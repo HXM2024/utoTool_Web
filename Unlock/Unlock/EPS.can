@@ -1,0 +1,913 @@
+/*@!Encoding:936*/
+includes
+{
+  #if X64
+    #pragma library("capldll.dll")
+    #pragma library("AES_CBC.dll")
+  #else
+    #pragma library("capldll.dll")
+    #pragma library("AES_CBC.dll")
+  #endif
+}
+variables
+{
+  diagRequest  * reqseed;
+  diagRequest  * sendkey;
+  diagRequest  * SendData;
+  diagRequest  * Session_Start;
+  
+  int AES_128 = 1;
+  byte  AES_CMAC_27 = 0;
+  int SendKey_Len = 0x12;
+  byte RequestSeed_27 = 0x05;
+  byte SendKey_27 = 0x06;
+  dword phyreq_ID = 0x770;
+  dword funreq_ID = 0x7FF;
+  dword Response_ID = 0x670;
+  
+  
+  char ECU_project[50] = "Geely3.0";
+  char Cdd_Name[50] = "ABS_ESP";
+  int Response_CanFD = 0;
+  
+  
+  dword Seed_AES[16]; //AES安全算法
+  word Mask_GeelyAPP[16] = {0x40,0x21,0x07,0x49,0x10,0xD0,0x27,0x15,0x2A,0x19,0x0F,0x1F,0xAC,0x3E,0xFD,0x75};
+  word Mask_RCAPP[16] = {0xEA,0xCA,0xEE,0x20,0x4C,0x42,0x35,0x8D,0x34,0x2A,0xEF,0xDE,0x5E,0xE5,0x92,0x4F};
+  word Mask_Chery_APP[16] = {0x6C,0xA7,0xEB,0xBA,0xD8,0xE2,0x8B,0xFA,0x03,0x58,0x8F,0x35,0x3F,0xD7,0x14,0x02}; //T1V_APP
+  word Mask_DongFeng_APP[16] = {0x52,0x3E,0x0D,0x8A,0x9F,0x6C,0x1B,0x47,0x26,0x3A,0x8D,0x0F,0x5E,0x9B,0x1C,0x7A};
+  word Mask_CCAG_APP[16] = {0x58,0x94,0x93,0x03,0x62,0xEB,0x75,0x94,0xCD,0x10,0x16,0x50,0x25,0x0D,0x4C,0xD2};
+  word corresKey[16];
+  byte noFail;//不需要判断
+  message 0x00 responseMsgs[10];//用于接收发送诊断后的所有响应码
+  /*************AES_CBC***********************/
+  byte Iv[16] = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0x00,0x66,0x55,0x44,0x33,0x22,0x11};
+  byte ECU_Key[16] ={0x7d,0x0b,0xa5,0xb6,0xb5,0x7c,0x49,0x05,0x8d,0xf3,0xf9,0xad,0x2f,0x31,0x92,0xfb};
+  byte Secret_KEY[16];
+  byte Serial_number[16];
+  byte KEY_Len = 16;
+  byte RA[16];
+  byte ra[16];
+  byte R[16];
+  byte r[16];
+  byte Seed_CBC[16];
+  
+  int N_Cr_Time = 70;
+  int NRC78_flag = 0;
+  int defsession = 1;
+  int exsession = 3;
+  int p2cmax = 50;
+  
+}
+TESTCASE _Unlock_EPS()
+{
+  Send_Diag(@sysvar::Auto::Unlock);
+}
+//请求解锁ECU
+_unlockECU()
+{
+  diagSetTarget(Cdd_Name);
+  if(AES_128 != 2)
+    _SetSession(exsession);
+  diagResize(reqseed,2);
+  diagResize(sendkey,SendKey_Len);
+  DiagSetPrimitiveByte(reqseed,0,0x27);
+  DiagSetPrimitiveByte(sendkey,0,0x27);
+  DiagSetPrimitiveByte(reqseed,1,RequestSeed_27);
+  DiagSetPrimitiveByte(sendkey,1,SendKey_27);
+  if(AES_128==0)
+  {
+    dword seed;
+    dword skey;
+    testCaseComment("请求解锁ECU");
+    diagSendRequest(reqseed);
+    diagSetP2Extended(-1);
+    testWaitForDiagRequestSent(reqseed,500);
+    testWaitForDiagResponse(reqseed,p2cmax);
+    if(diagGetLastResponseCode(reqseed)==0x78)
+      testWaitForDiagResponse(reqseed,p2cmax*100);
+    if(diagGetLastResponseCode(reqseed)==-1)
+    {
+      int Seed_Pos,Seed_Len,Key_Loop;
+      Seed_Len = DiagGetRespPrimitiveSize(reqseed);
+      seed = 0;skey = 0;
+      for(Seed_Pos = 2 ;Seed_Pos < Seed_Len;Seed_Pos++)
+        seed = seed | (DiagGetRespPrimitiveByte(reqseed,Seed_Pos) << ((Seed_Len -3 -(Seed_Pos-2))*8));
+      /*安全算法函数*/
+      testStep("种子","种子为0x%08X",seed);
+      _SecurityAccess(seed,skey);
+      testStep("密钥","计算出密钥为0x%08X",skey);
+      DiagSetPrimitiveByte(sendkey,0,0x27);
+      for(Key_Loop = 2;Key_Loop < SendKey_Len;Key_Loop++)
+        DiagSetPrimitiveByte(sendkey,Key_Loop,(skey>>((SendKey_Len-1-Key_Loop)*8))&0xFF);
+      diagSendRequest(sendkey);
+      testWaitForDiagRequestSent(sendkey,50);
+      diagSetP2Extended(-1);
+      testWaitForDiagResponse(sendkey,p2cmax);
+      if(diagGetLastResponseCode(sendkey)==0x78)
+        testWaitForDiagResponse(sendkey,p2cmax*100);
+      /*判断是否解锁成功*/
+      if(diagGetLastResponseCode(sendkey)==-1)
+        testStepPass("ECU解锁成功");
+      else
+        testStepFail("ECU解锁失败");
+    }
+    else
+      testStepFail("ECU解锁,获取种子失败");
+    testWaitForTimeout(500);
+  }
+  else if(AES_128==1)
+  {
+    testWaitForTimeout(500);    //排除10 03的反馈干扰,会影响到获取种子
+    testCaseComment("请求解锁ECU");
+    _SendAndWriteReport_NoTime(reqseed,phyreq_ID);
+    _saveMsg(p2cmax);
+    _CheckCode(-1,4);
+    testWaitForTimeout(200);
+    diagResize(sendkey,SendKey_Len);
+    DiagSetPrimitiveByte(sendkey,1,SendKey_27);
+    _padding2702(0);
+    _SendAndWriteReport_NoTime(sendkey,phyreq_ID);
+    _saveMsg(p2cmax);
+    testWaitForTimeout(150);
+  }
+  else if(AES_128==2) /*AES_CBC*/
+  {
+    byte data[3]={0x22,0xF1,0x8C};
+    int m;
+    testCaseComment("获取序列号");
+    _Send_Diag_And_Get_CF(3,phyreq_ID,data);
+    if(diagGetLastResponseCode(SendData) == -1)
+    {
+      if(DiagGetRespPrimitiveSize(SendData) == 22)
+      {
+        for(m=0;m<16;m++)
+          Serial_number[m] = DiagGetRespPrimitiveByte(SendData,m+6);
+        /*序列号移位*/
+        LeftMove(Serial_number,3);
+//        for(m=0;m<16;m++)
+//          writeEx(-3,0,"----------移位后序列号-------0x%2x",Serial_number[m]);
+        /*用ECU KEY加密移位后的序列号 获取密钥KEY*/
+        AES128_CBC_encrypt_buffer(Secret_KEY,Serial_number,KEY_Len,ECU_Key,Iv); 
+        
+        _SetSession(exsession);
+        testWaitForTimeout(150);
+        testCaseComment("请求解锁ECU");
+        _SendAndWriteReport(reqseed,phyreq_ID,500);
+        if(diagGetLastResponseCode(reqseed) == -1)
+        {
+          for(m=0;m<16;m++)
+            RA[m]=DiagGetRespPrimitiveByte(reqseed,m+2);
+          /*用密钥KEY解密RA 得到ra`*/
+          AES128_CBC_decrypt_buffer(ra,RA,KEY_Len,Secret_KEY,Iv);
+          /*ra逆向*/
+          reverseNum(ra,16);
+          testWaitForTimeout(100);
+          /*用密钥KEY加密r得到R*/
+          AES128_CBC_encrypt_buffer(R,ra,KEY_Len,Secret_KEY,Iv);
+          diagResize(sendkey,18);
+          DiagSetPrimitiveByte(sendkey,1,SendKey_27);
+          for(m=0;m<16;m++)
+            DiagSetPrimitiveByte(sendkey,m+2,R[m]);
+          _SendAndWriteReport(sendkey,phyreq_ID,p2cmax);
+          if(diagGetLastResponseCode(sendkey)==-1)
+            testStepPass("ECU解锁成功");
+          else
+            testStepFail("ECU解锁失败");
+        }
+        else
+          testStepFail("","请求种子失败");
+      }
+      else
+        testStepFail("","返回序列号长度错误,导致秘钥Key不可信");
+    }
+    else
+      testStepFail("","未收到正确序列号,无法进行安全访问");
+  }
+}
+
+
+//重置为默认会话或扩展会话
+_SetSession(byte Session)
+{
+  if(Session==defsession)
+  {
+    _Switch_To_Def();
+//    Session_BIN = 0x01;
+  }
+  else if(Session==exsession)
+  {
+    _Switch_To_Ex();
+//    Session_BIN = 0x04;
+  }
+}
+
+//请求重置为默认会话
+_Switch_To_Def()
+{
+  testCaseComment("请求重置为默认会话");
+  diagResize(Session_Start,2);
+  DiagSetPrimitiveByte(Session_Start,0,0x10);
+  DiagSetPrimitiveByte(Session_Start,1,defsession);
+  diagSendRequest(Session_Start);
+  testWaitForDiagRequestSent(Session_Start,50);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(Session_Start,p2cmax);
+  if(diagGetLastResponseCode(Session_Start)==0x78)
+    testWaitForDiagResponse(Session_Start,p2cmax*100);
+  /*判断重置默认会话是否成功并体现在报告里*/
+  if(diagGetLastResponseCode(Session_Start)==-1)
+    testStepPass("重置默认会话成功");
+  else
+    testStepFail("重置默认会话失败");
+}
+
+//请求重置为扩展会话
+_Switch_To_Ex()
+{
+  testCaseComment("请求重置为扩展会话");
+//  diagSetTarget(Cdd_Name); //重新连接Cdd文件会导致前面定义的信息无效化
+  diagResize(Session_Start,2);
+  DiagSetPrimitiveByte(Session_Start,0,0x10);
+  DiagSetPrimitiveByte(Session_Start,1,exsession);
+  diagSendRequest(Session_Start);
+  testWaitForDiagRequestSent(Session_Start,50);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(Session_Start,p2cmax);
+  if(diagGetLastResponseCode(Session_Start)==0x78)
+    testWaitForDiagResponse(Session_Start,p2cmax*100);
+  /*判断重置扩展会话是否成功并体现在报告里*/
+  if(diagGetLastResponseCode(Session_Start)==-1)
+    testStepPass("重置扩展会话成功");
+  else
+    testStepFail("重置扩展会话失败");
+}
+
+//安全算法
+_SecurityAccess(dword SaccSeed,dword& SaccKey)
+{
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    dword KeyK;
+    dword KeyResult;
+    KeyK = 0X00000137;
+//    _WriteEx_and_Report(ECU_project,"当前项目为BYD,采用BYD安全算法");
+    KeyResult = ((((SaccSeed >> 1) ^ SaccSeed) <<3) ^ (SaccSeed >>2));
+    SaccKey = KeyResult ^ KeyK;
+  }
+  else if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    dword key1;
+    dword key2;
+    dword getSeed1;
+    dword getSeed2;
+    dword AppKeyConst;
+    int i;
+    AppKeyConst  =0x70F77302;
+    key1 = 0;key2 = 0;
+    getSeed2  = 0;
+    getSeed1 = SaccSeed;
+//    _WriteEx_and_Report(ECU_project,"当前项目为长安,采用长安安全算法");
+    key1 = AppKeyConst ^ getSeed1;
+    for(i = 32;i > 0;i--)
+  	{
+  		getSeed2 |=  ((getSeed1 & 0x80000000) >> (i-1));
+      getSeed1 = getSeed1<<1;
+  	}
+  	key2 = AppKeyConst ^ getSeed2;
+  	SaccKey = (dword)(key1 + key2);
+  }
+  else if(strncmp(ECU_project,"SGMW",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("SGMW"))
+  {
+    word uds_key_mul[32] = 
+    {
+      0x7678, 0x9130, 0xd753, 0x750f, 0x72cb, 0x55f7, 0x13da, 0x786b, 
+      0x372a, 0x4932, 0x0e7c, 0x3687, 0x3261, 0xa82c, 0x8935, 0xd00c, 
+      0x1995, 0x4311, 0xb854, 0x0d8d, 0x9863, 0x1a21, 0xf753, 0xd6d3,
+      0xb15d, 0x7f3d, 0x6821, 0x791c, 0x26c5, 0x2e37, 0x0e69, 0x64a0 
+    };
+    dword temp;
+  	word index;
+  	word mult1;
+  	word mult2;
+    dword NC_DEFAULT_SEED;
+    dword NC_UDS_KEYMASK;
+    NC_DEFAULT_SEED=0xA548FD85;
+    NC_UDS_KEYMASK=0x5C7D4EF3;
+    index = 0x5D39;
+  	if(SaccSeed == 0) 
+  		SaccSeed = NC_DEFAULT_SEED;
+  	for(temp=0x80000000;temp!=0;temp>>=1)
+  	{
+  		if(temp & SaccSeed) 
+      {
+  			index = croshortright(index,1);
+  			if (temp & NC_UDS_KEYMASK) 
+  				index ^= 0x74c9;
+  		}
+  	}
+  	mult1 = (uds_key_mul[(index >> 2) & ((1 << 5) - 1)] ^ index);
+  	mult2 = (uds_key_mul[(index >> 8) &((1 << 5) - 1)] ^ index);
+  	temp = (((dword) mult1) << 16) | ((dword) mult2);
+  	temp = mulu32(SaccSeed,temp);
+  	SaccKey = temp;
+  }
+  else if(strncmp(ECU_project,"Geely1.0",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Geely1.0"))
+  {
+    byte i;
+    byte XorArray[4] = {0xC1,0x1C,0x12,0x81};
+    byte calData[4];
+    byte skeybyte[4];
+    for (i = 0;i < 4;i++)
+      calData[i] = 0;
+    for (i = 0;i < 4;i++)
+      calData[i] = ((SaccSeed>>(24-8*i))&0xFF)^ XorArray[i];/*修改秘钥传入方式为MSB*/
+    skeybyte[0] = ((calData[3] & 0x0F) << 4 )|(calData[3]&0xF0);
+    skeybyte[1] = ((calData[1] & 0x0F) << 4 )|((calData[0]&0xF0) >> 4 );
+    skeybyte[2] = (calData[1] & 0xF0)|((calData[2] & 0xF0) >> 4);
+    skeybyte[3] = ((calData[0] & 0x0F) << 4 )|(calData[2] & 0x0F);
+    SaccKey=skeybyte[0];
+    SaccKey=(SaccKey<<8)|skeybyte[1];
+    SaccKey=(SaccKey<<8)|skeybyte[2];
+    SaccKey=(SaccKey<<8)|skeybyte[3];
+  }
+  else if(strncmp(ECU_project,"BaoTeng",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BaoTeng"))
+  {
+    byte i;
+    byte XorArray[4] = {0x53,0x4E,0x22,0xCD};
+    byte calData[4];
+    byte skeybyte[4];
+    for (i = 0;i < 4;i++)
+      calData[i] = 0;
+    for (i = 0;i < 4;i++)
+      calData[i] = ((SaccSeed>>(24-8*i))&0xFF)^ XorArray[i];/*修改秘钥传入方式为MSB*/
+    skeybyte[0] = ((calData[3] & 0x0F) << 4 )|(calData[3]&0xF0);
+    skeybyte[1] = ((calData[1] & 0x0F) << 4 )|((calData[0]&0xF0) >> 4 );
+    skeybyte[2] = (calData[1] & 0xF0)|((calData[2] & 0xF0) >> 4);
+    skeybyte[3] = ((calData[0] & 0x0F) << 4 )|(calData[2] & 0x0F);
+    SaccKey=skeybyte[0];
+    SaccKey=(SaccKey<<8)|skeybyte[1];
+    SaccKey=(SaccKey<<8)|skeybyte[2];
+    SaccKey=(SaccKey<<8)|skeybyte[3];
+  }
+  else if((strncmp(ECU_project,"DongFeng",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("DongFeng")) || (strncmp(ECU_project,"Seres",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Seres")))
+  {
+    byte i;
+    byte XorArray[4] = {0xD1,0x31,0x54,0x07};
+    byte calData[4];
+    byte skeybyte[4];
+    for (i = 0;i < 4;i++)
+    {
+      calData[i] = 0;
+      skeybyte[i] = 0;
+    }
+    for (i = 0;i < 4;i++)
+      calData[i] = ((SaccSeed>>(24-8*i))&0xFF)^ XorArray[i];/*修改秘钥传入方式为MSB*/
+    skeybyte[0] = ((calData[0] & 0x0F) << 4 )|(calData[1]&0xF0);
+    skeybyte[1] = ((calData[1] & 0x0F) << 4 )|((calData[2]&0xF0) >> 4 );
+    skeybyte[2] = (calData[2] & 0xF0)|((calData[3] & 0xF0) >> 4);
+    skeybyte[3] = ((calData[3] & 0x0F) << 4 )|(calData[0] & 0x0F);
+    SaccKey=skeybyte[0];
+    SaccKey=(SaccKey<<8)|skeybyte[1];
+    SaccKey=(SaccKey<<8)|skeybyte[2];
+    SaccKey=(SaccKey<<8)|skeybyte[3];
+  }  
+  else if((strncmp(ECU_project,"SRM",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("SRM")))
+  {
+    byte i;
+    byte XorArray[4] = {0xA1,0x59,0xD4,0x30};
+    byte getKey[4];
+    byte getSeed[4];
+    byte Cal[4];
+    dword _Key;
+    _Key = 0;
+    for (i = 0;i < 4;i++)
+    {
+      Cal[i] = 0;
+      getKey[i] = 0;
+      getSeed[i] = 0;
+    }
+    getSeed[0] = (SaccSeed>>24)&0xFF;
+    getSeed[1] = (SaccSeed>>16)&0xFF;
+    getSeed[2] = (SaccSeed>>8)&0xFF;
+    getSeed[3] = (SaccSeed)&0xFF;
+    for(i=0;i<4;i++)
+      Cal[i] = getSeed[i]^XorArray[i];
+    
+    getKey[0] = ((Cal[3] & 0x0f)<<4) | (Cal[0] & 0xff);
+		getKey[1] =	(Cal[1] & 0xd8) | ((Cal[2] & 0xf0)>>4);
+		getKey[2] =	(Cal[2] & 0xcf) | (Cal[0] & 0xf0);
+		getKey[3] = (Cal[3] & 0xf0) | ((Cal[1] & 0xd0)>>4);
+    
+    _Key |= getKey[0]<<24;
+    _Key |= getKey[1]<<16;
+    _Key |= getKey[2]<<8;
+    _Key |= getKey[3];
+    SaccKey = _Key;
+  }
+  else if(strncmp(ECU_project,"Chery",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Chery"))
+  {
+    Byte bSeed[2];
+    Word remainder;
+    Byte n;
+    Byte i;
+    bSeed[0] = (Byte)(SaccSeed >> 8); 
+    bSeed[1] = (Byte)SaccSeed; 
+    remainder =0xFFFE;
+    for (n = 0; n < 2; n++)
+    {
+      remainder ^= ((bSeed[n]) << 8);
+      for (i = 0; i < 8; i++)
+      {
+        if (remainder & 0x8000)
+        {
+          if(remainder & 0x0080)
+            remainder = (remainder << 1) ^ 0x8408;
+          else
+            remainder = (remainder << 1) ^ 0x8025;
+        }
+        else
+          remainder = (remainder << 1);
+      }
+    }
+    SaccKey = remainder;
+  }
+  else if(strncmp(ECU_project,"GAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("GAC"))
+  {
+    dword _Key;
+    dword APPKeyConst;
+    byte Seed[4],Key_[4],AppConst[4];
+    int i;
+    APPKeyConst = 0x20F77302;
+    _Key = 0;
+    for(i=0;i<4;i++)
+    {
+      Seed[i] = (SaccSeed>>(8*(4-i-1)))&0xFF;
+      AppConst[i] = (APPKeyConst>>(8*(4-i-1)))&0xFF;
+      Key_[i] = Seed[i] ^ AppConst[i];
+    }
+    for(i=0;i<4;i++)
+      _Key = _Key + (Key_[i]<<(8*(4-1-i)));
+    SaccKey = _Key;
+  }
+}
+/*数组逆向*/
+void reverseNum(byte num[],dword size)
+{
+  dword startnum;
+  dword temp;
+  dword endnum;
+  
+  startnum = 0;
+  endnum = size - 1;
+  while(startnum < endnum)
+  {
+    temp = num[startnum];
+    num[startnum] = num[endnum];
+    num[endnum] = temp;
+    startnum++;
+    endnum--;
+  }
+}
+/*数组移位*/
+void LeftMove(byte Serial_Num[],byte bit)
+{
+  dword i;
+  byte current;
+  byte carry;
+  byte shif;  
+  carry = 0;
+  for(i=15;i>=0;i--)
+  {
+    current = Serial_Num[i];
+    shif = current << bit;
+    shif |= carry;
+    Serial_Num[i] = shif & 0xFF;
+    carry = (current>>(8-bit)) & ((1<<bit)-1);
+  }
+}
+//用于五菱安全算法
+word croshortright(word c, word b)
+{
+	word right;
+	word left;
+	word crorightvalue;
+  right = c >> b;
+  left = c << (16 - b);
+  crorightvalue = left | right;
+	return crorightvalue;
+}
+//用于五菱安全算法
+dword croleft(dword c, word b)
+{
+	dword left;
+	dword right;
+	dword croleftvalue;
+  left = c << b;
+  right = c >> (32 - b);
+  croleftvalue = left | right;
+	return croleftvalue;
+}
+//用于五菱安全算法
+dword mulu32(dword val1, dword val2)
+{
+	dword x, y, z, p;
+  dword NC_UDS_KEYMASK=0x5c7d4ef3;
+	x = (val1 & NC_UDS_KEYMASK) | ((~val1) & val2);
+	y = ((croleft(val1, 1)) & (croleft(val2, 14)))
+	        | ((croleft(NC_UDS_KEYMASK, 21)) & (~(croleft(val1, 30))));
+	z = (croleft(val1, 17)) ^ (croleft(val2, 4))
+	        ^ (croleft(NC_UDS_KEYMASK, 11));
+	p = x ^ y ^ z;
+	return p;
+}
+void _SecurityAccess_AES(dword seed[], word Byte_[],word corresKey[])
+{
+  char M[16],mic[16];
+  int i;
+  char fixByte[16];
+  word gHandle;
+  for(i=0;i<16;i++)
+  {
+    fixByte[i] = Byte_[i];
+  }
+  gHandle = registerCAPLDLL();
+  for(i = 0; i < 16; i++)
+  {
+    M[i] = seed[i];
+  }
+  aes_128_cmac(M,fixByte,mic);
+  for(i = 0; i < 16; i++)
+  {
+    corresKey[i] = mic[i] & 0xFF;
+  }
+  fileClose(gHandle);
+}
+
+/*2702密钥填充：type:0:正确密钥  1:错误密钥*/
+void _padding2702(int type)
+{
+  word key_i;
+//  dword Seed_AES_[16] = {0x6b,0xc1,0xbe,0xe2,0x2e,0x40,0x9f,0x96,0xe9,0x3d,0x7e,0x11,0x73,0x93,0x17,0x2a};
+  if(type == 0)
+  {
+    _Key_Count();
+    for(key_i = 0; key_i < 16; key_i++)
+      DiagSetPrimitiveByte(sendkey,key_i+2,corresKey[key_i]);
+  }
+  else
+  {
+    for(key_i = 0; key_i < 16; key_i++)
+      DiagSetPrimitiveByte(sendkey,key_i+2,0x00);
+  }
+}
+/**
+  将接受到的所有报文装载到responseMsgs中
+  且第一帧在50ms，后续帧通过参数time来控制
+**/
+void _saveMsg(int time)
+{
+  byte i,j;
+  int flag_getMsg;
+  flag_getMsg = _getMsg(responseMsgs[0],p2cmax);
+  if(flag_getMsg == 1)
+  {
+    for(i = 1; i < 10; i++)
+    {
+      _getMsg(responseMsgs[i],N_Cr_Time);
+      if(responseMsgs[i].dlc == 0)
+        break;
+    }
+  }
+}
+/**
+  获取报文，判断报文响应时间是否在目标时间time内
+**/
+int _getMsg(message 0x00 msg,int time)
+{
+  char comment[50];
+  byte i;
+  int re;
+  int resave;
+  int flag_getMsg;//判断有没有获取到报文
+//  TestJoinMessageEvent(0x670);
+  re = testWaitForMessage(Response_ID,time);
+//  re = TestWaitForAnyJoinedEvent(2000);
+  if(re>0)
+  {
+    testGetWaitEventMsgData(msg);
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    resave++;
+    flag_getMsg = 1;
+  }
+  else
+    flag_getMsg = 0;
+  
+  if(re == 0 && resave == 0)
+  {
+    if(noFail == 0)
+      TestStepFail("报文响应超时");
+  }
+  return flag_getMsg;
+}
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport_NoTime(diagRequest* obj,dword msgID)
+{
+  char comment[70];
+  byte primitiveRaw[300];
+  long size;
+  byte i;
+  
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  if(DiagGetPrimitiveByte(obj,0) == 0x10 || DiagGetPrimitiveByte(obj,0) == 0x11 || DiagGetPrimitiveByte(obj,0) == 0x27 || DiagGetPrimitiveByte(obj,0) == 0x3E)
+  {
+    NRC78_flag = 1;
+  }
+  if(msgID==phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  for(i=0;i<size;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  }
+  if(msgID==phyreq_ID)
+    diagSendRequest(obj);
+  else if(msgID==funreq_ID)
+    diagSendFunctional(obj);
+  
+  diagSetP2Extended(-1);
+  testWaitForDiagRequestSent(obj,500);
+  testCaseComment(comment);
+  writeEx(-3,0,comment);
+  testReportWriteDiagObject(obj);
+}
+int _CheckCode(int passcondition,int checkLength)
+{
+  int resNum,i,j,allRes_i;
+  int checkResult;
+  word allRes[100];
+  word dlc,allRes_length;
+  checkResult = 0;
+  dlc = 8;
+  for(i = 0; i< 10; i++)//获取当前响应码序列长度
+  {
+    if(responseMsgs[i].dlc == 0)
+      break;
+    else if(responseMsgs[i].byte(0) == 0x03 && responseMsgs[i].byte(1) == 0x7f && responseMsgs[i].byte(3) == 0x78 && NRC78_flag == 0)//响应78不存入验证数组
+    {
+      allRes_i++;
+      resNum--;
+    }
+    else if(responseMsgs[i].byte(0) == 0x30 )  //流控帧不计入数组
+    {
+      allRes_i++;
+      resNum--;
+    }
+    else
+    {
+      for(j = 0; j < dlc ; j++)
+        allRes[((i-allRes_i)*dlc)+j] = responseMsgs[i].byte(j);
+    }  
+    resNum++;
+  }
+  allRes_length = resNum * dlc;
+  if(AES_128 == 1 && allRes_length > 0)//将响应的种子存入seed    需注意区分CAN与CANFD
+  {
+    word inx;
+    inx = 4;
+    if(Response_CanFD==0)
+    {
+      for(j = 0; j < 16; j++)
+      {
+        Seed_AES[j] = allRes[j+inx];
+        if(j == 3)
+          inx = 5;
+        if(j == 10)
+          inx = 6;
+      }
+    }
+    else
+    {
+      for(j = 0; j < 16; j++)
+        Seed_AES[j] = allRes[j+inx];
+    }
+    inx = 4;
+  }
+  if(passcondition == -1)
+    testStepPass("收到肯定响应");
+  else if(passcondition == 0)
+    testStepfail("无响应");
+  else
+    testStepfail("收到否定响应");
+  resNum = 0;
+  allRes_i = 0;
+  NRC78_flag = 0;
+  for(i = 0; i < 100 ; i++)
+    allRes[i] = 0;
+  _initMsg(responseMsgs);
+  return checkResult;
+}
+/* 操作完后将responseMsgs重置*/
+void _initMsg(message 0x00 msg[])
+{
+  message 0x00 init_msg;
+  word i;
+  for(i = 0; i < elCount(msg); i++)
+    msg[i] = init_msg;
+}
+
+_Key_Count() // 用于匹配简化输入调用，计算安全秘钥使用
+{
+  switch(AES_CMAC_27)
+  {
+    case 0:
+      _SecurityAccess_AES(Seed_AES,Mask_GeelyAPP,corresKey);break;
+    case 1:
+      _SecurityAccess_AES(Seed_AES,Mask_RCAPP,corresKey);break;
+    case 2:
+      _SecurityAccess_AES(Seed_AES,Mask_Chery_APP,corresKey);break;
+    case 3:
+      _SecurityAccess_AES(Seed_AES,Mask_DongFeng_APP,corresKey);break;
+    case 4:
+      _SecurityAccess_AES(Seed_AES,Mask_CCAG_APP,corresKey);break;
+    default:
+      writeEx(-3,0,"未收到正确的配置信息");break;
+  }
+}
+
+_Send_Diag_And_Get_CF(byte size,dword ID,byte Send_Data[])
+{
+  _Send_Diag(size,ID,Send_Data);
+  if(AES_128 != 0)/*多帧存在接收不全问题*/
+  {
+    if(diagGetLastResponseCode(SendData)==0)
+      testWaitForDiagResponse(SendData,200);
+  }
+}
+
+_Send_Diag(int size,dword ID,byte Send_Data[])
+{
+  int i;
+  dword LenSend;
+  i=0;
+  LenSend = elCount(Send_Data);
+  diagResize(SendData,size);
+  if(size<=LenSend)
+  {
+    for(i=0;i<size;i++)
+      DiagSetPrimitiveByte(SendData,i,Send_Data[i]);
+  }
+  else if(size>LenSend)
+  {
+    for(i=0;i<LenSend;i++)
+      DiagSetPrimitiveByte(SendData,i,Send_Data[i]);
+    for(i=LenSend;i<size;i++)
+      DiagSetPrimitiveByte(SendData,i,0x55);
+  } 
+  _SendAndWriteReport(SendData,ID); 
+}
+
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,dword msgID)
+{
+  char comment[1000];
+  byte primitiveRaw[1000];
+  long size;
+  int i;
+  
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  if(msgID==phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else if(msgID==funreq_ID)
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  
+  for(i=0;i<size;i++)
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  if(msgID==phyreq_ID)
+    diagSendRequest(obj);
+  else if(msgID==funreq_ID)
+    diagSendFunctional(obj);
+  testWaitForDiagRequestSent(obj,500);
+  testCaseComment(comment);
+  writeEx(-3,0,comment);
+  testReportWriteDiagObject(obj);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(obj,50);
+  if(diagGetLastResponseCode(obj)==0x78)
+  {
+    if(DiagGetRespPrimitiveByte(obj,1) != DiagGetPrimitiveByte(obj,0))
+      testStepFail("","NRC78响应时,服务不正确,期望为 0x%2X  实际为 0x%02X",DiagGetPrimitiveByte(obj,0),DiagGetRespPrimitiveByte(obj,1));
+    if(DiagGetRespPrimitiveSize(obj) != 3)
+      testStepFail("","NRC78响应时,长度不正确");
+    testWaitForDiagResponse(obj,50*100);
+  }
+  if(diagGetLastResponseCode(obj)!=0)
+    testReportWriteDiagResponse(obj);
+}
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,dword msgID,dword time)
+{
+  char comment[70];
+  byte primitiveRaw[300];
+  long size;
+  byte i;
+  
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  if(msgID==phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  for(i=0;i<size;i++)
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  if(msgID==phyreq_ID)
+    diagSendRequest(obj);
+  else if(msgID==funreq_ID)
+    diagSendFunctional(obj);
+  
+  testWaitForDiagRequestSent(obj,500);
+  testCaseComment(comment);
+  writeEx(-3,0,comment);
+  testReportWriteDiagObject(obj);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(obj,time);
+  if(diagGetLastResponseCode(obj)==0x78)
+  {
+    if(DiagGetRespPrimitiveByte(obj,1) != DiagGetPrimitiveByte(obj,0))
+      testStepFail("","NRC78响应时,服务不正确,期望为 0x%2X  实际为 0x%02X",DiagGetPrimitiveByte(obj,0),DiagGetRespPrimitiveByte(obj,1));
+    if(DiagGetRespPrimitiveSize(obj) != 3)
+      testStepFail("","NRC78响应时,长度不正确");
+    testWaitForDiagResponse(obj,50*100);
+  }
+  if(diagGetLastResponseCode(obj)!=0)
+    testReportWriteDiagResponse(obj);
+}
+
+
+void _diagSendMsg(dword msgID,diagRequest* obj)
+{
+  char comment[70];
+  byte primitiveRaw[30];
+  long size;
+  byte i;
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  
+  if(msgID==phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  for(i=0;i<2;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  }
+  
+  if(msgID==phyreq_ID)
+    diagSendRequest(obj);
+  else if(msgID==funreq_ID)
+    diagSendFunctional(obj);
+}
+void ClearDTC(dword msgID)
+{
+  diagRequest ABS_ESP.FaultMemory_Clear req14;
+  
+  diagResize(req14,4);
+  DiagSetPrimitiveByte(req14,0,0x14);
+  DiagSetPrimitiveByte(req14,1,0xFF);
+  DiagSetPrimitiveByte(req14,2,0xFF);
+  DiagSetPrimitiveByte(req14,3,0xFF);
+  
+  _diagSendMsg(msgID,req14);
+}
+
+void Send19(dword msgID,byte byte1,byte byte2)
+{
+  diagRequest ABS_ESP.FaultMemory_ReadAllIdentified req19;
+  
+  diagResize(req19,3);
+  DiagSetPrimitiveByte(req19,0,0x19);
+  DiagSetPrimitiveByte(req19,1,byte1);
+  DiagSetPrimitiveByte(req19,2,byte2);
+  
+  _diagSendMsg(msgID,req19);
+}
+
+on key ' '{
+  Send19(phyreq_ID,0x02,0x01);
+}
+
+void Send_Diag(int Value)
+{
+//  writeEx(-3,0,"Value = %d",Value);
+  switch(Value)
+  {
+    case 1: _unlockECU();break;
+    case 2: Send19(phyreq_ID,0x02,0x01);break;
+    case 3: Send19(phyreq_ID,0x02,0x09);break;
+    case 4: ClearDTC(phyreq_ID);break;
+    default: _unlockECU();break;
+  }
+}

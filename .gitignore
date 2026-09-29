@@ -1,0 +1,31 @@
+# 依赖与构建产物
+node_modules/
+dist/
+build/
+release_v2/
+venv/
+.venv/
+.env
+__pycache__/
+*.py[cod]
+*.pkg
+
+# 打包 / 二进制文件
+*.exe
+*.dll
+*.rar
+*.zip
+*.cbf
+
+# 日志
+*.log
+
+# 运行时输出与本地备份
+outputs/
+uploads/
+_recovery/
+configs/**/*bak*
+
+# 编辑器
+.vscode/
+.idea/

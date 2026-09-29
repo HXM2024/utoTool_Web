@@ -1,0 +1,229 @@
+// ============================================================
+//  全局样式与主题变量  —  通信自动化测试工具
+//  主色: 工业蓝 #1890ff   辅色: 科技灰 #2c3e50
+//  单一主色源：--el-color-primary。全站（含 Element Plus 组件与自绘 CSS）
+//  一律引用它，不再直接写蓝色的字面色值。
+// ============================================================
+
+// ---------- 浅色主题 (默认) ----------
+:root {
+  --color-primary: var(--el-color-primary);
+  --color-primary-light: var(--el-color-primary-light-3);
+  --color-primary-dark: var(--el-color-primary-dark-2);
+
+  // Element Plus 主色阶（覆盖 EP 默认的 var(--el-color-primary) 系）
+  --el-color-primary: #1890ff;
+  --el-color-primary-light-3: #5db1ff;
+  --el-color-primary-light-5: #8cc8ff;
+  --el-color-primary-light-7: #badeff;
+  --el-color-primary-light-8: #d1e9ff;
+  --el-color-primary-light-9: #e8f4ff;
+  --el-color-primary-dark-2: #1373cc;
+
+  --color-secondary: #2c3e50;
+  --color-secondary-light: #0c6ab6;
+
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-error: #f5222d;
+  --color-info: #909399;
+
+  --bg-page: #f0f2f5;
+  --bg-card: #ffffff;
+  --bg-header: #ffffff;
+  --bg-sidebar: #01040c13;
+  --bg-hover: #f5f5f5;
+
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --text-placeholder: #c0c4cc;
+
+  --border-color: #dcdfe6;
+  --border-color-light: #e4e7ed;
+
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.08);
+  --shadow-header: 0 1px 4px rgba(0, 0, 0, 0.1);
+
+  // 本应用没有独立顶栏，只有下面 40px 的 tab 栏。这里保留变量是为了兼容各处
+  // calc(100vh - var(--header-height) - var(--tab-height) - N) 的写法，值必须为 0，
+  // 否则每个模块都会凭空少掉 56px 内容高度。
+  --header-height: 0px;
+  --tab-height: 40px;
+
+  // ---------- 密度：控件之间的留白统一从这里取，改一处全站生效 ----------
+  --gap-block: 10px; // 卡片 / 区块之间
+  --gap-inline: 8px; // 同一行控件之间
+  --pad-card: 14px; // 卡片内边距
+  --pad-bar: 8px 12px; // 工具条内边距
+
+  --radius-base: 6px;
+  --radius-small: 4px;
+
+  --transition-base: all 0.25s cubic-bezier(0.645, 0.045, 0.355, 1);
+}
+
+// ---------- 深色主题 ----------
+html.dark {
+  --color-primary: var(--el-color-primary);
+  --color-primary-light: var(--el-color-primary-light-3);
+  --color-primary-dark: var(--el-color-primary-dark-2);
+
+  // Element Plus 暗色主色阶（往深底 #141414 方向混，与 EP 暗色规则一致）
+  --el-color-primary: #3c9ae8;
+  --el-color-primary-light-3: #3072a8;
+  --el-color-primary-light-5: #28577e;
+  --el-color-primary-light-7: #203c54;
+  --el-color-primary-light-8: #1c2f3e;
+  --el-color-primary-light-9: #182129;
+  --el-color-primary-dark-2: #63aeed;
+
+  --color-secondary: #5a6f80;
+
+  --bg-page: #1a1a2e;
+  --bg-card: #23233a;
+  --bg-header: #1e1e36;
+  --bg-sidebar: #1e1e36;
+  --bg-hover: #2a2a45;
+
+  --text-primary: #e8e8ea;
+  --text-regular: #b8b8c0;
+  --text-secondary: #8c8c9a;
+  --text-placeholder: #5c5c6a;
+
+  --border-color: #3a3a55;
+  --border-color-light: #2e2e48;
+
+  --shadow-card: 0 2px 12px rgba(0, 0, 0, 0.3);
+  --shadow-header: 0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+// ---------- 重置 ----------
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html,
+body,
+#app {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: 'Segoe UI', 'Microsoft YaHei', -apple-system, BlinkMacSystemFont,
+    'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg-page);
+  color: var(--text-primary);
+  font-size: 14px;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  transition: var(--transition-base);
+  &:hover {
+    color: var(--color-primary-light);
+  }
+}
+
+// ---------- 滚动条 ----------
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  &:hover {
+    background: var(--text-placeholder);
+  }
+}
+
+// ---------- 通用工具类 ----------
+.flex {
+  display: flex;
+}
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+// ---------- 页面过渡动画 ----------
+.fade-transform-enter-active,
+.fade-transform-leave-active {
+  transition: all 0.3s ease;
+}
+.fade-transform-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+.fade-transform-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+// ---------- Element Plus 主题覆盖 ----------
+.el-button--primary {
+  --el-button-bg-color: var(--color-primary);
+  --el-button-border-color: var(--color-primary);
+  --el-button-hover-bg-color: var(--color-primary-light);
+  --el-button-hover-border-color: var(--color-primary-light);
+  --el-button-active-bg-color: var(--color-primary-dark);
+  --el-button-active-border-color: var(--color-primary-dark);
+}
+
+.el-tabs__item.is-active {
+  color: var(--color-primary);
+}
+.el-tabs__active-bar {
+  background-color: var(--color-primary);
+}
+
+// ---------- 卡片通用样式 ----------
+.app-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-base);
+  box-shadow: var(--shadow-card);
+  padding: var(--pad-card);
+  transition: var(--transition-base);
+}
+
+// 表单行距收紧：Element Plus 默认 18px，密集表单里一行就白掉 6px
+.el-form-item {
+  margin-bottom: 12px;
+}
+
+// ---------- 空状态占位 ----------
+.empty-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 300px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  gap: 12px;
+  .empty-icon {
+    font-size: 48px;
+    opacity: 0.4;
+  }
+}

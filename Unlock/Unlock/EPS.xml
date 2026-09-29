@@ -1,0 +1,5 @@
+﻿<testmodule title="安全访问" version="1.0">
+      <testgroup title="诊断指令">
+      <capltestcase name="_Unlock_EPS" title="诊断指令发送" />
+      </testgroup>
+</testmodule>

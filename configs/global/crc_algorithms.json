@@ -1,0 +1,50 @@
+[
+  {
+    "name": "E2E_CRC",
+    "code": "byte E2E_CRC(byte da[],int len)\n{\n  byte byte_index=0,bit_index=0;\n  byte CRC=0;\n  byte POLY;\n  byte_index=0;\n  bit_index=0;\n  CRC=0;\n  POLY=0x1d;\n\n     for(byte_index=0;byte_index<len;byte_index++)\n    {\n      CRC ^=da[byte_index];\n\n      for( bit_index=0; bit_index<8; ++bit_index )\n        {\n            if( (CRC & 0x80) != 0 )\n            {CRC = (CRC << 1) ^ POLY;}\n            else\n            CRC = (CRC << 1);\n        }\n    }\n    CRC= CRC^0x00;\nreturn CRC;\n}"
+  },
+  {
+    "name": "CRC8",
+    "code": "byte CRC8(byte da[])\n{\n  byte byte_index=0,bit_index=0;\n  byte CRC=0;\n  byte POLY;\n  byte_index=0;\n  bit_index=0;\n  CRC=0xFF;\n  POLY=0x1d;\n\n  for(byte_index=0;byte_index<elcount(da);byte_index++)\n    {CRC ^=da[byte_index];\n\n    for( bit_index=0; bit_index<8; ++bit_index )\n    {\n      if( (CRC & 0x80) != 0 )\n      {CRC = (CRC << 1) ^ POLY;}\n      else\n      CRC = (CRC << 1);\n    }\n    }\n  CRC= CRC^0xFF;\nreturn CRC;\n}"
+  },
+  {
+    "name": "CRC_Xor_FF",
+    "code": "byte CRC_Xor_FF(byte da[])\n{\nbyte CRC=0;\nint i;\nfor(i=0;i<elcount(da);i++)\n{CRC=CRC^da[i];}\nCRC=CRC^0xFF;\nreturn CRC;\n}\n/// <Check>\nbyte CRC_Xor_FF(byte data[],byte bytelbit[],int dataLength)\n{\n  int index;\n  byte crc;\n  crc=0;\n  for ( index = 0; index < 8; index++)\n  {\n    if((index) == bytelbit[0])\n      {continue;}\n    crc += data[index];\n  }\n  return crc^0xFF;\n}"
+  },
+  {
+    "name": "CRC_CheckSum",
+    "code": "byte CRC_CheckSum(byte da[])\n{\nbyte CRC=0;\nint i;\nfor(i=0;i<elcount(da);i++)\n{CRC=CRC+da[i];}\nreturn CRC;\n}\n/// <Check>\nbyte CRC_Checksum(byte data[],byte bytelbit[],int dataLength)\n{\n  int index;\n  byte crc;\n  crc=0;\n  for ( index = 0; index < 8; index++)\n  {\n    if((index) == bytelbit[0])\n      {continue;}\n    crc += data[index];\n  }\n  return crc;\n}"
+  },
+  {
+    "name": "CRC_Hig_xor_low",
+    "code": "byte CRC_Hig_xor_low(byte da[])\n{\nbyte CRC=0;\nint i;\nfor(i=0;i<elcount(da);i++)\n{CRC=CRC+da[i];}\nCRC=(CRC>>8)^(CRC&0xFF);\nreturn CRC;\n}\n/// <Check>\nbyte CRC_Hig_xor_low(byte data[],byte bytelbit[],int dataLength)\n{\n  int index,byte_i;\n  byte crc;\n  byte temp;\n  temp=0;\n  crc=0;\n  byte_i=bytelbit[0] & 0xF;\n  for ( index = 0; index < dataLength; index++)\n  {\n    if(index == byte_i)\n    {\n      if( bytelbit[0] & 0xF0 == 0x80 )\n      {\n       temp =  (data[index] >> 4) & 0xF;\n      }\n      else{\n        temp =  (data[index]) & 0xF;\n      }\n    }\n    else{\n      temp = ((data[index] >> 4) & 0xF) ^ (data[index] & 0xF);\n    }\n\n    crc ^= temp;\n\n  }\n  return crc & 0xF;\n}"
+  },
+  {
+    "name": "CRC8_2F_Cutoff",
+    "code": "byte CRC8_2F_Cutoff(byte da[],byte bytelbit[],int dataLength)\n{\n  byte byte_index=0,bit_index=0,byte_i = 0;\n  byte CRC=0;\n  byte POLY;\n  byte_index=0;\n  bit_index=0;\n  CRC=0xFF;\n  POLY=0x2F;\n\n  for(byte_index=0;byte_index<dataLength;byte_index++)\n  {\n    for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n    {\n      if(bytelbit[byte_i]==byte_index)\n       { break;}\n    }\n    if(byte_i==elcount(bytelbit))\n    {\n\n      CRC ^=da[byte_index];\n    }\n    else\n    {\n      break;\n    }\n    for( bit_index=0; bit_index<8; ++bit_index )\n    {\n      if( (CRC & 0x80) > 0 )\n      {\n        CRC = (CRC << 1) ^ POLY;\n      }\n      else\n        CRC = (CRC << 1);\n    }\n  }\n  CRC^=0xFF;\n  return CRC;\n  }"
+  },
+  {
+    "name": "CRC8_2F_All",
+    "code": "byte CRC8_2F_All(byte da[],byte bytelbit[],int dataLength)\n{\n  byte byte_index=0,bit_index=0,byte_i = 0;\n  byte CRC=0;\n  byte POLY;\n  byte_index=0;\n  bit_index=0;\n  CRC=0xFF;\n  POLY=0x2F;\n\n  for(byte_index=0;byte_index<dataLength;byte_index++)\n  {\n    for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n    {\n      if(bytelbit[byte_i]==byte_index)\n       { break;}\n    }\n    if(byte_i==elcount(bytelbit))\n    {\n\n      CRC ^=da[byte_index];\n    }\n    else\n    {\n      continue;\n    }\n    for( bit_index=0; bit_index<8; ++bit_index )\n    {\n      if( (CRC & 0x80) > 0 )\n      {\n        CRC = (CRC << 1) ^ POLY;\n      }\n      else\n        CRC = (CRC << 1);\n    }\n  }\n  CRC^=0xFF;\n  return CRC;\n  }"
+  },
+  {
+    "name": "CRC8_1D_Cutoff",
+    "code": "byte CRC8_1D_Cutoff(byte da[],byte bytelbit[],int dataLength)\n{\n  byte byte_index=0,bit_index=0,byte_i = 0;\n  byte CRC=0;\n  byte POLY;\n  byte_index=0;\n  bit_index=0;\n  CRC=0xFF;\n  POLY=0x1d;\n\n  for(byte_index=0;byte_index<dataLength;byte_index++)\n  {\n    for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n    {\n      if(bytelbit[byte_i]==byte_index)\n       { break;}\n    }\n    if(byte_i==elcount(bytelbit))\n    {\n\n      CRC ^=da[byte_index];\n    }\n    else\n    {\n      break;\n    }\n    for( bit_index=0; bit_index<8; ++bit_index )\n    {\n      if( (CRC & 0x80) > 0 )\n      {\n        CRC = (CRC << 1) ^ POLY;\n      }\n      else\n        CRC = (CRC << 1);\n    }\n  }\n  CRC^=0xFF;\n  return CRC;\n  }"
+  },
+  {
+    "name": "CRC8_1D_All",
+    "code": "byte CRC8_1D_All(byte da[],byte bytelbit[],int dataLength)\n{\n  byte byte_index=0,bit_index=0,byte_i = 0;\n  byte CRC=0;\n  byte POLY;\n  byte_index=0;\n  bit_index=0;\n  CRC=0xFF;\n  POLY=0x1d;\n\n  for(byte_index=0;byte_index<dataLength;byte_index++)\n  {\n    for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n    {\n      if(bytelbit[byte_i]==byte_index)\n       { break;}\n    }\n    if(byte_i==elcount(bytelbit))\n    {\n\n      CRC ^=da[byte_index];\n    }\n    else\n    {\n      continue;\n    }\n    for( bit_index=0; bit_index<8; ++bit_index )\n    {\n      if( (CRC & 0x80) > 0 )\n      {\n        CRC = (CRC << 1) ^ POLY;\n      }\n      else\n        CRC = (CRC << 1);\n    }\n  }\n  CRC^=0xFF;\n  return CRC;\n  }"
+  },
+  {
+    "name": "CRC16_All",
+    "code": "word CRC16_All(byte data[],byte bytelbit[],int dataLength)\n{\n  int index;\n  int bit=0;\n  byte byte_index=0,byte_i = 0;\n  int c15=0;\n  int i=0 ;\n  byte b=0;\n  qword crc;\n  qword  polynomial;\n  polynomial = 0x1021;\n  crc = 0xffff;\n  for ( index = 0; index < dataLength; index++)\n  {\n\n    for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n    {\n      if(bytelbit[byte_i]==byte_index)\n       { break;}\n    }\n    if(byte_i==elcount(bytelbit))\n    {\n\n      b = data[index];\n    }\n    else\n    {\n      continue;\n    }\n       for ( i = 0; i < 8; i++)\n       {\n             bit = ((b >> (7 - i) & 1) == 1);\n             c15 = ((crc >> 15 & 1) == 1);\n             crc <<= 1;\n            if (c15 ^ bit)\n           {crc ^= polynomial;}\n       }\n  }\n  crc &= 0xffff;\n  return crc;\n}"
+  },
+  {
+    "name": "CRC16_Cutoff",
+    "code": "word CRC16_Cutoff(byte data[],byte bytelbit[],int dataLength)\n{\n  int index;\n  int bit=0;\n  byte byte_index=0,byte_i = 0;\n  int c15=0;\n  int i=0 ;\n  byte b=0;\n  qword crc;\n  qword  polynomial;\n  polynomial = 0x1021;\n  crc = 0xffff;\n  for ( index = 0; index < dataLength; index++)\n  {\n\n    for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n    {\n      if(bytelbit[byte_i]==byte_index)\n       { break;}\n    }\n    if(byte_i==elcount(bytelbit))\n    {\n\n      b = data[index];\n    }\n    else\n    {\n      break;\n    }\n       for ( i = 0; i < 8; i++)\n       {\n             bit = ((b >> (7 - i) & 1) == 1);\n             c15 = ((crc >> 15 & 1) == 1);\n             crc <<= 1;\n            if (c15 ^ bit)\n           {crc ^= polynomial;}\n       }\n  }\n  crc &= 0xffff;\n  return crc;\n}"
+  },
+  {
+    "name": "CRC_Checksum_XOR",
+    "code": "byte CRC_Checksum_XOR(byte data[],byte bytelbit[],int dataLength)\n{\n  int index;\n  byte crc;\n  crc=0;\n  for ( index = 0; index < 8; index++)\n  {\n    if((index) == bytelbit[0])\n      {continue;}\n    crc ^= data[index];\n  }\n  return crc;\n}"
+  }
+]

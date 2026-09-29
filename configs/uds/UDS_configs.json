@@ -1,0 +1,475 @@
+{
+  "test": {
+    "services": []
+  },
+  "debug_test": {
+    "services": [
+      {
+        "services": "0x10",
+        "Description": "诊断模式控制",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "01",
+            "Description": "默认模式",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "02",
+            "Description": "编程模式",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 1,
+            "addressDefPhys": 1,
+            "addressExtPhys": 0,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "03",
+            "Description": "扩展诊断模式",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x11",
+        "Description": "电控单元复位",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "01",
+            "Description": "硬件复位",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 1,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "03",
+            "Description": "软件复位",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 1,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x14",
+        "Description": "清除诊断信息",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "/",
+            "Description": "",
+            "Code": "",
+            "params": "[0xFF,0xFF,0xFF]",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 0,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x27",
+        "Description": "安全访问",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "01",
+            "Description": "请求种子",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 0,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "02",
+            "Description": "发送密钥",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 0,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x28",
+        "Description": "通信控制",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "00",
+            "Description": "使能接收和发送",
+            "Code": "",
+            "params": "[0x01]\n[0x03]",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 0,
+            "addressDefFunc": 0,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "01",
+            "Description": "使能接收禁止发送",
+            "Code": "",
+            "params": "[0x01]\n[0x03]",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 0,
+            "addressDefFunc": 0,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "02",
+            "Description": "禁止读接收使能发送",
+            "Code": "",
+            "params": "[0x01]\n[0x03]",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 0,
+            "addressDefFunc": 0,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "03",
+            "Description": "禁止接收和发送",
+            "Code": "",
+            "params": "[0x01]\n[0x03]",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 0,
+            "addressDefFunc": 0,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x22",
+        "Description": "读取DID",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "sheet",
+            "Description": "",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 0,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x2E",
+        "Description": "通过标识写入数据",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "sheet",
+            "Description": "",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 1,
+            "addressDefPhys": 0,
+            "addressExtPhys": 0,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x31",
+        "Description": "例程控制",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "sheet",
+            "Description": "开始执行",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 0,
+            "addressExtPhys": 0,
+            "addressDefFunc": 0,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x34",
+        "Description": "请求下载",
+        "Code": "",
+        "subitems": []
+      },
+      {
+        "services": "0x36",
+        "Description": "发送数据",
+        "Code": "",
+        "subitems": []
+      },
+      {
+        "services": "0x37",
+        "Description": "请求退出发送",
+        "Code": "",
+        "subitems": []
+      },
+      {
+        "services": "0x3E",
+        "Description": "诊断设备在线",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "00",
+            "Description": "Zero子功能",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x85",
+        "Description": "控制DTC设置",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "01",
+            "Description": "打开DTC设置",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 1,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "02",
+            "Description": "关闭DTC设置",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 1,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 1,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      },
+      {
+        "services": "0x19",
+        "Description": "读取DTC信息",
+        "Code": "",
+        "subitems": [
+          {
+            "services": "01",
+            "Description": "通过状态掩码报告DTC的数",
+            "Code": "",
+            "params": "0x9",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "02",
+            "Description": "通过状态掩码报告DTC",
+            "Code": "",
+            "params": "0x89",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "04",
+            "Description": "通过DTC报告Snapshot的记录",
+            "Code": "",
+            "params": "0x01",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "06",
+            "Description": "通过DTC报告扩展数据记录",
+            "Code": "",
+            "params": "0x01",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          },
+          {
+            "services": "0x0A",
+            "Description": "报告支持的DTC",
+            "Code": "",
+            "params": "/",
+            "securityAccess": 0,
+            "suppressPos": 0,
+            "addressDefPhys": 1,
+            "addressExtPhys": 1,
+            "addressDefFunc": 1,
+            "addressExtFunc": 0,
+            "nrcList": [],
+            "nrc22Condition": 0,
+            "sendLength": 2,
+            "subitems": []
+          }
+        ]
+      }
+    ]
+  },
+  "debug_uds": {
+    "services": []
+  }
+}

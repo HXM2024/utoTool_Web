@@ -1,0 +1,86 @@
+{
+  "name": "autotool-frontend",
+  "version": "1.0.20",
+  "description": "#Excel2Case#V1.0.00",
+  "author": "AutoTool Team",
+  "type": "module",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build",
+    "preview": "vite preview",
+    "electron:dev": "concurrently \"npm run dev\" \"electron .\"",
+    "electron:build": "npm run build && electron-builder",
+    "electron:prod": "electron ."
+  },
+  "dependencies": {
+    "@element-plus/icons-vue": "^2.3.1",
+    "axios": "^1.6.7",
+    "echarts": "^5.5.0",
+    "element-plus": "^2.6.0",
+    "highlight.js": "^11.9.0",
+    "pinia": "^2.1.7",
+    "vue": "^3.4.21",
+    "vue-echarts": "^6.6.1",
+    "vue-router": "^4.3.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "concurrently": "^8.2.2",
+    "electron": "^30.5.1",
+    "electron-builder": "^25.1.7",
+    "sass": "^1.71.1",
+    "typescript": "^5.4.2",
+    "vite": "^5.1.6",
+    "vue-tsc": "^2.0.6"
+  },
+  "build": {
+    "appId": "com.autotool.excel2case",
+    "productName": "#Excel2Case#V1.0.00",
+    "executableName": "#Excel2Case#V1.0.00",
+    "directories": {
+      "output": "release_v2"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/main.js",
+      "electron/preload.cjs",
+      "electron/splash.html",
+      "../AT.ico"
+    ],
+    "extraResources": [
+      {
+        "from": "electron/resources",
+        "to": "resources",
+        "filter": ["**/*"]
+      },
+      {
+        "from": "../AT.ico",
+        "to": "AT.ico"
+      }
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "../AT.ico"
+    },
+    "publish": {
+      "provider": "generic",
+      "url": "https://127.0.0.1/"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "allowElevation": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "#Excel2Case#",
+      "deleteAppDataOnUninstall": false,
+      "displayLanguageSelector": false,
+      "language": "2052",
+      "installerIcon": "../AT.ico",
+      "uninstallerIcon": "../AT.ico",
+      "installerHeaderIcon": "../AT.ico"
+    }
+  }
+}
