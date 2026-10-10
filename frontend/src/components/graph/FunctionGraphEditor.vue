@@ -96,16 +96,17 @@
 import { ref, computed, watch, onMounted, provide, nextTick, toRaw } from 'vue'
 import { Back, Check, Promotion, Files, Grid, Plus } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import type { Card, CardLibrary, CardType, CardStep, CaseFrame, CaseGroup, Graph, InjectRole, MappingKind, ObjectMapping, ValueResource } from '@/types/functionGraph'
+import type { Card, CardLibrary, CardType, CardStep, CaseFrame, CaseGroup, Graph, InjectRole, MappingEntry, MappingKind, ObjectMapping, ValueResource } from '@/types/functionGraph'
 import { emptyCardLibrary, emptyCaseGroup, emptyMapping, emptyValueLibrary, genId, EMPTY_CARDS, EMPTY_MAPPING, EMPTY_VALUES } from '@/types/functionGraph'
-import { newCard, frameCaseRowsWithLookups, buildCardLookup, buildValueLookup, syncGraphRefs, migrateRefCopyNodes, reanchorFrameSeqPorts, frameSequenceId, migrateSeqPortKeys, extractCaseBlock } from '@/utils/functionGraph'
+import { newCard, frameCaseRowsWithLookups, buildCardLookup, buildValueLookup, syncGraphRefs, migrateRefCopyNodes, reanchorFrameSeqPorts, frameSequenceId, migrateSeqPortKeys, extractCaseBlock, injectGlobalIntoGroup, cloneFrameWithNewIds } from '@/utils/functionGraph'
 import type { FrameCaseRow } from '@/utils/functionGraph'
-import { getGlobalLibrary, saveGlobalLibrary, expandCases } from '@/api/function'
+import { getGlobalLibrary, saveGlobalLibrary, expandCases, loadGlobalSections, saveGlobalCards, saveGlobalMapping, saveGlobalValueLibrary, parseFunctions } from '@/api/function'
 import DockPanel from './DockPanel.vue'
 import DockLayout from './DockLayout.vue'
 import type { LayoutNode } from './DockLayout.vue'
 import PanelBody from './PanelBody.vue'
 import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
+import { useModuleStore } from '@/stores/modules'
 
 const props = defineProps<{
   graph: Graph
@@ -139,6 +140,9 @@ const globalTemplate = ref<{
   valueLibrary: [],
 })
 
+/** 函数库里已有的函数名（含 CANoe 内置共用函数）：用于「调用了函数库里不存在的函数」告警 */
+const knownFuncNames = ref<string[]>([])
+
 // 三列卡片类型
 const cardTabs: Array<{ value: CardType; label: string }> = [
   { value: 'inject', label: '故障注入' },
@@ -151,13 +155,35 @@ const selectedFrameId = ref('')
 const selectedCardId = ref('')
 // 列表里单击选中的卡片 id（仅高亮 + 复制用，不切换编辑视图）
 const selectionCardId = ref('')
-// 列表多选（Ctrl/Shift 点击累加）；selectionCardId 始终为最后一个
+// 列表多选（Ctrl 点击累加；Shift 点击 = 范围选择）；selectionCardId 始终为最后一个
 const selectionCardIds = ref<string[]>([])
+/** Shift 范围选择的锚点：上一次单击选中的卡片 id */
+let listAnchorId = ''
 function isCardSelected(id: string): boolean {
   return selectionCardIds.value.includes(id)
 }
-function selectCardInList(card: Card, e?: MouseEvent) {
-  const multi = !!e && (e.ctrlKey || e.metaKey || e.shiftKey)
+/**
+ * 列表里点击卡片。
+ * - 普通点击：只选中它；
+ * - Ctrl/Cmd 点击：加选 / 减选；
+ * - Shift 点击：选中「上一次点击的卡片 → 这次点击的卡片」之间（含两端）的全部卡片，
+ *   顺序取列表的可见顺序（故障注入面板 = 注入组 + 恢复组）。
+ * orderedIds 由面板传入（面板才知道自己的可见顺序）。
+ */
+function selectCardInList(card: Card, e?: MouseEvent, orderedIds?: string[]) {
+  const shift = !!e && e.shiftKey
+  const order = orderedIds && orderedIds.length ? orderedIds : [card.id]
+  if (shift && listAnchorId) {
+    const a = order.indexOf(listAnchorId)
+    const b = order.indexOf(card.id)
+    if (a >= 0 && b >= 0 && a !== b) {
+      const [lo, hi] = a < b ? [a, b] : [b, a]
+      selectionCardIds.value = order.slice(lo, hi + 1)
+      selectionCardId.value = card.id
+      return
+    }
+  }
+  const multi = !!e && (e.ctrlKey || e.metaKey)
   if (multi) {
     const i = selectionCardIds.value.indexOf(card.id)
     if (i >= 0) selectionCardIds.value.splice(i, 1)
@@ -165,6 +191,7 @@ function selectCardInList(card: Card, e?: MouseEvent) {
   } else {
     selectionCardIds.value = [card.id]
   }
+  listAnchorId = card.id
   selectionCardId.value = selectionCardIds.value[selectionCardIds.value.length - 1] || ''
 }
 
@@ -177,6 +204,7 @@ function focusLibraryCard(payload: { cardId: string; type: CardType }) {
   activateTab(payload.type)
   selectionCardIds.value = [payload.cardId]
   selectionCardId.value = payload.cardId
+  listAnchorId = payload.cardId
 }
 
 /** 画布上点了工况框：让左侧工况列表聚焦到该工况。
@@ -401,18 +429,19 @@ function switchGroup(id: string) {
     if (frames.value.length) selectFrame(frames.value[0].id)
   })
 }
-/** 在编辑器内新建分组并切过去（内容默认空白） */
-function addGroup() {
+/** 在编辑器内新建分组并切过去（内容默认空白，全局项自动带出） */
+async function addGroup() {
   syncActiveGroupFrames()
   const g = graph.value
   if (!Array.isArray(g.groups)) g.groups = []
   const grp = emptyCaseGroup(`GraphCase${g.groups.length + 1}`)
+  const n = await applyGlobalToGroup(grp)
   g.groups.push(grp)
   activeGroupId.value = grp.id
   g.frames = grp.frames
   selectedFrameId.value = ''
   emitGraph()
-  ElMessage.success(`已新建分组 ${grp.name}（内容为空）`)
+  ElMessage.success(n ? `已新建分组 ${grp.name}（已带出 ${n} 项全局内容）` : `已新建分组 ${grp.name}（内容为空）`)
 }
 /** 分组名变更：写回并通知父级 */
 function onGroupNameChange() {
@@ -506,6 +535,8 @@ function duplicateCardTo(cardId: string, role: InjectRole) {
   const c: Card = JSON.parse(JSON.stringify(card))
   c.id = genId('card')
   c.refId = undefined
+  // 副本不继承「全局卡片」：副本不在全局库里，继承标记会显示成全局却带不进新配置
+  c.global = undefined
   c.steps = (c.steps || []).map((s: CardStep) => ({ ...s, id: genId('step') }))
   // inject 类型按目标 role 归入故障注入/恢复分组
   if (card.type === 'inject') c.role = role
@@ -532,8 +563,9 @@ function duplicateCardTo(cardId: string, role: InjectRole) {
 function duplicateFrame(frameId: string) {
   const frame = frames.value.find((f) => f.id === frameId)
   if (!frame) return
-  const f: CaseFrame = JSON.parse(JSON.stringify(frame))
-  f.id = genFrameId()
+  // 复制必须重生成 node/lane/edge id：只换 frame.id 会让两个工况共用 nodeId，
+  // 画布上按 id 的查找/删除会误命中另一个工况（与画布自带的「复制工况」保持一致）
+  const f: CaseFrame = cloneFrameWithNewIds(frame)
   const existingNames = frames.value.map((x) => x.name)
   f.name = nextCopyName(frame.name || '工况', existingNames)
   const next: Graph = { ...graph.value, frames: [...frames.value, f] }
@@ -656,12 +688,13 @@ function cloneCard(card: Card): Card {
   c.id = genId('card')
   c.name = (card.name || '卡片') + ' 副本'
   c.refId = undefined
+  // 副本不继承「全局卡片」：副本自己并不在全局库里，否则会显示成全局却带不进新配置
+  c.global = undefined
   c.steps = (c.steps || []).map((s: CardStep) => ({ ...s, id: genId('step') }))
   return c
 }
 function cloneFrame(frame: CaseFrame): CaseFrame {
-  const f: CaseFrame = JSON.parse(JSON.stringify(frame))
-  f.id = genFrameId()
+  const f: CaseFrame = cloneFrameWithNewIds(frame)
   f.name = (frame.name || '工况') + ' 副本'
   return f
 }
@@ -763,7 +796,8 @@ function initTree(): LayoutNode {
     id: newNodeId(),
     kind: 'split',
     dir: 'row',
-    ratios: [2, 5, 2.5],
+    // 右栏（映射表/值资源库/函数库/对象浏览器）宽度减半：3.4 → 1.7，让出的宽度给中栏编辑区
+    ratios: [1.9, 6.1, 1.7],
     children: [
       // 左栏：2×2 网格（工况|序列 / 故障注入|检查）
       {
@@ -801,26 +835,15 @@ function initTree(): LayoutNode {
         tabs: ['editor'],
         active: 'editor',
       },
-      // 右栏：左侧（函数库在上、对象映射表在中、值资源库在下），右侧（对象浏览器）
+      // 右栏：对象映射表 / 值资源库 / 函数库 / 对象浏览器 同格切换。
+      // 对象浏览器仅在加载了对象（DBC/DTC/A2L）时可见，可见时会自动高亮该页签（见下方 watch）。
+      // collapsible：在「编辑 ↔ 右栏」的分隔条上显示收起/展开控件。
       {
         id: newNodeId(),
-        kind: 'split',
-        dir: 'row',
-        ratios: [1.1, 1],
-        children: [
-          {
-            id: newNodeId(),
-            kind: 'split',
-            dir: 'column',
-            ratios: [1, 1, 1],
-            children: [
-              { id: newNodeId(), kind: 'tab', tabs: ['func'], active: 'func' },
-              { id: newNodeId(), kind: 'tab', tabs: ['mapping'], active: 'mapping' },
-              { id: newNodeId(), kind: 'tab', tabs: ['value'], active: 'value' },
-            ],
-          },
-          { id: newNodeId(), kind: 'tab', tabs: ['obj'], active: 'obj' },
-        ],
+        kind: 'tab',
+        tabs: ['mapping', 'value', 'func', 'obj'],
+        active: 'mapping',
+        collapsible: true,
       },
     ],
   }
@@ -941,6 +964,35 @@ function activateTab(id: string) {
   const node = findTabNode(dockTree.value, id)
   if (node) node.active = id
 }
+
+// 对象浏览器与映射表/值资源库/函数库同格：
+// 1) 只有真正加载了对象（DBC/DTC/A2L）时才让该页签出现（它不再常驻渲染，无法靠自身折叠来隐藏）
+// 2) 一旦可见就自动高亮该页签
+const objStore = useModuleStore()
+const objHasData = computed(() => {
+  const raw = (v: any) => !!(v && ((Array.isArray(v) && v.length > 0) || (v.rows && v.rows.length > 0)))
+  const a2l: any = objStore.objA2lVars
+  return (
+    raw(objStore.objMergedDbcRaw) ||
+    raw(objStore.objDtcRaw) ||
+    !!(a2l && ((a2l.measurements?.length ?? 0) > 0 || (a2l.characteristics?.length ?? 0) > 0))
+  )
+})
+watch(
+  objHasData,
+  (has) => {
+    panelStates.value.obj.visible = has
+  },
+  { immediate: true },
+)
+watch(
+  () => panelStates.value.obj.visible,
+  (visible) => {
+    if (visible) activateTab('obj')
+  },
+  // immediate：打开编辑器时对象已加载（objHasData 初始为真）也要立刻高亮该页签
+  { immediate: true },
+)
 
 function onPanelDragStart(id: string) {
   draggingPanelId.value = id as PanelId
@@ -1246,6 +1298,117 @@ function onValueLibraryChange(values: ValueResource[]) {
   emitGroupUpdate()
 }
 
+// ===== 全局化：卡片 / 映射表对象 / 值资源（列表里右键「设为全局 / 取消全局」） =====
+/** 新建分组/新建配置：把全局库里标记为全局的项带进新分组；读全局库失败不阻断建组 */
+async function applyGlobalToGroup(grp: CaseGroup): Promise<number> {
+  try {
+    const g = await loadGlobalSections()
+    return injectGlobalIntoGroup(grp, g)
+  } catch {
+    return 0
+  }
+}
+/** 提示文案里的对象名摘要：单个显示名字，多个显示「N 个（前两个…）」 */
+function globalLabel(names: string[], unit: string): string {
+  const list = names.map((n) => n || '未命名')
+  if (list.length <= 1) return `「${list[0] ?? ''}」`
+  return `${list.length} 个${unit}（${list.slice(0, 2).join('、')}${list.length > 2 ? '…' : ''}）`
+}
+/** 设为 / 取消全局卡片（支持多选批量）：同步全局库 cards 段 + 本地标记（同步失败回滚标记） */
+async function setCardsGlobal(cards: Card[], on: boolean) {
+  const list = cards.filter((c) => !!c.global !== on)
+  if (!list.length) return
+  list.forEach((c) => {
+    c.global = on
+  })
+  emitGroupUpdate()
+  try {
+    const g = await loadGlobalSections()
+    const ids = new Set(list.map((c) => c.id))
+    const buckets: CardType[] = ['inject', 'sequence', 'result']
+    for (const b of buckets) {
+      const remain = (g.cards[b] || []).filter((c) => !ids.has(c.id))
+      if (on) {
+        remain.push(
+          ...list
+            .filter((c) => c.type === b)
+            .map((c) => JSON.parse(JSON.stringify({ ...c, global: true })) as Card),
+        )
+      }
+      g.cards[b] = remain
+    }
+    await saveGlobalCards(g.cards)
+    ElMessage.success(on ? `已设为全局卡片：${globalLabel(list.map((c) => c.name), '卡片')}` : `已取消全局：${globalLabel(list.map((c) => c.name), '卡片')}`)
+  } catch (e: any) {
+    list.forEach((c) => {
+      c.global = !on
+    })
+    emitGroupUpdate()
+    ElMessage.warning(`全局库同步失败：${e?.message || String(e)}`)
+  }
+}
+/** 设为 / 取消全局映射对象（支持多选批量；同 kind + alias + name 视为同一条） */
+async function setMappingsGlobal(entries: MappingEntry[], on: boolean) {
+  const list = entries.filter((e) => !!e.global !== on)
+  if (!list.length) return
+  const keyOf = (e: MappingEntry) => `${e.kind}|${e.alias}|${e.name}`
+  list.forEach((e) => {
+    e.global = on
+  })
+  emitGroupUpdate()
+  try {
+    const g = await loadGlobalSections()
+    const keys = new Set(list.map(keyOf))
+    const buckets = ['signals', 'dtcs', 'messages', 'envvars', 'a2l'] as const
+    for (const b of buckets) {
+      const remain = (g.mapping[b] || []).filter((x) => !keys.has(keyOf(x)))
+      if (on) {
+        remain.push(
+          ...list
+            .filter((e) => bucketOfMapping(e.kind) === b)
+            .map((e) => JSON.parse(JSON.stringify({ ...e, global: true })) as MappingEntry),
+        )
+      }
+      g.mapping[b] = remain
+    }
+    await saveGlobalMapping(g.mapping)
+    const names = list.map((e) => e.alias || e.name)
+    ElMessage.success(on ? `已设为全局：${globalLabel(names, '映射')}` : `已取消全局：${globalLabel(names, '映射')}`)
+  } catch (e: any) {
+    list.forEach((e) => {
+      e.global = !on
+    })
+    emitGroupUpdate()
+    ElMessage.warning(`全局库同步失败：${e?.message || String(e)}`)
+  }
+}
+/** 设为 / 取消全局值资源（支持多选批量；按 name 视为同一条） */
+async function setValuesGlobal(items: ValueResource[], on: boolean) {
+  const list = items.filter((v) => !!v.global !== on)
+  if (!list.length) return
+  list.forEach((v) => {
+    v.global = on
+  })
+  emitGroupUpdate()
+  try {
+    const g = await loadGlobalSections()
+    const names = new Set(list.map((v) => v.name))
+    const next = (g.valueLibrary || []).filter((x) => !names.has(x.name))
+    if (on) {
+      next.push(...list.map((v) => JSON.parse(JSON.stringify({ ...v, global: true })) as ValueResource))
+    }
+    await saveGlobalValueLibrary(next)
+    const labels = list.map((v) => v.name)
+    ElMessage.success(on ? `已设为全局：${globalLabel(labels, '值资源')}` : `已取消全局：${globalLabel(labels, '值资源')}`)
+  } catch (e: any) {
+    list.forEach((v) => {
+      v.global = !on
+    })
+    emitGroupUpdate()
+    ElMessage.warning(`全局库同步失败：${e?.message || String(e)}`)
+  }
+}
+
 /** 加载全局库到模板（不修改任何分组内容） */
 async function loadGlobal() {
   try {
@@ -1266,8 +1429,34 @@ async function loadGlobal() {
       },
       valueLibrary: Array.isArray(data.value_library) ? data.value_library : [],
     }
+    // 顺带把函数库解析成「已知函数名」，供卡片上「调用了不存在的函数」告警使用
+    await refreshKnownFuncNames(String(data.function_library || ''))
   } catch (e: any) {
     ElMessage.warning('加载全局库失败：' + (e?.message || String(e)))
+  }
+}
+
+/** 解析函数库源码 → 刷新已知函数名（source 省略时从全局库现取） */
+async function refreshKnownFuncNames(source?: string) {
+  try {
+    let src = source
+    if (src === undefined) {
+      const res: any = await getGlobalLibrary()
+      const data = res?.data?.data ?? res?.data ?? {}
+      src = String(data.function_library || '')
+    }
+    const raw = String(src || '').trim()
+    if (!raw) {
+      // 函数库为空时无法判断函数是否存在：留空让画布/卡片列表跳过这项校验，避免全体误报
+      knownFuncNames.value = []
+      return
+    }
+    const res: any = await parseFunctions(raw)
+    const data = res?.data?.data ?? res?.data ?? res ?? {}
+    const list = Array.isArray(data.functions) ? data.functions : []
+    knownFuncNames.value = list.map((f: any) => String(f?.name || '')).filter(Boolean)
+  } catch {
+    // 解析失败不阻塞编辑：保持上一次结果（空数组时画布会跳过这项校验）
   }
 }
 
@@ -1430,6 +1619,9 @@ provide('geCtx', {
   frameCaseIds,
   frameCaseRowsMap,
   loadCaseCode,
+  /** 函数库已有函数名 + 刷新入口（函数库面板保存后由 PanelBody 回调） */
+  knownFuncNames,
+  refreshKnownFuncNames,
   selectedCardId,
   selectionCardId,
   selectionCardIds,
@@ -1461,6 +1653,9 @@ provide('geCtx', {
   onGraphChange,
   onMappingChange,
   onValueLibraryChange,
+  setCardsGlobal,
+  setMappingsGlobal,
+  setValuesGlobal,
   hideObj: () => {
     panelStates.value.obj.visible = false
   },

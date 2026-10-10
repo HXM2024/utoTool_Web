@@ -59,6 +59,44 @@ export const getGlobalLibrary = () =>
 export const saveGlobalLibrary = (data: Partial<GlobalLibraryData>) =>
   client.post('/function/global-library', data)
 
+/** 全局库内容（前端字段名归一：value_library → valueLibrary） */
+export interface GlobalSections {
+  cards: { inject: Card[]; sequence: Card[]; result: Card[] }
+  mapping: ObjectMapping
+  valueLibrary: ValueResource[]
+}
+
+/** 读取全局库并归一字段名。后端按顶层键与既有数据合并，只写其中一段不会动其它段。 */
+export async function loadGlobalSections(): Promise<GlobalSections> {
+  const res: any = await getGlobalLibrary()
+  const data = res?.data?.data ?? res?.data ?? {}
+  return {
+    cards: {
+      inject: data.cards?.inject || [],
+      sequence: data.cards?.sequence || [],
+      result: data.cards?.result || [],
+    },
+    mapping: {
+      signals: data.mapping?.signals || [],
+      dtcs: data.mapping?.dtcs || [],
+      messages: data.mapping?.messages || [],
+      envvars: data.mapping?.envvars || [],
+      a2l: data.mapping?.a2l || [],
+    },
+    valueLibrary: Array.isArray(data.value_library) ? data.value_library : [],
+  }
+}
+
+/** 只更新全局库的卡片段 */
+export const saveGlobalCards = (cards: GlobalSections['cards']) => saveGlobalLibrary({ cards })
+
+/** 只更新全局库的映射表段 */
+export const saveGlobalMapping = (mapping: ObjectMapping) => saveGlobalLibrary({ mapping })
+
+/** 只更新全局库的值资源段（后端字段名 value_library） */
+export const saveGlobalValueLibrary = (valueLibrary: ValueResource[]) =>
+  saveGlobalLibrary({ value_library: valueLibrary })
+
 /** 解析 CAPL 函数库源码，提取函数定义列表 */
 export const parseFunctions = (code: string) =>
   client.post('/function/parse-functions', { code })

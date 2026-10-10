@@ -41,9 +41,11 @@
     </el-tabs>
 
     <CardEditor
+      ref="cardEditorRef"
       :visible="editorVisible"
       :card="editingCard"
       :default-type="activeTab"
+      :cards="cards"
       @update:visible="editorVisible = $event"
       @save="saveCard"
     />
@@ -81,8 +83,15 @@ function cardsOf(type: CardType): Card[] {
 
 const editorVisible = ref(false)
 const editingCard = ref<Card | null>(null)
+/** 卡片编辑器实例：切换编辑对象前用它做「有未保存修改 → 提示保存」的守卫 */
+const cardEditorRef = ref<InstanceType<typeof CardEditor> | null>(null)
 
-function openEditor(card: Card | null) {
+/** 打开编辑器。切换编辑对象前先过守卫：选保存且保存成功才切过去（取消/失败则留在当前卡片） */
+async function openEditor(card: Card | null) {
+  if (editorVisible.value && cardEditorRef.value) {
+    const ok = await cardEditorRef.value.confirmBeforeSwitch()
+    if (!ok) return
+  }
   editingCard.value = card
   editorVisible.value = true
 }

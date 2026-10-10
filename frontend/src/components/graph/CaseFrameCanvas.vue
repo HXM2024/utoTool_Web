@@ -9,11 +9,11 @@
           <button type="button" class="cfc-help" title="画布操作说明" aria-label="画布操作说明">?</button>
         </template>
         <div class="cfc-hint">
-          <div class="hint-row"><b>结构</b><span>主序列为主干，其它卡片（含辅序列）可互相串联</span></div>
-          <div class="hint-row"><b>选中</b><span>点击卡片/泳道即选中，Shift+点击多选</span></div>
-          <div class="hint-row"><b>排列</b><span>卡片在泳道内按顺序排列，拖到两张卡片之间即插到该位置</span></div>
+          <div class="hint-row"><b>结构</b><span>主序列为主干：入口从主序列<b>左侧</b>的卡片接入主序列，出口从主序列接到<b>右侧</b>的卡片；两侧卡片不能互连（否则连线会压过主序列）</span></div>
+          <div class="hint-row"><b>选中</b><span>点击卡片/泳道即选中；<b>Shift+点击</b> = 选中「上次点击的卡片 → 这次点击的卡片」之间的所有卡片（左侧列表里同样适用）；再 Shift+点同一张 = 取消它</span></div>
+          <div class="hint-row"><b>排列</b><span>卡片在泳道内按顺序排列，拖到两张卡片之间即插到该位置；拖到「不合法的一侧」时会自动归到合法泳道（按连线判定：入口来源在左、出口目标在右），落在主序列上的非序列卡也会自动归到左右侧</span></div>
           <div class="hint-row"><b>复制</b><span>Ctrl+C / Ctrl+V；按住 Ctrl 拖拽 = 复制到其它泳道/工况</span></div>
-          <div class="hint-row"><b>连线</b><span>按住 Ctrl 点击两个端口/卡片自动连线；单击连线或序号徽标高亮；双击连线删除；双击序号徽标选编号（点选已有编号，Ctrl 多选 / Shift 连选 / 拖拽框选；清空 = 全部，徽标显示 All；也可手填 1,2,5-8）</span></div>
+          <div class="hint-row"><b>连线</b><span>单击接线口起线（虚线跟随鼠标，再点另一个接线口完成，点空白取消）；按住 Ctrl 点击两个端口/卡片也可连线；单击连线或序号徽标高亮（选中时起点端显示该线关联的用例 ID）；双击连线删除；双击序号徽标选编号（点选已有编号，Ctrl 多选 / Shift 连选 / 拖拽框选；清空 = 全部，徽标显示 All；也可手填 1,2,5-8）</span></div>
           <div class="hint-row"><b>编辑</b><span>双击节点编辑</span></div>
           <div class="hint-row"><b>撤销</b><span>Ctrl+Z 撤销 / Ctrl+Y 重做</span></div>
           <div class="hint-row"><b>横看</b><span>泳道超出宽度后，把鼠标停在该工况上 Shift+滚轮左右查看</span></div>
@@ -243,6 +243,7 @@
                         <div
                           v-if="row.showIn"
                           class="port port-in"
+                          :class="{ 'port-selected': isPortSelected(f.id, row.inKey, 'in'), 'port-blocked': isPortBlocked(f.id, row.inKey) }"
                           :ref="el => setPortEl(f.id, row.inKey, 'in', el)"
                           @mousedown.stop="onPortMousedown($event, f.id, row.inKey, 'in')"
                           @click.stop="onPortClick(f.id, row.inKey, 'in', $event)"
@@ -250,7 +251,7 @@
                         <div
                           v-if="row.showOut"
                           class="port port-out"
-                          :class="{ 'port-selected': isPortSelected(f.id, row.outKey) }"
+                          :class="{ 'port-selected': isPortSelected(f.id, row.outKey, 'out'), 'port-blocked': isPortBlocked(f.id, row.outKey) }"
                           :ref="el => setPortEl(f.id, row.outKey, 'out', el)"
                           @mousedown.stop="onPortMousedown($event, f.id, row.outKey, 'out')"
                           @click.stop="onPortClick(f.id, row.outKey, 'out', $event)"
@@ -269,7 +270,7 @@
               <!-- 其它泳道：普通卡片（含辅序列），左右各一个接线口 -->
               <template v-else>
                 <div
-                  v-for="nid in lane.nodeIds"
+                  v-for="nid in renderNodeIds(f, lane)"
                   :key="nid"
                   class="node"
                   :data-nid="nid"
@@ -303,19 +304,20 @@
                   <div class="node-sub">{{ summarizeOf(f, nid) }}</div>
                   <div
                     class="port port-in"
+                    :class="{ 'port-selected': isPortSelected(f.id, 'node:' + nid, 'in'), 'port-blocked': isPortBlocked(f.id, 'node:' + nid) }"
                     :ref="el => setPortEl(f.id, 'node:' + nid, 'in', el)"
                     @mousedown.stop="onPortMousedown($event, f.id, 'node:' + nid, 'in')"
                     @click.stop="onPortClick(f.id, 'node:' + nid, 'in', $event)"
                   />
                   <div
                     class="port port-out"
-                    :class="{ 'port-selected': isPortSelected(f.id, 'node:' + nid) }"
+                    :class="{ 'port-selected': isPortSelected(f.id, 'node:' + nid, 'out'), 'port-blocked': isPortBlocked(f.id, 'node:' + nid) }"
                     :ref="el => setPortEl(f.id, 'node:' + nid, 'out', el)"
                     @mousedown.stop="onPortMousedown($event, f.id, 'node:' + nid, 'out')"
                     @click.stop="onPortClick(f.id, 'node:' + nid, 'out', $event)"
                   />
                 </div>
-                <div v-if="!lane.nodeIds.length" class="empty-drop-hint">拖入卡片（注入/检查/恢复/辅序列）</div>
+                <div v-if="!renderNodeIds(f, lane).length" class="empty-drop-hint">拖入卡片（注入/检查/恢复/辅序列）</div>
               </template>
             </div>
 
@@ -351,6 +353,16 @@
             />
             <path v-if="tempLine.frameId === f.id" :d="tempLine.d" class="temp" />
           </svg>
+
+          <!-- 选中连线：在「起点端」（靠近起始接线口）显示这条线关联的用例 ID。
+               位置取曲线起点坐标，只由接线口决定，不随连线形状/长度漂移；
+               未选中时整体不渲染（与高亮状态同步）。 -->
+          <div
+            v-for="c in edgeCaseIdLabels(f)"
+            :key="c.key"
+            class="edge-caseid"
+            :style="{ left: c.x + 8 + 'px', top: c.y + 'px' }"
+          >{{ c.text }}</div>
         </div>
 
         <div class="frame-foot">
@@ -404,6 +416,7 @@
     <div v-if="marquee" class="cfc-marquee" :style="marqueeStyle" />
 
     <CardEditor
+      ref="cardEditorRef"
       :visible="editorVisible"
       :card="editingCard"
       :cards="cardLibrary"
@@ -473,6 +486,7 @@ import {
   frameEdgeKey,
   frameLanes,
   frameSequenceId,
+  frameEdgeCrossesMain,
   reanchorFrameSeqPorts,
   frameCaseRowsWithLookups,
   frameDiagnostics,
@@ -480,6 +494,7 @@ import {
   buildValueLookup,
   paramDisplayText,
   nodeParamValues,
+  cloneFrameWithNewIds,
   FRAME_LANE_LABEL,
 } from '@/utils/functionGraph'
 import type { FrameCaseRow, FrameDiagnostics, FrameIssue } from '@/utils/functionGraph'
@@ -504,6 +519,8 @@ const props = defineProps<{
   caseRowsMap?: Record<string, FrameCaseRow[]>
   /** 按需取某条用例的 CAPL 代码（右击用例 ID / 编号徽标的代码预览用） */
   loadCaseCode?: (caseId: string) => Promise<string>
+  /** 函数库里已有的函数名：用于「调用了函数库里不存在的函数」告警（不传则跳过这项校验） */
+  funcNames?: string[]
 }>()
 const emit = defineEmits<{
   (e: 'update:graph', graph: Graph): void
@@ -533,6 +550,19 @@ function normalizeFrame(f: CaseFrame): CaseFrame {
   if (!lanes.some((l) => l.type === 'main')) {
     lanes = [{ id: genId('lane'), type: 'main', nodeIds: [] }, ...lanes]
   }
+  const nodes = f.nodes || {}
+  // 修复历史脏数据：泳道里挂着的「已删除卡片」和「重复挂到多条泳道」的 nodeId，
+  // 会让节点模板解引用 undefined 而整帧渲染失败（整个工况空白）。这里以第一条泳道为准清理。
+  const claimed = new Set<string>()
+  lanes = lanes.map((l) => {
+    const nodeIds: string[] = []
+    for (const nid of l.nodeIds) {
+      if (claimed.has(nid) || !nodes[nid]) continue
+      claimed.add(nid)
+      nodeIds.push(nid)
+    }
+    return nodeIds.length === l.nodeIds.length ? l : { ...l, nodeIds }
+  })
   const edges: Record<string, FrameEdge> = {}
   for (const [id, e] of Object.entries(f.edges || {})) {
     // 历史数据可能缺 id（只用对象键当 id）：补回来，否则选中/双击删除会失效
@@ -542,7 +572,7 @@ function normalizeFrame(f: CaseFrame): CaseFrame {
     id: f.id,
     name: f.name,
     lanes,
-    nodes: f.nodes || {},
+    nodes,
     edges,
     // 用例名覆盖：必须带上，否则画布 emit 回传时会被丢掉
     ...(Array.isArray(f.caseNames) ? { caseNames: f.caseNames } : {}),
@@ -571,6 +601,8 @@ watch(
     frames.value = v ? normalizeFrames(JSON.parse(JSON.stringify(v))) : []
     // 外部整体替换 frames（加载配置/切换分组/迁移补全）：历史记录作废，避免撤销回放出别的配置的内容
     resetHistory()
+    // 画布内容被整体换掉（切配置/切分组）：待落点的虚线连的是旧画布，一并取消
+    cancelPendingLink(true)
     // 外部整体替换 frames 后需重算连线，否则端口 DOM 已就绪但连线不会重绘
     scheduleRecompute()
   },
@@ -758,6 +790,8 @@ function onWindowDragEnd() {
 // 选中态：卡片按 nodeId、泳道按 laneId（都可多选）
 const selNodes = ref<string[]>([])
 const selLanes = ref<string[]>([])
+/** Shift 范围选择的锚点：上一次单击选中的卡片（Shift+点击时从这里选到当前卡片） */
+let selNodeAnchor = ''
 // 连线选中态：单击高亮（再点一次取消，Ctrl/Shift+单击追加），双击删除；框选可一次选多条
 const selectedEdgeIds = ref<string[]>([])
 /** 是否把高亮扩展到「同工况同编号」的连线：
@@ -775,6 +809,7 @@ function clearSelection() {
   selLanes.value = []
   selectedEdgeIds.value = []
   highlightSameNum.value = false
+  selNodeAnchor = ''
 }
 function selectNodeOnly(id: string) {
   selLanes.value = []
@@ -798,13 +833,17 @@ function dragNodeIdsOf(payload: DragPayload | null): string[] {
   const ids = payload.nodeIds && payload.nodeIds.length ? payload.nodeIds : [payload.nodeId]
   return [...new Set(ids)]
 }
-/** 跨工况按 id 找节点（多选拖动时选中项可能分散在不同工况） */
-function findFrameNodeById(id: string): Card | undefined {
-  for (const f of frames.value) {
-    const n = f.nodes[id]
-    if (n) return n
+/**
+ * 按 id 找「持有该节点」的工况：优先在拖拽来源工况里找。
+ * 复制工况后会存在孪生工况（历史上 id 未换新时共用 nodeId），全局取第一个会误命中原件，
+ * 于是「在副本里拖一张卡」会去删原件里的同名卡并把节点挂到副本的两条泳道上。
+ */
+function frameOwningNode(id: string, preferFrameId?: string): CaseFrame | undefined {
+  if (preferFrameId) {
+    const prefer = frames.value.find((f) => f.id === preferFrameId)
+    if (prefer?.nodes[id]) return prefer
   }
-  return undefined
+  return frames.value.find((f) => !!f.nodes[id])
 }
 /** 该卡片是否属于「本次正在拖拽的整批」（用于整批高亮拖拽态） */
 function isDraggingNode(nid: string): boolean {
@@ -828,12 +867,29 @@ function onFrameHeadClick(frameId: string) {
   clearSelection()
   emit('select-frame', frameId)
 }
-// 普通点击卡片：Ctrl+点击仍留给「连线」，Shift+点击加/减选
+// 普通点击卡片：Ctrl+点击仍留给「连线」；Shift+点击 = 范围选择（上一次点击的卡片 → 当前卡片之间的全部卡片）
 function onCardClick(e: MouseEvent, frameId: string, laneId: string, nodeId: string) {
   markLastLane(frameId, laneId)
   if (e.ctrlKey || e.metaKey) return
-  if (e.shiftKey) toggleNodeSel(nodeId)
-  else selectNodeOnly(nodeId)
+  if (e.shiftKey) {
+    const f = frames.value.find((x) => x.id === frameId)
+    // 范围顺序 = 工况内非主序列泳道的卡片顺序（主序列卡片不参与点击选中）
+    const order = f ? f.lanes.filter((l) => l.type !== 'main').flatMap((l) => l.nodeIds) : []
+    const a = order.indexOf(selNodeAnchor)
+    const b = order.indexOf(nodeId)
+    if (a >= 0 && b >= 0 && a !== b) {
+      const [lo, hi] = a < b ? [a, b] : [b, a]
+      selLanes.value = []
+      selNodes.value = order.slice(lo, hi + 1)
+      selectedEdgeIds.value = []
+      emitCardFocus(frameId, nodeId)
+      return
+    }
+    toggleNodeSel(nodeId)
+  } else {
+    selectNodeOnly(nodeId)
+  }
+  selNodeAnchor = nodeId
   // 同步聚焦卡片列表：卡片库里改过名字/步骤后，从画布上点一下就能定位到那张库卡片
   emitCardFocus(frameId, nodeId)
 }
@@ -1016,32 +1072,48 @@ function moveNodesToLane(
   targetLane: FrameLane,
   ids: string[],
   insertAt: number,
+  sourceFrameId?: string,
 ): number {
-  const moving: Array<{ frame: CaseFrame; lane: FrameLane; node: Card }> = []
+  const moving: Array<{ frame: CaseFrame; lane: FrameLane; node: Card; key: string }> = []
   const seen = new Set<string>()
   for (const id of ids) {
     if (!id || seen.has(id)) continue
-    for (const f of frames.value) {
-      const lane = f.lanes.find((l) => l.nodeIds.includes(id))
-      const node = f.nodes[id]
-      if (!lane || !node) continue
-      seen.add(id)
-      moving.push({ frame: f, lane, node })
-      break
-    }
+    // 只在「拖拽来源工况」里定位（缺省才全局兜底），避免孪生工况共用 id 时误命中原件
+    const owner = frameOwningNode(id, sourceFrameId)
+    if (!owner) continue
+    const lane = owner.lanes.find((l) => l.nodeIds.includes(id))
+    const node = owner.nodes[id]
+    if (!lane || !node) continue
+    seen.add(id)
+    moving.push({ frame: owner, lane, node, key: id })
   }
   const accepted = moving.filter((m) => laneAccepts(targetLane.type, m.node))
   if (!accepted.length) return 0
   const list = targetLane.type === 'main' ? accepted.slice(0, 1) : accepted
-  const movedIds = new Set(list.map((m) => m.node.id))
-  for (const m of list) m.lane.nodeIds = m.lane.nodeIds.filter((x) => x !== m.node.id)
+  // 同工况内移到主序列另一侧：既有连线会跟着卡片走，可能变成跨越主序列的线 → 直接拒绝这次移动。
+  // 跨工况移动会在下面 removeNodeEdges 断线，不会产生跨越，因此只查同工况部分。
+  if (targetLane.type !== 'main') {
+    const crossMoved = new Set(list.filter((m) => m.frame.id === targetFrame.id).map((m) => m.key))
+    if (crossMoved.size) {
+      const nextLanes = targetFrame.lanes.map((l) => ({
+        ...l,
+        nodeIds: [
+          ...l.nodeIds.filter((nid) => !crossMoved.has(nid)),
+          ...(l.id === targetLane.id ? [...crossMoved] : []),
+        ],
+      }))
+      if (rejectIfAddsCrossing(targetFrame, nextLanes)) return 0
+    }
+  }
+  const movedIds = new Set(list.map((m) => m.key))
+  for (const m of list) m.lane.nodeIds = m.lane.nodeIds.filter((x) => x !== m.key)
   for (const m of list) {
     if (m.frame.id === targetFrame.id) continue
-    removeNodeEdges(m.frame, m.node.id, m.lane.type)
-    delete m.frame.nodes[m.node.id]
-    targetFrame.nodes[m.node.id] = m.node
+    removeNodeEdges(m.frame, m.key, m.lane.type)
+    delete m.frame.nodes[m.key]
+    targetFrame.nodes[m.key] = m.node
   }
-  const order = list.map((m) => m.node.id)
+  const order = list.map((m) => m.key)
   if (targetLane.type === 'main') {
     // 主序列泳道：替换原有序列（与拖入单张序列卡片的行为一致）
     for (const nid of targetLane.nodeIds) {
@@ -1202,7 +1274,8 @@ function deleteSelection(): boolean {
     for (const nid of nodeIds) {
       const lane = f.lanes.find((l) => l.nodeIds.includes(nid))
       if (!lane) continue
-      lane.nodeIds = lane.nodeIds.filter((x) => x !== nid)
+      // 同一 id 若被挂到多条泳道（历史脏数据），一起摘掉；只摘第一条会留下悬空挂靠
+      for (const l of f.lanes) l.nodeIds = l.nodeIds.filter((x) => x !== nid)
       removeNodeEdges(f, nid, lane.type)
       delete f.nodes[nid]
       cards++
@@ -1283,9 +1356,35 @@ const editorFrameId = ref('')
 const editorNodeId = ref('')
 const editingCard = ref<Card | null>(null)
 const editorVisible = ref(false)
+/** 卡片编辑器实例：切换编辑对象前用它做「有未保存修改 → 提示保存」的守卫 */
+const cardEditorRef = ref<InstanceType<typeof CardEditor> | null>(null)
 
 // ===== 泳道辅助 =====
 const LANE_MIN_W = 160
+/**
+ * 渲染用 nodeIds：只保留「在 f.nodes 里真实存在」且「本工况内首次出现」的 id。
+ * 历史脏数据里泳道可能挂着已删除的卡片、或同一 id 被挂到多条泳道 —— 前者会让节点模板
+ * 解引用 undefined 直接整帧渲染失败（整个工况空白），后者会造成重复 :key 与端口锚点错位。
+ */
+const renderNodeIdsMap = computed<Record<string, string[]>>(() => {
+  const map: Record<string, string[]> = {}
+  for (const f of visibleFrames.value) {
+    const claimed = new Set<string>()
+    for (const lane of f.lanes) {
+      const ids: string[] = []
+      for (const nid of lane.nodeIds) {
+        if (claimed.has(nid) || !f.nodes[nid]) continue
+        claimed.add(nid)
+        ids.push(nid)
+      }
+      map[`${f.id}:${lane.id}`] = ids
+    }
+  }
+  return map
+})
+function renderNodeIds(f: CaseFrame, lane: FrameLane): string[] {
+  return renderNodeIdsMap.value[`${f.id}:${lane.id}`] ?? lane.nodeIds
+}
 /** 自适应宽度（未手动设宽）的上限：内容再长，泳道也不会超过这个宽度 */
 const LANE_AUTO_MAX_W = 260
 /** 手动拖泳道右边缘的硬上限：允许突破自适应上限，只是防手滑拖出离谱宽度 */
@@ -1354,6 +1453,116 @@ function resetLaneWidth(frameId: string, laneId: string) {
 function laneAccepts(laneType: FrameLaneType, card: Card): boolean {
   if (laneType === 'main') return card.type === 'sequence'
   return true
+}
+/** 泳道相对主序列的侧别：主序列泳道 = main，其左侧 = left、右侧 = right（判不出来按 main 不干预） */
+function laneSideOf(f: CaseFrame, lane: FrameLane): 'main' | 'left' | 'right' {
+  if (lane.type === 'main') return 'main'
+  const mi = f.lanes.findIndex((l) => l.type === 'main')
+  const li = f.lanes.findIndex((l) => l.id === lane.id)
+  if (mi < 0 || li < 0) return 'main'
+  return li < mi ? 'left' : 'right'
+}
+/** 卡片按角色应落在主序列哪一侧（只在「完全没有连线」时兜底）：结果卡→右，其余→左 */
+function roleSideOf(card: Card | null | undefined): 'left' | 'right' {
+  return card?.type === 'result' ? 'right' : 'left'
+}
+/** 卡片当前所在侧别（按它落在哪条泳道） */
+function currentSideOf(f: CaseFrame, nid: string): 'main' | 'left' | 'right' | null {
+  const li = f.lanes.findIndex((l) => l.nodeIds.includes(nid))
+  if (li < 0) return null
+  return f.lanes[li].type === 'main' ? 'main' : laneSideOf(f, f.lanes[li])
+}
+/**
+ * 卡片「合法」该待的一侧 —— 只由它在本工况里的**连线**决定：
+ * - 入口来源（卡片 → 主序列）→ 必须在左；出口目标（主序列 → 卡片）→ 必须在右；
+ * - 只参与链式的卡片 → 跟随同侧邻居；
+ * - 连线要求互相冲突、或该卡在本工况没有任何连线 → 返回 null（不由连线定侧，交给调用方兜底）。
+ */
+function legalSideOfCard(f: CaseFrame, nid: string): 'main' | 'left' | 'right' | null {
+  if (frameSequenceId(f) === nid) return 'main'
+  let sawEntry = false
+  let sawExit = false
+  const neighbors: string[] = []
+  for (const e of Object.values(f.edges)) {
+    const a = isCardKey(e.from) ? cardKeyNodeId(e.from) : null
+    const b = isCardKey(e.to) ? cardKeyNodeId(e.to) : null
+    if (a === nid && parseSeqPortKey(e.to)) sawEntry = true
+    else if (b === nid && parseSeqPortKey(e.from)) sawExit = true
+    else if (a === nid && b) neighbors.push(b)
+    else if (b === nid && a) neighbors.push(a)
+  }
+  if (sawEntry && sawExit) return null
+  if (sawEntry) return 'left'
+  if (sawExit) return 'right'
+  const sides = neighbors
+    .map((x) => currentSideOf(f, x))
+    .filter((s): s is 'left' | 'right' => s === 'left' || s === 'right')
+  if (sides.length) return sides.every((s) => s === sides[0]) ? sides[0] : null
+  return null
+}
+/** 取本工况指定一侧的泳道；该侧没有泳道时就在主序列那一侧新建一条 */
+function laneOnSide(f: CaseFrame, side: 'left' | 'right'): FrameLane {
+  const mi = f.lanes.findIndex((l) => l.type === 'main')
+  const hit = f.lanes.find((l, i) => l.type !== 'main' && (mi < 0 || (side === 'left' ? i < mi : i > mi)))
+  if (hit) return hit
+  const lane: FrameLane = { id: genId('lane'), type: 'other', nodeIds: [] }
+  if (mi < 0 || side === 'right') f.lanes.push(lane)
+  else f.lanes.unshift(lane)
+  return lane
+}
+/**
+ * 落点泳道修正：卡片必须落在它「合法一侧」的泳道里，否则自动改投到该侧的泳道。
+ * - 已有卡片（ids 非空）：同工况时按**连线**定侧（入口来源→左、出口目标→右、链式跟随同侧邻居）；
+ *   跨工况拖动会断开原有连线，只能按角色判；多选时取一致的一侧，冲突则不干预；
+ * - 新卡片：落在**主序列泳道**上时按角色改投（结果卡→右，其余→左）；
+ * - 没有连线依据（新卡 / 跨工况 / 连线冲突）且不是落在主序列泳道上：尊重用户落点 ——
+ *   真实工况里右侧链上本来就有注入/恢复卡（实测 375 个 inject 端点），按角色强推左侧会把这类链条锁死。
+ * 返回修正后的泳道（无需修正时原样返回 targetLane）。
+ */
+function resolveDropLane(
+  f: CaseFrame,
+  targetLane: FrameLane,
+  ids: string[],
+  card?: Card | null,
+  sourceFrameId?: string,
+): FrameLane {
+  let want: 'main' | 'left' | 'right' | null = null
+  let roleSide: 'left' | 'right' | null = null
+  if (ids.length) {
+    const sides: Array<'main' | 'left' | 'right' | null> = []
+    const roles: Array<'left' | 'right'> = []
+    for (const id of ids) {
+      // 与 moveNodesToLane 一致：优先按「拖拽来源工况」定位，避免孪生工况共用 id 时误判成跨工况
+      const owner = frameOwningNode(id, sourceFrameId)
+      const ownerNode = owner?.nodes[id]
+      if (owner && owner.id !== f.id) {
+        // 跨工况拖动：原有连线会被断开，只能按角色判（此时卡片在本工况还没有连线）
+        sides.push(null)
+      } else {
+        sides.push(legalSideOfCard(f, id))
+      }
+      if (ownerNode) roles.push(roleSideOf(ownerNode))
+    }
+    want = sides.every((s) => s !== null && s === sides[0]) ? sides[0] : null
+    roleSide = roles.length && roles.every((r) => r === roles[0]) ? roles[0] : null
+  } else if (card) {
+    if (card.type === 'sequence' && targetLane.type === 'main') return targetLane
+    roleSide = roleSideOf(card)
+  } else {
+    return targetLane
+  }
+  if (!want) {
+    // 没有连线依据时，只有落在主序列泳道上才按角色改投；其余情况尊重用户落点
+    if (targetLane.type !== 'main' || !roleSide) return targetLane
+    want = roleSide
+  }
+  if (want === 'main') return targetLane
+  if (laneSideOf(f, targetLane) === want) return targetLane
+  const lane = laneOnSide(f, want)
+  if (lane.id !== targetLane.id) {
+    ElMessage.info(`已自动放到主序列${want === 'left' ? '左' : '右'}侧的泳道`)
+  }
+  return lane
 }
 // 落点在泳道内的插入下标：用鼠标 Y 和各卡片中线比较（排除正在拖动的那张卡片自身）。
 // 旧逻辑是一律追加到泳道末尾，拖到卡片之间/上方也只能落到最后，手感像「没生效」。
@@ -1595,70 +1804,6 @@ async function removeFrame(id: string) {
   ElMessage.success('已删除工况，Ctrl+Z 可撤销')
   scheduleRecompute()
 }
-/** 复制工况：整框深拷贝后把**卡片 / 泳道 / 连线 / 步骤 id 全部换新**，并重写端口键里的引用。
- *  直接沿用原件的 id，会让「按 id 找节点」的操作（Delete、拖拽、程序化选中、按步骤定位工况）
- *  串到原件上 —— Delete 与卡片 ✕ 的删除范围因此会不一致。 */
-function cloneFrameWithNewIds(src: CaseFrame): CaseFrame {
-  const cp: CaseFrame = JSON.parse(JSON.stringify(src))
-  cp.id = genId('frame')
-
-  // 1) 先建 id 映射：步骤 id 被序列接线口的锚点引用（seq:<seqId>@<stepId>），要一起换
-  const nodeIdMap = new Map<string, string>()
-  const stepIdMap = new Map<string, string>()
-  for (const oldId of Object.keys(cp.nodes ?? {})) nodeIdMap.set(oldId, genId('node'))
-  for (const [oldId, node] of Object.entries(cp.nodes ?? {})) {
-    const nextNodeId = nodeIdMap.get(oldId) ?? oldId
-    node.id = nextNodeId
-    for (const step of node.steps ?? []) {
-      const nextStepId = genId('step')
-      stepIdMap.set(step.id, nextStepId)
-      step.id = nextStepId
-    }
-  }
-
-  // 2) nodes 字典换键
-  const nodes: Record<string, Card> = {}
-  for (const [oldId, node] of Object.entries(cp.nodes ?? {})) nodes[nodeIdMap.get(oldId) ?? oldId] = node
-  cp.nodes = nodes
-
-  // 3) 泳道 id + 泳道内的 nodeId
-  for (const lane of cp.lanes ?? []) {
-    lane.id = genId('lane')
-    lane.nodeIds = lane.nodeIds.map((nid) => nodeIdMap.get(nid) ?? nid)
-  }
-  // 旧字段（迁移到 lanes 后不再写入，历史配置里可能还有）
-  const mapNode = (nid: string): string => nodeIdMap.get(nid) ?? nid
-  cp.sequenceId = cp.sequenceId ? mapNode(cp.sequenceId) : cp.sequenceId
-  if (cp.injects) cp.injects = cp.injects.map(mapNode)
-  if (cp.recovers) cp.recovers = cp.recovers.map(mapNode)
-  if (cp.results) cp.results = cp.results.map(mapNode)
-
-  // 4) 连线：边 id 换新，端口键里的 nodeId / seqId / stepId 按映射改写
-  const remapPort = (key: string): string => {
-    const seq = parseSeqPortKey(key)
-    if (seq) {
-      const seqId = mapNode(seq.seqId)
-      // 锚点步骤已不存在（悬空锚点）时保留原 stepId，仍由「悬空连线」逻辑兜着
-      if (seq.stepId !== undefined) return seqPortKey(seqId, stepIdMap.get(seq.stepId) ?? seq.stepId)
-      return `seq:${seqId}:${seq.idx ?? 0}`
-    }
-    if (isCardKey(key)) {
-      const nodeId = cardKeyNodeId(key)
-      return key.slice(0, key.length - nodeId.length) + mapNode(nodeId)
-    }
-    return key
-  }
-  const edges: Record<string, FrameEdge> = {}
-  for (const edge of Object.values(cp.edges ?? {})) {
-    edge.id = genId('edge')
-    edge.from = remapPort(edge.from)
-    edge.to = remapPort(edge.to)
-    edges[edge.id] = edge
-  }
-  cp.edges = edges
-  return cp
-}
-
 function copyFrame(id: string) {
   const f = frames.value.find((x) => x.id === id)
   if (!f) return
@@ -1694,14 +1839,21 @@ function onGapDrop(frameId: string, index: number, e: DragEvent) {
       onDragEnd()
       return
     }
-    // 在泳道间隙新建一条泳道，整批卡片一起搬进去（同工况内移动保留连线，跨工况断开）
+    // 在泳道间隙新建一条泳道，整批卡片一起搬进去（同工况内移动保留连线，跨工况断开）；
+    // 间隙不在卡片「合法一侧」时改投到该侧的泳道，刚建的空泳道撤掉。
     const lane: FrameLane = { id: genId('lane'), type: 'other', nodeIds: [] }
     f.lanes.splice(index, 0, lane)
-    if (!moveNodesToLane(f, lane, ids, -1)) {
+    const target = resolveDropLane(f, lane, ids, null, payload.frameId)
+    if (!moveNodesToLane(f, target, ids, -1, payload.frameId)) {
       // 没有可移动的卡片：撤掉刚建的空泳道，避免留下空泳道
-      f.lanes.splice(index, 1)
+      const at = f.lanes.indexOf(lane)
+      if (at >= 0) f.lanes.splice(at, 1)
       onDragEnd()
       return
+    }
+    if (target.id !== lane.id) {
+      const at = f.lanes.indexOf(lane)
+      if (at >= 0) f.lanes.splice(at, 1)
     }
     emitChange()
     onDragEnd()
@@ -1711,14 +1863,21 @@ function onGapDrop(frameId: string, index: number, e: DragEvent) {
 
   const cards = parseCards(e)
   if (!cards.length) return
-  // 多选拖入：所有卡片放入同一个新泳道
+  // 多选拖入：先建一条泳道，再按卡片角色自动落到合法一侧（结果卡→右侧，其余→左侧）
   const lane: FrameLane = { id: genId('lane'), type: 'other', nodeIds: [] }
+  f.lanes.splice(index, 0, lane)
+  let laneUsed = false
   for (const card of cards) {
     const n = cardToNode(card)
     f.nodes[n.id] = n
-    lane.nodeIds.push(n.id)
+    const target = resolveDropLane(f, lane, [], card)
+    target.nodeIds.push(n.id)
+    if (target.id === lane.id) laneUsed = true
   }
-  f.lanes.splice(index, 0, lane)
+  if (!laneUsed) {
+    const at = f.lanes.indexOf(lane)
+    if (at >= 0) f.lanes.splice(at, 1)
+  }
   onZoneLeave()
   emitChange()
   scheduleRecompute()
@@ -1729,9 +1888,12 @@ function moveLane(frameId: string, laneId: string, dir: number) {
   const i = f.lanes.findIndex((l) => l.id === laneId)
   const j = i + dir
   if (i < 0 || j < 0 || j >= f.lanes.length) return
-  const tmp = f.lanes[i]
-  f.lanes[i] = f.lanes[j]
-  f.lanes[j] = tmp
+  const next = f.lanes.slice()
+  const tmp = next[i]
+  next[i] = next[j]
+  next[j] = tmp
+  if (rejectIfAddsCrossing(f, next)) return
+  f.lanes.splice(0, f.lanes.length, ...next)
   emitChange()
   scheduleRecompute()
 }
@@ -1801,13 +1963,14 @@ function applyLaneDrop(frameId: string, laneId: string): boolean {
   const from = f.lanes.findIndex((l) => l.id === drag.laneId)
   if (from < 0) return true
   const moved = f.lanes[from]
-  f.lanes.splice(from, 1)
-  const to = f.lanes.findIndex((l) => l.id === targetLaneId)
-  if (to < 0) {
-    f.lanes.splice(from, 0, moved)
-    return true
-  }
-  f.lanes.splice(pos === 'before' ? to : to + 1, 0, moved)
+  // 先在副本上算出换位后的顺序，确认不会新增跨越主序列的连线再落盘（泳道换位会改变卡片的左右侧别）
+  const rest = f.lanes.filter((l) => l.id !== drag.laneId)
+  const to = rest.findIndex((l) => l.id === targetLaneId)
+  if (to < 0) return true
+  const next = rest.slice()
+  next.splice(pos === 'before' ? to : to + 1, 0, moved)
+  if (rejectIfAddsCrossing(f, next)) return true
+  f.lanes.splice(0, f.lanes.length, ...next)
   emitChange()
   scheduleRecompute()
   return true
@@ -2019,9 +2182,11 @@ function onZoneDrop(frameId: string, laneId: string, e: DragEvent) {
       onDragEnd()
       return
     }
+    // 落点不在卡片「合法一侧」时自动改投到该侧的泳道（改投后按追加落位）
+    const dropLane = resolveDropLane(f, lane, ids, null, payload.frameId)
     if (!ids.some((id) => {
-      const n = findFrameNodeById(id)
-      return !!n && laneAccepts(lane.type, n)
+      const n = frameOwningNode(id, payload.frameId)?.nodes[id]
+      return !!n && laneAccepts(dropLane.type, n)
     })) {
       // 移动已有卡片到主序列泳道：主序列只放「序列」卡片，静默失败最费解
       ElMessage.warning('主序列泳道只放「序列」卡片；这些卡片请放到其它泳道（可在右侧新建泳道）')
@@ -2029,41 +2194,47 @@ function onZoneDrop(frameId: string, laneId: string, e: DragEvent) {
       return
     }
     const laneEl = laneElOf(e)
-    moveNodesToLane(f, lane, ids, dropIndexInLane(laneEl, e.clientY, ids))
-    emitChange()
+    const at = dropLane.id === lane.id ? dropIndexInLane(laneEl, e.clientY, ids) : -1
+    const movedN = moveNodesToLane(f, dropLane, ids, at, payload.frameId)
+    if (movedN) emitChange()
     onDragEnd()
     scheduleRecompute()
     return
   }
 
   const incoming = parseCards(e)
-  const cards = incoming.filter((c) => laneAccepts(lane.type, c))
-  if (!cards.length) {
-    // 静默失败最费解：主序列泳道只收「序列」卡片，其余卡片需落到其它泳道或泳道之间的新建区
-    if (incoming.length) {
-      ElMessage.warning('主序列泳道只放「序列」卡片；函数/注入/检查类卡片请拖到其它泳道，或拖到泳道之间新建泳道')
-    }
+  if (!incoming.length) {
     onZoneLeave()
     return
   }
-  // 新卡片按鼠标位置插入（与拖拽时的停靠提示一致），位置由顺序决定
+  // 新卡片按鼠标位置插入（与拖拽时的停靠提示一致），位置由顺序决定；
+  // 同时按角色自动落到合法一侧的泳道（结果卡→右侧，其余→左侧）。
   const laneEl = laneElOf(e)
   const baseIdx = lane.type === 'main' ? -1 : dropIndexInLane(laneEl, e.clientY, '')
   let nth = 0
-  for (const card of cards) {
+  let placed = 0
+  for (const card of incoming) {
+    const target = resolveDropLane(f, lane, [], card)
+    if (!laneAccepts(target.type, card)) continue
     const n = cardToNode(card)
     f.nodes[n.id] = n
-    if (lane.type === 'main') {
-      for (const nid of lane.nodeIds) {
+    if (target.type === 'main') {
+      for (const nid of target.nodeIds) {
         removeNodeEdges(f, nid, 'main')
         delete f.nodes[nid]
       }
-      lane.nodeIds = [n.id]
+      target.nodeIds = [n.id]
     } else {
-      const at = baseIdx < 0 ? lane.nodeIds.length : Math.min(baseIdx + nth, lane.nodeIds.length)
-      lane.nodeIds.splice(at, 0, n.id)
+      const keepIdx = target.id === lane.id && baseIdx >= 0
+      const at = keepIdx ? Math.min(baseIdx + nth, target.nodeIds.length) : target.nodeIds.length
+      target.nodeIds.splice(at, 0, n.id)
     }
     nth++
+    placed++
+  }
+  if (!placed) {
+    onZoneLeave()
+    return
   }
   onZoneLeave()
   emitChange()
@@ -2126,21 +2297,26 @@ function onCardDrop(frameId: string, laneId: string, targetNodeId: string, e: Dr
       onDragEnd()
       return
     }
+    // 落点不在卡片「合法一侧」时自动改投到该侧的泳道（改投后按追加落位）
+    const dropLane = resolveDropLane(f, lane, ids, null, payload.frameId)
     if (!ids.some((id) => {
-      const n = findFrameNodeById(id)
-      return !!n && laneAccepts(lane.type, n)
+      const n = frameOwningNode(id, payload.frameId)?.nodes[id]
+      return !!n && laneAccepts(dropLane.type, n)
     })) {
       onDragEnd()
       return
     }
     // 插入下标按「移除这一批之后」的顺序算，多选时下标才不会被前面的选中项挤偏
-    const movedSet = new Set(ids)
-    const rest = lane.nodeIds.filter((x) => !movedSet.has(x))
-    const tIdx = rest.indexOf(targetNodeId)
-    const at = tIdx < 0 ? rest.length : dropAfter ? tIdx + 1 : tIdx
-    moveNodesToLane(f, lane, ids, at)
-    // 位置由泳道顺序决定（不再按鼠标高度留白）
-    emitChange()
+    let at = -1
+    if (dropLane.id === lane.id) {
+      const movedSet = new Set(ids)
+      const rest = lane.nodeIds.filter((x) => !movedSet.has(x))
+      const tIdx = rest.indexOf(targetNodeId)
+      at = tIdx < 0 ? rest.length : dropAfter ? tIdx + 1 : tIdx
+    }
+    const movedN = moveNodesToLane(f, dropLane, ids, at, payload.frameId)
+    // 位置由泳道顺序决定（不再按鼠标高度留白）；被拦截（返回 0）时不写回，避免产生空操作的历史记录
+    if (movedN) emitChange()
     onDragEnd()
     scheduleRecompute()
     return
@@ -2148,12 +2324,13 @@ function onCardDrop(frameId: string, laneId: string, targetNodeId: string, e: Dr
 
   const cards = parseCards(e)
   if (!cards.length) return
-  let nthNew = 0
   for (const card of cards) {
+    // 新卡片按角色自动落到合法一侧的泳道（结果卡→右侧，其余→左侧）
+    const target = resolveDropLane(f, lane, [], card)
     const n = cardToNode(card)
     f.nodes[n.id] = n
-    insertAt(n.id)
-    nthNew++
+    if (target.id === lane.id) insertAt(n.id)
+    else target.nodeIds.push(n.id)
   }
   onZoneLeave()
   emitChange()
@@ -2182,15 +2359,15 @@ function onCanvasDrop(e: DragEvent) {
     const ids = dragNodeIdsOf(payload)
     let removed = 0
     for (const id of ids) {
-      for (const fr of frames.value) {
-        const lane = fr.lanes.find((l) => l.nodeIds.includes(id))
-        if (!lane || !fr.nodes[id]) continue
-        lane.nodeIds = lane.nodeIds.filter((x) => x !== id)
-        removeNodeEdges(fr, id, lane.type)
-        delete fr.nodes[id]
-        removed++
-        break
-      }
+      // 只删「拖拽来源工况」里的这一张，避免孪生工况共用 id 时把另一个工况的卡片删掉
+      const fr = frameOwningNode(id, payload.frameId)
+      if (!fr) continue
+      const lane = fr.lanes.find((l) => l.nodeIds.includes(id))
+      if (!lane) continue
+      lane.nodeIds = lane.nodeIds.filter((x) => x !== id)
+      removeNodeEdges(fr, id, lane.type)
+      delete fr.nodes[id]
+      removed++
     }
     if (removed) {
       emitChange()
@@ -2203,18 +2380,23 @@ function onCanvasDrop(e: DragEvent) {
   const cards = parseCards(e)
   if (!cards.length) return
   const f = newFrame(`工况${frames.value.length + 1}`)
-  // 序列卡进主序列泳道，其余卡片统一放入同一个泳道
-  const otherLane: FrameLane = { id: genId('lane'), type: 'other', nodeIds: [] }
+  // 卡片按角色落到主序列两侧：结果卡进右侧泳道，其余（注入/检查/函数等）进左侧泳道。
+  // 与「入口只能来自主序列左侧、出口只能连到主序列右侧」的连线规则保持一致 ——
+  // 否则新建工况里卡片全在主序列右边，连不出入口线。
+  const leftLane: FrameLane = { id: genId('lane'), type: 'other', nodeIds: [] }
+  const rightLane: FrameLane = { id: genId('lane'), type: 'other', nodeIds: [] }
   for (const card of cards) {
     const n = cardToNode(card)
     f.nodes[n.id] = n
-    if (card.type === 'sequence' && !f.lanes[0].nodeIds.length) {
-      f.lanes[0].nodeIds = [n.id]
-    } else {
-      otherLane.nodeIds.push(n.id)
-    }
+    if (card.type === 'sequence' && !f.lanes[0].nodeIds.length) f.lanes[0].nodeIds = [n.id]
+    else if (card.type === 'result') rightLane.nodeIds.push(n.id)
+    else leftLane.nodeIds.push(n.id)
   }
-  if (otherLane.nodeIds.length) f.lanes.push(otherLane)
+  f.lanes = [
+    ...(leftLane.nodeIds.length ? [leftLane] : []),
+    ...f.lanes,
+    ...(rightLane.nodeIds.length ? [rightLane] : []),
+  ]
   frames.value.push(f)
   emitChange()
   emit('update:active-frame-id', f.id)
@@ -2227,7 +2409,8 @@ function removeNode(frameId: string, laneId: string, nodeId: string) {
   if (!f) return
   const lane = f.lanes.find((l) => l.id === laneId)
   if (!lane) return
-  lane.nodeIds = lane.nodeIds.filter((x) => x !== nodeId)
+  // 同一 id 若被挂到多条泳道（历史脏数据），一起摘掉；残留的挂靠会让整帧渲染失败
+  for (const l of f.lanes) l.nodeIds = l.nodeIds.filter((x) => x !== nodeId)
   removeNodeEdges(f, nodeId, lane.type)
   delete f.nodes[nodeId]
   emitChange()
@@ -2666,6 +2849,48 @@ function isCaseRowHighlighted(f: CaseFrame, row: number): boolean {
   return (highlightedCaseRows.value[f.id] || []).includes(row)
 }
 
+/** 选中连线在「起点端」显示的关联用例 ID（未选中 → 不返回，整体不渲染） */
+interface EdgeCaseIdLabel {
+  key: string
+  edgeId: string
+  x: number
+  y: number
+  text: string
+}
+/**
+ * 计算每条「已高亮连线」要在起点端显示的用例 ID。
+ *
+ * 位置取曲线起点 `geo.x1/y1`（即 from 接线口的坐标）：只由接线口决定，
+ * 不随连线形状 / 长度（bow、目标点、标签避让）变化 —— 标签位置因此保持稳定。
+ * 用例 ID 的口径与「用例展开」行、编号徽标右键预览一致：连线生效编号 → caseNums 下标
+ * → 该行的 case_id；未编号的连线对所有用例生效。
+ */
+function edgeCaseIdLabels(f: CaseFrame): EdgeCaseIdLabel[] {
+  const caseNums = frameCaseNums.value[f.id] || []
+  if (!caseNums.length) return []
+  const out: EdgeCaseIdLabel[] = []
+  for (const p of edgePathCache.value[f.id] ?? []) {
+    if (!isEdgeHighlighted(p, f.id)) continue
+    const nums = p.nums.length ? p.nums : caseNums
+    const ids: string[] = []
+    caseNums.forEach((n, i) => {
+      if (!nums.includes(n)) return
+      const nm = caseNameOf(f, i)
+      if (nm && !ids.includes(nm)) ids.push(nm)
+    })
+    if (!ids.length) continue
+    out.push({
+      key: 'cid:' + p.edgeId,
+      edgeId: p.edgeId,
+      x: p.geo.x1,
+      y: p.geo.y1,
+      // 一条线可能覆盖多个用例（汇合 / 分叉）：最多列 3 个，其余折成 +N
+      text: ids.length > 3 ? `${ids.slice(0, 3).join(' · ')} +${ids.length - 3}` : ids.join(' · '),
+    })
+  }
+  return out
+}
+
 // ===== 连线创建与序号 =====
 function onPortOutDown(e: MouseEvent, frameId: string, key: string) {
   e.preventDefault()
@@ -2693,11 +2918,48 @@ function edgeDirOk(fromKey: string, toKey: string): boolean {
     (fromKey.startsWith('seq:') && toNode)
   )
 }
-// 创建一条连线（拖拽释放或点击两个端口都会调用），方向校验在内部完成
+/** 按给定泳道顺序统计「压过主序列」的连线数（用共享规则，侧别查表由 framePortSide 负责） */
+function crossCount(f: CaseFrame, lanes: FrameLane[]): number {
+  const probe: CaseFrame = { ...f, lanes }
+  let n = 0
+  for (const e of Object.values(f.edges)) {
+    if (frameEdgeCrossesMain(probe, e.from, e.to)) n++
+  }
+  return n
+}
+/** 结构性改动（拖卡片跨线 / 泳道换位）会让「跨越主序列」的连线变多时拒绝并提示 */
+function rejectIfAddsCrossing(f: CaseFrame, nextLanes: FrameLane[]): boolean {
+  const delta = crossCount(f, nextLanes) - crossCount(f, f.lanes)
+  if (delta <= 0) return false
+  ElMessage.warning(
+    `该操作会让 ${delta} 条连线压过主序列，已取消（入口只能来自主序列左侧的卡片，出口只能连到右侧的卡片，两侧卡片不能互连）`,
+  )
+  return true
+}
+type EdgeReject = 'dir' | 'cross'
+const EDGE_REJECT_MSG: Record<EdgeReject, string> = {
+  dir: '连线方向不合法（仅支持：卡片→卡片、卡片→主序列、主序列→卡片）',
+  cross:
+    '连线不能跨越主序列：入口只能来自主序列左侧的卡片，出口只能连到主序列右侧的卡片，两侧卡片/接线口不能互连',
+}
+/** 单条连线的合法性校验结果：null = 允许，否则为拒绝原因 */
+function edgeReject(f: CaseFrame, fromKey: string, toKey: string): EdgeReject | null {
+  if (!edgeDirOk(fromKey, toKey)) return 'dir'
+  if (frameEdgeCrossesMain(f, fromKey, toKey)) return 'cross'
+  return null
+}
+// 最近一次被拒绝的原因（createEdge 写入），供调用方给出对应提示
+let lastEdgeReject: EdgeReject | null = null
+// 创建一条连线（拖拽释放或点击两个端口都会调用），方向与跨主序列校验在内部完成
 function createEdge(frameId: string, fromKey: string, toKey: string): boolean {
   const f = frames.value.find((x) => x.id === frameId)
   if (!f) return false
-  if (!edgeDirOk(fromKey, toKey)) return false
+  const rej = edgeReject(f, fromKey, toKey)
+  if (rej) {
+    lastEdgeReject = rej
+    return false
+  }
+  lastEdgeReject = null
   const eid = genId('edge')
   // 新连线默认不写编号：由起始卡片顺序排号 / 继承左侧连线编号
   const edge: FrameEdge = { id: eid, from: fromKey, to: toKey }
@@ -2715,22 +2977,34 @@ function batchConnect(frameId: string, key: string, side: 'in' | 'out'): boolean
   const nids = selNodes.value.filter((nid) => !!f.nodes[nid])
   if (nids.length < 2) return false
   let ok = 0
+  let badDir = 0
+  let badCross = 0
   for (const nid of nids) {
     const nodeKey = 'node:' + nid
     const fromKey = side === 'in' ? nodeKey : key
     const toKey = side === 'in' ? key : nodeKey
-    if (fromKey === toKey || !edgeDirOk(fromKey, toKey)) continue
+    if (fromKey === toKey) continue
+    const rej = edgeReject(f, fromKey, toKey)
+    if (rej === 'dir') {
+      badDir++
+      continue
+    }
+    if (rej === 'cross') {
+      badCross++
+      continue
+    }
     const eid = genId('edge')
     f.edges[eid] = { id: eid, from: fromKey, to: toKey }
     ok++
   }
   if (!ok) {
-    ElMessage.warning('连线方向不合法（仅支持：卡片→卡片、卡片→主序列、主序列→卡片）')
+    ElMessage.warning(EDGE_REJECT_MSG[badCross ? 'cross' : 'dir'])
     return true
   }
   emitChange()
   scheduleRecompute()
-  ElMessage.success(`已创建 ${ok} 条连线`)
+  const skipped = badDir + badCross
+  ElMessage.success(skipped ? `已创建 ${ok} 条连线，跳过 ${skipped} 条（不符合连线规则）` : `已创建 ${ok} 条连线`)
   return true
 }
 /** 批量改接的目标集合 = **与「高亮」完全一致**的那批连线（直接复用 isEdgeHighlighted，
@@ -2764,6 +3038,7 @@ function repointSelectedEdges(frameId: string, key: string, side: 'in' | 'out'):
   const targetIsSeq = !!parseSeqPortKey(key)
   let ok = 0
   let badDir = 0
+  let badCross = 0
   let same = 0
   let kind = 0
   let offSeq = 0
@@ -2793,6 +3068,10 @@ function repointSelectedEdges(frameId: string, key: string, side: 'in' | 'out'):
       badDir++
       continue
     }
+    if (frameEdgeCrossesMain(f, fromKey, toKey)) {
+      badCross++
+      continue
+    }
     e.from = fromKey
     e.to = toKey
     ok++
@@ -2802,9 +3081,10 @@ function repointSelectedEdges(frameId: string, key: string, side: 'in' | 'out'):
     emitChange()
     scheduleRecompute()
   }
-  const skip = badDir + same + kind + offSeq
+  const skip = badDir + badCross + same + kind + offSeq
   const reasons: string[] = []
   if (badDir) reasons.push(`方向不合法 ${badDir}`)
+  if (badCross) reasons.push(`跨越主序列 ${badCross}`)
   if (same) reasons.push(`无需改动 ${same}`)
   if (kind) reasons.push(`接线口类型不同 ${kind}`)
   if (offSeq) reasons.push(`不接主序列 ${offSeq}`)
@@ -2850,7 +3130,9 @@ function onLinkUp(e: MouseEvent) {
   const target = document.elementFromPoint(e.clientX, e.clientY)
   const portEl = target && (target as HTMLElement).closest ? (target as HTMLElement).closest('.port-in') : null
   const toKey = portEl ? (portEl as any).__portKey : null
-  if (toKey) createEdge(drag.frameId, drag.fromKey, toKey)
+  if (toKey && !createEdge(drag.frameId, drag.fromKey, toKey) && lastEdgeReject) {
+    ElMessage.warning(EDGE_REJECT_MSG[lastEdgeReject])
+  }
   scheduleRecompute()
 }
 // 点击连线：第一次点输出端口记录起点（再次点同一端口取消）
@@ -2863,9 +3145,23 @@ function onPortOutClick(frameId: string, key: string) {
   clickLinkFrom.value = { frameId, fromKey: key }
   ElMessage.info('已选择起点端口，请按住Ctrl点击目标输入端口完成连线')
 }
-// 判断某个输出端口是否为当前点击连线的起点（用于高亮）
-function isPortSelected(frameId: string, key: string): boolean {
-  return !!clickLinkFrom.value && clickLinkFrom.value.frameId === frameId && clickLinkFrom.value.fromKey === key
+// 判断某个接线口是否为「当前点击连线的起点」（待落点状态 / Ctrl 两步连线的起点），用于高亮。
+// 要比对 side：同一张卡片的输入/输出口 key 相同（都是 'node:<id>'），只比 key 会把另一个口也点亮。
+function isPortSelected(frameId: string, key: string, side: 'in' | 'out'): boolean {
+  const pending = pendingLink.value
+  if (pending) return pending.frameId === frameId && pending.key === key && pending.side === side
+  const from = clickLinkFrom.value
+  return !!from && from.frameId === frameId && from.fromKey === key
+}
+/** 待落点状态下，与起点连起来会被拒绝的接线口（标红提示「连不上」） */
+function isPortBlocked(frameId: string, key: string): boolean {
+  const link = pendingLink.value
+  if (!link || link.frameId !== frameId || link.key === key) return false
+  const f = frames.value.find((x) => x.id === frameId)
+  if (!f) return false
+  const fromKey = link.side === 'out' ? link.key : key
+  const toKey = link.side === 'out' ? key : link.key
+  return edgeReject(f, fromKey, toKey) !== null
 }
 // 点击连线：点输入端口，若有起点则创建连线
 function onPortInClick(frameId: string, key: string) {
@@ -2877,15 +3173,119 @@ function onPortInClick(frameId: string, key: string) {
     return
   }
   if (!createEdge(frameId, from.fromKey, key)) {
-    ElMessage.warning('连线方向不合法（仅支持：卡片→卡片、卡片→主序列、主序列→卡片）')
+    ElMessage.warning(EDGE_REJECT_MSG[lastEdgeReject || 'dir'])
+    return
+  }
+  ElMessage.success('已创建连线')
+}
+/**
+ * 点击式连线：单击任意接线口 → 立刻起一条跟随鼠标的虚线；再单击另一个接线口 → 连成实线；
+ * 点空白或非接线口处 → 取消。
+ *
+ * 与既有的两种创建方式并存（都汇到 createEdge）：
+ * - 拖拽式：在输出口按下 → 拖到输入口松开；
+ * - Ctrl 两步：Ctrl 点输出口 → Ctrl 点输入口。
+ * 这条通道专门服务「裸单击」，所以不做 Ctrl 分支。
+ */
+const pendingLink = ref<{ frameId: string; key: string; side: 'in' | 'out' } | null>(null)
+/** 待落点状态下虚线「固定端」的坐标（另一头跟鼠标） */
+let pendingAnchor: { x: number; y: number } | null = null
+let pendingRaf = 0
+let pendingMove: MouseEvent | null = null
+
+function startPendingLink(frameId: string, key: string, side: 'in' | 'out') {
+  cancelPendingLink(true)
+  const anchor = portPos(frameId, key, side)
+  if (!anchor) return
+  pendingLink.value = { frameId, key, side }
+  pendingAnchor = anchor
+  tempLine.value = { frameId, d: bezier(anchor.x, anchor.y, anchor.x, anchor.y) }
+  window.addEventListener('mousemove', onPendingLinkMove)
+  window.addEventListener('click', onPendingLinkGlobalClick, true)
+  window.addEventListener('keydown', onPendingLinkKeydown)
+}
+/** 结束待落点状态（silent=false 时提示「已取消连线」，用于用户主动取消） */
+function cancelPendingLink(silent = true) {
+  if (pendingRaf) {
+    cancelAnimationFrame(pendingRaf)
+    pendingRaf = 0
+  }
+  pendingMove = null
+  pendingAnchor = null
+  const had = !!pendingLink.value
+  pendingLink.value = null
+  if (tempLine.value.d) tempLine.value = { frameId: '', d: '' }
+  window.removeEventListener('mousemove', onPendingLinkMove)
+  window.removeEventListener('click', onPendingLinkGlobalClick, true)
+  window.removeEventListener('keydown', onPendingLinkKeydown)
+  if (had && !silent) ElMessage.info('已取消连线')
+}
+// 鼠标跟随：与拖拽式同一套「合并到下一帧」写法，避免每次 mousemove 都读 rect + 触发重渲染
+function onPendingLinkMove(e: MouseEvent) {
+  pendingMove = e
+  if (pendingRaf) return
+  pendingRaf = requestAnimationFrame(() => {
+    pendingRaf = 0
+    const ev = pendingMove
+    const link = pendingLink.value
+    const anchor = pendingAnchor
+    if (!ev || !link || !anchor) return
+    const body = bodyEls[link.frameId]
+    if (!body) return
+    const b = body.getBoundingClientRect()
+    const x = ev.clientX - b.left
+    const y = ev.clientY - b.top
+    // 起点端固定不动，另一端跟鼠标：起点是输入口时方向反过来画，箭头感与拖拽式一致
+    tempLine.value = {
+      frameId: link.frameId,
+      d: link.side === 'out' ? bezier(anchor.x, anchor.y, x, y) : bezier(x, y, anchor.x, anchor.y),
+    }
+  })
+}
+function onPendingLinkKeydown(e: KeyboardEvent) {
+  if (e.key === 'Escape') cancelPendingLink(false)
+}
+/** 点到接线口以外的地方（卡片 / 泳道 / 空白 / 按钮…）→ 取消连线状态 */
+function onPendingLinkGlobalClick(e: MouseEvent) {
+  const t = e.target as HTMLElement | null
+  if (t?.closest?.('.port')) return
+  cancelPendingLink(false)
+}
+/** 待落点状态下再点一个接线口：方向合法就连成实线；同一口再点一次 = 取消 */
+function finishPendingLink(frameId: string, key: string, side: 'in' | 'out'): void {
+  const from = pendingLink.value
+  if (!from) return
+  if (from.frameId !== frameId) {
+    ElMessage.warning('起点和目标不在同一工况')
+    cancelPendingLink(true)
+    return
+  }
+  if (from.key === key) {
+    cancelPendingLink(false)
+    return
+  }
+  const fromKey = from.side === 'out' ? from.key : key
+  const toKey = from.side === 'out' ? key : from.key
+  cancelPendingLink(true)
+  if (!createEdge(frameId, fromKey, toKey)) {
+    ElMessage.warning(EDGE_REJECT_MSG[lastEdgeReject || 'dir'])
     return
   }
   ElMessage.success('已创建连线')
 }
 function onPortClick(frameId: string, key: string, side: 'in' | 'out', e: MouseEvent) {
-  // 裸点击：已多选连线（≥2）→ 把这些连线的对应端批量改接到这个口；否则维持现状（什么都不做）
+  // 已有「待落点」：这一击就是终点（同一口再点 = 取消）
+  if (pendingLink.value && !e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+    finishPendingLink(frameId, key, side)
+    return
+  }
+  // 裸点击
   if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-    repointSelectedEdges(frameId, key, side)
+    // 显式多选（框选 / Ctrl 多选）出来的连线 → 批量改接到这个口（既有功能，保持优先）
+    // 单击连线时按「同编号」自动展开的高亮不算显式选中，放行给点击式连线
+    if (!highlightSameNum.value && repointSelectedEdges(frameId, key, side)) return
+    // 否则：单击接线口开始连线 —— 虚线跟随鼠标，再点另一个口完成
+    startPendingLink(frameId, key, side)
     return
   }
   // 已多选卡片（≥2）时：Ctrl 点接线口 = 批量连线，不再走「记住起点 → 再点终点」两步流程
@@ -3410,10 +3810,15 @@ function onWindowMouseDown(e: MouseEvent) {
 }
 
 // ===== 节点就地编辑 =====
-function openEditor(frameId: string, nodeId: string) {
+/** 打开节点编辑器。切换编辑对象前先过「未保存修改」守卫：选保存且保存成功才切过去（取消/失败则留在当前卡片） */
+async function openEditor(frameId: string, nodeId: string) {
   const f = frames.value.find((x) => x.id === frameId)
   const n = f && f.nodes[nodeId]
   if (!n) return
+  if (editorVisible.value && cardEditorRef.value) {
+    const ok = await cardEditorRef.value.confirmBeforeSwitch()
+    if (!ok) return
+  }
   editorFrameId.value = frameId
   editorNodeId.value = nodeId
   editingCard.value = JSON.parse(JSON.stringify(n))
@@ -3449,8 +3854,10 @@ const frameDiags = computed<Record<string, FrameDiagnostics>>(() => {
   const map: Record<string, FrameDiagnostics> = {}
   // 带上卡片库：标签里的 {{参数}} 要按「节点 params / 它引用的库卡片 params」解析
   const lookup = cardLookup.value
+  // 函数库还没加载出来时（空数组）不做「函数不存在」校验，否则会把所有函数都标成缺失
+  const funcs = props.funcNames?.length ? new Set(props.funcNames) : undefined
   // 只校验当前展示的工况（画布一次只挂载一个；全量校验是每次改动都要跑一遍的开销）
-  for (const f of visibleFrames.value) map[f.id] = frameDiagnostics(f, lookup)
+  for (const f of visibleFrames.value) map[f.id] = frameDiagnostics(f, lookup, funcs)
   return map
 })
 function diagOf(f: CaseFrame): FrameDiagnostics {
@@ -3637,6 +4044,7 @@ onUnmounted(() => {
   window.removeEventListener('mousedown', onWindowMouseDown, true)
   window.removeEventListener('mousemove', onLinkMove)
   window.removeEventListener('mouseup', onLinkUp)
+  cancelPendingLink(true)
   bodyResizeObserver?.disconnect()
   bodyResizeObserver = null
 })
@@ -3977,6 +4385,29 @@ onUnmounted(() => {
   background: #e6a23c;
   transform: scale(1.18);
   box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.35);
+}
+/* 选中连线在起点端显示的「关联用例 ID」：位置由起点坐标决定，不随连线长度/形状漂移。
+   与选中徽标同色（#e6a23c）表达「这根线的用例归属」；pointer-events: none 只做展示，
+   不吃掉接线口 / 连线自己的点击与拖拽。 */
+.edge-caseid {
+  position: absolute;
+  transform: translateY(-50%);
+  z-index: 10;
+  pointer-events: none;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 16px;
+  color: #fff;
+  background: #e6a23c;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
 }
 /* 正在编辑编号的那条线：徽标描边高亮，与面板里 .edge-input 的描边同色 */
 .label-badge.badge-editing,
@@ -4505,6 +4936,16 @@ onUnmounted(() => {
   border-color: var(--el-color-primary);
   box-shadow: 0 0 0 4px rgba(64, 158, 255, 0.35);
   transform: translateY(-50%) scale(1.25);
+}
+/* 待落点时「连不上」的口：入口只能来自主序列左侧、出口只能连到右侧，两侧不能互连（否则压过主序列） */
+.port-blocked {
+  border-color: var(--el-color-danger);
+  background: repeating-linear-gradient(45deg, #fef0f0, #fef0f0 3px, #fde2e2 3px, #fde2e2 6px);
+  cursor: not-allowed;
+}
+.port-blocked:hover {
+  background: var(--el-color-danger);
+  border-color: var(--el-color-danger);
 }
 
 .frame-foot {

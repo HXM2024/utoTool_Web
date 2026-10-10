@@ -6,12 +6,14 @@ import type {
   CardStepArg,
   CardType,
   CaseFrame,
+  CaseGroup,
   FrameEdge,
   FrameLane,
   FrameLaneType,
   GroupNode,
   Graph,
   InjectRole,
+  ObjectMapping,
   Port,
   ValueResource,
 } from '@/types/functionGraph'
@@ -351,6 +353,8 @@ export function syncGraphRefs(
       id: card.id,
       refId: card.refId,
       params: mergeCardParams(card.params, src.params),
+      // 「全局卡片」是卡片库条目的作用域标记，不该带到工况节点副本上
+      global: undefined,
     }
     if (JSON.stringify(next) !== JSON.stringify(card)) {
       synced += 1
@@ -881,9 +885,11 @@ export type FrameIssueKind =
   | 'no-sequence'
   | 'empty-sequence'
   | 'dangling-edge'
+  | 'cross-main-edge'
   | 'orphan-node'
   | 'floating-node'
   | 'param-unresolved'
+  | 'missing-func'
 
 /** 单条校验问题 */
 export interface FrameIssue {
@@ -909,13 +915,56 @@ export interface FrameDiagnostics {
   ok: boolean
 }
 
+/** 端口相对主序列的位置类别：主序列泳道（含序列接线口）= main，其左侧泳道 = left，右侧 = right */
+export type FramePortSide = 'left' | 'right' | 'main' | 'unknown'
+
+/** 端口所在侧别。序列接线口恒为 main；卡片口按所在泳道与主序列泳道的先后判定 */
+export function framePortSide(frame: CaseFrame, key: string): FramePortSide {
+  if (parseSeqPortKey(key)) return 'main'
+  if (!isCardKey(key)) return 'unknown'
+  const lanes = frameLanes(frame)
+  const mi = lanes.findIndex((l) => l.type === 'main')
+  if (mi < 0) return 'unknown'
+  const li = lanes.findIndex((l) => l.nodeIds.includes(cardKeyNodeId(key)))
+  if (li < 0) return 'unknown'
+  if (li === mi) return 'main'
+  return li < mi ? 'left' : 'right'
+}
+
+/**
+ * 连线是否「压过主序列」。
+ *
+ * 主序列卡片占住主序列列，它的输入口在卡片**左缘**、输出口在**右缘**，所以：
+ * - 入口 `卡片 → 主序列`：卡片必须在主序列**左侧**，否则连线是从右往左压过主序列卡片；
+ * - 出口 `主序列 → 卡片`：卡片必须在主序列**右侧**，否则同样是从右往左压过主序列卡片；
+ * - 链式 `卡片 → 卡片`：两端必须在主序列**同一侧**，否则连线跨过主序列。
+ *
+ * 侧别判不出来（没有主序列泳道、卡片不在任何泳道）时一律放行，避免误判。
+ */
+export function frameEdgeCrossesMain(frame: CaseFrame, fromKey: string, toKey: string): boolean {
+  const fromSeq = !!parseSeqPortKey(fromKey)
+  const toSeq = !!parseSeqPortKey(toKey)
+  if (fromSeq && !toSeq) return framePortSide(frame, toKey) === 'left'
+  if (!fromSeq && toSeq) return framePortSide(frame, fromKey) === 'right'
+  if (!fromSeq && !toSeq) {
+    const a = framePortSide(frame, fromKey)
+    const b = framePortSide(frame, toKey)
+    return (a === 'left' && b === 'right') || (a === 'right' && b === 'left')
+  }
+  return false
+}
+
 /**
  * 校验工况框，找出「悬空连线」与「孤立卡片」。
  * - 悬空连线：端点卡片已被删除、或序列接线口失效（锚定的步骤已删除 / 旧序号越界）。这类线在画布上画不出来
  *   （端口找不到 → 跳过绘制），也不会参与用例展开，属于静默失效，必须显式提示。
  * - 孤立卡片：完全没有连线，或连了线但整条链未接入主序列，都不会出现在任何用例里。
  */
-export function frameDiagnostics(frame: CaseFrame, cardLookup?: Map<string, Card>): FrameDiagnostics {
+export function frameDiagnostics(
+  frame: CaseFrame,
+  cardLookup?: Map<string, Card>,
+  funcNames?: ReadonlySet<string>,
+): FrameDiagnostics {
   const issues: FrameIssue[] = []
   const danglingEdgeIds = new Set<string>()
   const invalidNodeIds = new Set<string>()
@@ -990,6 +1039,18 @@ export function frameDiagnostics(frame: CaseFrame, cardLookup?: Map<string, Card
       edgeId: key,
       label: `${labelOf(e.from)} → ${labelOf(e.to)}`,
       reason: fromIssue || toIssue || '端口无效',
+    })
+  }
+
+  // 1.5) 压过主序列的连线：入口来自右侧卡片 / 出口落到左侧卡片 / 两侧卡片互连。
+  //      创建时已拦截，这里兜住「先连线、后把卡片拖到另一侧」这类位置变动造成的违规。
+  for (const e of validEdges) {
+    if (!frameEdgeCrossesMain(frame, e.from, e.to)) continue
+    issues.push({
+      kind: 'cross-main-edge',
+      edgeId: frameEdgeKey(e),
+      label: `${labelOf(e.from)} → ${labelOf(e.to)}`,
+      reason: '连线压过了主序列：入口要接主序列左侧的卡片、出口要接主序列右侧的卡片，两侧卡片不能互连',
     })
   }
 
@@ -1078,6 +1139,24 @@ export function frameDiagnostics(frame: CaseFrame, cardLookup?: Map<string, Card
     })
   }
 
+  // 5) 步骤调用的函数在函数库里找不到（函数被裁剪 / 改名后卡片仍在调用）。
+  //    这类卡片生成出的 CAPL 会编译不过，必须显式提示；节点一并标为异常，画布上按 ⚠ 显示。
+  if (funcNames && funcNames.size) {
+    for (const [nid, node] of Object.entries(nodes)) {
+      const missing = collectCalledFunctionNames(node.steps).filter(
+        (n) => !funcNames.has(n) && !EXTERNAL_CALL_WHITELIST.has(n),
+      )
+      if (!missing.length) continue
+      invalidNodeIds.add(nid)
+      issues.push({
+        kind: 'missing-func',
+        nodeId: nid,
+        label: nameOf(nid),
+        reason: `调用了函数库里不存在的函数：${missing.join('、')}（生成时 CAPL 会编译不过）`,
+      })
+    }
+  }
+
   return { issues, danglingEdgeIds, invalidNodeIds, ok: !issues.length }
 }
 
@@ -1107,6 +1186,57 @@ function unresolvedParamNames(node: Card, cardLookup?: Map<string, Card>): strin
   const values = nodeParamValues(node, cardLookup)
   return [...names].filter((n) => !(n in values) || String(values[n] ?? '').trim() === '')
 }
+
+/** 步骤里出现过的 {{参数}} 名（去重）。用于把步骤里的占位符「反推」成卡片参数声明：
+ *  历史卡片 / 手工写的步骤常常只有占位符没声明参数，界面上就没有可填值的参数接口。 */
+export function collectStepParamNames(steps?: CardStep[]): string[] {
+  const names = new Set<string>()
+  const scan = (s: unknown) => {
+    if (typeof s !== 'string' || !s.includes('{{')) return
+    for (const m of s.matchAll(CARD_PARAM_REF_RE)) {
+      const n = String(m[1]).trim()
+      if (n) names.add(n)
+    }
+  }
+  for (const step of steps ?? []) {
+    if (!step) continue
+    for (const k of STEP_TEXT_FIELDS) scan(step[k])
+    for (const a of step.args ?? []) {
+      if (!a) continue
+      for (const k of ARG_TEXT_FIELDS) scan(a[k])
+    }
+  }
+  return [...names]
+}
+
+/** 卡片步骤里「直接调用」的函数名（call / wait / loop_start 的 fun 字段）；
+ *  带 {{参数}} 的动态函数名无法静态判定，跳过。 */
+export function collectCalledFunctionNames(steps?: CardStep[]): string[] {
+  const names = new Set<string>()
+  for (const s of steps ?? []) {
+    if (!s || (s.kind !== 'call' && s.kind !== 'wait' && s.kind !== 'loop_start')) continue
+    const n = String(s.fun ?? '').trim()
+    if (n && !n.includes('{{')) names.add(n)
+  }
+  return [...names]
+}
+
+/**
+ * 「外部函数」白名单：不属于函数库、但生成出的 CAPL 里仍然可用（CANoe 内置 test / 系统变量 API、
+ * 以及 .cin 里定义的公共函数）。这些不会出现在函数库解析结果里，属于正常调用，
+ * 不参与「调用了函数库里不存在的函数」的告警。遇到新的外部函数，往这里追加即可。
+ */
+export const EXTERNAL_CALL_WHITELIST: ReadonlySet<string> = new Set<string>([
+  // CANoe 系统变量 API
+  'putValue',
+  'getValue',
+  // CANoe Test Feature Set
+  'testEnableMsg',
+  'testDisableMsg',
+  // 项目 .cin 里定义的公共函数（非函数库内容）
+  'setSignal',
+  'testenableMsg',
+])
 
 /** 连线编号解析结果 */
 export interface FrameNumberInfo {
@@ -1691,6 +1821,72 @@ export function collectSplitDims(
   return dims
 }
 
+/**
+ * 深拷贝一个工况，并把所有 id 重新生成：node / step / lane / edge。
+ * 复制工况必须走这里 —— 只换 frame.id 会让孪生工况共用 nodeId，
+ * 画布上按 id 的查找/删除就会命中另一个工况（卡片挂到两条泳道、删一张整帧空白都是这么来的）。
+ */
+export function cloneFrameWithNewIds(src: CaseFrame): CaseFrame {
+  const cp: CaseFrame = JSON.parse(JSON.stringify(src))
+  cp.id = genId('frame')
+
+  // 1) 先建 id 映射：步骤 id 被序列接线口的锚点引用（seq:<seqId>@<stepId>），要一起换
+  const nodeIdMap = new Map<string, string>()
+  const stepIdMap = new Map<string, string>()
+  for (const oldId of Object.keys(cp.nodes ?? {})) nodeIdMap.set(oldId, genId('node'))
+  for (const [oldId, node] of Object.entries(cp.nodes ?? {})) {
+    const nextNodeId = nodeIdMap.get(oldId) ?? oldId
+    node.id = nextNodeId
+    for (const step of node.steps ?? []) {
+      const nextStepId = genId('step')
+      stepIdMap.set(step.id, nextStepId)
+      step.id = nextStepId
+    }
+  }
+
+  // 2) nodes 字典换键
+  const nodes: Record<string, Card> = {}
+  for (const [oldId, node] of Object.entries(cp.nodes ?? {})) nodes[nodeIdMap.get(oldId) ?? oldId] = node
+  cp.nodes = nodes
+
+  // 3) 泳道 id + 泳道内的 nodeId
+  for (const lane of cp.lanes ?? []) {
+    lane.id = genId('lane')
+    lane.nodeIds = lane.nodeIds.map((nid) => nodeIdMap.get(nid) ?? nid)
+  }
+  // 旧字段（迁移到 lanes 后不再写入，历史配置里可能还有）
+  const mapNode = (nid: string): string => nodeIdMap.get(nid) ?? nid
+  cp.sequenceId = cp.sequenceId ? mapNode(cp.sequenceId) : cp.sequenceId
+  if (cp.injects) cp.injects = cp.injects.map(mapNode)
+  if (cp.recovers) cp.recovers = cp.recovers.map(mapNode)
+  if (cp.results) cp.results = cp.results.map(mapNode)
+
+  // 4) 连线：边 id 换新，端口键里的 nodeId / seqId / stepId 按映射改写
+  const remapPort = (key: string): string => {
+    const seq = parseSeqPortKey(key)
+    if (seq) {
+      const seqId = mapNode(seq.seqId)
+      // 锚点步骤已不存在（悬空锚点）时保留原 stepId，仍由「悬空连线」逻辑兜着
+      if (seq.stepId !== undefined) return seqPortKey(seqId, stepIdMap.get(seq.stepId) ?? seq.stepId)
+      return `seq:${seqId}:${seq.idx ?? 0}`
+    }
+    if (isCardKey(key)) {
+      const nodeId = cardKeyNodeId(key)
+      return key.slice(0, key.length - nodeId.length) + mapNode(nodeId)
+    }
+    return key
+  }
+  const edges: Record<string, FrameEdge> = {}
+  for (const edge of Object.values(cp.edges ?? {})) {
+    edge.id = genId('edge')
+    edge.from = remapPort(edge.from)
+    edge.to = remapPort(edge.to)
+    edges[edge.id] = edge
+  }
+  cp.edges = edges
+  return cp
+}
+
 /** 把卡片库平铺为 id -> Card */
 export function buildCardLookup(library?: CardLibrary): Map<string, Card> {
   const map = new Map<string, Card>()
@@ -1751,6 +1947,49 @@ export function extractCaseBlock(testCases: string, caseId: string): string {
     else if (testCases[i] === '}' && --depth === 0) return testCases.slice(at, i + 1)
   }
   return testCases.slice(at)
+}
+
+/** 全局库内容（前端字段名归一；global 标记只在全局库/被注入的副本里才有意义） */
+export interface GlobalContent {
+  cards: CardLibrary
+  mapping: ObjectMapping
+  valueLibrary: ValueResource[]
+}
+
+/**
+ * 把全局库里带 `global` 标记的项注入到新分组 —— 新建配置 / 新建分组时调用。
+ * 只注入被标记为全局的卡片 / 映射条目 / 值资源，其它内容不受影响；注入的是深拷贝（保留 global 标记）。
+ * 返回注入的条目数（0 表示没有全局内容，分组保持空白）。
+ */
+export function injectGlobalIntoGroup(grp: CaseGroup, g: GlobalContent): number {
+  const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
+  const pickCards = (list?: Card[]): Card[] => (list || []).filter((c) => !!c?.global).map(clone)
+  const cards: CardLibrary = {
+    inject: pickCards(g?.cards?.inject),
+    sequence: pickCards(g?.cards?.sequence),
+    result: pickCards(g?.cards?.result),
+  }
+  let n = cards.inject.length + cards.sequence.length + cards.result.length
+  const mapping = {
+    signals: [],
+    dtcs: [],
+    messages: [],
+    envvars: [],
+    a2l: [],
+  } as ObjectMapping
+  const buckets = ['signals', 'dtcs', 'messages', 'envvars', 'a2l'] as const
+  for (const b of buckets) {
+    const list = (g?.mapping?.[b] || []).filter((e) => !!e?.global).map(clone)
+    mapping[b] = list
+    n += list.length
+  }
+  const values = (g?.valueLibrary || []).filter((v) => !!v?.global).map(clone)
+  n += values.length
+  if (!n) return 0
+  grp.cards = cards
+  grp.mapping = mapping
+  grp.valueLibrary = values
+  return n
 }
 
 /**

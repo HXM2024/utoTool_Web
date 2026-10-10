@@ -50,6 +50,7 @@
     </template>
 
     <CardEditor
+      ref="cardEditorRef"
       :visible="cardEditorVisible"
       :card="editingCard"
       @update:visible="cardEditorVisible = $event"
@@ -118,7 +119,14 @@ function onArgChange(cardId: string, stepId: string, argIdx: number, value: stri
 
 const cardEditorVisible = ref(false)
 const editingCard = ref<Card | null>(null)
-function editCard(card: Card) {
+/** 卡片编辑器实例：切换编辑对象前用它做「有未保存修改 → 提示保存」的守卫 */
+const cardEditorRef = ref<InstanceType<typeof CardEditor> | null>(null)
+/** 切换卡片前先过守卫：选保存且保存成功才切过去（取消/失败则留在当前卡片） */
+async function editCard(card: Card) {
+  if (cardEditorVisible.value && cardEditorRef.value) {
+    const ok = await cardEditorRef.value.confirmBeforeSwitch()
+    if (!ok) return
+  }
   editingCard.value = JSON.parse(JSON.stringify(card))
   cardEditorVisible.value = true
 }

@@ -27,6 +27,10 @@ export interface A2lVar {
   type: string
   /** mapxml 符号的字节长度（A2L 变量无此字段） */
   size?: number
+  /** mapxml 符号的精度（工程量 = 原始值 × 精度 + 偏移，默认 1；A2L 变量无此字段） */
+  precision?: number
+  /** mapxml 符号的偏移（默认 0；A2L 变量无此字段） */
+  offset?: number
 }
 
 /** A2L 变量集合 */
@@ -40,6 +44,25 @@ export type CanMotorMode = 'brushless' | 'brushed'
 
 /** CCP 系统变量类型（有刷模式，对象浏览器双击变量手动指定） */
 export type CcpVarType = 'int' | 'float' | 'int64'
+
+/** CCP 符号的精度 / 偏移（有刷模式；物理值 = 原始值 × 精度 + 偏移，默认 1 / 0） */
+export interface CcpVarScale {
+  precision?: number
+  offset?: number
+}
+
+/** CCP 精度 / 偏移的默认值（与后端 ns_ccp_capl 保持一致） */
+export const DEFAULT_CCP_PRECISION = 1
+export const DEFAULT_CCP_OFFSET = 0
+
+/** 规整单个符号的精度/偏移：非法值或两项都为默认值时返回 null（表示无需记录覆盖） */
+function normalizeCcpScale(scale: CcpVarScale | null | undefined): CcpVarScale | null {
+  const precision = Number(scale?.precision ?? DEFAULT_CCP_PRECISION)
+  const offset = Number(scale?.offset ?? DEFAULT_CCP_OFFSET)
+  if (!Number.isFinite(precision) || !Number.isFinite(offset)) return null
+  if (precision === DEFAULT_CCP_PRECISION && offset === DEFAULT_CCP_OFFSET) return null
+  return { precision, offset }
+}
 
 /** 继电器模块取值：0=老 1=单刀（单掷）2=双刀（双掷），与 Create CANoe 一致 */
 export type RelayModule = 0 | 1 | 2
@@ -170,6 +193,8 @@ export const useModuleStore = defineStore('modules', () => {
   const canMotorMode = ref<CanMotorMode>('brushless')
   // 有刷模式：手动指定的 CCP 系统变量类型 {符号名: int|float|int64}，未指定时后端按字节长度推断
   const ccpVarTypes = ref<Record<string, CcpVarType>>({})
+  // 有刷模式：CCP 符号的精度/偏移 {符号名: {precision, offset}}，未指定时用默认 1 / 0
+  const ccpVarScales = ref<Record<string, CcpVarScale>>({})
   // 继电器模块 / CAN 通道：Function、CAN 模块各自一份（侧边栏配置，生成时随请求下发）
   const relayConfigs = ref<Record<RelayConfigModule, RelayConfig>>({
     function: { ...DEFAULT_RELAY_CONFIG },
@@ -295,7 +320,10 @@ function normalizeA2lVars(list: any): A2lVar[] {
     canMotorMode.value = mode
     objA2lVars.value = { measurements: [], characteristics: [] }
     if (mode === 'brushed') objA2lQualifier.value = ''
-    else ccpVarTypes.value = {}
+    else {
+      ccpVarTypes.value = {}
+      ccpVarScales.value = {}
+    }
   }
 
   /** 设置某符号的 CCP 系统变量类型（空值清除，回退按字节长度推断） */
@@ -306,6 +334,29 @@ function normalizeA2lVars(list: any): A2lVar[] {
     if (type) next[key] = type
     else delete next[key]
     ccpVarTypes.value = next
+  }
+
+  /** 设置某符号的 CCP 精度 / 偏移（两项都是默认 1 / 0 时删除该条目） */
+  function setCcpVarScale(name: string, scale: CcpVarScale) {
+    const key = String(name || '').trim()
+    if (!key) return
+    const next = { ...ccpVarScales.value }
+    const norm = normalizeCcpScale(scale)
+    if (norm) next[key] = norm
+    else delete next[key]
+    ccpVarScales.value = next
+  }
+
+  /** 整表设置 CCP 精度 / 偏移（加载配置时回填；非法项与默认值项都不记录） */
+  function setCcpVarScales(scales: Record<string, CcpVarScale> | null | undefined) {
+    const next: Record<string, CcpVarScale> = {}
+    for (const [rawKey, rawScale] of Object.entries(scales || {})) {
+      const key = String(rawKey || '').trim()
+      if (!key || !rawScale || typeof rawScale !== 'object') continue
+      const norm = normalizeCcpScale(rawScale)
+      if (norm) next[key] = norm
+    }
+    ccpVarScales.value = next
   }
 
   /** 设置 Function / CAN 模块的继电器配置（部分更新） */
@@ -388,6 +439,7 @@ function normalizeA2lVars(list: any): A2lVar[] {
     objA2lQualifier,
     canMotorMode,
     ccpVarTypes,
+    ccpVarScales,
     relayConfigs,
     objMergedDbcRaw,
     objHasDbc,
@@ -404,6 +456,8 @@ function normalizeA2lVars(list: any): A2lVar[] {
     setA2lQualifier,
     setCanMotorMode,
     setCcpVarType,
+    setCcpVarScale,
+    setCcpVarScales,
     setRelayConfig,
     fetchConfigList,
     setCurrentConfig,

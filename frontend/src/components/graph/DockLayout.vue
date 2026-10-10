@@ -47,7 +47,20 @@
           class="dl-resizer"
           :class="node.dir === 'column' ? 'dl-resizer-h' : 'dl-resizer-v'"
           @mousedown="onResizeStart($event, i)"
-        />
+        >
+          <!-- 边界收起/展开控件：点一下把它后面那一栏（对象映射表所在右栏）收起 / 还原 -->
+          <button
+            v-if="children[i + 1]?.collapsible"
+            type="button"
+            class="dl-collapse"
+            :class="[node.dir === 'column' ? 'dl-collapse-h' : 'dl-collapse-v', { collapsed: isCollapsed(i) }]"
+            :title="isCollapsed(i) ? '展开右侧面板' : '收起右侧面板'"
+            @mousedown.stop
+            @click.stop="toggleCollapse(i)"
+          >
+            <el-icon><component :is="collapseIcon(i)" /></el-icon>
+          </button>
+        </div>
       </template>
     </template>
   </div>
@@ -55,6 +68,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { ArrowRight, ArrowLeft, ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 import DockPanel from './DockPanel.vue'
 import PanelBody from './PanelBody.vue'
 
@@ -66,6 +80,8 @@ export interface LayoutNode {
   dir?: 'row' | 'column'
   ratios?: number[]
   children?: LayoutNode[]
+  /** true = 可在「它前面那条分隔条」上用一个按钮把这一栏收起/还原（右栏 对象映射表） */
+  collapsible?: boolean
 }
 
 const props = defineProps<{
@@ -107,6 +123,37 @@ function childStyle(i: number) {
   const g = ratios[i] ?? 1
   return { flexGrow: g, flexBasis: 0, flexShrink: 1, minWidth: 0, minHeight: 0 }
 }
+
+// ===== 分隔条上的「收起 / 展开」控件 =====
+/** 分隔条下标 → 收起前的右侧比例（还原用） */
+const savedRatios = new Map<number, number>()
+/** 该分隔条后面那一栏是否已收起 */
+function isCollapsed(i: number): boolean {
+  return (ensureRatios()[i + 1] ?? 1) <= 0
+}
+/** 收起：把右栏比例全部并到左栏，右栏 flexGrow 归零（配合 .dl-child 的 overflow:hidden 收成 0 宽） */
+function toggleCollapse(i: number) {
+  const ratios = ensureRatios()
+  const left = ratios[i] ?? 1
+  const right = ratios[i + 1] ?? 1
+  if (right > 0) {
+    savedRatios.set(i, right)
+    ratios[i] = left + right
+    ratios[i + 1] = 0
+    return
+  }
+  const back = savedRatios.get(i) ?? 1
+  const give = Math.min(back, Math.max(0.3, left - 0.3))
+  ratios[i] = left - give
+  ratios[i + 1] = give
+}
+/** 箭头指向「会被收起的那个方向」：展开态指右/下，收起态指左/上（点它就还原） */
+function collapseIcon(i: number) {
+  const collapsed = isCollapsed(i)
+  if (props.node.dir === 'column') return collapsed ? ArrowUp : ArrowDown
+  return collapsed ? ArrowLeft : ArrowRight
+}
+
 function onResizeStart(e: MouseEvent, i: number) {
   e.preventDefault()
   const dir = props.node.dir === 'column' ? 'column' : 'row'
@@ -187,6 +234,8 @@ function onResizeStart(e: MouseEvent, i: number) {
   background: transparent;
   transition: background 0.12s;
   z-index: 2;
+  /* 收起/展开控件的定位基准 */
+  position: relative;
 }
 .dl-resizer:hover,
 .dl-resizer:active {
@@ -197,6 +246,48 @@ function onResizeStart(e: MouseEvent, i: number) {
 }
 .dl-resizer-h {
   cursor: row-resize;
+}
+/* 分隔条上的收起/展开按钮：常态淡显、悬停分隔条或按钮时高亮；不挡拖拽（mousedown 已 stop） */
+.dl-collapse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  background: #fff;
+  color: #909399;
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 3;
+  opacity: 0.4;
+  transition: opacity 0.12s, color 0.12s, border-color 0.12s;
+}
+.dl-collapse-v {
+  width: 12px;
+  height: 32px;
+}
+.dl-collapse-h {
+  width: 32px;
+  height: 12px;
+}
+.dl-collapse :deep(.el-icon) {
+  margin: 0;
+}
+/* 收起后按钮常显：分隔条已贴到容器边缘，需要一个明显的「点我再展开」入口 */
+.dl-collapse.collapsed {
+  opacity: 0.85;
+}
+.dl-resizer:hover .dl-collapse,
+.dl-collapse:hover {
+  opacity: 1;
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
 }
 .dl-tab {
   flex: 1;

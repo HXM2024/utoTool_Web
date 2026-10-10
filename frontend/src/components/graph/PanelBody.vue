@@ -29,14 +29,21 @@
           v-for="c in injectCards"
           :key="c.id"
           class="obj-item"
-          :class="{ active: ctx.isCardSelected(c.id) }"
+          :class="{ active: ctx.isCardSelected(c.id), global: c.global }"
           :data-card-id="c.id"
           draggable="true"
           @dragstart="ctx.onCardDragStart($event, c)"
           @dblclick="ctx.selectCard(c)"
-          @click="ctx.selectCardInList(c, $event)"
+          @click="ctx.selectCardInList(c, $event, orderedCardIds)"
+          @contextmenu.prevent.stop="openCardMenu($event, c)"
         >
           <span class="obj-drag" title="拖拽到工况 / Ctrl+拖拽复制">⠿</span>
+          <span v-if="c.global" class="obj-global" title="全局卡片：新建配置 / 新建分组时自动带出">全局</span>
+          <span
+            v-if="missingFuncsOf(c).length"
+            class="obj-warn"
+            :title="`调用了函数库里不存在的函数：${missingFuncsOf(c).join('、')}（生成时 CAPL 会编译不过）`"
+          >⚠</span>
           <span class="obj-name" :title="c.name">{{ c.name }}</span>
           <el-icon class="obj-del" @click.stop="ctx.removeCardSelection(c)"><Close /></el-icon>
         </div>
@@ -50,14 +57,21 @@
           v-for="c in recoverCards"
           :key="c.id"
           class="obj-item"
-          :class="{ active: ctx.isCardSelected(c.id) }"
+          :class="{ active: ctx.isCardSelected(c.id), global: c.global }"
           :data-card-id="c.id"
           draggable="true"
           @dragstart="ctx.onCardDragStart($event, c)"
           @dblclick="ctx.selectCard(c)"
-          @click="ctx.selectCardInList(c, $event)"
+          @click="ctx.selectCardInList(c, $event, orderedCardIds)"
+          @contextmenu.prevent.stop="openCardMenu($event, c)"
         >
           <span class="obj-drag" title="拖拽到工况 / Ctrl+拖拽复制">⠿</span>
+          <span v-if="c.global" class="obj-global" title="全局卡片：新建配置 / 新建分组时自动带出">全局</span>
+          <span
+            v-if="missingFuncsOf(c).length"
+            class="obj-warn"
+            :title="`调用了函数库里不存在的函数：${missingFuncsOf(c).join('、')}（生成时 CAPL 会编译不过）`"
+          >⚠</span>
           <span class="obj-name" :title="c.name">{{ c.name }}</span>
           <el-icon class="obj-del" @click.stop="ctx.removeCardSelection(c)"><Close /></el-icon>
         </div>
@@ -72,14 +86,21 @@
         v-for="c in cardList"
         :key="c.id"
         class="obj-item"
-        :class="{ active: ctx.isCardSelected(c.id) }"
+        :class="{ active: ctx.isCardSelected(c.id), global: c.global }"
         :data-card-id="c.id"
         draggable="true"
         @dragstart="ctx.onCardDragStart($event, c)"
         @dblclick="ctx.selectCard(c)"
-        @click="ctx.selectCardInList(c, $event)"
+        @click="ctx.selectCardInList(c, $event, orderedCardIds)"
+        @contextmenu.prevent.stop="openCardMenu($event, c)"
       >
         <span class="obj-drag" title="拖拽到工况 / Ctrl+拖拽复制">⠿</span>
+        <span v-if="c.global" class="obj-global" title="全局卡片：新建配置 / 新建分组时自动带出">全局</span>
+        <span
+          v-if="missingFuncsOf(c).length"
+          class="obj-warn"
+          :title="`调用了函数库里不存在的函数：${missingFuncsOf(c).join('、')}（生成时 CAPL 会编译不过）`"
+        >⚠</span>
         <span class="obj-name" :title="c.name">{{ c.name }}</span>
         <el-icon class="obj-del" @click.stop="ctx.removeCardSelection(c)"><Close /></el-icon>
       </div>
@@ -113,6 +134,7 @@
         :frame-case-ids="ctx.frameCaseIds.value"
         :case-rows-map="ctx.frameCaseRowsMap.value"
         :load-case-code="ctx.loadCaseCode"
+        :func-names="ctx.knownFuncNames.value"
         @update:graph="ctx.onGraphChange"
         @update:active-frame-id="ctx.setActiveFrame"
         @select-card="ctx.focusLibraryCard"
@@ -123,23 +145,34 @@
 
     <!-- 映射表 -->
     <div v-else-if="panelId === 'mapping'" class="pb-fill">
-      <MappingManager :mapping="ctx.mapping.value" @update:mapping="ctx.onMappingChange" />
+      <MappingManager
+        :mapping="ctx.mapping.value"
+        @update:mapping="ctx.onMappingChange"
+        @toggle-global="(list, on) => ctx.setMappingsGlobal(list, on)"
+      />
     </div>
 
     <!-- 函数库 -->
     <div v-else-if="panelId === 'func'" class="pb-fill">
-      <PanelContent panel-key="func" />
+      <PanelContent panel-key="func" @saved="onFuncLibSaved" />
     </div>
 
     <!-- 值资源库 -->
     <div v-else-if="panelId === 'value'" class="pb-fill">
-      <ValueLibraryPanel :values="ctx.valueLibrary.value" @update:values="ctx.onValueLibraryChange" />
+      <ValueLibraryPanel
+        :values="ctx.valueLibrary.value"
+        @update:values="ctx.onValueLibraryChange"
+        @toggle-global="(list, on) => ctx.setValuesGlobal(list, on)"
+      />
     </div>
 
     <!-- 对象浏览器 -->
     <div v-else class="pb-fill">
       <PanelContent panel-key="obj" @collapse="ctx.hideObj" />
     </div>
+
+    <!-- 卡片/映射/值资源的右键菜单（列表行右键「设为全局 / 取消全局」） -->
+    <CtxMenu ref="ctxMenu" @select="onMenuSelect" />
   </div>
 </template>
 
@@ -147,6 +180,9 @@
 import { computed, inject, nextTick, ref, watch } from 'vue'
 import { Plus, Close } from '@element-plus/icons-vue'
 import type { Card } from '@/types/functionGraph'
+import { collectCalledFunctionNames, EXTERNAL_CALL_WHITELIST } from '@/utils/functionGraph'
+import CtxMenu from './CtxMenu.vue'
+import type { CtxMenuItem } from './CtxMenu.vue'
 import StepEditor from './StepEditor.vue'
 import CaseFrameCanvas from './CaseFrameCanvas.vue'
 import MappingManager from './MappingManager.vue'
@@ -165,8 +201,62 @@ const cardType = computed(() => props.panelId as 'inject' | 'sequence' | 'result
 const cardList = computed<Card[]>(() => ctx.cardLibrary.value[cardType.value] || [])
 const injectCards = computed<Card[]>(() => (ctx.cardLibrary.value.inject || []).filter((c: Card) => c.role !== 'recover'))
 const recoverCards = computed<Card[]>(() => (ctx.cardLibrary.value.inject || []).filter((c: Card) => c.role === 'recover'))
+/** 本面板卡片的可见顺序（Shift 范围选择 / 右键批量操作用）：故障注入面板 = 注入组 + 恢复组 */
+const orderedCards = computed<Card[]>(() =>
+  props.panelId === 'inject' ? [...injectCards.value, ...recoverCards.value] : cardList.value,
+)
+const orderedCardIds = computed<string[]>(() => orderedCards.value.map((c) => c.id))
 
 const rootEl = ref<HTMLElement | null>(null)
+
+// ===== 「调用了函数库里不存在的函数」告警（卡片行上按 ⚠ 提示） =====
+/** 已知函数名集合；函数库还没加载出来（空）时为 null，此时不做这项校验 */
+const knownFuncSet = computed<Set<string> | null>(() => {
+  const list = (ctx.knownFuncNames?.value as string[]) || []
+  return list.length ? new Set(list) : null
+})
+/** 该卡片调用的、函数库里不存在的函数名（白名单内的外部/内置函数不算） */
+function missingFuncsOf(c: Card): string[] {
+  const known = knownFuncSet.value
+  if (!known) return []
+  return collectCalledFunctionNames(c.steps).filter(
+    (n) => !known.has(n) && !EXTERNAL_CALL_WHITELIST.has(n),
+  )
+}
+/** 函数库面板保存后：用它回传的新源码刷新「已知函数名」，卡片上的告警随之更新 */
+function onFuncLibSaved(functionLibrary?: string) {
+  ctx.refreshKnownFuncNames?.(functionLibrary)
+}
+// ===== 卡片右键菜单：设为全局 / 取消全局（右键的那张在多选里时，作用于整批选中卡片） =====
+const ctxMenu = ref<InstanceType<typeof CtxMenu> | null>(null)
+/** 右键作用的卡片集合：右键目标在多选集合里 → 整批；否则只作用于它自己（并把选中态切到它） */
+function menuCards(c: Card): Card[] {
+  const ids = (ctx.selectionCardIds.value as string[]) || []
+  if (ids.length > 1 && ids.includes(c.id)) {
+    const picked = orderedCards.value.filter((x) => ids.includes(x.id))
+    if (picked.length) return picked
+  }
+  ctx.selectCardInList(c)
+  return [c]
+}
+function openCardMenu(e: MouseEvent, c: Card) {
+  const list = menuCards(c)
+  const globals = list.filter((x) => x.global).length
+  const items: CtxMenuItem[] = []
+  if (globals < list.length) {
+    items.push({ key: 'global', label: list.length > 1 ? `设为全局（${list.length - globals} 张）` : '设为全局' })
+  }
+  if (globals > 0) {
+    items.push({ key: 'unglobal', label: list.length > 1 ? `取消全局（${globals} 张）` : '取消全局' })
+  }
+  ctxMenu.value?.open(e, items, list)
+}
+function onMenuSelect(key: string, payload: unknown) {
+  const list = (payload as Card[]) || []
+  if (!list.length) return
+  if (key === 'global') ctx.setCardsGlobal(list.filter((c) => !c.global), true)
+  else if (key === 'unglobal') ctx.setCardsGlobal(list.filter((c) => c.global), false)
+}
 /** 把列表里对应条目滚进可视区（条目本来就在视口内时是空操作，不会跳动） */
 async function scrollItemIntoView(attr: string, id: string) {
   if (!id) return
@@ -288,6 +378,25 @@ function onFrameDrop(e: DragEvent) {
 .obj-item.active {
   background: #ecf5ff;
   border-color: var(--el-color-primary);
+}
+/* 全局卡片标记：琥珀色小胶囊，一眼可辨 */
+.obj-global {
+  flex-shrink: 0;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 15px;
+  color: #b88230;
+  background: #fdf6ec;
+  border: 1px solid #f5dab1;
+  pointer-events: none;
+}
+/* 卡片调用了函数库里不存在的函数：与画布上「未连线卡片」同一套 ⚠ 提示样式 */
+.obj-warn {
+  flex-shrink: 0;
+  color: #e6a23c;
+  font-weight: 700;
+  cursor: help;
 }
 .obj-drag {
   color: #c0c4cc;

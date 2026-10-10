@@ -896,7 +896,7 @@
                 </div>
               </div>
 
-              <!-- 纯参数卡片（11ResetTime：11 重启后等待报文的时间，排在 Ready_OffDiagStop 正下方） -->
+              <!-- 纯参数卡片（11ResetTime / IGON_OFF：只有一个输入框、无开关，跟随自动落位） -->
               <div
                 v-for="card in paramCardDefs"
                 :key="card.key"
@@ -926,6 +926,12 @@
                 </div>
               </div>
 
+              <!-- 分组卡片独立子网格：整行另起（占满 8 列），内部两列并排，
+                   避免 4 列宽的卡片在外层 8 列网格里落位参差、留出大片空白 -->
+              <div
+                class="other-group-wrap"
+                :style="{ gridRow: `span ${groupWrapRowSpan}` }"
+              >
               <!-- DiagStop Group 卡片（OTA / Sig / PwrStsFb） -->
               <div
                 v-for="card in groupCardDefs"
@@ -1015,6 +1021,122 @@
                     </div>
                   </div>
                 </div>
+              </div>
+              <!-- Config_Diag：与 SignalValue 同款分组卡片（半宽 + 分组条目格式）。
+                   ① 全配、② 全不配固定各一条（无删除）；③ 部分配置按「+ 添加」逐条录入 -->
+              <div
+                class="other-card other-card--group"
+                :class="{ 'other-card--active': otherCheckboxStates.configDiag }"
+                :style="{ gridRow: `span ${configDiagRowSpan}` }"
+                @click="otherCheckboxStates.configDiag = !otherCheckboxStates.configDiag"
+              >
+                <div class="other-card-header">
+                  <span class="other-card-title">Config_Diag</span>
+                  <div class="other-card-header-actions">
+                    <el-button
+                      class="other-add-btn"
+                      size="small"
+                      type="primary"
+                      link
+                      @click.stop="addPartialConfig"
+                    >
+                      + 添加
+                    </el-button>
+                    <el-popover
+                      v-if="OTHER_CARD_DOCS.configDiag"
+                      placement="bottom-end"
+                      trigger="click"
+                      :width="320"
+                    >
+                      <template #reference>
+                        <el-icon class="other-card-help" title="使用说明" @click.stop><QuestionFilled /></el-icon>
+                      </template>
+                      <div class="other-card-help-text">{{ OTHER_CARD_DOCS.configDiag }}</div>
+                    </el-popover>
+                  </div>
+                </div>
+                <div class="other-card-body other-card-body--groups" @click.stop>
+                  <!-- ① 全配：固定，无删除 -->
+                  <div class="other-group-item">
+                    <div class="other-group-header">
+                      <span class="other-group-idx">#1 AllConfig_Diag</span>
+                    </div>
+                    <div class="other-group-fields">
+                      <el-input
+                        v-model="otherData['configUdsCommand']"
+                        placeholder="配置所有功能的UDS指令"
+                        size="small"
+                        @click.stop
+                        @input="onUdsInput('configUdsCommand')"
+                      />
+                    </div>
+                  </div>
+                  <!-- ② 全不配：固定，无删除 -->
+                  <div class="other-group-item">
+                    <div class="other-group-header">
+                      <span class="other-group-idx">#2 EraseConfig_Diag</span>
+                    </div>
+                    <div class="other-group-fields">
+                      <el-input
+                        v-model="otherData['eraseUdsCommand']"
+                        placeholder="擦除所有配置的UDS指令"
+                        size="small"
+                        @click.stop
+                        @input="onUdsInput('eraseUdsCommand')"
+                      />
+                      <el-input
+                        v-model="otherData['unconfigDtc']"
+                        placeholder="未配置DTC (如 456F00)"
+                        size="small"
+                        @click.stop
+                        @input="onHexIdInput('unconfigDtc')"
+                      />
+                      <el-input
+                        v-model="otherData['excludeMsgIds']"
+                        placeholder="排除的报文ID (逗号分隔)"
+                        size="small"
+                        @click.stop
+                      />
+                    </div>
+                  </div>
+                  <!-- ③ 部分配置：数量不定，+ 添加 -->
+                  <div v-if="!(otherData.configDiagPartial || []).length" class="other-drop-hint">
+                    点击"+ 添加"录入部分配置（UDS指令 + 关联ID），每条生成一条用例
+                  </div>
+                  <div
+                    v-for="(g, idx) in (otherData.configDiagPartial || [])"
+                    :key="idx"
+                    class="other-group-item"
+                  >
+                    <div class="other-group-header">
+                      <span class="other-group-idx">#{{ idx + 3 }} PartialConfig_Diag</span>
+                      <el-button
+                        size="small"
+                        type="danger"
+                        link
+                        @click.stop="removePartialConfig(idx)"
+                      >
+                        删除
+                      </el-button>
+                    </div>
+                    <div class="other-group-fields">
+                      <el-input
+                        v-model="g.udsCommand"
+                        placeholder="UDS指令"
+                        size="small"
+                        @click.stop
+                        @input="g.udsCommand = normalizeUdsText(g.udsCommand)"
+                      />
+                      <el-input
+                        v-model="g.relatedIds"
+                        placeholder="关联ID (逗号分隔)"
+                        size="small"
+                        @click.stop
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
               </div>
             </div>
           </div>
@@ -1477,12 +1599,12 @@ import ObjectPanel, { type TestParamCard } from '@/components/ObjectPanel.vue'
 import DtcCardList from '@/components/DtcCardList.vue'
 import DbcSignalTable from '@/components/DbcSignalTable.vue'
 import ResizableSplitter from '@/components/ResizableSplitter.vue'
-import { parseDbcRecords, parseParamColumns } from '@/utils/dbc'
+import { parseDbcRecords, parseParamColumns, parseFlatParamCells } from '@/utils/dbc'
 import { getChartData, updateParams, generateCAN, parseA2lFile, parseCAN, parseDbcFile, getCrcAlgorithms, exportConfigExcel } from '@/api/can'
 import { getConfig, saveConfig, openFolder } from '@/api/config'
 import type { Column, VoltageChartData } from '@/types'
 import type { DbcTableColumn, DbcTableRow } from '@/types/dbcTable'
-import { useModuleStore, type A2lVars } from '@/stores/modules'
+import { useModuleStore, DEFAULT_CCP_PRECISION, DEFAULT_CCP_OFFSET, type A2lVars } from '@/stores/modules'
 import { useResizableSize } from '@/composables/useResizableSize'
 import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
 
@@ -1949,21 +2071,21 @@ const selectedTestParam = computed(() => {
   return targetNode.testParams.find((p: any) => p.value === paramValue) || null
 })
 
+// 仅在「报DTC的值」变化时从「不报DTC的值」中移除重复项，避免 deep watch
+// 在用户输入 noDtcValue 中间态时反复回写（逗号、空格等被 join 规范化吃掉）。
 watch(
-  () => selectedTestParam.value?.params,
-  (params) => {
-    if (!params) return
-    const paramValue = selectedTestParam.value?.value
-    if (paramValue === 'SigInvalidTest') {
-      const dtcValues = parseValues(params.dtcValue)
-      const noDtcValues = parseValues(params.noDtcValue)
+  () => selectedTestParam.value?.params?.dtcValue,
+  (_newVal) => {
+    const param = selectedTestParam.value
+    if (!param || param.value !== 'SigInvalidTest') return
+    const params = param.params
+    const dtcValues = parseValues(params.dtcValue)
+    const noDtcValues = parseValues(params.noDtcValue)
 
-      const dtcSet = new Set(dtcValues)
-      const filteredNoDtc = noDtcValues.filter((v) => !dtcSet.has(v))
-      params.noDtcValue = filteredNoDtc.join(', ')
-    }
-  },
-  { deep: true }
+    const dtcSet = new Set(dtcValues)
+    const filteredNoDtc = noDtcValues.filter((v) => !dtcSet.has(v))
+    params.noDtcValue = filteredNoDtc.join(', ')
+  }
 )
 
 // 切换为自动遍历时清空手动测试值，保证后端按 autoRange 生成遍历用例
@@ -2690,8 +2812,8 @@ interface OtherInputDef {
   key: string
   placeholder: string
   type?: 'text' | 'select'
-  /** 输入校验类型：int=仅整数，hex=16进制（0x 前缀） */
-  validate?: 'int' | 'hex'
+  /** 输入校验类型：int=仅整数，hex=16进制（0x 前缀），uds=UDS 指令字节序列 */
+  validate?: 'int' | 'hex' | 'uds'
   /** type=select 时的开关取值与文案（默认 TRUE / FALSE） */
   activeValue?: string
   inactiveValue?: string
@@ -2704,8 +2826,8 @@ interface OtherFieldDef {
   key: string
   label: string
   inputs: OtherInputDef[]
-  /** 'rows' = 内部按 12 列栅格排布，靠 span 让每组参数各占一行 */
-  layout?: 'rows'
+  /** 'rows' = 内部按 12 列栅格排布，靠 span 让每组参数各占一行；'break' = 强制从第 1 列开始（该卡另起一行） */
+  layout?: 'rows' | 'break'
   /** 覆盖卡片尺寸，取值为 `.other-card--span-<列>x<行>` 的 `<列>x<行>`（如 '3x2'）；不填则按输入框数量自动取 */
   span?: string
 }
@@ -2758,13 +2880,17 @@ const OTHER_CARD_DOCS: Record<string, string> = {
   powerDownDiagStop: 'PowerDown_DiagStop\n开启后生成 PowerDown_Diag 用例：IG ON 后等待所填时间，确认诊断已开启（注入各类故障应无故障误报）；随后 IG OFF 再等待所填时间，确认诊断已停止。\n\n参数：检测结果的等待时间（ms）。',
   highBusLoadTxatt: 'HighBusLoad_Txatt\n开启后生成 HighBusLoad_Txatt 用例：把总线负载逐步加到所填负载率，分别用 0x7FF 与 1 两种 ID 发送负载报文，检查 ECU 报文仍能正常发送则通过。\n\n参数：负载率（%）。',
   highBusLoadCommunication: 'HighBusLoad_communication\n开启后生成 HighBusLoad_communication 用例：把总线负载加到所填负载率并持续观察，检查总线未出现错误帧则通过。\n\n参数：负载率（%）。',
+  highBusLoadDiag: 'HighBusLoad_Diag\n开启后生成 HighBusLoad_Diag 用例：先用 14 FF FF FF 清除故障并确认无当前历史网络故障，再模拟高优先级报文把总线负载加到所填负载率并持续 1min，随后读全部故障码并检查外发故障灯，要求无当前历史故障码且故障灯 = 0x0；最后停止模拟负载。\n\n参数：负载率（%）。',
+  dtcAged: 'DTCAged\n开启后生成 DTC_Aged 用例：逐个制造 Fault_array 中的每个故障，确认能报出对应 DTC，同时把全部故障 DTC 去重汇总成白名单；随后按所填次数反复上下电做「老化」，每次都用 mask=8 断言这些 DTC 仍作为历史故障存在；最后再上下电一次，断言当前与历史故障码已全部清除（掩码 9）。\n\n参数：老化上下电次数（次）。',
   minDelayTime: 'Min_delayTime\n开启后生成 Min_delayTime 用例：对每个 Tx 报文统计同一 ID 报文的最小发送间隔，实测最小间隔小于所填值则失败。\n\n参数：最小间隔时间（ms，整数）。',
   shutdown: 'Shutdown\n开启后生成 Shutdown_time 用例：Ready_Off 后 IG OFF，检查通信停止时间是否落在所填 [minTime, maxTime] 区间内，超出区间判失败。\n\n参数：下电诊断停止 minTime / maxTime（ms）。',
   busOff: 'tBusOff\n开启后按三组参数生成 BusOff 相关用例：\n\n① 快恢复（tbusoffquickNum / tquickmin / tquickmax）\n生成 BusOff_quick_recovery 用例：连续制造 BusOff 并恢复，检查报文快恢复时间是否落在 [tquickmin, tquickmax] 区间内。\n\n② 慢恢复（tbusoffslowNum / tslowmin / tslowmax）\n生成 BusOff_slow_recovery 用例：连续制造 BusOff 并恢复，检查报文慢恢复时间是否落在 [tslowmin, tslowmax] 区间内。\n\n③ DTC（DTCbusoffNum / DTCbusoffrecovery / DTCbusoffrecoveryType / DTC）\n生成 BusOff DTC 检测用例。\nDTCbusoffrecovery 为恢复量，用右侧开关声明它的含义：开=时间（ms），关=报文帧数。\n\n三组参数互相独立，各自填了才会生成对应用例；Num 为busoff次数，min/max 单位为 ms。',
   disableXcp: 'DisableXCP\n开启后生成 DisableXCP 用例：先发送「关闭XCP」的 UDS 指令，随后连接 XCP 并检查指定 ID 的报文已停止发送；再发送「打开XCP」指令并重新 Init，检查该 ID 报文恢复正常发送。\n\n参数：XCP ID（16 进制，如 0x123）、关闭XCP的UDS指令、打开XCP的UDS指令。',
+  configDiag: 'Config_Diag\n开启后生成 AllConfig_Diag（配置所有功能）、EraseConfig_Diag（擦除所有配置）及若干 PartialConfig_Diag_N（部分配置）：\n\n① AllConfig_Diag：Req14 → 发送「配置所有功能」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，并断言其为历史故障）→ 注入全部网络故障 → 读取全部故障（白名单=全部网络故障 DTC + 未配置DTC）→ 恢复全部网络故障 → 再次读取（网络故障 DTC 应转历史）。\n\n② EraseConfig_Diag：Req14 → 发送「擦除所有配置」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，断言其为当前故障）→ 注入全部网络故障 → 读取全部故障（白名单=未被排除的 DTC + 未配置DTC）→ 恢复全部网络故障 → 读取（未配置DTC 应为当前故障）。\n\n③ PartialConfig_Diag_N（部分配置，数量不定，点「+ 添加」逐条录入）：Req14 → 发送该条的 UDS 指令 → 正常上下电（当前应无故障）→ 按分类静默注入故障 → 读取全部故障（白名单=该分类 DTC 去掉该条「关联ID」命中的，不含未配置DTC）→ 恢复后当前应无故障。与 EraseConfig 的区别：不期望「未配置DTC」，且只排除该条填写的「关联ID」。\n\n参数：全配=配置所有功能的UDS指令；全不配=擦除所有配置的UDS指令 + 未配置DTC（如 456F00）+ 擦除后不再报出的报文ID（可多个，英文逗号分隔，如 0x123,0x456）；部分配置=每条「UDS指令 + 关联ID（可多个，英文逗号分隔）」。',
   sliderGroup: '开关配置（四项开关，互相独立）\n· ExtendFrame：对每个 Rx 报文 ID 发送扩展帧，检查总线未出现错误帧。\n· RemotrFrame：对每个 Rx 报文 ID 发送远程帧，检查总线未出现错误帧。\n· UnexpectDlc:less：检查各 Tx 报文是否出现 DLC 小于预期的非预期长度。\n· UnexpectDlc:Greater：检查各 Tx 报文是否出现 DLC 大于预期的非预期长度。\n\n四项均依赖 DBC 中已配置的 Tx/Rx 报文列表，需先导入并配置 DBC 再勾选。',
   readyOffDiagStop: 'Ready_OffDiagStop\n开启后生成 Ready_Off_Diag 用例：Ready Off 状态下，所填报文 ID 对应的故障应被禁止诊断（不置位），其它故障仍正常触发；用于验证 Ready Off 时车速类 DTC 不置位。\n\n参数：车速报文ID（如 0x123）。',
   waittime: '11ResetTime\n每个 Tx 报文都会生成 11 重启用例（xxx_11Reset_Attribute）：发送 11 01（ECU 复位）后等待该报文重新发出。\n\n参数：等待时间（ms），未填时按 3000 处理。',
+  igonDag: 'IGON_OFF\n无需勾选，保存配置即生成 IGON_OFF 用例：执行 Init → Ready_Off → IG OFF（等待）→ IG ON（等待），中间先断言应无故障；随后 Ready_On → K30 OFF（等待）→ K30 ON（等待），最后读取 DTC 并断言结果。\n\n参数：IG ON 后读取的 DTC（16 进制，如 0xC12345）。留空时不读取 DTC，改用 _testnullDTC(0,1,0) 断言应无故障。',
   signalValue: 'SignalValue\n从 DBC 拖入信号，或点「+ 添加」手动录入；每条配置生成一组上电信号检查：上电后监控该信号，检查其在所填时间内达到所填值，未达到则失败。\n\n字段：信号名（拖入）、上电发送有效值时间（ms）、无效值。\n可添加多组，每组独立生成检查语句。',
   otaDiagStop: 'OTA_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：通过信号值开启 OTA 网络诊断，注入故障应能正常诊断，并校验低压/高压下的 DTC；再用停止值关闭网络诊断，注入的故障应不再被诊断。\n\n字段：OTA信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔），用例按取值循环执行。',
   sigDiagStop: 'Sig_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：先设置「开启诊断的信号值」，注入故障应能诊断到 DTC；再设置「关闭诊断的信号值」，故障应不再被诊断。\n\n字段：信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔）。',
@@ -2802,8 +2928,6 @@ const otherFieldDefs: OtherFieldDef[] = [
   { key: 'igonDiagStartTime', label: 'IGON_DiagStartTime', inputs: [{ key: 'igonDiagStartTime', placeholder: 'IGON开启诊断时间', validate: 'int' }] },
   { key: 'igoffDiagStopTime', label: 'IGOFF_DiagStopTime', inputs: [{ key: 'igoffDiagStopTime', placeholder: 'IGOFF关闭诊断时间', validate: 'int' }] },
   { key: 'powerDownDiagStop', label: 'PowerDown_DiagStop', inputs: [{ key: 'resultWaitTime', placeholder: '检测结果的等待时间', validate: 'int' }] },
-  { key: 'highBusLoadTxatt', label: 'HighBusLoad_Txatt', inputs: [{ key: 'busLoadRate', placeholder: '负载率', validate: 'int' }] },
-  { key: 'highBusLoadCommunication', label: 'HighBusLoad_communication', inputs: [{ key: 'busLoadRate2', placeholder: '负载率', validate: 'int' }] },
   { key: 'minDelayTime', label: 'Min_delayTime', inputs: [{ key: 'minDelayTime', placeholder: '最小间隔时间：整数', validate: 'int' }] },
   { key: 'shutdown', label: 'Shutdown', inputs: [
     { key: 'shutdownDiagStopMinTime', placeholder: '下电诊断停止minTime', validate: 'int' },
@@ -2814,11 +2938,22 @@ const otherFieldDefs: OtherFieldDef[] = [
     { key: 'closeXcpUdsCommand', placeholder: '关闭XCP的UDS指令' },
     { key: 'openXcpUdsCommand', placeholder: '打开XCP的UDS指令' },
   ] },
+  // Config_Diag 已改为与 SignalValue 同款的分组卡片（见模板 other-group-wrap 内），不再走 otherFieldDefs
+  // 三个「总线负载率」配置集中成一排、等宽（2 列 × 1 行）。
+  // 它们必须相邻：原先夹在 2×2 的 tBusOff 大卡两侧，会被隔成两段；
+  // 排在简单卡片末尾时，8 列网格里正好落成连续的一排（各占 1-2 / 3-4 / 5-6 列）
+
   // { key: 'busOffTxatt', label: 'BusOff_Txatt', inputs: [
   //   { key: 'angleSignalName', placeholder: '角度信号名' },
   //   { key: 'torqueSignalName', placeholder: '扭矩信号名' },
   // ] },
-
+  // 三个「总线负载率」并成一排：各占 2 列 × 1 行，第一张用 layout:'break' 强制另起一行（从第 1 列开始），
+  // 后两张紧随其后。用 break 而不是靠顺序，是为了不依赖 8 列网格的落位结果（否则会被 2×2 的 tBusOff 大卡隔开、或跨行拆成两段）。
+  // 取 2 列宽：3 张共占 6 列，本行只剩 1 个空格；若取 1 列宽则 3 张只占 3 列，本行会空出 3~4 格，反而松散
+  { key: 'highBusLoadTxatt', label: 'HighBusLoad_Txatt', span: '1x1', layout: 'break', inputs: [{ key: 'busLoadRate', placeholder: '负载率', validate: 'int' }] },
+  { key: 'highBusLoadCommunication', label: 'HighBusLoad_communication', span: '1x1', inputs: [{ key: 'busLoadRate2', placeholder: '负载率', validate: 'int' }] },
+  { key: 'highBusLoadDiag', label: 'HighBusLoad_Diag', span: '1x1', inputs: [{ key: 'busLoadRate3', placeholder: '负载率', validate: 'int' }] },
+  { key: 'dtcAged', label: 'DTCAged', span: '1x1', inputs: [{ key: 'dtcAgedNum', placeholder: '老化次数', validate: 'int' }] },
 ]
 
 /** Group 卡片（拖拽 DBC 对象生成多组参数） */
@@ -2873,6 +3008,8 @@ const hexIdCardDefs = ref<HexIdCardDef[]>([
 const paramCardDefs = ref<ParamCardDef[]>([
   // 11 重启用例（xxx_11Reset_Attribute）里 testWaitForMessage 的等待时间
   { key: 'waittime', label: '11ResetTime', placeholder: '等待时间 (ms)', validate: 'int' },
+  // IGON_OFF 用例里 TestStep_ReadDTC 读取的 DTC（后端 _add_IGON_OFF_testcase，无开关、保存即生成）
+  { key: 'igonDag', label: 'IGON_OFF', placeholder: 'DTC (如 0xC12345)', validate: 'hex' },
 ])
 
 /** Compound 滑块卡片 */
@@ -2930,6 +3067,26 @@ function removeGroup(cardKey: string, groupId: string) {
   if (idx >= 0) card.groups.splice(idx, 1)
 }
 
+/** Config_Diag「部分配置」列表：数量不定，每条 = { udsCommand, relatedIds }。
+ *  直接存在 otherData.configDiagPartial（随 Other 一起保存/加载），无需额外字段。 */
+function addPartialConfig() {
+  if (!Array.isArray(otherData.value.configDiagPartial)) {
+    otherData.value.configDiagPartial = []
+  }
+  otherData.value.configDiagPartial.push({ udsCommand: '', relatedIds: '' })
+  if (!otherCheckboxStates.value.configDiag) {
+    otherCheckboxStates.value.configDiag = true
+  }
+}
+
+/** 删除「部分配置」第 idx 条 */
+function removePartialConfig(idx: number) {
+  const list = otherData.value.configDiagPartial
+  if (Array.isArray(list) && idx >= 0 && idx < list.length) {
+    list.splice(idx, 1)
+  }
+}
+
 /** 获取 group 卡片的 checkbox 状态（有 group 即视为启用） */
 function isGroupActive(cardKey: string): boolean {
   const card = groupCardDefs.value.find(c => c.key === cardKey)
@@ -2955,6 +3112,24 @@ function getGroupRowSpan(groupCount: number): number {
   if (groupCount === 0) return 2
   return Math.max(2, Math.ceil((groupCount * 70 + 40) / 92))
 }
+
+/** Config_Diag 卡片条目数：2 条固定（全配 / 全不配）+ 部分配置条数 */
+const configDiagEntryCount = computed(() =>
+  2 + (Array.isArray(otherData.value.configDiagPartial) ? otherData.value.configDiagPartial.length : 0)
+)
+
+/** Config_Diag 卡片跨行数：与分组卡片同口径（每行 92px，每条约 70px） */
+const configDiagRowSpan = computed(() => getGroupRowSpan(configDiagEntryCount.value))
+
+/** 分组卡片子网格占用的外层行数：两列一行，累加每行两张卡片跨行数的较大值；
+ *  Config_Diag 也在这个子网格里（作为第 5 张），故一并计入 */
+const groupWrapRowSpan = computed(() => {
+  const rows = groupCardDefs.value.map(c => getGroupRowSpan(c.groups.length))
+  rows.push(configDiagRowSpan.value)
+  let total = 0
+  for (let i = 0; i < rows.length; i += 2) total += Math.max(rows[i], rows[i + 1] ?? 0)
+  return Math.max(2, total)
+})
 
 /** Hex ID 输入校验与转换：10 进制自动转 16 进制（0x 前缀） */
 function onHexIdInput(cardKey: string) {
@@ -3004,12 +3179,51 @@ function onIntInput(inputKey: string) {
   }
 }
 
+/** UDS 文本规范化：把各种写法统一成 0x14,0xFF,0xFF,0xFF（字母大写）。
+ *  兼容 `14 FF FF FF` / `0x14,0xFF,0xFF,0xFF` / `[0x14,0xFF,0xFF,0xFF]` /
+ *  `14ffffff`（无分隔的一串十六进制）。编辑中间态（单个字符、末尾分隔符）原样保留，避免删不掉；
+ *  含非十六进制字符时原样返回。 */
+function normalizeUdsText(raw: string): string {
+  if (raw === '') return raw
+  // 去掉包围的方括号/花括号，按逗号或空白切分
+  const parts = raw.replace(/[[\]{}]/g, '').split(/[\s,]+/).filter(s => s !== '')
+  if (parts.length === 0) return raw
+  const out: string[] = []
+  for (const p of parts) {
+    const hex = p.replace(/^0[xX]/, '')
+    // 含非十六进制字符：不强行纠正，保留用户原输入
+    if (!/^[0-9a-fA-F]+$/.test(hex)) return raw
+    if (hex.length > 2 && hex.length % 2 === 0) {
+      for (let i = 0; i < hex.length; i += 2) out.push('0x' + hex.slice(i, i + 2).toUpperCase())
+    } else if (hex.length === 2) {
+      out.push('0x' + hex.toUpperCase())
+    } else {
+      // 单个/奇数个十六进制字符：编辑中间态，原样保留
+      out.push(p)
+    }
+  }
+  const normalized = out.join(',')
+  const trailingSep = /[,\s]\s*$/.test(raw)
+  return trailingSep ? normalized + ',' : normalized
+}
+
+/** UDS 指令输入校验：把 otherData 里该字段的写法规范化 */
+function onUdsInput(inputKey: string) {
+  const raw = String(otherData.value[inputKey] || '')
+  const finalVal = normalizeUdsText(raw)
+  if (finalVal !== raw) {
+    otherData.value[inputKey] = finalVal
+  }
+}
+
 /** 根据输入框校验类型分发到对应校验函数 */
 function onValidateInput(inp: OtherInputDef) {
   if (inp.validate === 'int') {
     onIntInput(inp.key)
   } else if (inp.validate === 'hex') {
     onHexIdInput(inp.key)
+  } else if (inp.validate === 'uds') {
+    onUdsInput(inp.key)
   }
 }
 
@@ -3176,7 +3390,7 @@ function onDtcCardUpdate(payload: { row: number; col: number; value: string }) {
   }
   if (!dtcRaw.value.columns) dtcRaw.value.columns = []
   if (!dtcRaw.value.rows) dtcRaw.value.rows = []
-  
+
   while (payload.col >= dtcRaw.value.columns.length) {
     dtcRaw.value.columns.push('')
   }
@@ -3186,8 +3400,25 @@ function onDtcCardUpdate(payload: { row: number; col: number; value: string }) {
   while (payload.col >= dtcRaw.value.rows[payload.row].length) {
     dtcRaw.value.rows[payload.row].push('')
   }
-  
-  dtcRaw.value.rows[payload.row][payload.col] = payload.value
+
+  let value = String(payload.value ?? '')
+  // DTC_Type 列填写规范：只允许 Fun / Bus / Volt / BusOff（空值表示未填写）
+  const colTitle = String(dtcRaw.value.columns[payload.col] ?? '').replace(/^⚠\s*/, '').trim()
+  if (colTitle === 'DTC_Type') {
+    const trimmed = value.trim()
+    if (trimmed === '') {
+      value = ''
+    } else {
+      const matched = DTC_TYPE_OPTIONS.find(o => o.toLowerCase() === trimmed.toLowerCase())
+      if (!matched) {
+        ElMessage.warning({ message: `DTC_Type 只允许填写：${DTC_TYPE_OPTIONS.join(' / ')}`, grouping: true })
+        return
+      }
+      value = matched
+    }
+  }
+
+  dtcRaw.value.rows[payload.row][payload.col] = value
 }
 
 /** DTC 删除列（仅允许删除检测对象列） */
@@ -3203,6 +3434,151 @@ function onDtcColumnRemove(payload: { col: number }) {
 
 const selectedDtcRow = ref(-1)
 
+/** DTC_Type 列允许填写的取值（后端按该列原样写入生成的 DTC_Data_array） */
+const DTC_TYPE_OPTIONS = ['Fun', 'Bus', 'Volt', 'BusOff']
+
+// ==================== Excel 导入数据校验 ====================
+//
+// 导入 Excel 时按规范校验测试参数与 DTC 表：能自动纠正的直接改（如统一 0x 前缀、
+// 规范化大小写），不能纠正的清空或移除；所有改动汇总后一次性提示（详见控制台）。
+
+/** SigInvalidTest 子类型允许取值（对应后端 SigInvalid / SigvalueInvalid 两条生成路径） */
+const SIG_INVALID_TYPE_OPTIONS = ['SigInvalid', 'SigvalueInvalid']
+
+/** DTC 文本：0x + 1~8 位十六进制 */
+const DTC_HEX_RE = /^0[xX]([0-9a-fA-F]{1,8})$/
+/** DTC 文本：不带前缀的 1~8 位十六进制（如 C07300，保持原样，不自动补 0x） */
+const DTC_BARE_HEX_RE = /^[0-9a-fA-F]{1,8}$/
+const AUTO_RANGE_TRUE_RE = /^(y|yes|是|true|1)$/i
+const AUTO_RANGE_FALSE_RE = /^(n|no|否|false|0)$/i
+
+/**
+ * 规范化 DTC 文本。
+ * 返回 ``null`` = 非法（调用方应清空并提示）；空串 = 未填写；其余为规范化后的文本。
+ * 只把 ``0X`` 前缀统一成 ``0x``，不给不带前缀的值补前缀（C07300 / 500016 保持原样）。
+ */
+function normalizeDtcText(raw: any): string | null {
+  const text = String(raw ?? '').trim()
+  if (!text) return ''
+  const m = DTC_HEX_RE.exec(text)
+  if (m) return '0x' + m[1]
+  if (DTC_BARE_HEX_RE.test(text)) return text
+  return null
+}
+
+/** 导入校验问题汇总提示（完整明细输出到控制台，避免提示过长） */
+function notifyImportIssues(scope: string, issues: string[]) {
+  if (!issues.length) return
+  console.warn(`[导入校验] ${scope} 共 ${issues.length} 处不合规：\n` + issues.map((s) => '  - ' + s).join('\n'))
+  ElMessage.warning({
+    message: `${scope}已按规范自动纠正 ${issues.length} 处：${issues.slice(0, 3).join('；')}${issues.length > 3 ? ' …（完整明细见控制台）' : ''}`,
+    duration: 10000,
+    showClose: true,
+    grouping: true,
+  })
+}
+
+/**
+ * 校验并纠正一批导入的测试参数（不修改入参，返回新数组）。
+ *
+ * 规则：
+ * - EPS 卡片（CRC 算法名 / Counter）：不在「Counter + 已注册 CRC 算法」内 → 移除；
+ * - SigInvalidTest 子类型：只允许 SigInvalid / SigvalueInvalid，非法按 SigInvalid 处理；
+ * - FactorTest.autoRange：只接受布尔语义（Y/N/是/否/true/false/1/0），非法按 N 处理；
+ * - DTC 字段：只允许 空 / 0x+十六进制 / 裸十六进制，非法清空。
+ */
+function sanitizeImportedParams(list: any[], where: string, issues: string[]): any[] {
+  const crcNames = new Set(crcAlgorithms.value.map((a: any) => String(a?.name || '')))
+  const out: any[] = []
+  for (const p of list || []) {
+    if (!p || !p.value) continue
+    const value = String(p.value)
+
+    // 1) EPS 卡片：CRC 算法名 / Counter
+    if (p.target === 'eps') {
+      // CRC 算法列表尚未加载时不判定，避免误删合法卡片
+      if (!crcNames.size || value === 'Counter' || crcNames.has(value)) out.push(p)
+      else issues.push(`「${where}」的 EPS 类型「${value}」不在允许范围（Counter / 已注册 CRC 算法），已移除`)
+      continue
+    }
+
+    const params = { ...(p.params || {}) }
+
+    // 2) SigInvalidTest 子类型
+    if (value === 'SigInvalidTest') {
+      const raw = String(params.invalidType ?? '').trim()
+      const matched = SIG_INVALID_TYPE_OPTIONS.find((o) => o.toLowerCase() === raw.toLowerCase())
+      if (raw && !matched) {
+        issues.push(`「${where}」的无效类型「${raw}」不在允许范围（${SIG_INVALID_TYPE_OPTIONS.join(' / ')}），已按 SigInvalid 处理`)
+      }
+      params.invalidType = matched || 'SigInvalid'
+    }
+
+    // 3) FactorTest 自动遍历
+    if ('autoRange' in params && typeof params.autoRange !== 'boolean') {
+      const raw = String(params.autoRange ?? '').trim()
+      if (AUTO_RANGE_TRUE_RE.test(raw)) {
+        params.autoRange = true
+      } else if (AUTO_RANGE_FALSE_RE.test(raw)) {
+        params.autoRange = false
+      } else {
+        issues.push(`「${where}」的自动遍历取值「${raw}」不是 Y/N，已按 N 处理`)
+        params.autoRange = false
+      }
+    }
+
+    // 4) DTC 字段格式
+    if ('dtc' in params) {
+      const raw = String(params.dtc ?? '').trim()
+      const fixed = normalizeDtcText(params.dtc)
+      if (fixed === null) {
+        issues.push(`「${where}」的 DTC「${raw}」不是合法十六进制，已清空`)
+        params.dtc = ''
+      } else {
+        if (raw && fixed !== raw) issues.push(`「${where}」的 DTC「${raw}」已规范为「${fixed}」`)
+        params.dtc = fixed
+      }
+    }
+
+    out.push({ ...p, params })
+  }
+  return out
+}
+
+/** 校验/纠正整张测试参数表（导入 Excel 后调用），并弹出问题汇总 */
+function sanitizeImportedParamMap(map: Map<string, any[]>): Map<string, any[]> {
+  const issues: string[] = []
+  const next = new Map<string, any[]>()
+  for (const [key, list] of map) {
+    const cleaned = sanitizeImportedParams(list, key.replace(':::', ' / '), issues)
+    if (cleaned.length) next.set(key, cleaned)
+  }
+  notifyImportIssues('测试参数', issues)
+  return next
+}
+
+/** 校验/纠正导入的 DTC 表 DTC_Type 列（非法值清空） */
+function sanitizeImportedDtcTable(raw: any): void {
+  const cols: any[] = raw?.columns || []
+  const rows: any[][] = raw?.rows || []
+  const colIdx = cols.findIndex((c: any) => String(c ?? '').trim().replace(/^⚠\s*/, '') === 'DTC_Type')
+  if (colIdx < 0) return
+  const issues: string[] = []
+  rows.forEach((row, i) => {
+    if (!Array.isArray(row)) return
+    const cellVal = String(row[colIdx] ?? '').trim()
+    if (!cellVal) return
+    const matched = DTC_TYPE_OPTIONS.find((o) => o.toLowerCase() === cellVal.toLowerCase())
+    if (matched) {
+      row[colIdx] = matched
+    } else {
+      issues.push(`第 ${i + 2} 行 DTC_Type「${cellVal}」不在允许范围（${DTC_TYPE_OPTIONS.join(' / ')}），已清空`)
+      row[colIdx] = ''
+    }
+  })
+  notifyImportIssues('DTC 表', issues)
+}
+
 /** DTC 添加行 */
 function addDtcRow() {
   if (!dtcRaw.value) {
@@ -3213,6 +3589,9 @@ function addDtcRow() {
   // 新行数据列默认填 0（DTC 码列保留空，待用户输入）
   const newRow = new Array(dtcRaw.value.columns.length).fill(0)
   newRow[0] = '' // DTC 码列留空，等用户填写
+  // DTC_Type 列也留空：该列只允许 Fun / Bus / Volt / BusOff，由用户填写
+  const typeCol = dtcRaw.value.columns.findIndex((c: any) => String(c ?? '').trim() === 'DTC_Type')
+  if (typeCol >= 0) newRow[typeCol] = ''
   dtcRaw.value.rows.push(newRow)
 }
 
@@ -3457,9 +3836,20 @@ function buildSignalRowsFromRaw(raw: any): SignalRow[] {
     }
   }
   // 导出格式里的 8 个测试参数明细列（测试参数 / 报DTC值 / 不报DTC值 / DTC / 变量名 / 测试值 / 自动遍历 / 类型），
-  // 一个参数一行；用于手工填这种格式的 Excel 后导入（JSON 列存在时优先用 JSON）
+  // 一个参数一行；用于手工填这种格式的 Excel 后导入（旧导出文件的 JSON 列存在时优先用 JSON）。
+  // 参数名不在已知信号级参数列表中的（如 CRC 算法名 / Counter），视为 EPS 卡片还原 target='eps'。
+  const KNOWN_SIG_PARAMS = ['CRCTest', 'CounterTest', 'SigInvalidTest', 'SigvalueInvalidTest', 'FactorTest']
   const parseParamCols = (cells: string[], target: 'message' | 'signal'): any[] =>
     parseParamColumns(cells, target).map((p) => ({
+      value: p.value,
+      label: p.value,
+      target: (target === 'signal' && !KNOWN_SIG_PARAMS.includes(p.value)) ? 'eps' : p.target,
+      params: { ...p.params },
+      enabled: hasParamData(p),
+    }))
+  // 平铺测试参数列（新导出格式：每类参数每字段一列，如 LostTest / SigInvalidTest / SigInvalidTest_DTC）
+  const parseParamFlat = (cells: Record<string, string>): any[] =>
+    parseFlatParamCells(cells).map((p) => ({
       value: p.value,
       label: p.value,
       target: p.target,
@@ -3483,10 +3873,13 @@ function buildSignalRowsFromRaw(raw: any): SignalRow[] {
       seenMsgKeys.add(rec.msgName)
       const explicitMsg = parseParamJson(msgParamsText.get(rec.msgName) || '')
       const fromMsgCols = parseParamCols(rec.paramCells, 'message')
+      const fromMsgFlat = parseParamFlat(rec.flatParamCells)
       if (explicitMsg.length) {
         newMap.set(rec.msgName, explicitMsg)
       } else if (fromMsgCols.length) {
         newMap.set(rec.msgName, fromMsgCols)
+      } else if (fromMsgFlat.length) {
+        newMap.set(rec.msgName, fromMsgFlat)
       } else if (rec.senders !== 'EPS') {
         const params = buildAutoMsgTestParams({
           senders: rec.senders,
@@ -3506,6 +3899,11 @@ function buildSignalRowsFromRaw(raw: any): SignalRow[] {
       const fromSigCols = parseParamCols(rec.paramCells, 'signal')
       if (fromSigCols.length) {
         newMap.set(key, fromSigCols)
+        continue
+      }
+      const fromSigFlat = parseParamFlat(rec.flatParamCells)
+      if (fromSigFlat.length) {
+        newMap.set(key, fromSigFlat)
         continue
       }
       const fields = {
@@ -3551,7 +3949,8 @@ function buildSignalRowsFromRaw(raw: any): SignalRow[] {
       newMap.set(key, merged)
     }
   }
-  testParamMap.value = newMap
+  // 导入前按规范校验并纠正测试参数（非法值清空/移除，合法值规范化），并汇总提示
+  testParamMap.value = sanitizeImportedParamMap(newMap)
   return records.map((rec) => {
     const row = { __id: signalRowSeq++ } as SignalRow
     signalColumns.forEach((c) => { row[c.key] = '' })
@@ -5049,11 +5448,15 @@ function hasParamData(param: any): boolean {
     case 'CounterTest':
       // CRC / Counter：报值写死，只需填写 DTC 才算已配置（未填 DTC 时为灰色）
       return p.dtc !== '' && p.dtc !== null && p.dtc !== undefined
-    case 'SigInvalidTest':
-      // 类型滑块（SigInvalid / SigvalueInvalid）都需填「报DTC的值 / 不报DTC的值 / DTC」
-      return (p.dtcValue !== '' && p.dtcValue !== null && p.dtcValue !== undefined) &&
-             (p.noDtcValue !== '' && p.noDtcValue !== null && p.noDtcValue !== undefined) &&
-             (p.dtc !== '' && p.dtc !== null && p.dtc !== undefined)
+    case 'SigInvalidTest': {
+      // 填哪项生成哪项：「报DTC的值」「不报DTC的值」至少填一项即算已配置，可留空其一。
+      // 填了「报DTC的值」时必须有「DTC」（否则后端按 NullDTC 生成，语义错误）；
+      // 只填「不报DTC的值」时 DTC 可空（该组用例的 DTC 恒为 0）。
+      const filled = (v: any) => v !== '' && v !== null && v !== undefined
+      const hasReportValue = filled(p.dtcValue)
+      const hasNullValue = filled(p.noDtcValue)
+      return (hasReportValue || hasNullValue) && (!hasReportValue || filled(p.dtc))
+    }
     case 'FactorTest': {
       // 已配置判定：仅要求「变量名非空」。
       // 之前还要求 autoRange === true 或 testValues 非空，导致「只拖入 A2L 变量、
@@ -6325,6 +6728,15 @@ async function loadConfig(name: string, token: number = configChangeToken) {
 function applyConfigurationData(raw: any, merge = false) {
   const rawCfg = { ...(raw || {}) }
 
+  // 有刷模式：CCP 精度/偏移回填（保存时存于 Configuration.ccp_var_scales）。
+  // 加载配置（merge=false）时以配置为准，缺失即清空；上传 Excel（merge=true）时只在表里
+  // 带该字段才覆盖，避免把用户已设的换算系数冲掉。
+  if (!merge || rawCfg.ccp_var_scales) {
+    store.setCcpVarScales(rawCfg.ccp_var_scales)
+  }
+  // 该字段由 store 统一持有，这里从配置表里摘掉，避免整表替换后再回写旧值
+  delete rawCfg.ccp_var_scales
+
   let readyOnParsed = { signal: '', value: '' }
   let readyOffParsed = { signal: '', value: '' }
   if (rawCfg.readyOn) {
@@ -6456,6 +6868,9 @@ function collectConfigData(): any {
   const cfg = { ...configPageData.value }
   cfg.serviceObject = store.selectedOem || 'BYD'
   cfg.securityAlgo = store.selectedAlgo || 'BYD_CBC'
+  // 有刷模式：CCP 符号的精度/偏移（对象浏览器双击设置）随配置保存。
+  // store 是唯一来源，所以这里按当前值整体写入（清空后即为 {}）
+  cfg.ccp_var_scales = { ...store.ccpVarScales }
 
   // 兜底：确保 cfgDir 来自最新的 store.cfgData（避免老配置未保存 cfgDir 时丢失）
   if (!cfg.cfgDir && store.cfgData?.cfg_dir) {
@@ -6626,14 +7041,16 @@ async function onExportExcel() {
   } catch { /* 错误由拦截器处理 */ }
 }
 
-/** 有刷模式：收集生成脚本用到的符号 → { addr, size, type? }，供后端生成 CCP 采集模块 */
-function collectCcpSymbols(): Record<string, { addr: string; size: number; type?: string }> {
-  const table = new Map<string, { addr: string; size: number }>()
+/** 有刷模式：收集生成脚本用到的符号 → { addr, size, type?, precision?, offset? }，供后端生成 CCP 采集模块 */
+function collectCcpSymbols(): Record<string, { addr: string; size: number; type?: string; precision?: number; offset?: number }> {
+  const table = new Map<string, { addr: string; size: number; precision?: number; offset?: number }>()
   for (const v of store.objA2lVars.measurements) {
     const name = String(v?.name || '').trim()
     const addr = String(v?.type || '').trim()
     const size = Number(v?.size || 0)
-    if (name && addr && size > 0) table.set(name, { addr, size })
+    if (name && addr && size > 0) {
+      table.set(name, { addr, size, precision: v?.precision, offset: v?.offset })
+    }
   }
   if (!table.size) return {}
 
@@ -6656,12 +7073,23 @@ function collectCcpSymbols(): Record<string, { addr: string; size: number; type?
     }
   }
 
-  // 手动指定的 CCP 系统变量类型（对象浏览器双击变量设置），未指定则由后端按长度推断
-  const out: Record<string, { addr: string; size: number; type?: string }> = {}
+  // CCP 系统变量类型 / 精度 / 偏移（对象浏览器双击符号设置）：
+  // 精度/偏移优先级：对象浏览器设置 > mapxml 对象自带值 > 默认 1 / 0；等于默认值时不发该字段
+  const out: Record<string, { addr: string; size: number; type?: string; precision?: number; offset?: number }> = {}
   for (const name of used) {
     const info = table.get(name)!
+    const entry: { addr: string; size: number; type?: string; precision?: number; offset?: number } = {
+      addr: info.addr,
+      size: info.size,
+    }
     const type = store.ccpVarTypes[name]
-    out[name] = type ? { ...info, type } : info
+    if (type) entry.type = type
+    const scale = store.ccpVarScales[name]
+    const precision = scale?.precision ?? Number(info.precision ?? DEFAULT_CCP_PRECISION)
+    const offset = scale?.offset ?? Number(info.offset ?? DEFAULT_CCP_OFFSET)
+    if (Number.isFinite(precision) && precision !== DEFAULT_CCP_PRECISION) entry.precision = precision
+    if (Number.isFinite(offset) && offset !== DEFAULT_CCP_OFFSET) entry.offset = offset
+    out[name] = entry
   }
   return out
 }
@@ -6870,7 +7298,10 @@ async function onUnifiedFileChange(uploadFile: any) {
         dbcRaw.value = parsed.DBC
         signalRows.value = buildSignalRowsFromRaw(parsed.DBC)
       }
-      if (parsed.DTC) dtcRaw.value = parsed.DTC
+      if (parsed.DTC) {
+        dtcRaw.value = parsed.DTC
+        sanitizeImportedDtcTable(dtcRaw.value)
+      }
       if (parsed.DataLinkLayer) { dllRaw.value = parsed.DataLinkLayer; buildDllTreeFromRaw(dllRaw.value) }
       // 旧版 Excel 的 Configuration 表（限定符 / Ready / 内部变量名等）一并回填配置页
       if (parsed.Configuration) {
@@ -7007,6 +7438,10 @@ function replaceQualifierInString(text: string, oldQ: string, newQ: string, mode
   const o = String(oldQ || '').trim()
   const n = String(newQ || '').trim()
   if (!text || !n || o === n) return text
+  // 快速跳过：限定符仅出现在 `xxx::yyy` 或 `xxx.yyy` 形式中，
+  // 绝大多数字符串（信号名 / DTC 码 / 数值）不含 `::` 或 `.`。
+  // 加此判断可避免扫描大量无关字符串的正则开销（大配置文件每次事件触发遍历数千节点）。
+  if (!text.includes('::') && !text.includes('.')) return text
   let out = text
   if (mode === 'a2l') {
     // sysvar::XCP::<限定符>::path —— 不论原先嵌的是哪个限定符（拖拽时的旧值、模板占位符 XCPDemo、
@@ -7091,24 +7526,54 @@ function forceQualifierReplace() {
   }
 }
 
-watch(() => configPageData.value.a2lQualifier, (val, oldVal) => {
+/**
+ * 限定符替换的防抖调度。
+ *
+ * 限定符输入框每敲一个字符都会触发 watcher，而 applyQualifierReplace 要全量深度遍历
+ * treeData / signalRows / dtcRaw / testParamMap 等十余个结构，配置越大越卡（原本还是
+ * flush:'sync'，直接阻塞输入）。此处把连续输入合并成一次替换：停止输入 300ms 后执行。
+ *
+ * 为保持与「逐字符执行」一致的替换语义，记录本轮输入**起始**的旧限定符（而非上一次按键的值），
+ * 例如 XCPDemo → 逐字打 "ABC" 时仍以 XCPDemo 为旧值替换，而不是 A/AB。
+ */
+const QUALIFIER_DEBOUNCE_MS = 300
+
+function createDebouncedQualifierReplacer(mode: 'a2l' | 'cdd') {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  let burstOld = ''
+  return (oldQ: string, newQ: string) => {
+    if (timer === undefined) burstOld = oldQ
+    else clearTimeout(timer)
+    timer = setTimeout(() => {
+      timer = undefined
+      const from = burstOld
+      burstOld = ''
+      if (from !== newQ) applyQualifierReplace(from, newQ, mode)
+    }, QUALIFIER_DEBOUNCE_MS)
+  }
+}
+
+const scheduleA2lReplace = createDebouncedQualifierReplacer('a2l')
+const scheduleCddReplace = createDebouncedQualifierReplacer('cdd')
+
+watch(() => configPageData.value.a2lQualifier, (val) => {
   const nv = String(val ?? '').trim()
-  const ov = lastA2lQualifier || String(oldVal ?? '').trim()
-  // 同步到全局 store，供其他模块对象浏览器使用
+  const ov = lastA2lQualifier
+  // 同步到全局 store，供其他模块对象浏览器使用（即时，不防抖）
   if (nv) store.setA2lQualifier(nv)
   if (nv) lastA2lQualifier = nv
   // a2l 的 sysvar 引用按「当前限定符」归一化，不依赖旧值（旧值为空或嵌入的是模板占位符时同样生效）
   if (suppressQualifierReplace || !nv || ov === nv) return
-  applyQualifierReplace(ov, nv, 'a2l')
-}, { flush: 'sync' })
+  scheduleA2lReplace(ov, nv)
+})
 
-watch(() => configPageData.value.cddQualifier, (val, oldVal) => {
+watch(() => configPageData.value.cddQualifier, (val) => {
   const nv = String(val ?? '').trim()
-  const ov = lastCddQualifier || String(oldVal ?? '').trim()
+  const ov = lastCddQualifier
   if (nv) lastCddQualifier = nv
   if (suppressQualifierReplace || !ov || !nv || ov === nv) return
-  applyQualifierReplace(ov, nv, 'cdd')
-}, { flush: 'sync' })
+  scheduleCddReplace(ov, nv)
+})
 
 // 切换到有刷模式：清空 A2L 限定符（该模式不使用 a2l_qualifier）
 watch(() => store.canMotorMode, (mode) => {
@@ -7126,7 +7591,10 @@ watch(() => store.moduleStates.can.lastUploadResult, (result) => {
         dbcRaw.value = parsed.DBC
         signalRows.value = buildSignalRowsFromRaw(parsed.DBC)
       }
-      if (parsed.DTC) dtcRaw.value = parsed.DTC
+      if (parsed.DTC) {
+        dtcRaw.value = parsed.DTC
+        sanitizeImportedDtcTable(dtcRaw.value)
+      }
       if (parsed.DataLinkLayer) { dllRaw.value = parsed.DataLinkLayer; buildDllTreeFromRaw(dllRaw.value) }
       if (parsed.DBC) {
         activeTab.value = 'dbc'
@@ -8032,17 +8500,29 @@ onActivated(() => {
     }
   }
 
+  // 分组卡片（groupCardDefs）：宽度由外层 .other-group-wrap 子网格决定（两列并排），
+  // 这里只保留高度（由 getGroupRowSpan 控制）
   &--group {
-    grid-column: span 4;
     cursor: default;
     min-height: 120px;
   }
 
-  // 纯参数卡片（paramCardDefs）：固定与 Ready_OffDiagStop 同列（第 4 列），
-  // 自动落位时就会排到它正下方那一格；必须放在上面的 --span-#x# 循环之后才能覆盖 grid-column
+  // 纯参数卡片（paramCardDefs）：跟随自动落位依次排布。
+  // 注意：不要给 grid-column 固定列（如 4），否则会挤在单列上、右侧留下大片空白
   &--param {
-    grid-column: 4;
+    cursor: default;
   }
+}
+
+// 分组卡片专用子网格：整行另起（占满外层 8 列）+ 内部两列并排，
+// 避免 4 列宽的卡片在外层网格里落位参差、留下空白；行高与卡片内的跨行数保持一致
+.other-group-wrap {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-auto-rows: 92px;
+  gap: 10px;
+  align-content: start;
 }
 
 .other-card-header {
@@ -8137,6 +8617,12 @@ onActivated(() => {
       height: auto;
     }
   }
+}
+
+// layout='break'：强制从第 1 列开始 → 该卡必定另起一行，
+// 后面同宽（span 相同）的卡就依次并排成一整排，不受前面卡片落位影响
+.other-card--layout-break {
+  grid-column-start: 1;
 }
 
 // layout='rows'：12 列栅格，靠每个输入框的 span 让「每组参数各占一行」

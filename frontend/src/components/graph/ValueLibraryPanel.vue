@@ -9,10 +9,14 @@
         v-for="(v, i) in values"
         :key="v.id"
         class="vl-item"
+        :class="{ 'vl-item-active': isRowSelected(i) }"
         draggable="true"
         @dragstart="onDragStart($event, v)"
+        @click="onRowClick(i, $event)"
+        @contextmenu.prevent.stop="openMenu($event, i)"
       >
         <span class="vl-drag" title="拖拽到参数框">⠿</span>
+        <span v-if="v.global" class="vl-global" title="全局值资源：新建配置 / 新建分组时自动带出">全局</span>
         <el-select v-model="v.kind" size="small" class="vl-kind" @change="onKindChange(v)">
           <el-option label="常量" value="const" />
           <el-option label="列表" value="list" />
@@ -34,25 +38,88 @@
           </span>
         </template>
 
-        <el-button size="small" text :icon="Close" class="vl-del" @click="removeResource(i)" />
+        <el-button size="small" text :icon="Close" class="vl-del" @click.stop="removeResource(i)" />
       </div>
       <div v-if="!values.length" class="vl-empty">暂无值资源，点击「新增」创建常量/列表/区间</div>
     </div>
+    <CtxMenu ref="ctxMenu" @select="onMenuSelect" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { computed, reactive, ref, watch } from 'vue'
 import { Plus, Close } from '@element-plus/icons-vue'
 import type { ValueResource } from '@/types/functionGraph'
 import { genId } from '@/types/functionGraph'
+import CtxMenu from './CtxMenu.vue'
+import type { CtxMenuItem } from './CtxMenu.vue'
 
 const props = defineProps<{
   values: ValueResource[]
 }>()
 const emit = defineEmits<{
   (e: 'update:values', values: ValueResource[]): void
+  /** 右键「设为全局 / 取消全局」：只发意图（可批量），全局库同步由编辑器统一处理 */
+  (e: 'toggle-global', items: ValueResource[], on: boolean): void
 }>()
+
+// ===== 行选中（右键批量操作 / Shift 范围选择）=====
+const selRows = ref<number[]>([])
+/** Shift 范围选择的锚点行 */
+let anchorRow = -1
+function isRowSelected(i: number): boolean {
+  return selRows.value.includes(i)
+}
+/** 当前选中的值资源（按下标取，越界自动忽略） */
+const selectedItems = computed<ValueResource[]>(() =>
+  selRows.value.map((i) => props.values[i]).filter(Boolean) as ValueResource[],
+)
+function onRowClick(i: number, e?: MouseEvent) {
+  if (e?.shiftKey && anchorRow >= 0 && anchorRow !== i) {
+    const [lo, hi] = anchorRow < i ? [anchorRow, i] : [i, anchorRow]
+    selRows.value = Array.from({ length: hi - lo + 1 }, (_, k) => lo + k)
+    return
+  }
+  if (e && (e.ctrlKey || e.metaKey)) {
+    selRows.value = selRows.value.includes(i) ? selRows.value.filter((x) => x !== i) : [...selRows.value, i]
+  } else {
+    selRows.value = [i]
+  }
+  anchorRow = i
+}
+
+// ===== 行右键菜单：设为全局 / 取消全局（右键行在多选里时作用于整批） =====
+const ctxMenu = ref<InstanceType<typeof CtxMenu> | null>(null)
+/** 右键作用的条目集合：右键行已在多选中 → 整批；否则只作用于该行（并把选中态切到它） */
+function menuItems(i: number): ValueResource[] {
+  if (selRows.value.length > 1 && selRows.value.includes(i)) {
+    const picked = selectedItems.value
+    if (picked.length) return picked
+  }
+  selRows.value = [i]
+  anchorRow = i
+  const only = props.values[i]
+  return only ? [only] : []
+}
+function openMenu(e: MouseEvent, i: number) {
+  const list = menuItems(i)
+  if (!list.length) return
+  const globals = list.filter((x) => x.global).length
+  const items: CtxMenuItem[] = []
+  if (globals < list.length) {
+    items.push({ key: 'global', label: list.length > 1 ? `设为全局（${list.length - globals} 个）` : '设为全局' })
+  }
+  if (globals > 0) {
+    items.push({ key: 'unglobal', label: list.length > 1 ? `取消全局（${globals} 个）` : '取消全局' })
+  }
+  ctxMenu.value?.open(e, items, list)
+}
+function onMenuSelect(key: string, payload: unknown) {
+  const list = (payload as ValueResource[]) || []
+  if (!list.length) return
+  if (key === 'global') emit('toggle-global', list.filter((x) => !x.global), true)
+  else if (key === 'unglobal') emit('toggle-global', list.filter((x) => x.global), false)
+}
 
 // 编辑草稿：list 逗号分隔文本、const 文本、range 数字
 const constDraft = reactive<Record<string, string>>({})
@@ -131,6 +198,10 @@ function removeResource(i: number) {
     delete listDraft[removed.id]
     delete rangeDraft[removed.id]
   }
+  // 选中态里的下标跟着左移，避免删一行后选中错位
+  selRows.value = selRows.value.filter((x) => x !== i).map((x) => (x > i ? x - 1 : x))
+  if (anchorRow > i) anchorRow -= 1
+  else if (anchorRow === i) anchorRow = -1
   emit('update:values', next)
 }
 
@@ -184,11 +255,28 @@ function onDragStart(e: DragEvent, v: ValueResource) {
 .vl-item:hover {
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
 }
+/* 选中行：右键可对整批选中项做「设为全局 / 取消全局」 */
+.vl-item.vl-item-active {
+  border-color: var(--el-color-primary);
+  background: #ecf5ff;
+}
 .vl-drag {
   color: #c0c4cc;
   cursor: grab;
   font-size: 13px;
   flex-shrink: 0;
+}
+/* 全局值资源标记：琥珀色小胶囊 */
+.vl-global {
+  flex-shrink: 0;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 15px;
+  color: #b88230;
+  background: #fdf6ec;
+  border: 1px solid #f5dab1;
+  pointer-events: none;
 }
 .vl-kind {
   width: 72px;

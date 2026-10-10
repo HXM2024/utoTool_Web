@@ -51,6 +51,11 @@ export interface DbcRecord {
    * 一个参数一行，用 \n 分隔；缺列时为空数组。
    */
   paramCells: string[]
+  /**
+   * 平铺测试参数列的值（{列名: 单元格文本}），仅含当前 Excel 中实际存在的平铺列。
+   * 列定义见 FLAT_PARAM_DEFS；无平铺列（旧格式）时为空对象。
+   */
+  flatParamCells: Record<string, string>
 }
 
 /** 归一化列名：转小写并移除空白/下划线/斜杠 */
@@ -68,12 +73,13 @@ function findIdx(cols: string[], keys: string[], exclude: number[] = []): number
   return -1
 }
 
-/** 精确查找 DTC 列（排除 lostDTC / dlcDTC） */
-function findDtcIdx(cols: string[]): number {
+/** 精确查找 DTC 列（排除 lostDTC / dlcDTC 与指定列，如平铺测试参数列） */
+function findDtcIdx(cols: string[], exclude: number[] = []): number {
   const ncols = cols.map(norm)
   const exact = ncols.indexOf('dtc')
-  if (exact >= 0) return exact
+  if (exact >= 0 && !exclude.includes(exact)) return exact
   for (let i = 0; i < ncols.length; i++) {
+    if (exclude.includes(i)) continue
     // 跳过 lostDTC/dlcDTC，以及测试参数明细里的「报DTC值 / 不报DTC值」（它们不是信号级 DTC 列）
     if (ncols[i].includes('dtc') && !ncols[i].includes('lost') && !ncols[i].includes('dlc') && !ncols[i].includes('报')) {
       return i
@@ -173,6 +179,74 @@ export function parseParamColumns(
   return out
 }
 
+/**
+ * 平铺测试参数列定义（与后端 backend/services/can_config_excel.py 的 FLAT_PARAM_COLUMNS 一致）。
+ *
+ * 每类参数的每个字段独立成列、表头即列名：
+ * - ``LostTest`` / ``DlcTest``：单元格放 DTC；
+ * - ``SigInvalidTest``：单元格放 Invalid_Type（SigInvalid / SigvalueInvalid）；
+ * - ``CRC/Counter``：单元格放 EPS 类型（CRC 算法名或 Counter）；
+ * - ``CRCTest_DTC`` / ``CounterTest_DTC``：CRC / 计数器测试的 DTC（报/不报DTC值由后端写死）；
+ * - 其余列名形如「参数_字段」（如 ``SigInvalidTest_报DTC值``）。
+ */
+export const FLAT_PARAM_DEFS = [
+  { name: 'LostTest', param: 'LostTest', field: 'dtc' },
+  { name: 'DlcTest', param: 'DlcTest', field: 'dtc' },
+  { name: 'CRC/Counter', param: '__eps__', field: '' },
+  { name: 'CRCTest_DTC', param: 'CRCTest', field: 'dtc' },
+  { name: 'CounterTest_DTC', param: 'CounterTest', field: 'dtc' },
+  { name: 'SigInvalidTest', param: 'SigInvalidTest', field: 'invalidType' },
+  { name: 'SigInvalidTest_报DTC值', param: 'SigInvalidTest', field: 'dtcValue' },
+  { name: 'SigInvalidTest_不报DTC值', param: 'SigInvalidTest', field: 'noDtcValue' },
+  { name: 'SigInvalidTest_DTC', param: 'SigInvalidTest', field: 'dtc' },
+  { name: 'FactorTest_变量名', param: 'FactorTest', field: 'variable' },
+  { name: 'FactorTest_测试值', param: 'FactorTest', field: 'testValues' },
+  { name: 'FactorTest_自动遍历', param: 'FactorTest', field: 'autoRange' },
+] as const
+
+/** 每类参数归属层级：报文级参数只出现在报文行，其余按信号行处理 */
+const FLAT_PARAM_TARGET: Record<string, 'message' | 'signal'> = {
+  LostTest: 'message',
+  DlcTest: 'message',
+}
+
+/** 平铺测试参数列名集合（用于把这些列从其它字段的关键字匹配中排除） */
+export const FLAT_PARAM_NAMES: string[] = FLAT_PARAM_DEFS.map((d) => d.name)
+
+/**
+ * 平铺测试参数列 → 测试参数数组。
+ *
+ * ``cells`` = {列名: 单元格文本}（仅含当前 Excel 中实际存在的平铺列）。
+ * 某类参数只要有任一字段有值即视为存在；CRC/Counter 列还原为 EPS 卡片（target='eps'）。
+ */
+export function parseFlatParamCells(
+  cells: Record<string, string>
+): Array<{ value: string; label: string; target: string; params: Record<string, any> }> {
+  type FlatItem = { value: string; label: string; target: string; params: Record<string, any> }
+  const out: FlatItem[] = []
+  const byParam = new Map<string, Record<string, any>>()
+  let epsValue = ''
+  for (const def of FLAT_PARAM_DEFS) {
+    const text = String(cells[def.name] ?? '').trim()
+    if (!text) continue
+    if (def.param === '__eps__') {
+      epsValue = text
+      continue
+    }
+    const params = byParam.get(def.param) || {}
+    params[def.field] = def.field === 'autoRange' ? /^(y|yes|是|true|1)$/i.test(text) : text
+    byParam.set(def.param, params)
+  }
+  for (const [value, params] of byParam) {
+    // SigInvalidTest 未填类型时按 SigInvalid 处理（与前端默认值一致）
+    if (value === 'SigInvalidTest' && !params.invalidType) params.invalidType = 'SigInvalid'
+    out.push({ value, label: value, target: FLAT_PARAM_TARGET[value] || 'signal', params })
+  }
+  // EPS 类型（CRC 算法名 / Counter）→ EPS 卡片，放在最前（与表格视图的 EPS 卡片位置一致）
+  if (epsValue) out.unshift({ value: epsValue, label: epsValue, target: 'eps', params: {} })
+  return out
+}
+
 /** 从报文名中推断发送节点。
  * 适用场景：Excel 表头缺少"发送节点/Senders"列时，常见格式如
  *   "HCU_0x201" / "EPS_0x605" / "GW_0x123"
@@ -207,7 +281,15 @@ export function parseDbcRecords(raw: any): DbcRecord[] {
   const sigParamsIdx = findParamIdx(cols, 'sig')
   const rowParamsIdx = findParamIdx(cols, 'row')
   const paramDetailIdx = findParamDetailIdx(cols)
-  const paramIdxList = [msgParamsIdx, sigParamsIdx, rowParamsIdx, ...paramDetailIdx].filter((i) => i >= 0)
+  // 导出的平铺测试参数列（每个参数每字段一列）：也不参与其它字段的关键字匹配，
+  // 否则「SigInvalidTest_DTC」会被误判成信号级 DTC 列、「FactorTest_变量名」会被误判成精度列。
+  const flatIdx: Array<{ name: string; i: number }> = []
+  FLAT_PARAM_DEFS.forEach((def) => {
+    const i = cols.findIndex((c) => String(c ?? '').split('\n')[0].trim() === def.name)
+    if (i >= 0) flatIdx.push({ name: def.name, i })
+  })
+  const flatIdxList = flatIdx.map((f) => f.i)
+  const paramIdxList = [msgParamsIdx, sigParamsIdx, rowParamsIdx, ...paramDetailIdx, ...flatIdxList].filter((i) => i >= 0)
   // Test 列优先精确匹配（避免命中含 "test" 的测试参数列）
   const testExact = findExactIdx(cols, 'test')
 
@@ -229,7 +311,7 @@ export function parseDbcRecords(raw: any): DbcRecord[] {
     bitLength: findIdx(cols, ['bit_length', '信号长度', '位长度']),
     dataType: findIdx(cols, ['data_type', '数据类型']),
     testDataType: findExactIdx(cols, 'data_type'),
-    factor: findIdx(cols, ['factor', '精度']),
+    factor: findIdx(cols, ['factor', '精度'], flatIdxList),
     offset: findIdx(cols, ['offset', '偏移']),
     minPhy: findIdx(cols, ['min_value_phy', 'signal_min', '物理最小值', '最小值']),
     maxPhy: findIdx(cols, ['max_value_phy', 'signal_max', '物理最大值', '最大值']),
@@ -257,13 +339,19 @@ export function parseDbcRecords(raw: any): DbcRecord[] {
   // 兜底：若 Excel 表头中无"发送节点"列，则尝试从报文名(形如 "HCU_0x201") 推断。
   // 推断结果仅在原 senders 字段为空时使用，避免覆盖真实数据。
   const hasSenderCol = idx.senders >= 0
-  const dtcIdx = findDtcIdx(cols)
+  const dtcIdx = findDtcIdx(cols, flatIdxList)
 
   const get = (row: any[], i: number): string =>
     i >= 0 && row[i] != null ? String(row[i]).trim() : ''
   // 测试参数明细列要保留「行内空行」（各列靠空行逐行对齐，如某参数没有 DTC 就该行留空），
   // 所以不能整串 trim，只按行 trim（见 cellLines）。
   const getRaw = (row: any[], i: number): string => (i >= 0 && row[i] != null ? String(row[i]) : '')
+  // 平铺测试参数列取值：{列名: 单元格文本}（无该列时不写入，便于区分「列不存在」与「值为空」）
+  const flatCellsOf = (row: any[]): Record<string, string> => {
+    const o: Record<string, string> = {}
+    for (const f of flatIdx) o[f.name] = getRaw(row, f.i)
+    return o
+  }
 
   // 报文级字段：在 DBC Canmatrix 中通常为合并单元格，仅报文的首个信号行有值，
   // 同一报文的后续信号行这些单元格为空。若不做前向填充，除首行外的信号会因
@@ -312,6 +400,7 @@ export function parseDbcRecords(raw: any): DbcRecord[] {
       msgTestParams: get(row, msgParamsIdx),
       sigTestParams: get(row, sigParamsIdx),
       paramCells: paramDetailIdx.map((i) => getRaw(row, i)),
+      flatParamCells: flatCellsOf(row),
     }
 
     // 检测是否进入新报文：与后端 process_dbc_canmatrix 一致，以 Msg_ID 非空作为报文边界

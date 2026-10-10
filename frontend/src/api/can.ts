@@ -30,7 +30,9 @@ export const updateParams = (type: string, params: any) =>
 
 /** 生成 CAN 脚本（body: { config_name, service_object, cfg_dir, motor_mode, ccp_symbols, relay_module, can_channel }）
  *  motor_mode：brushless 无刷（A2L/XCP）/ brushed 有刷（mapxml + CCP 采集）
- *  ccp_symbols：有刷模式下用到的符号 → { addr, size, type? }，用于生成 CCP 采集模块
+ *  ccp_symbols：有刷模式下用到的符号 → { addr, size, type?, precision?, offset? }，用于生成 CCP 采集模块
+ *    type / precision / offset 由对象浏览器双击符号设置：类型未指定按字节长度推断，
+ *    精度/偏移未指定为默认 1 / 0（发布物理值 = 原始值 × 精度 + 偏移）
  *  relay_module / can_channel：继电器模块（0老/1单刀/2双刀）与 CAN 通道（1/2），
  *  写入 TestFunction.cin 里共用的 RelayON/RelayOFF（见 backend/templates/relay.py） */
 export const generateCAN = (
@@ -38,7 +40,7 @@ export const generateCAN = (
   serviceObject: string,
   cfgDir?: string,
   motorMode: 'brushless' | 'brushed' = 'brushless',
-  ccpSymbols: Record<string, { addr: string; size: number; type?: string }> = {},
+  ccpSymbols: Record<string, { addr: string; size: number; type?: string; precision?: number; offset?: number }> = {},
   relayModule?: number,
   canChannel?: number,
 ) =>

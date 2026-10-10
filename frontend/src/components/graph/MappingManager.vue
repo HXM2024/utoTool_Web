@@ -1,6 +1,7 @@
 <template>
   <div class="mapping-manager">
     <div class="mm-header">
+      <span class="mm-hint">点击选中，Ctrl 加选 / Shift 范围选；右键可设为全局</span>
       <el-button
         size="small"
         :icon="Plus"
@@ -23,18 +24,22 @@
         v-for="(e, i) in allEntries"
         :key="i"
         class="mm-row"
-        :class="{ 'drop-over': dropRow === i }"
+        :class="{ 'drop-over': dropRow === i, 'mm-row-active': isRowSelected(i) }"
         @dragover.prevent="dropRow = i"
         @dragleave="dropRow = -1"
         @drop.prevent.stop="onRowDrop($event, i)"
+        @click="onRowClick(i, $event)"
+        @contextmenu.prevent.stop="openMenu($event, i)"
       >
         <span class="mm-drag" draggable="true" title="拖拽变量到步骤/参数" @dragstart="onRowDragStart($event, e)">⠿</span>
+        <span v-if="e.global" class="mm-global" title="全局对象：新建配置 / 新建分组时自动带出">全局</span>
         <el-input v-model="e.alias" size="small" placeholder="变量名" class="mm-col" />
         <el-input v-model="e.name" size="small" placeholder="对象" class="mm-col" />
-        <el-button size="small" :icon="Close" text class="mm-col-op" @click="removeEntry(i)" />
+        <el-button size="small" :icon="Close" text class="mm-col-op" @click.stop="removeEntry(i)" />
       </div>
       <div v-if="!allEntries.length" class="mm-empty">暂无映射，拖入对象或点「新增变量」</div>
     </div>
+    <CtxMenu ref="ctxMenu" @select="onMenuSelect" />
   </div>
 </template>
 
@@ -43,13 +48,75 @@ import { computed, ref } from 'vue'
 import { Plus, Close } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import type { MappingEntry, MappingKind, ObjectMapping } from '@/types/functionGraph'
+import CtxMenu from './CtxMenu.vue'
+import type { CtxMenuItem } from './CtxMenu.vue'
 
 const props = defineProps<{
   mapping: ObjectMapping
 }>()
 const emit = defineEmits<{
   (e: 'update:mapping', m: ObjectMapping): void
+  /** 右键「设为全局 / 取消全局」：只发意图（可批量），本地结构与全局库同步由编辑器统一处理 */
+  (e: 'toggle-global', entries: MappingEntry[], on: boolean): void
 }>()
+
+// ===== 行选中（右键批量操作 / Shift 范围选择）=====
+const selRows = ref<number[]>([])
+/** Shift 范围选择的锚点行 */
+let anchorRow = -1
+function isRowSelected(i: number): boolean {
+  return selRows.value.includes(i)
+}
+/** 当前选中的条目（按行下标取，越界自动忽略） */
+const selectedEntries = computed<MappingEntry[]>(() =>
+  selRows.value.map((i) => allEntries.value[i]).filter(Boolean) as MappingEntry[],
+)
+function onRowClick(i: number, e?: MouseEvent) {
+  if (e?.shiftKey && anchorRow >= 0 && anchorRow !== i) {
+    const [lo, hi] = anchorRow < i ? [anchorRow, i] : [i, anchorRow]
+    selRows.value = Array.from({ length: hi - lo + 1 }, (_, k) => lo + k)
+    return
+  }
+  if (e && (e.ctrlKey || e.metaKey)) {
+    selRows.value = selRows.value.includes(i) ? selRows.value.filter((x) => x !== i) : [...selRows.value, i]
+  } else {
+    selRows.value = [i]
+  }
+  anchorRow = i
+}
+
+// ===== 行右键菜单：设为全局 / 取消全局（右键行在多选里时作用于整批） =====
+const ctxMenu = ref<InstanceType<typeof CtxMenu> | null>(null)
+/** 右键作用的条目集合：右键行已在多选中 → 整批；否则只作用于该行（并把选中态切到它） */
+function menuEntries(i: number): MappingEntry[] {
+  if (selRows.value.length > 1 && selRows.value.includes(i)) {
+    const picked = selectedEntries.value
+    if (picked.length) return picked
+  }
+  selRows.value = [i]
+  anchorRow = i
+  const only = allEntries.value[i]
+  return only ? [only] : []
+}
+function openMenu(e: MouseEvent, i: number) {
+  const list = menuEntries(i)
+  if (!list.length) return
+  const globals = list.filter((x) => x.global).length
+  const items: CtxMenuItem[] = []
+  if (globals < list.length) {
+    items.push({ key: 'global', label: list.length > 1 ? `设为全局（${list.length - globals} 条）` : '设为全局' })
+  }
+  if (globals > 0) {
+    items.push({ key: 'unglobal', label: list.length > 1 ? `取消全局（${globals} 条）` : '取消全局' })
+  }
+  ctxMenu.value?.open(e, items, list)
+}
+function onMenuSelect(key: string, payload: unknown) {
+  const list = (payload as MappingEntry[]) || []
+  if (!list.length) return
+  if (key === 'global') emit('toggle-global', list.filter((x) => !x.global), true)
+  else if (key === 'unglobal') emit('toggle-global', list.filter((x) => x.global), false)
+}
 
 const kinds: Array<{ label: string; value: MappingKind }> = [
   { label: '信号', value: 'signal' },
@@ -195,6 +262,10 @@ function addEntry() {
 function removeEntry(i: number) {
   const entries = allEntries.value.map((e) => ({ ...e }))
   entries.splice(i, 1)
+  // 选中态里的下标跟着左移，避免删一行后选中错位
+  selRows.value = selRows.value.filter((x) => x !== i).map((x) => (x > i ? x - 1 : x))
+  if (anchorRow > i) anchorRow -= 1
+  else if (anchorRow === i) anchorRow = -1
   commit(entries)
 }
 </script>
@@ -210,9 +281,17 @@ function removeEntry(i: number) {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 6px;
   padding: 6px 10px;
   border-bottom: 1px solid #ebeef5;
   flex-shrink: 0;
+}
+.mm-hint {
+  font-size: 11px;
+  color: #a8abb2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .mm-list {
   flex: 1;
@@ -241,6 +320,12 @@ function removeEntry(i: number) {
   background: #ecf5ff;
   outline: 1px dashed var(--el-color-primary);
 }
+/* 选中行：右键可对整批选中项做「设为全局 / 取消全局」 */
+.mm-row.mm-row-active {
+  background: #ecf5ff;
+  box-shadow: inset 0 0 0 1px var(--el-color-primary);
+  border-radius: 4px;
+}
 .mm-col {
   flex: 1;
   min-width: 0;
@@ -248,6 +333,18 @@ function removeEntry(i: number) {
 .mm-col-op {
   width: 24px;
   flex-shrink: 0;
+}
+/* 全局对象标记：琥珀色小胶囊 */
+.mm-global {
+  flex-shrink: 0;
+  padding: 0 5px;
+  border-radius: 8px;
+  font-size: 10px;
+  line-height: 15px;
+  color: #b88230;
+  background: #fdf6ec;
+  border: 1px solid #f5dab1;
+  pointer-events: none;
 }
 .mm-drag {
   width: 16px;

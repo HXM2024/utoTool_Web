@@ -259,29 +259,50 @@
       </template>
     </el-dialog>
 
-    <!-- 有刷模式：CCP 系统变量类型指定（双击对象浏览器变量） -->
+    <!-- 有刷模式：CCP 系统变量（类型 / 精度 / 偏移）指定（双击对象浏览器变量） -->
     <el-dialog
       v-model="ccpTypeVisible"
-      :title="ccpTypeTarget ? `CCP 系统变量类型：${ccpTypeTarget}` : 'CCP 系统变量类型'"
-      width="420px"
+      :title="ccpTypeTarget ? `CCP 系统变量：${ccpTypeTarget}` : 'CCP 系统变量'"
+      width="440px"
       append-to-body
     >
       <div class="ccp-type-body">
         <div class="ccp-type-tip">
-          该变量在生成脚本中会发布为 sysvar::NsCcp::{{ ccpTypeTarget }}，请指定其类型
+          该变量在生成脚本中会发布为 sysvar::NsCcp::{{ ccpTypeTarget }}，请指定其类型与换算系数
         </div>
         <el-radio-group v-model="ccpTypeValue">
           <el-radio-button label="int">int</el-radio-button>
           <el-radio-button label="float">float</el-radio-button>
           <el-radio-button label="int64">int64</el-radio-button>
         </el-radio-group>
+        <div class="ccp-scale-row">
+          <span class="ccp-scale-label">精度</span>
+          <el-input-number
+            v-model="ccpPrecValue"
+            :step="0.01"
+            :controls="false"
+            size="small"
+            class="ccp-scale-input"
+          />
+          <span class="ccp-scale-label">偏移</span>
+          <el-input-number
+            v-model="ccpOffsetValue"
+            :step="0.01"
+            :controls="false"
+            size="small"
+            class="ccp-scale-input"
+          />
+        </div>
+        <div class="ccp-type-tip">
+          发布物理值 = 原始值 × 精度 + 偏移（默认 1 / 0）；精度或偏移带小数时类型自动用 float
+        </div>
         <div v-if="ccpTypeDefault" class="ccp-type-tip">
-          未指定时按字节长度推断为 {{ ccpTypeDefault }}
+          未指定类型时按字节长度推断为 {{ ccpTypeDefault }}
         </div>
       </div>
       <template #footer>
         <el-button @click="ccpTypeVisible = false">取消</el-button>
-        <el-button @click="onCcpTypeClear">按长度推断</el-button>
+        <el-button @click="onCcpScaleClear">恢复默认</el-button>
         <el-button type="primary" @click="onCcpTypeConfirm">确定</el-button>
       </template>
     </el-dialog>
@@ -290,7 +311,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, type Ref } from 'vue'
-import { useModuleStore, type CcpVarType } from '@/stores/modules'
+import { useModuleStore, DEFAULT_CCP_PRECISION, DEFAULT_CCP_OFFSET, type CcpVarType } from '@/stores/modules'
 import {
   Search,
   Connection,
@@ -334,6 +355,8 @@ const emit = defineEmits<{
   (e: 'test-param-configure', card: TestParamCard): void
   (e: 'test-param-copy', card: TestParamCard): void
 }>()
+
+const store = useModuleStore()
 
 // ==================== 状态 ====================
 const activeView = ref<'dbc' | 'dtc' | 'a2l' | 'testparam'>('dbc')
@@ -384,7 +407,7 @@ const testParamHelpText: Record<string, string> = {
   DlcTest: '报文 DLC 错误测试：人为篡改报文的 DLC（数据长度码），校验 ECU 能否识别长度异常并上报对应 DTC。需填写 DTC。',
   CRCTest: '校验和（CRC）测试：篡改信号的校验和，校验 ECU 能否识别并上报对应 DTC。报/不报值由后台写死，仅需填写 DTC。',
   CounterTest: '滚动计数器测试：篡改信号的滚动计数器，校验 ECU 能否识别并上报对应 DTC。报/不报值由后台写死，仅需填写 DTC。',
-  SigInvalidTest: '信号无效值测试：设置信号为无效值，校验 ECU 是否正确识别并上报对应 DTC。需填「报 DTC 的值」「不报 DTC 的值」「DTC」；类型滑块选择 SigInvalid（信号无效）或 SigvalueInvalid（信号值无效）。',
+  SigInvalidTest: '信号无效值测试：设置信号为无效值，校验 ECU 是否正确识别并上报对应 DTC。「报 DTC 的值」与「不报 DTC 的值」按需填写（填哪项生成哪组用例，可留空其一）；填「报 DTC 的值」时需同时填「DTC」；类型滑块选择 SigInvalid（信号无效）或 SigvalueInvalid（信号值无效）。',
   FactorTest: '精度偏移测试：通过 XCP/CCP 变量监控被测信号，按设定的测试值逐个写入并比对精度。需填写变量名；可手动输入测试值，或开启「自动遍历」（从最小值到最大值）。',
   Counter: 'EPS 计数器类型：作为 EPS 发送节点的计数器信号，用于滚动计数器连续性校验。拖拽到 EPS 信号节点即生效，无需额外参数。',
 }
@@ -849,17 +872,27 @@ const a2lTree = computed(() => {
   if (!v) return []
   const tree: any[] = []
   let id = 0
-  // 节点说明：种类 · 数据类型或地址 · 字节长度
+  // 节点说明：种类 · 数据类型或地址 · 字节长度 · 换算系数（非默认时）
   const a2lInfo = (kind: string, vv: A2lVar): string => {
     const parts = [kind]
     if (vv.type) parts.push(vv.type)
     if (vv.size) parts.push(`${vv.size}B`)
+    const { precision, offset } = resolveCcpScale(vv)
+    if (precision !== DEFAULT_CCP_PRECISION || offset !== DEFAULT_CCP_OFFSET) {
+      parts.push(`×${precision}+${offset}`)
+    }
     return parts.join(' · ')
   }
   const toVar = (item: A2lVar | string): A2lVar =>
     typeof item === 'string'
       ? { name: item, type: '' }
-      : { name: item?.name ?? '', type: item?.type ?? '', size: item?.size }
+      : {
+          name: item?.name ?? '',
+          type: item?.type ?? '',
+          size: item?.size,
+          precision: item?.precision,
+          offset: item?.offset,
+        }
   if (v.measurements?.length) {
     tree.push({
       id: `a2lM${id++}`,
@@ -874,6 +907,8 @@ const a2lTree = computed(() => {
           type: 'a2l-measurement',
           name: vv.name,
           size: vv.size,
+          precision: vv.precision,
+          offset: vv.offset,
           info: a2lInfo('MEASUREMENT', vv),
           draggable: true,
         }
@@ -894,6 +929,8 @@ const a2lTree = computed(() => {
           type: 'a2l-characteristic',
           name: vv.name,
           size: vv.size,
+          precision: vv.precision,
+          offset: vv.offset,
           info: a2lInfo('CHARACTERISTIC', vv),
           draggable: true,
         }
@@ -967,13 +1004,14 @@ const filteredA2lTree = computed(() => {
   return out
 })
 
-// ==================== 有刷模式：CCP 系统变量类型 ====================
+// ==================== 有刷模式：CCP 系统变量类型 / 精度 / 偏移 ====================
 
-const store = useModuleStore()
 const ccpTypeVisible = ref(false)
 const ccpTypeTarget = ref('')
 const ccpTypeValue = ref<CcpVarType>('float')
 const ccpTypeDefault = ref<CcpVarType>('int')
+const ccpPrecValue = ref<number>(DEFAULT_CCP_PRECISION)
+const ccpOffsetValue = ref<number>(DEFAULT_CCP_OFFSET)
 
 /** 按字节长度推断类型（与后端 ns_ccp_capl.ccp_var_type 保持一致） */
 function inferCcpType(size?: number): CcpVarType {
@@ -982,7 +1020,17 @@ function inferCcpType(size?: number): CcpVarType {
   return 'int64'
 }
 
-/** 双击对象浏览器变量：指定 CCP 系统变量类型（仅无刷/有刷的测量变量节点，且仅无刷模式有效） */
+/** 该符号的 CCP 精度/偏移：对象自带的默认值作底，对象浏览器里的覆盖优先，再缺省回退 1 / 0 */
+function resolveCcpScale(v: { name?: string; precision?: number; offset?: number } | null | undefined) {
+  const name = String(v?.name || '').trim()
+  const override = name ? store.ccpVarScales[name] : undefined
+  return {
+    precision: override?.precision ?? v?.precision ?? DEFAULT_CCP_PRECISION,
+    offset: override?.offset ?? v?.offset ?? DEFAULT_CCP_OFFSET,
+  }
+}
+
+/** 双击对象浏览器变量：指定 CCP 类型 + 精度/偏移（仅有刷模式的测量变量/标定参数节点） */
 function onA2lNodeDblClick(data: any) {
   if (store.canMotorMode !== 'brushed') return
   if (!data || (data.type !== 'a2l-measurement' && data.type !== 'a2l-characteristic')) return
@@ -991,17 +1039,25 @@ function onA2lNodeDblClick(data: any) {
   ccpTypeTarget.value = name
   ccpTypeDefault.value = inferCcpType(Number(data.size) || undefined)
   ccpTypeValue.value = store.ccpVarTypes[name] || ccpTypeDefault.value
+  const { precision, offset } = resolveCcpScale(data)
+  ccpPrecValue.value = precision
+  ccpOffsetValue.value = offset
   ccpTypeVisible.value = true
 }
 
 function onCcpTypeConfirm() {
   store.setCcpVarType(ccpTypeTarget.value, ccpTypeValue.value)
+  store.setCcpVarScale(ccpTypeTarget.value, {
+    precision: ccpPrecValue.value,
+    offset: ccpOffsetValue.value,
+  })
   ccpTypeVisible.value = false
 }
 
-/** 清除手动指定，回退按字节长度推断 */
-function onCcpTypeClear() {
+/** 恢复默认：类型按字节长度推断，精度/偏移回到 1 / 0 */
+function onCcpScaleClear() {
   store.setCcpVarType(ccpTypeTarget.value, '')
+  store.setCcpVarScale(ccpTypeTarget.value, {})
   ccpTypeVisible.value = false
 }
 
@@ -1356,6 +1412,23 @@ function getNodeIcon(type: string) {
   font-size: 12px;
   color: var(--text-color-secondary);
   line-height: 1.5;
+}
+
+.ccp-scale-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ccp-scale-label {
+  flex: none;
+  font-size: 12px;
+  color: var(--text-color-secondary);
+}
+
+.ccp-scale-input {
+  flex: 1;
+  min-width: 0;
 }
 
 .testparam-help-row {

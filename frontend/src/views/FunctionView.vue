@@ -507,8 +507,8 @@ import { useResizableSize } from '@/composables/useResizableSize'
 import FunctionGraphEditor from '@/components/graph/FunctionGraphEditor.vue'
 import type { Graph, ObjectMapping, CardLibrary, CaseGroup, ValueResource } from '@/types/functionGraph'
 import { emptyGraph, emptyMapping, emptyCardLibrary, emptyValueLibrary, emptyCaseGroup, genId } from '@/types/functionGraph'
-import { normalizeStaleSeqAnchors } from '@/utils/functionGraph'
-import { generateFunction, expandCases, exportFunctionCases, importFunctionCases } from '@/api/function'
+import { normalizeStaleSeqAnchors, injectGlobalIntoGroup } from '@/utils/functionGraph'
+import { generateFunction, expandCases, exportFunctionCases, importFunctionCases, loadGlobalSections } from '@/api/function'
 import { getConfig, getConfigs, saveConfig, openFolder } from '@/api/config'
 import { parseCAN, parseDbcFile, parseA2lFile } from '@/api/can'
 import { useModuleStore } from '@/stores/modules'
@@ -1016,6 +1016,16 @@ async function onCreate(name: string) {
     cards: emptyCardLibrary(),
     value_library: emptyValueLibrary(),
   }
+  // 新建配置：把全局库里标记为全局的卡片/映射/值资源带进默认分组，并同步到配置根级兜底字段
+  const seeded = defaultData.graph.groups?.[0]
+  if (seeded) {
+    const n = await applyGlobalToGroup(seeded)
+    if (n) {
+      defaultData.cards = seeded.cards ?? defaultData.cards
+      defaultData.mapping = seeded.mapping ?? defaultData.mapping
+      defaultData.value_library = seeded.valueLibrary ?? defaultData.value_library
+    }
+  }
   const dataToSave = hasConfig ? defaultData : (hasData.value ? currentData.value : defaultData)
   try {
     await saveConfig('function', name, dataToSave)
@@ -1149,6 +1159,16 @@ async function doGenerate() {
       if (data.output_dir) generatedDir.value = data.output_dir
     }
     ElMessage.success(res?.message || '文件生成成功')
+    // 函数库里与内置模板同名同参、实现不同的函数：生成时以内置模板为准，这里弹窗提示
+    const conflicts: string[] = Array.isArray(data?.function_conflicts) ? data.function_conflicts : []
+    if (conflicts.length) {
+      ElMessageBox.alert(
+        `函数库里以下函数与内置模板同名同参数、但实现不同，本次生成已以内置模板为准：\n\n${
+          conflicts.join('、')}\n\n如需使用你自己的实现，请改用别的函数名（或改参数）。`,
+        '函数库与内置模板冲突',
+        { type: 'warning', confirmButtonText: '知道了' },
+      ).catch(() => { /* 关闭弹窗即可 */ })
+    }
   } catch {
     /* 错误由拦截器处理 */
   } finally {
@@ -1163,13 +1183,23 @@ function openGraphEditor(groupId?: string) {
 }
 
 // ==================== 用例分组 ====================
-/** 新建分组：每个分组是一份独立图形配置（卡片库/映射表/值资源库默认空），组内用例以分组名为前缀 */
-function addCaseGroup() {
+/** 新建分组/新建配置时，把全局库里标记为全局的卡片/映射/值资源带进新分组；读全局库失败不阻断建组 */
+async function applyGlobalToGroup(grp: CaseGroup): Promise<number> {
+  try {
+    const g = await loadGlobalSections()
+    return injectGlobalIntoGroup(grp, g)
+  } catch {
+    return 0
+  }
+}
+/** 新建分组：每个分组是一份独立图形配置（卡片库/映射表/值资源库默认空，全局项自动带出），组内用例以分组名为前缀 */
+async function addCaseGroup() {
   if (!graph.value.groups) graph.value.groups = []
   const idx = graph.value.groups.length + 1
   const group = emptyCaseGroup(`GraphCase${idx}`)
+  const n = await applyGlobalToGroup(group)
   graph.value.groups.push(group)
-  ElMessage.success(`已新建分组 ${group.name}（内容为空）`)
+  ElMessage.success(n ? `已新建分组 ${group.name}（已带出 ${n} 项全局内容）` : `已新建分组 ${group.name}（内容为空）`)
 }
 /** 切换预览页某个分组的收起/展开 */
 function toggleGroupCollapse(groupId: string) {

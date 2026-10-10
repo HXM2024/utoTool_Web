@@ -4,6 +4,11 @@
     :title="dialogTitle"
     width="720px"
     append-to-body
+    :modal="false"
+    :close-on-click-modal="false"
+    draggable
+    modal-class="ce-modal-pass"
+    :style="{ marginLeft: '16px' }"
     @update:model-value="onVisibleChange"
     @open="sync"
   >
@@ -22,10 +27,20 @@
         </el-select>
       </el-form-item>
       <el-form-item label="名称">
-        <el-input v-model="form.name" placeholder="卡片名称" />
+        <el-input
+          v-model="form.name"
+          placeholder="卡片名称"
+          @dragover.prevent
+          @drop.stop.prevent="onFieldDrop($event, (v: string) => (form.name = v))"
+        />
       </el-form-item>
       <el-form-item label="描述">
-        <el-input v-model="form.description" placeholder="可选，用途说明" />
+        <el-input
+          v-model="form.description"
+          placeholder="可选，用途说明"
+          @dragover.prevent
+          @drop.stop.prevent="onFieldDrop($event, (v: string) => (form.description = v))"
+        />
       </el-form-item>
     </el-form>
 
@@ -47,10 +62,31 @@
             draggable="true"
             @dragstart.stop="onParamDragStart($event, p)"
           >⠿</span>
-          <el-input v-model="p.name" size="small" placeholder="参数名（如 dtc）" style="width: 140px" />
+          <el-input
+            v-model="p.name"
+            size="small"
+            placeholder="参数名（如 dtc）"
+            style="width: 140px"
+            @dragover.prevent
+            @drop.stop.prevent="onFieldDrop($event, (v: string) => (p.name = v))"
+          />
           <template v-if="paramExtraOpen[i]">
-            <el-input v-model="p.default" size="small" placeholder="默认值（留空=默认不参与）" style="width: 200px" />
-            <el-input v-model="p.label" size="small" placeholder="显示名（可选）" style="width: 140px" />
+            <el-input
+              v-model="p.default"
+              size="small"
+              placeholder="默认值（留空=默认不参与）"
+              style="width: 200px"
+              @dragover.prevent
+              @drop.stop.prevent="onFieldDrop($event, (v: string) => (p.default = v))"
+            />
+            <el-input
+              v-model="p.label"
+              size="small"
+              placeholder="显示名（可选）"
+              style="width: 140px"
+              @dragover.prevent
+              @drop.stop.prevent="onFieldDrop($event, (v: string) => (p.label = v))"
+            />
           </template>
           <template v-else>
             <span v-if="p.default" class="ce-param-def">默认 {{ p.default }}</span>
@@ -143,6 +179,8 @@
               type="textarea"
               :autosize="{ minRows: 1, maxRows: 3 }"
               placeholder="原始 CAPL 行"
+              @dragover.prevent
+              @drop.stop.prevent="onFieldDrop($event, (v: string) => (step.raw = v))"
             />
             <ParamFieldAssist
               :text="step.raw || ''"
@@ -156,7 +194,13 @@
 
           <!-- 函数调用 / 等待 -->
           <span v-else-if="step.kind === 'call' || step.kind === 'wait'" class="ce-fun-field">
-            <el-input v-model="step.fun" size="small" placeholder="函数名（如 setSignal）" />
+            <el-input
+              v-model="step.fun"
+              size="small"
+              placeholder="函数名（如 setSignal）"
+              @dragover.prevent
+              @drop.stop.prevent="onFieldDrop($event, (v: string) => (step.fun = v))"
+            />
             <ParamFieldAssist
               :text="step.fun || ''"
               :params="params"
@@ -175,6 +219,8 @@
                 size="small"
                 style="flex: 1"
                 placeholder="弹窗提示内容（如：请确认 XXX 已上电）"
+                @dragover.prevent
+                @drop.stop.prevent="onFieldDrop($event, (v: string) => (step.prompt = v))"
               />
               <ParamFieldAssist
                 :text="step.prompt || ''"
@@ -204,6 +250,8 @@
                 :placeholder="nf.placeholder"
                 :title="nf.title"
                 @update:model-value="(v: string) => setStepNum(step, nf.key, v)"
+                @dragover.prevent
+                @drop.stop.prevent="onFieldDrop($event, (v: string) => setStepNum(step, nf.key, v))"
               />
             </template>
             <span class="kind-static">{{ stepKindHint(step) }}</span>
@@ -248,6 +296,8 @@
               :disabled="isCardArgSkipped(step, p.name)"
               :placeholder="cardArgPlaceholder(p)"
               @update:model-value="(v: string) => setCardArg(step, p.name, v)"
+              @dragover.prevent
+              @drop.stop.prevent="onFieldDrop($event, (v: string) => setCardArg(step, p.name, v))"
             />
             <el-checkbox
               :model-value="isCardArgSkipped(step, p.name)"
@@ -278,7 +328,11 @@
             @dragleave="dragOverArg = ''"
             @drop.stop="onArgDrop($event, i, ai)"
           >
-            <span class="arg-field arg-field-key">
+            <span
+              class="arg-field arg-field-key"
+              @dragover.prevent
+              @drop.stop.prevent="onArgFieldDrop($event, arg, 'key')"
+            >
               <el-input v-model="arg.key" size="small" placeholder="参数名" />
               <ParamFieldAssist
                 :text="arg.key || ''"
@@ -288,7 +342,11 @@
                 @setText="(v: string) => (arg.key = v)"
               />
             </span>
-            <span class="arg-field arg-field-value">
+            <span
+              class="arg-field arg-field-value"
+              @dragover.prevent
+              @drop.stop.prevent="onArgFieldDrop($event, arg, 'value')"
+            >
               <el-input v-model="arg.value" size="small" placeholder="对象 / 别名 / 值" />
               <ParamFieldAssist
                 :text="arg.value || ''"
@@ -299,7 +357,12 @@
               />
             </span>
             <!-- 限时检查的区间形式：第二个值（上限） -->
-            <span v-if="isWaitRange(step)" class="arg-field arg-field-value">
+            <span
+              v-if="isWaitRange(step)"
+              class="arg-field arg-field-value"
+              @dragover.prevent
+              @drop.stop.prevent="onArgFieldDrop($event, arg, 'value2')"
+            >
               <el-input v-model="arg.value2" size="small" placeholder="上限" />
               <ParamFieldAssist
                 :text="arg.value2 || ''"
@@ -356,10 +419,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus, Close, CaretTop, CaretBottom, Link, Top, Bottom, EditPen, ArrowLeft, Search } from '@element-plus/icons-vue'
-import type { Card, CardLibrary, CardParam, CardStep, CardType } from '@/types/functionGraph'
+import type { Card, CardLibrary, CardParam, CardStep, CardStepArg, CardType, MappingKind } from '@/types/functionGraph'
 import {
   newStep,
   newCard,
@@ -372,6 +435,7 @@ import {
   applyWaitForm,
   isWaitRange,
   waitCheckFunOf,
+  collectStepParamNames,
 } from '@/utils/functionGraph'
 import type { StepNumField } from '@/utils/functionGraph'
 import { CARD_PARAM_MIME } from '@/types/functionGraph'
@@ -395,13 +459,15 @@ const stepKinds = Object.keys(STEP_KIND_LABEL) as CardStep['kind'][]
 
 const isNew = computed(() => !props.card)
 const form = ref<Card>(newCard('inject'))
+/** 「载入时的表单快照」：用于判断是否有未保存修改（见 hasChanges / confirmBeforeSwitch） */
+const loadedSnapshot = ref(JSON.stringify(form.value))
 const dragOverArg = ref('')
 
 /**
  * 引用卡片编辑栈：非空表示当前正在编辑「被引用的库卡片」。
  * 每层存父级表单快照，返回时原样恢复（不影响外层已编辑内容）。
  */
-const editStack = ref<{ form: Card }[]>([])
+const editStack = ref<{ form: Card; snapshot: string }[]>([])
 const isSubEdit = computed(() => editStack.value.length > 0)
 
 function sync() {
@@ -415,7 +481,32 @@ function sync() {
   }
   if (!Array.isArray(form.value.params)) form.value.params = []
   if (!Array.isArray(form.value.steps)) form.value.steps = []
+  ensureParamsFromSteps()
+  markLoaded()
 }
+/** 记录「当前表单 = 刚载入的状态」，之后 hasChanges() 才有意义 */
+function markLoaded() {
+  loadedSnapshot.value = JSON.stringify(form.value)
+}
+/** 兜底：步骤里写了 {{X}} 却没声明参数 X 时自动补一条声明。
+ *  否则界面上没有可填值的「参数（接口）」行，占位符会一直原样留在步骤里。 */
+function ensureParamsFromSteps() {
+  const list = form.value.params ?? (form.value.params = [])
+  const declared = new Set(list.map((p) => String(p?.name ?? '').trim()).filter(Boolean))
+  for (const n of collectStepParamNames(form.value.steps)) {
+    if (declared.has(n) || !/^\w+$/.test(n)) continue
+    declared.add(n)
+    list.push({ name: n })
+  }
+}
+// 对话框是非模态的、可以一直开着：外层直接切换编辑对象时不会经过 close→open，
+// 只靠 @open 同步会停留在上一张卡片上（表现为「另一张卡片打不开、重复打开不刷新」）。
+watch(
+  () => props.card,
+  () => {
+    if (props.visible) sync()
+  },
+)
 
 const dialogTitle = computed(() => {
   if (isSubEdit.value) return `编辑引用卡片：${form.value.name || '未命名'}`
@@ -565,14 +656,16 @@ function openCardRef(step: CardStep) {
     ElMessage.warning('不能引用自身或形成循环引用')
     return
   }
-  editStack.value.push({ form: JSON.parse(JSON.stringify(form.value)) })
+  editStack.value.push({ form: JSON.parse(JSON.stringify(form.value)), snapshot: loadedSnapshot.value })
   form.value = JSON.parse(JSON.stringify(found))
+  markLoaded()
 }
 /** 返回上一层（丢弃当前层未保存的修改） */
 function backToParent() {
   const prev = editStack.value.pop()
   if (!prev) return
   form.value = prev.form
+  loadedSnapshot.value = prev.snapshot
 }
 /** 关闭弹窗：子编辑态先退栈，只有回到顶层才真正关闭 */
 function onVisibleChange(v: boolean) {
@@ -766,6 +859,8 @@ function inlineField(target: any, field: 'key' | 'value' | 'value2' | 'fun' | 'r
 
 /** 校验并规范化卡片参数：名称必填、仅字母数字下划线、不可重名 */
 function normalizeParams(): boolean {
+  // 先兜底：保存前把步骤里新出现的 {{X}} 也补成参数声明
+  ensureParamsFromSteps()
   const list = form.value.params ?? []
   const seen = new Set<string>()
   for (const p of list) {
@@ -952,28 +1047,98 @@ function onStepListDrop(e: DragEvent) {
   ElMessage.success(`已从函数库添加步骤：${payload.name}`)
 }
 
-/** 拖入参数：对象映射别名 → 设置 mapping 引用 */
+/** 拖入参数：对象映射别名 / 对象浏览器对象 → 写入参数行（与 StepEditor 同规则） */
 function onArgDrop(e: DragEvent, i: number, ai: number) {
   dragOverArg.value = ''
   const arg = form.value.steps[i].args[ai]
+  if (!arg) return
+  // 落在行内非字段处（内边距等）时按「值」字段处理
+  applyDropToField(e, arg, 'value')
+}
+
+/** 映射表分类 → 步骤参数的 argType（与 StepEditor 保持一致） */
+const mappingArgType: Record<MappingKind, CardStepArg['argType']> = {
+  signal: 'signal',
+  dtc: 'dtc',
+  message: 'message',
+  envvar: 'envvar',
+  a2l: 'sysvar',
+}
+
+/** 对象浏览器拖入的对象载荷：{ kind, name, argType } */
+function extractObjectPayload(e: DragEvent): { kind: MappingKind; name: string; argType: CardStepArg['argType'] } | null {
+  const raw = e.dataTransfer?.getData('application/json')
+  if (!raw) return null
+  let p: any = null
+  try {
+    p = JSON.parse(raw)
+  } catch {
+    return null
+  }
+  if (!p || !p.type) return null
+  if (p.type === 'signal') return { kind: 'signal', name: p.name || '', argType: 'signal' }
+  if (p.type === 'message') return { kind: 'message', name: p.name || '', argType: 'message' }
+  if (p.type === 'dtc') return { kind: 'dtc', name: p.code || p.name || '', argType: 'dtc' }
+  if (p.type === 'envvar') return { kind: 'envvar', name: p.name || '', argType: 'envvar' }
+  if (p.type === 'a2l-measurement' || p.type === 'a2l-characteristic') {
+    // A2L 对象名取拖拽源的 text/plain（已按 CAN 模块的补全规则拼好），与映射表/步骤编辑器同源
+    const plain = e.dataTransfer?.getData('text/plain') || ''
+    return { kind: 'a2l', name: plain || p.name || '', argType: 'sysvar' }
+  }
+  return null
+}
+
+/** 映射表变量拖入的载荷：{ alias, name, kind } */
+function extractMappingPayload(e: DragEvent): { alias: string; name: string; kind: MappingKind } | null {
+  const raw = e.dataTransfer?.getData('application/x-mapping')
+  if (!raw) return null
+  try {
+    const p = JSON.parse(raw)
+    if (!p || !p.alias) return null
+    return { alias: p.alias, name: p.name || p.alias, kind: p.kind || 'signal' }
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 把拖拽载荷解析成「待写入的文本」：卡片参数占位符 → `{{参数名}}`；映射表变量 → 变量名；
+ * 对象浏览器对象 → 对象名（并带上 argType，便于生成时按类型处理）；兜底纯文本。
+ */
+function extractDrop(e: DragEvent): { text: string; argType?: CardStepArg['argType']; kind?: string } | null {
   // 参数行拖入：插入 {{参数名}} 占位符（生成时按引用处填的值替换）
   const paramName = e.dataTransfer?.getData(CARD_PARAM_MIME)
-  if (paramName) {
-    arg.value = `{{${paramName}}}`
-    return
-  }
-  const raw = e.dataTransfer?.getData('application/x-mapping-alias')
-  if (!raw) return
-  let payload: { alias?: string } | null = null
-  try {
-    payload = JSON.parse(raw)
-  } catch {
-    return
-  }
-  if (!payload?.alias) return
-  arg.value = payload.alias
-  if (!arg.key) arg.key = 'arg'
-  ElMessage.success(`参数已引用别名：${payload.alias}`)
+  if (paramName) return { text: `{{${paramName}}}` }
+  const obj = extractObjectPayload(e)
+  if (obj?.name) return { text: obj.name, argType: obj.argType, kind: '对象' }
+  const mp = extractMappingPayload(e)
+  if (mp) return { text: mp.alias, argType: mappingArgType[mp.kind], kind: '映射变量' }
+  const plain = e.dataTransfer?.getData('text/plain') || ''
+  return plain ? { text: plain } : null
+}
+
+/** 把拖拽载荷写进参数行的某个字段（参数名 / 对象 / 上限） */
+function applyDropToField(e: DragEvent, arg: CardStepArg, field: 'key' | 'value' | 'value2') {
+  const d = extractDrop(e)
+  if (!d) return false
+  arg[field] = d.text
+  if (d.argType) arg.argType = d.argType
+  if (d.kind) ElMessage.success(`已填入${d.kind}：${d.text}`)
+  return true
+}
+
+/** 拖到某个具体字段框（参数名 / 对象 / 上限）上 */
+function onArgFieldDrop(e: DragEvent, arg: CardStepArg, field: 'key' | 'value' | 'value2') {
+  dragOverArg.value = ''
+  applyDropToField(e, arg, field)
+}
+
+/** 任意输入框的拖拽填充：卡片名 / 描述 / 函数名 / 提示内容 / 步骤数值 / 参数名与默认值… */
+function onFieldDrop(e: DragEvent, set: (v: string) => void) {
+  const d = extractDrop(e)
+  if (!d) return
+  set(d.text)
+  ElMessage.success(d.kind ? `已填入${d.kind}：${d.text}` : `已填入：${d.text}`)
 }
 
 /**
@@ -1006,27 +1171,60 @@ function saveSub() {
       }
     }
     form.value = prev.form
+    loadedSnapshot.value = prev.snapshot
   }
   ElMessage.success(`引用卡片「${card.name}」已保存，所有引用处将同步更新`)
 }
 
-function save() {
+/** 是否有相对「载入时」的未保存修改 */
+function hasChanges(): boolean {
+  return JSON.stringify(form.value) !== loadedSnapshot.value
+}
+/**
+ * 切换编辑对象前的守卫：有未保存修改就询问「保存 / 不保存」。
+ * 返回 true = 可以继续切换（已保存或用户选择丢弃）；false = 保存失败（保持当前编辑）。
+ */
+async function confirmBeforeSwitch(): Promise<boolean> {
+  if (!hasChanges()) return true
+  try {
+    await ElMessageBox.confirm('当前卡片有未保存的修改，是否保存？', '提示', {
+      confirmButtonText: '保存',
+      cancelButtonText: '不保存',
+      type: 'warning',
+      closeOnClickModal: false,
+    })
+  } catch {
+    // 选「不保存」/ 关闭弹窗 → 丢弃当前修改
+    return true
+  }
+  // 子编辑态：先把正在编辑的引用卡片存回去，再回到顶层表单继续保存
+  if (isSubEdit.value) {
+    saveSub()
+    if (!hasChanges()) return true
+  }
+  return save()
+}
+
+defineExpose({ hasChanges, confirmBeforeSwitch })
+
+function save(): boolean {
   if (!form.value.name.trim()) {
     ElMessage.warning('请输入卡片名称')
-    return
+    return false
   }
   if (!form.value.steps.length) {
     ElMessage.warning('卡片至少需要一个步骤')
-    return
+    return false
   }
-  if (!normalizeParams()) return
+  if (!normalizeParams()) return false
   if (isSubEdit.value) {
     saveSub()
-    return
+    return true
   }
   normalizeRefBinding()
   emit('save', JSON.parse(JSON.stringify(form.value)))
   emit('update:visible', false)
+  return true
 }
 </script>
 
@@ -1409,5 +1607,18 @@ function save() {
   color: #c0c4cc;
   font-size: 12px;
   padding: 16px 0;
+}
+</style>
+
+<!-- 非 scoped：卡片编辑弹窗改成了非模态，遮罩层必须放行鼠标事件，
+     否则「从对象映射表 / 对象浏览器拖对象到参数框」时连拖拽都起不来（鼠标按下被遮罩吃掉）。
+     只作用在本弹窗自己的遮罩上（modal-class="ce-modal-pass"），不影响其它弹窗。 -->
+<style>
+.ce-modal-pass,
+.ce-modal-pass .el-overlay-dialog {
+  pointer-events: none;
+}
+.ce-modal-pass .el-dialog {
+  pointer-events: auto;
 }
 </style>

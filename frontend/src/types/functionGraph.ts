@@ -113,6 +113,8 @@ export interface Card {
   /** 工况画布内：卡片上方的额外留白(px)，用于在泳道里自由摆放。
    *  只加不减（>=0），所以卡片之间永远不会重叠；与用例生成无关。 */
   topGap?: number
+  /** 全局卡片：随全局库同步，新建配置/新建分组时自动带出 */
+  global?: boolean
 }
 
 /** 组节点（画布上的节点，内含 N 张卡片，带扇出开关） */
@@ -192,6 +194,8 @@ export interface MappingEntry {
   name: string
   value?: string
   extra?: Record<string, string>
+  /** 全局对象：随全局库同步，新建配置/新建分组时自动带出 */
+  global?: boolean
 }
 
 /** 全对象映射表 */
@@ -262,6 +266,8 @@ export interface ValueResource {
   /** split=遍历拆成多条用例；loop=单用例内 for 循环 */
   expand: 'split' | 'loop'
   label?: string
+  /** 全局值资源：随全局库同步，新建配置/新建分组时自动带出 */
+  global?: boolean
 }
 
 /** 展开后的单个端口 */
