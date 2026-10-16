@@ -892,7 +892,10 @@ function createWindow(backendReady = true) {
     console.log('[Electron] Window icon:', iconPath)
   }
 
-  mainWindow = new BrowserWindow(windowOptions)
+  // 用局部变量持有「本窗口」：mainWindow 会被「新建窗口」覆盖成最新窗口，
+  // 关闭回调若引用它就会隐藏错窗口（表现为原窗口点关闭没反应）。
+  const win = new BrowserWindow(windowOptions)
+  mainWindow = win
 
   // 设置中文应用菜单（含缩放功能），菜单构建见 buildAppMenu
   buildAppMenu()
@@ -912,7 +915,7 @@ function createWindow(backendReady = true) {
   const maxRetries = 5
 
   function loadPage() {
-    mainWindow.loadURL(loadUrl)
+    win.loadURL(loadUrl)
   }
 
   mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
@@ -930,10 +933,10 @@ function createWindow(backendReady = true) {
 
   loadPage()
 
-  mainWindow.webContents.on('did-finish-load', () => {
+  win.webContents.on('did-finish-load', () => {
     console.log('[Electron] Page loaded')
     // 注入 Ctrl+滚轮缩放：页面捕获 wheel 事件 → IPC 通知主进程调整 zoomLevel
-    mainWindow.webContents.executeJavaScript(`
+    win.webContents.executeJavaScript(`
       if (!window.__zoomInjected) {
         window.__zoomInjected = true;
         document.addEventListener('wheel', function(e) {
@@ -955,16 +958,19 @@ function createWindow(backendReady = true) {
   })
 
   // 点击关闭按钮时最小化到托盘，而不是退出
-  mainWindow.on('close', (event) => {
+  // 必须绑定「本窗口」实例（win），不能用全局 mainWindow：
+  // 打开「新建窗口」后 mainWindow 已指向新窗口，用它隐藏的是新窗口，原窗口点关闭就没反应。
+  win.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault()
-      mainWindow.hide()
+      win.hide()
       console.log('[Electron] Window hidden to tray')
     }
   })
 
-  mainWindow.on('closed', () => {
-    mainWindow = null
+  win.on('closed', () => {
+    // 仅当关闭的正是当前 mainWindow 时才清空，避免关掉新窗口后丢失仍存在的窗口引用
+    if (mainWindow === win) mainWindow = null
   })
 }
 

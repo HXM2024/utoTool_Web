@@ -13,7 +13,7 @@
           <div class="hint-row"><b>选中</b><span>点击卡片/泳道即选中；<b>Shift+点击</b> = 选中「上次点击的卡片 → 这次点击的卡片」之间的所有卡片（左侧列表里同样适用）；再 Shift+点同一张 = 取消它</span></div>
           <div class="hint-row"><b>排列</b><span>卡片在泳道内按顺序排列，拖到两张卡片之间即插到该位置；拖到「不合法的一侧」时会自动归到合法泳道（按连线判定：入口来源在左、出口目标在右），落在主序列上的非序列卡也会自动归到左右侧</span></div>
           <div class="hint-row"><b>复制</b><span>Ctrl+C / Ctrl+V；按住 Ctrl 拖拽 = 复制到其它泳道/工况</span></div>
-          <div class="hint-row"><b>连线</b><span>单击接线口起线（虚线跟随鼠标，再点另一个接线口完成，点空白取消）；按住 Ctrl 点击两个端口/卡片也可连线；单击连线或序号徽标高亮（选中时起点端显示该线关联的用例 ID）；双击连线删除；双击序号徽标选编号（点选已有编号，Ctrl 多选 / Shift 连选 / 拖拽框选；清空 = 全部，徽标显示 All；也可手填 1,2,5-8）</span></div>
+          <div class="hint-row"><b>连线</b><span><b>最快：从输出口按住拖到输入口松手</b>即可成线；也可<b>单击</b>接线口起线（虚线跟随鼠标，再点另一个接线口完成，点空白取消），或按住 <b>Ctrl</b> 依次点击两个端口/卡片；单击连线或序号徽标高亮（选中时起点端显示该线关联的用例 ID）；双击连线删除；双击序号徽标选编号（点选已有编号，Ctrl 多选 / Shift 连选 / 拖拽框选；清空 = 全部，徽标显示 All；也可手填 1,2,5-8）</span></div>
           <div class="hint-row"><b>编辑</b><span>双击节点编辑</span></div>
           <div class="hint-row"><b>撤销</b><span>Ctrl+Z 撤销 / Ctrl+Y 重做</span></div>
           <div class="hint-row"><b>横看</b><span>泳道超出宽度后，把鼠标停在该工况上 Shift+滚轮左右查看</span></div>
@@ -21,6 +21,11 @@
       </el-popover>
       <span class="cfc-spacer" />
       <el-tag size="small" type="info">{{ frames.length }} 个工况框</el-tag>
+    </div>
+
+    <!-- 拖出工况框的删除预警：原来只有松手后才知道卡片没了 -->
+    <div v-if="dragOutWillDelete" class="cfc-del-warn">
+      ⚠ 松手将从工况中删除该卡片（Ctrl+Z 可撤销）
     </div>
 
     <!-- 工况标签：画布一次只挂载一个工况（全量挂载时任何改动都要重跑整块画布的 diff）。
@@ -78,13 +83,20 @@
           <el-tooltip v-if="diagOf(f).issues.length" placement="top" effect="dark" :show-after="120">
             <template #content>
               <div class="diag-tip">
-                <div class="diag-tip-title">连线校验：{{ diagOf(f).issues.length }} 处需修正</div>
-                <div v-for="(it, ii) in diagOf(f).issues" :key="ii" class="diag-tip-row">
-                  · {{ it.label }}：{{ it.reason }}
+                <div class="diag-tip-title">
+                  连线校验：{{ diagOf(f).issues.length }} 处需修正<template v-if="blockingCount(f)">（其中 {{ blockingCount(f) }} 处会导致生成失败）</template>
+                </div>
+                <div
+                  v-for="(it, ii) in diagOf(f).issues"
+                  :key="ii"
+                  class="diag-tip-row"
+                  :class="{ 'diag-tip-row-block': isBlockingIssue(it) }"
+                >
+                  · <b v-if="isBlockingIssue(it)">[阻断]</b> {{ it.label }}：{{ it.reason }}
                 </div>
               </div>
             </template>
-            <span class="badge warn">⚠ {{ diagOf(f).issues.length }} 处待修正</span>
+            <span class="badge" :class="blockingCount(f) ? 'danger' : 'warn'">⚠ {{ diagOf(f).issues.length }} 处待修正</span>
           </el-tooltip>
           <div class="frame-actions">
             <button class="icon-btn" title="复制工况" @click="copyFrame(f.id)">⧉</button>
@@ -103,6 +115,8 @@
               class="hit"
               @click.stop="p.explicit && toggleEdgeSel(p.edgeId, $event.ctrlKey || $event.metaKey || $event.shiftKey)"
               @dblclick.stop="p.explicit && removeEdge(f.id, p.edgeId)"
+              @mouseenter="p.explicit && setHoverEdge(p.edgeId)"
+              @mouseleave="clearHoverEdge"
             />
           </svg>
 
@@ -111,6 +125,8 @@
             :key="'l' + p.key"
             class="edge-label"
             :style="{ left: p.mid.x + 'px', top: p.mid.y + 'px' }"
+            @mouseenter="p.explicit && setHoverEdge(p.edgeId)"
+            @mouseleave="clearHoverEdge"
           >
             <el-popover
               v-if="p.editable && (!p.badgeOnSelect || selectedEdgeIds.includes(p.edgeId))"
@@ -180,6 +196,18 @@
                 </div>
               </div>
             </el-popover>
+
+            <!-- 悬停连线时出现的删除按钮：把「双击删线」这个隐藏手势变成可见入口 -->
+            <button
+              v-if="p.explicit && hoverEdgeId === p.edgeId"
+              type="button"
+              class="edge-del"
+              title="删除这条连线（也可双击连线删除）"
+              aria-label="删除这条连线"
+              @mouseenter="setHoverEdge(p.edgeId)"
+              @mousedown.stop.prevent
+              @click.stop="removeEdge(f.id, p.edgeId)"
+            >✕</button>
           </div>
 
           <!-- 泳道（分栏），从左到右；拖拽卡片时才显示两侧停靠区 -->
@@ -294,9 +322,24 @@
                   @click.ctrl.stop="onCardCtrlClick(f.id, nid)"
                 >
                   <span class="node-grip" title="按住卡片任意位置即可拖动（同泳道内拖到两张卡片之间可调整顺序 / 拖到其它泳道，拖出工况框即删除）">⣿</span>
-                  <span class="node-del" title="删除卡片（也可拖出工况删除）" @mousedown.stop @click.stop="removeNode(f.id, lane.id, nid)">✕</span>
+                  <span
+                    class="node-del"
+                    role="button"
+                    tabindex="0"
+                    title="删除卡片（也可拖出工况删除）"
+                    aria-label="删除卡片"
+                    @mousedown.stop
+                    @click.stop="removeNode(f.id, lane.id, nid)"
+                    @keydown.enter.stop.prevent="removeNode(f.id, lane.id, nid)"
+                    @keydown.space.stop.prevent="removeNode(f.id, lane.id, nid)"
+                  >✕</span>
                   <div class="node-name">
-                    <span v-if="diagOf(f).invalidNodeIds.has(nid)" class="warn-mark" :title="diagReasonOf(f, nid)">⚠</span>
+                    <span
+                      v-if="diagOf(f).invalidNodeIds.has(nid)"
+                      class="warn-mark"
+                      :class="{ 'warn-mark-block': nodeBlocked(f, nid) }"
+                      :title="diagReasonOf(f, nid)"
+                    >⚠</span>
                     <span v-if="f.nodes[nid].type === 'sequence'" class="aux-mark" title="辅序列">⧉</span>
                     <span v-if="f.nodes[nid].refId" class="ref-mark" title="来自卡片库引用">⛓</span>
                     {{ f.nodes[nid].name }}
@@ -387,6 +430,8 @@
               v-if="editingCaseName.frameId === f.id && editingCaseName.row === ri"
               v-model="editingCaseName.value"
               class="case-name-input"
+              :class="{ 'case-name-invalid': !!caseNameError(editingCaseName.value) }"
+              :title="caseNameError(editingCaseName.value) || '用例名只能用字母 / 数字 / 下划线，且不能以数字开头'"
               :style="{ width: caseNameInputWidth }"
               @keydown.enter.stop.prevent="saveCaseName"
               @keydown.esc.stop.prevent="cancelCaseNameEdit"
@@ -475,7 +520,7 @@ import type {
   ValueResource,
 } from '@/types/functionGraph'
 import { genId, FUNC_CARD_MIME } from '@/types/functionGraph'
-import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
+import { useShortcut, isModuleActive, isPointerIn } from '@/composables/useShortcuts'
 import {
   isNodeKey,
   isCardKey,
@@ -483,6 +528,7 @@ import {
   parseSeqPortKey,
   seqPortKey,
   resolveFrameNumbers,
+  freezeFrameNumbers,
   frameEdgeKey,
   frameLanes,
   frameSequenceId,
@@ -521,6 +567,8 @@ const props = defineProps<{
   loadCaseCode?: (caseId: string) => Promise<string>
   /** 函数库里已有的函数名：用于「调用了函数库里不存在的函数」告警（不传则跳过这项校验） */
   funcNames?: string[]
+  /** 外层保存配置时递增：保存成功后清空画布撤销栈（#22 撤销边界） */
+  saveSignal?: number
 }>()
 const emit = defineEmits<{
   (e: 'update:graph', graph: Graph): void
@@ -528,6 +576,8 @@ const emit = defineEmits<{
   (e: 'update:active-frame-id', frameId: string): void
   /** 点击工况里的卡片：通知外层让左侧卡片列表聚焦到它引用的库卡片 */
   (e: 'select-card', payload: { cardId: string; type: CardType }): void
+  /** 点击工况里的「独立副本」卡片（无 refId，卡片库没有对应条目）：让外层按名称兜底定位并给反馈 */
+  (e: 'focus-node', payload: { frameId: string; nodeId: string; name: string }): void
   /** 点击工况框（框头 / 泳道）：通知外层让左侧工况列表聚焦到该工况 */
   (e: 'select-frame', frameId: string): void
   /** 卡片编辑框里保存了「被引用的库卡片」：交由外层写回卡片库并同步所有引用处 */
@@ -636,10 +686,14 @@ function stepFrame(delta: number) {
 }
 
 /* 切换展示的工况时清空画布选中：复制工况后卡片 id 与原件重名，
-   留着旧选中会让 Delete / 拖拽作用到新工况里的同名卡片上。 */
+   留着旧选中会让 Delete / 拖拽作用到新工况里的同名卡片上。
+   #22：撤销栈按工况隔离 —— 切工况即清空，Ctrl+Z 不会回退上一个工况的改动。 */
 watch(
   () => props.activeFrameId,
-  () => clearSelection(),
+  () => {
+    clearSelection()
+    resetHistory()
+  },
 )
 
 // ===== 撤销 / 重做（快照式：以整份 frames 为粒度，覆盖拖拽、增删、粘贴等所有画布改动）=====
@@ -654,6 +708,19 @@ function resetHistory() {
   lastFramesSnapshot = JSON.stringify(toRaw(frames.value))
 }
 resetHistory()
+/**
+ * #22 撤销边界：外层保存配置成功后递增 saveSignal → 清空撤销栈并提示。
+ * 撤销不该回退到「已保存」之前的状态，否则用户会以为改动丢了。
+ */
+watch(
+  () => props.saveSignal,
+  (v) => {
+    if (!v || v <= 0) return
+    const had = undoStack.value.length > 0
+    resetHistory()
+    if (had) ElMessage.success('已保存，撤销历史已清空')
+  },
+)
 /** 工况名逐字符输入的防抖计时器（见 onFrameNameInput） */
 let frameNameTimer: ReturnType<typeof setTimeout> | null = null
 function emitChange(opts: { history?: boolean } = {}) {
@@ -768,6 +835,12 @@ function isNodeDropAfter(frameId: string, laneId: string, nodeId: string): boole
 }
 // 是否正在拖拽卡片（库卡片或画布内卡片）——用于按需显示泳道间的停靠区
 const dragging = ref(false)
+/** 拖拽中指针是否落在工况框内。落在框外松手 = 删除该卡片，所以要在松手前给出红色预警。 */
+const dragOverFrame = ref(true)
+/** 正在拖拽的是「画布内卡片」且不是 Ctrl 复制：只有这种情况下拖出框才会删卡片 */
+const dragOutWillDelete = computed(
+  () => dragging.value && dragPayload.value?.source === 'node' && !dragPayload.value?.copy && !dragOverFrame.value,
+)
 function onWindowDragStart(e: DragEvent) {
   const types = e.dataTransfer?.types
   const list = types ? Array.from(types) : []
@@ -860,7 +933,14 @@ function markLastLane(frameId: string, laneId: string) {
  *  只有「引用式」卡片（refId 指向卡片库）才有对应条目，独立副本没有，不发事件。 */
 function emitCardFocus(frameId: string, nodeId: string) {
   const node = frames.value.find((x) => x.id === frameId)?.nodes[nodeId]
-  if (node?.refId) emit('select-card', { cardId: node.refId, type: node.type })
+  if (!node) return
+  if (node.refId) {
+    emit('select-card', { cardId: node.refId, type: node.type })
+    return
+  }
+  // 独立副本（无 refId）在卡片库里没有对应条目：交给外层按名称兜底定位，并在找不到时给出说明，
+  // 否则点了卡片左侧列表毫无反应，看起来像点击失效。
+  emit('focus-node', { frameId, nodeId, name: node.name || '' })
 }
 // 点工况框头：清画布选中，并让左侧工况列表聚焦到该工况
 function onFrameHeadClick(frameId: string) {
@@ -1042,6 +1122,24 @@ function applyClip(f: CaseFrame, lane: FrameLane, clip: CanvasClip, at = -1): nu
   if (dropped) ElMessage.warning('主序列泳道只放「序列」卡片，已跳过其它卡片')
   return cards.length + clip.lanes.reduce((s, l) => s + l.cards.length, 0)
 }
+/**
+ * #2：主序列「不可删、但可被整体替换」是既有规则 —— 替换是破坏性的（整条序列换掉），
+ * 原来静默执行，容易误丢。这里在真正替换前二次确认。
+ * 只在「目标主序列已有内容」时询问；返回 false = 用户取消，调用方应中止本次落点。
+ */
+async function confirmMainReplace(f: CaseFrame, existing: number): Promise<boolean> {
+  if (existing <= 0) return true
+  try {
+    await ElMessageBox.confirm(
+      `「${f.name || '工况'}」的主序列已有 ${existing} 张序列卡片，本次操作会用它整体替换原有主序列（替换后可按 Ctrl+Z 撤销）。是否继续？`,
+      '覆盖主序列',
+      { confirmButtonText: '替换主序列', cancelButtonText: '取消', type: 'warning' },
+    )
+    return true
+  } catch {
+    return false
+  }
+}
 // 把快照里的泳道（含整栏卡片）克隆插入到目标下标处
 function insertClipLanes(f: CaseFrame, at: number, clip: CanvasClip) {
   if (!clip.lanes.length) return
@@ -1074,6 +1172,9 @@ function moveNodesToLane(
   insertAt: number,
   sourceFrameId?: string,
 ): number {
+  // 编号固定：任何「移动卡片改变泳道内顺序」的操作，都在落盘前把当前生效编号写死，
+  // 避免编号跟着新的位置重新排（编号只在重新连线、从无到有时才自动排）
+  freezeFrameNumbers(targetFrame)
   const moving: Array<{ frame: CaseFrame; lane: FrameLane; node: Card; key: string }> = []
   const seen = new Set<string>()
   for (const id of ids) {
@@ -1149,16 +1250,53 @@ function pasteClipboard(): boolean {
   // 画布剪贴板为空 → 不接管，交给上层（粘贴工况/库卡片）
   if (!clip) return false
   const t = lastLane.value
-  const f = t ? frames.value.find((x) => x.id === t.frameId) : null
-  const lane = f ? f.lanes.find((l) => l.id === (t as { laneId: string }).laneId) : null
+  let f: CaseFrame | null = t ? frames.value.find((x) => x.id === t.frameId) ?? null : null
+  let lane: FrameLane | null = f && t ? f.lanes.find((l) => l.id === (t as { laneId: string }).laneId) ?? null : null
+  let auto = false
+  if (!f || !lane) {
+    // 没有「最近交互过的泳道」时不再直接报错：按卡片角色选合法一侧
+    // （结果卡→右、其余→左）落到当前展示工况；该侧没有泳道就新建一条。
+    // 仍可先点目标泳道再 Ctrl+V 精确指定落点。
+    f = visibleFrames.value[0] ?? null
+    if (f) {
+      const clipCards = [...clip.cards, ...clip.lanes.flatMap((l) => l.cards)]
+      const side: 'left' | 'right' =
+        clipCards.length > 0 && clipCards.every((c) => c.type === 'result') ? 'right' : 'left'
+      lane = laneOnSide(f, side)
+      auto = true
+    }
+  }
   if (!f || !lane) {
     ElMessage.warning('请先点击要粘贴到的泳道，再按 Ctrl+V')
     return true
   }
-  const n = applyClip(f, lane, clip)
-  emitChange()
-  scheduleRecompute()
-  ElMessage.success(`已粘贴 ${n} 张卡片`)
+  const laneIndex = f.lanes.findIndex((l) => l.id === lane!.id) + 1
+  // 落点与提示都基于「本次选定的工况/泳道」，先固化成非空常量供闭包使用
+  const targetFrame: CaseFrame = f
+  const targetLane: FrameLane = lane
+  const pasteNow = () => {
+    const n = applyClip(targetFrame, targetLane, clip)
+    emitChange()
+    scheduleRecompute()
+    ElMessage.success(
+      auto
+        ? `已粘贴 ${n} 张卡片到「泳道${laneIndex}」（可先点击目标泳道再 Ctrl+V 指定落点）`
+        : `已粘贴 ${n} 张卡片`,
+    )
+  }
+  // #2：粘贴会把主序列整体替换掉时先二次确认；本次按键仍由画布接管
+  // （保持「没有画布剪贴板才放行给上层」的原有语义，P2-2 依赖这一点）
+  const willReplaceMain =
+    targetLane.type === 'main' &&
+    filterClipCards(targetLane, clip.cards).cards.length > 0 &&
+    targetLane.nodeIds.length > 0
+  if (willReplaceMain) {
+    void (async () => {
+      if (await confirmMainReplace(targetFrame, targetLane.nodeIds.length)) pasteNow()
+    })()
+    return true
+  }
+  pasteNow()
   return true
 }
 // 画布内的快捷键统一注册到「统一快捷键层」（context 作用域，最内层优先）：
@@ -1166,6 +1304,9 @@ function pasteClipboard(): boolean {
 // 注意：FunctionView 被 keep-alive 缓存、画布不会卸载，所以每条都必须用 isModuleActive 限定在功能模块内，
 // 否则在其它模块按 Insert/Delete 会被画布抢走（新建/删除工况）。
 const canvasShortcutWhen = () => isModuleActive('/function')
+// Insert / Delete 额外要求「指针在画布内」：否则在右侧面板（映射表/值资源/函数库）按到
+// Insert 会凭空新建工况、按 Delete 会删掉画布上的选中项，等于误操作。
+const canvasPointerWhen = () => canvasShortcutWhen() && isPointerIn(canvasEl.value)
 function canvasShortcuts() {
   useShortcut({
     id: 'canvas:copy',
@@ -1211,7 +1352,7 @@ function canvasShortcuts() {
     id: 'canvas:selectAll',
     keys: 'Ctrl+A',
     scope: 'context',
-    desc: '全选画布卡片',
+    desc: '全选当前工况的卡片（Alt+A 全选全部工况）',
     when: canvasShortcutWhen,
     run: () => {
       const all: string[] = []
@@ -1220,6 +1361,37 @@ function canvasShortcuts() {
       if (!all.length) return false
       selLanes.value = []
       selNodes.value = all
+      ElMessage({
+        message: `已选中当前工况 ${all.length} 张卡片（Ctrl+A 仅当前工况；Alt+A 全选全部工况）`,
+        type: 'success',
+        grouping: true,
+      })
+      return true
+    },
+  })
+  useShortcut({
+    id: 'canvas:selectAllFrames',
+    keys: 'Alt+A',
+    scope: 'context',
+    desc: '全选全部工况的卡片',
+    when: canvasShortcutWhen,
+    run: () => {
+      const all: string[] = []
+      let frameCount = 0
+      for (const f of frames.value) {
+        let n = 0
+        for (const lane of f.lanes) n += lane.nodeIds.length
+        if (n > 0) frameCount++
+        for (const lane of f.lanes) all.push(...lane.nodeIds)
+      }
+      if (!all.length) return false
+      selLanes.value = []
+      selNodes.value = all
+      ElMessage({
+        message: `已选中全部工况 ${frameCount} 个、共 ${all.length} 张卡片`,
+        type: 'success',
+        grouping: true,
+      })
       return true
     },
   })
@@ -1240,7 +1412,7 @@ function canvasShortcuts() {
     keys: 'Insert',
     scope: 'context',
     desc: '新建工况',
-    when: canvasShortcutWhen,
+    when: canvasPointerWhen,
     run: () => {
       addFrame()
       return true
@@ -1251,7 +1423,7 @@ function canvasShortcuts() {
     keys: 'Delete',
     scope: 'context',
     desc: '删除选中的卡片/泳道/连线',
-    when: canvasShortcutWhen,
+    when: canvasPointerWhen,
     run: () => {
       if (deleteSelection()) return true
       return false
@@ -1345,6 +1517,27 @@ const frameCaseNums = ref<Record<string, number[]>>({})
 
 const editingEdgeId = ref('')
 const editingEdgeFrameId = ref('')
+/**
+ * 连线悬停态（用于「悬停出删除按钮」，把原本只写在帮助气泡里的「双击删线」变成可见入口）。
+ * 离开连线后延迟一小会儿再清空：鼠标从连线描边移到旁边的小按钮上时，
+ * 中间会短暂离开描边，立即清空会让按钮闪现即消失、点不到。
+ */
+const hoverEdgeId = ref('')
+let hoverEdgeTimer: number | null = null
+function setHoverEdge(edgeId: string) {
+  if (hoverEdgeTimer !== null) {
+    clearTimeout(hoverEdgeTimer)
+    hoverEdgeTimer = null
+  }
+  hoverEdgeId.value = edgeId
+}
+function clearHoverEdge() {
+  if (hoverEdgeTimer !== null) clearTimeout(hoverEdgeTimer)
+  hoverEdgeTimer = window.setTimeout(() => {
+    hoverEdgeId.value = ''
+    hoverEdgeTimer = null
+  }, 160)
+}
 const editingEdgeValue = ref('')
 /**
  * 序号编辑框宽度：按内容长度自适应（最小 9 个字符，保证面板里的 placeholder「如 1,2,5-8」可见）。
@@ -1893,6 +2086,8 @@ function moveLane(frameId: string, laneId: string, dir: number) {
   next[i] = next[j]
   next[j] = tmp
   if (rejectIfAddsCrossing(f, next)) return
+  // 编号固定：改泳道顺序前先固化编号（否则编号会跟着新的从左到右顺序重排）
+  freezeFrameNumbers(f)
   f.lanes.splice(0, f.lanes.length, ...next)
   emitChange()
   scheduleRecompute()
@@ -1970,6 +2165,8 @@ function applyLaneDrop(frameId: string, laneId: string): boolean {
   const next = rest.slice()
   next.splice(pos === 'before' ? to : to + 1, 0, moved)
   if (rejectIfAddsCrossing(f, next)) return true
+  // 编号固定：改泳道顺序前先固化编号（同 moveLane）
+  freezeFrameNumbers(f)
   f.lanes.splice(0, f.lanes.length, ...next)
   emitChange()
   scheduleRecompute()
@@ -2160,6 +2357,9 @@ function resolveCopyClip(e: DragEvent): CanvasClip | null {
   return snap ? { cards: snap.cards, lanes: [], edges: snap.edges } : null
 }
 function onZoneDrop(frameId: string, laneId: string, e: DragEvent) {
+  void onZoneDropApply(frameId, laneId, e)
+}
+async function onZoneDropApply(frameId: string, laneId: string, e: DragEvent) {
   if (applyLaneDrop(frameId, laneId)) return
   const f = frames.value.find((x) => x.id === frameId)
   if (!f) return
@@ -2171,10 +2371,20 @@ function onZoneDrop(frameId: string, laneId: string, e: DragEvent) {
     // Ctrl 拖拽 = 复制：原件保留，克隆落到停靠位置（泳道内的插入下标由鼠标 Y 决定）
     const copyClip = resolveCopyClip(e)
     if (copyClip) {
-      applyClip(f, lane, copyClip, dropIndexInLane(e.currentTarget as Element | null, e.clientY, ''))
-      emitChange()
-      onDragEnd()
-      scheduleRecompute()
+      const applyCopy = () => {
+        applyClip(f, lane, copyClip, dropIndexInLane(e.currentTarget as Element | null, e.clientY, ''))
+        emitChange()
+        onDragEnd()
+        scheduleRecompute()
+      }
+      // #2：复制拖到主序列上会整体替换主序列 → 先确认
+      if (lane.type === 'main' && filterClipCards(lane, copyClip.cards).cards.length > 0 && lane.nodeIds.length > 0) {
+        if (!(await confirmMainReplace(f, lane.nodeIds.length))) {
+          onDragEnd()
+          return
+        }
+      }
+      applyCopy()
       return
     }
     const ids = dragNodeIdsOf(payload)
@@ -2206,6 +2416,22 @@ function onZoneDrop(frameId: string, laneId: string, e: DragEvent) {
   if (!incoming.length) {
     onZoneLeave()
     return
+  }
+  // #2：这批卡片里有会落到「已有内容的主序列」的 → 会整体替换主序列，先确认
+  const mainReplaceCount = (() => {
+    const mainLane = f.lanes.find((l) => l.type === 'main')
+    if (!mainLane || mainLane.nodeIds.length === 0) return 0
+    const willHit = incoming.some((c) => {
+      const t = resolveDropLane(f, lane, [], c)
+      return t.type === 'main' && laneAccepts('main', c)
+    })
+    return willHit ? mainLane.nodeIds.length : 0
+  })()
+  if (mainReplaceCount > 0) {
+    if (!(await confirmMainReplace(f, mainReplaceCount))) {
+      onDragEnd()
+      return
+    }
   }
   // 新卡片按鼠标位置插入（与拖拽时的停靠提示一致），位置由顺序决定；
   // 同时按角色自动落到合法一侧的泳道（结果卡→右侧，其余→左侧）。
@@ -2268,6 +2494,9 @@ function onCardDrop(frameId: string, laneId: string, targetNodeId: string, e: Dr
     onDragEnd()
     return
   }
+  // 编号固定：拖拽重排前先把「当前生效编号」写死。
+  // 编号只在「重新连线（从无到有）」时按位置自动排，改变卡片顺序不应该让编号跟着重排。
+  freezeFrameNumbers(f)
   // 依据拖拽过程中记录的落点方向决定插到目标卡片之前还是之后
   const dropAfter = isNodeDropAfter(frameId, laneId, targetNodeId)
   const insertAt = (nodeId: string) => {
@@ -2372,6 +2601,7 @@ function onCanvasDrop(e: DragEvent) {
     if (removed) {
       emitChange()
       scheduleRecompute()
+      ElMessage.success(`已删除 ${removed} 张卡片（拖出工况框），Ctrl+Z 可撤销`)
     }
     onDragEnd()
     return
@@ -2415,6 +2645,7 @@ function removeNode(frameId: string, laneId: string, nodeId: string) {
   delete f.nodes[nodeId]
   emitChange()
   scheduleRecompute()
+  ElMessage.success('已删除卡片，Ctrl+Z 可撤销')
 }
 
 // ===== 连线坐标与渲染 =====
@@ -2649,6 +2880,31 @@ function recompute() {
 }
 let recomputeTries = 0
 let recomputeScheduled = false
+/**
+ * #13 / #14 性能度量（仅 dev，不参与生产构建）：
+ * 记录每次「渲染 + 连线重算」耗时，供 P95 自测与防回退对比。
+ * 控制台执行 `__CANVAS_PERF__.report()` 查看近 200 次的 P50 / P95 / 最大值。
+ */
+const canvasPerfSamples: number[] = []
+if (import.meta.env.DEV) {
+  ;(window as any).__CANVAS_PERF__ = {
+    samples: canvasPerfSamples,
+    reset: () => {
+      canvasPerfSamples.length = 0
+    },
+    report: () => {
+      const s = [...canvasPerfSamples].sort((a, b) => a - b)
+      if (!s.length) return { count: 0 }
+      const q = (p: number) => s[Math.min(s.length - 1, Math.floor(s.length * p))]
+      return {
+        count: s.length,
+        p50: +q(0.5).toFixed(1),
+        p95: +q(0.95).toFixed(1),
+        max: +s[s.length - 1].toFixed(1),
+      }
+    },
+  }
+}
 function scheduleRecompute() {
   recomputeTries = 0
   syncObserveBodies()
@@ -2659,7 +2915,14 @@ function scheduleRecompute() {
   recomputeScheduled = true
   requestAnimationFrame(() => {
     recomputeScheduled = false
-    recompute()
+    if (import.meta.env.DEV) {
+      const t0 = performance.now()
+      recompute()
+      canvasPerfSamples.push(performance.now() - t0)
+      if (canvasPerfSamples.length > 200) canvasPerfSamples.shift()
+    } else {
+      recompute()
+    }
   })
 }
 // 监听工况框尺寸变化（停靠区显隐、泳道宽度、内容增减等）自动重算连线
@@ -2778,6 +3041,8 @@ function onCanvasDragOverScroll(e: DragEvent) {
   if ((autoScroll.x || autoScroll.y) && !autoScroll.raf) {
     autoScroll.raf = requestAnimationFrame(autoScrollStep)
   }
+  // 记录指针是否仍在某个工况框内：拖出框松手 = 删除卡片，需提前预警
+  dragOverFrame.value = !!(e.target as HTMLElement | null)?.closest?.('.frame')
 }
 // 点击工况列表选中时，滚动画布到对应工况框
 function scrollToFrame(id: string) {
@@ -3143,7 +3408,7 @@ function onPortOutClick(frameId: string, key: string) {
     return
   }
   clickLinkFrom.value = { frameId, fromKey: key }
-  ElMessage.info('已选择起点端口，请按住Ctrl点击目标输入端口完成连线')
+  ElMessage.info('已选择起点端口，请点击目标端口完成连线（也可按住 Ctrl 点击）')
 }
 // 判断某个接线口是否为「当前点击连线的起点」（待落点状态 / Ctrl 两步连线的起点），用于高亮。
 // 要比对 side：同一张卡片的输入/输出口 key 相同（都是 'node:<id>'），只比 key 会把另一个口也点亮。
@@ -3872,6 +4137,41 @@ function diagReasonOf(f: CaseFrame, nodeId: string): string {
     .map((it) => it.reason)
     .join('；')
 }
+/**
+ * 告警分级（纯展示层）：按 issue.kind 分「阻断 / 提示」两类，不改变 utils 里
+ * frameDiagnostics 的判定集合与返回结构。
+ * - 阻断：会导致生成失败或整条用例失效（悬空连线、缺/空主序列、压过主序列、调用了不存在的函数）
+ * - 提示：仅需关注（孤立卡片、未接入主序列、参数没取值）
+ */
+const BLOCKING_ISSUES = new Set([
+  'dangling-edge',
+  'no-sequence',
+  'empty-sequence',
+  'cross-main-edge',
+  'missing-func',
+])
+function isBlockingIssue(it: FrameIssue): boolean {
+  return BLOCKING_ISSUES.has(it.kind)
+}
+/** 该工况里「阻断类」问题的条数（决定徽标红/黄） */
+function blockingCount(f: CaseFrame): number {
+  return diagOf(f).issues.filter(isBlockingIssue).length
+}
+/** 每个工况里「存在阻断类问题」的节点集合：节点 ⚠ 用它决定红/黄（预聚合，避免逐节点扫 issues） */
+const blockingNodeIdsMap = computed<Record<string, Set<string>>>(() => {
+  const map: Record<string, Set<string>> = {}
+  for (const f of visibleFrames.value) {
+    const s = new Set<string>()
+    for (const it of frameDiags.value[f.id]?.issues ?? []) {
+      if (it.nodeId && isBlockingIssue(it)) s.add(it.nodeId)
+    }
+    map[f.id] = s
+  }
+  return map
+})
+function nodeBlocked(f: CaseFrame, nodeId: string): boolean {
+  return blockingNodeIdsMap.value[f.id]?.has(nodeId) ?? false
+}
 
 // ===== 展开预览（含值资源 @list/@range 拆分）=====
 /**
@@ -3925,6 +4225,14 @@ function cancelCaseNameEdit() {
   editingCaseName.value = { frameId: '', row: -1, value: '' }
 }
 
+/** 用例名即时校验：返回 null=通过（空值视为「用默认名」，不算错），否则错误文案。
+ *  判据与 saveCaseName 的提交校验完全一致，只是把结果提前到输入时展示。 */
+function caseNameError(v: string): string | null {
+  const name = String(v ?? '').trim()
+  if (!name) return null
+  if (!/^[A-Za-z_]\w*$/.test(name)) return '只能用字母 / 数字 / 下划线，且不能以数字开头'
+  return null
+}
 /** 提交用例名：与默认名一致就清掉覆盖（不存冗余），非法标识符直接拒绝 */
 function saveCaseName() {
   const { frameId, row, value } = editingCaseName.value
@@ -3933,7 +4241,7 @@ function saveCaseName() {
   const f = frames.value.find((x) => x.id === frameId)
   if (!f) return
   const name = value.trim()
-  if (name && !/^[A-Za-z_]\w*$/.test(name)) {
+  if (caseNameError(name)) {
     ElMessage.warning('用例名只能用字母 / 数字 / 下划线，且不能以数字开头（会作为生成的函数名）')
     return
   }
@@ -4239,6 +4547,13 @@ onUnmounted(() => {
   border: 1px solid #f5dab1;
   cursor: help;
 }
+/* 存在「会导致生成失败」的问题时用红色：与提示类（黄）区分开 */
+.badge.danger {
+  background: #fef0f0;
+  color: #f56c6c;
+  border: 1px solid #fbc4c4;
+  cursor: help;
+}
 .diag-tip {
   max-width: 460px;
   line-height: 1.7;
@@ -4250,6 +4565,11 @@ onUnmounted(() => {
 .diag-tip-row {
   font-size: 12px;
   opacity: 0.92;
+}
+/* 阻断类问题在悬浮清单里也标红，便于一眼分辨「会导致生成失败」的项 */
+.diag-tip-row-block {
+  color: #ffb3b3;
+  opacity: 1;
 }
 .frame-name {
   flex: 1;
@@ -4378,6 +4698,50 @@ onUnmounted(() => {
 }
 .label-badge:hover {
   background: #337ecc;
+}
+/* 悬停连线时出现的删除按钮：贴在编号徽标右上角，不与徽标重叠点击区 */
+.edge-del {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  transform: translate(-40%, -60%);
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #fbc4c4;
+  border-radius: 50%;
+  background: #fef0f0;
+  color: #f56c6c;
+  font-size: 10px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 11;
+}
+.edge-del:hover {
+  background: #f56c6c;
+  color: #fff;
+  border-color: #f56c6c;
+}
+/* 拖出工况框时的删除预警条：固定在画布顶部，松手前给出明确提示。
+   fixed 定位（编辑器本身就是全屏浮层）：不依赖祖先是否 positioned，滚动时也始终可见 */
+.cfc-del-warn {
+  position: fixed;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  padding: 4px 12px;
+  border-radius: 4px;
+  background: #fef0f0;
+  border: 1px solid #fbc4c4;
+  color: #f56c6c;
+  font-size: 12px;
+  font-weight: 600;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 /* 连线高亮时，所属序号徽标同步高亮（含同工况内相同序号的所有连线） */
 .label-badge.badge-selected,
@@ -4725,6 +5089,10 @@ onUnmounted(() => {
   margin-right: 3px;
   cursor: help;
 }
+/* 节点上存在「阻断类」问题（如调用了不存在的函数）时用红色，与提示类区分 */
+.warn-mark-block {
+  color: #f56c6c;
+}
 /* 拖拽排序停靠占位框：在落点处画一个与卡片等宽的虚线占位框（替代原来的一条指示线），
    直观提示卡片松手后会插到这个位置；框整个落在卡片上/下方的间隙里，不遮住卡片本身 */
 .node.node-drop-before::before,
@@ -5024,6 +5392,12 @@ onUnmounted(() => {
   box-shadow: 0 0 0 2px rgba(230, 162, 60, 0.35);
   background: #fff;
 }
+/* 用例名非法（会作为生成的函数名，必须是合法标识符）时输入框描红 */
+.case-row .case-name-input.case-name-invalid {
+  color: #f56c6c;
+  border-color: #f56c6c;
+  box-shadow: 0 0 0 2px rgba(245, 108, 108, 0.3);
+}
 .case-row .chain {
   color: #909399;
   min-width: 0;
@@ -5109,6 +5483,16 @@ onUnmounted(() => {
 }
 .cp-pre code {
   background: transparent;
+}
+
+/* #27 可访问性：系统开启「减少动态效果」时关闭画布过渡/动画 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
 }
 </style>
 

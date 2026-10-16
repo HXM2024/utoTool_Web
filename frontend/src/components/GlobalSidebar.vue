@@ -22,7 +22,7 @@
       </div>
     </div>
 
-    <!-- 继电器模块 / CAN 通道（Function、CAN 模块生成共用 RelayON/RelayOFF 时使用） -->
+    <!-- 继电器模块 / CAN 通道（Function、CAN、三包 模块生成共用 RelayON/RelayOFF 时使用） -->
     <template v-if="isRelayModule">
       <div class="sidebar-section relay-section">
         <div class="section-title">CAN 通道</div>
@@ -201,9 +201,11 @@ const CAN_CHANNEL_OPTIONS = [
   { label: '1', value: 1 },
   { label: '2', value: 2 },
 ]
-/** 只有 Function / CAN 两个模块使用继电器配置 */
+/** Function / CAN / 三包 三个模块使用继电器配置 */
 const relayModuleKey = computed<RelayConfigModule | null>(() =>
-  store.activeModule === 'function' || store.activeModule === 'can' ? store.activeModule : null,
+  store.activeModule === 'function' || store.activeModule === 'can' || store.activeModule === 'sanbao'
+    ? store.activeModule
+    : null,
 )
 const isRelayModule = computed(() => relayModuleKey.value !== null)
 const relayConfig = computed(() => store.relayConfigs[relayModuleKey.value ?? 'function'])

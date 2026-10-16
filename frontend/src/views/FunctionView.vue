@@ -4,6 +4,7 @@
     <ConfigToolbar
       ref="toolbarRef"
       module-name="function"
+      :busy="generating"
       @config-change="onConfigChange"
       @create="onCreate"
       @copy="onCopy"
@@ -90,7 +91,7 @@
         <!-- 左：按分组展示用例（每组一份独立图形配置） -->
         <div class="preview-cases-wrap" :style="{ width: casesWidth + 'px' }">
           <ResizableSplitter direction="horizontal" :on-drag="onCasesDrag" />
-          <div class="preview-cases">
+          <div class="preview-cases" v-loading="casePreviewLoading">
           <div class="pane-title">
             <span>用例分组</span>
             <el-button size="small" text @click="collapseAllGroups">全部折叠</el-button>
@@ -119,6 +120,7 @@
                     size="small"
                     class="group-name-input"
                     placeholder="分组名称（用例名前缀）"
+                    :ref="(el: any) => setGroupNameEl(grp.id, el)"
                     @change="onGroupMetaChange"
                   />
                   <span class="group-count">{{ groupCaseCount(grp.id) }} 条</span>
@@ -140,10 +142,22 @@
                     v-for="c in casesOfGroup(grp.id)"
                     :key="c.case_id"
                     class="case-item"
+                    role="button"
+                    tabindex="0"
                     title="点击定位到右侧代码预览"
                     @click="locateCaseInCode(c)"
+                    @keydown.enter.prevent="locateCaseInCode(c)"
+                    @keydown.space.prevent="locateCaseInCode(c)"
                   >
                     <span class="case-name" :title="c.case_id">{{ c.case_id }}</span>
+                    <el-button
+                      class="case-locate"
+                      size="small"
+                      text
+                      :icon="Connection"
+                      title="定位到图形配置中产出该用例的工况"
+                      @click.stop="locateCaseInGraph(c)"
+                    />
                     <span class="case-meta">{{ c.lines }} 行</span>
                   </div>
                   <div v-if="!casesOfGroup(grp.id).length" class="empty-mini">该分组暂无用例</div>
@@ -177,8 +191,12 @@
                   v-for="c in ungroupedCases"
                   :key="c.case_id"
                   class="case-item"
+                  role="button"
+                  tabindex="0"
                   title="点击定位到右侧代码预览"
                   @click="locateCaseInCode(c)"
+                  @keydown.enter.prevent="locateCaseInCode(c)"
+                  @keydown.space.prevent="locateCaseInCode(c)"
                 >
                   <span class="case-name" :title="c.case_id">{{ c.case_id }}</span>
                   <span class="case-meta">{{ c.lines }} 行</span>
@@ -242,7 +260,7 @@
           type="primary"
           :icon="Promotion"
           :loading="generating"
-          :disabled="!currentConfig"
+          :disabled="!currentConfig || generating"
           @click="handleGenerate"
         >
           生成文件
@@ -303,7 +321,12 @@
       :cards="cards"
       :value-library="valueLibrary"
       :active-group-id="activeGroupId"
+      :focus-case-id="focusCaseId"
+      :generating="generating"
+      :generate-result="generateResult"
+      @open-output-dir="handleOpenDir"
       :ccp-var-types="store.ccpVarTypes"
+      :dbc-env-names="dbcEnvVarNames"
       @close="graphEditorVisible = false"
       @save="onGraphSave"
       @generate="onGraphGenerate"
@@ -357,6 +380,18 @@
                     {{ g.frames.length }} 个工况框 · {{ cardCountOf(g) }} 张库卡片
                   </span>
                 </el-checkbox>
+                <!-- #20：拉取时同名分组标记「本地已存在」，默认不勾选（跳过）；勾选后才可「覆盖」 -->
+                <template v-if="transferMode === 'pull' && isLocalDupGroup(g)">
+                  <el-tag size="small" type="warning" effect="plain">本地已存在</el-tag>
+                  <el-checkbox
+                    v-model="transferOverwrite"
+                    :value="g.id"
+                    :disabled="!transferSelected.includes(g.id)"
+                    title="勾选后：用源分组整体替换当前配置里的同名分组（未勾选则跳过该分组）"
+                  >
+                    覆盖
+                  </el-checkbox>
+                </template>
               </div>
             </el-checkbox-group>
             <div v-if="!transferLoading && !transferGroups.length" class="grp-empty">
@@ -366,8 +401,8 @@
         </div>
         <div class="grp-hint">
           <template v-if="transferMode === 'pull'">
-            复制到当前配置后新增分组（重名自动加「_来自&lt;源配置&gt;」后缀），并带上该分组的卡片库 /
-            映射表 / 值资源库；改动需点「保存」落盘。
+            复制到当前配置后新增分组（重名分组默认<b>跳过</b>，勾选其「覆盖」才用源分组整体替换本地同名分组），
+            并带上该分组的卡片库 / 映射表 / 值资源库；改动需点「保存」落盘。
           </template>
           <template v-else>
             推送会立即写入目标配置：以该配置当前的磁盘内容为基础追加分组后整体写回，目标配置的其它内容保持不变。
@@ -377,7 +412,7 @@
       <template #footer>
         <el-button size="small" @click="transferVisible = false">取消</el-button>
         <el-button size="small" text :disabled="!transferGroups.length" @click="toggleTransferAll">
-          {{ transferSelected.length === transferGroups.length ? '全不选' : '全选' }}
+          {{ transferAllSelected ? '全不选' : '全选' }}
         </el-button>
         <el-button
           size="small"
@@ -418,8 +453,15 @@
               <div v-if="!fileExportGroups.length" class="grp-empty">当前配置下没有分组</div>
             </div>
           </div>
+          <div class="grp-row">
+            <span class="grp-label">依赖</span>
+            <el-checkbox v-model="fileExportWithDeps">含依赖导出（函数库 + 配置参数）</el-checkbox>
+          </div>
           <div class="grp-hint">
             导出为 .json 文件（含工况框 / 卡片库 / 映射表 / 值资源库），可在其它机器或其它配置里导入。
+            <template v-if="fileExportWithDeps">
+              <br />另打包：全局函数库（TestFunction.cin 正文 + 自定义函数）、A2L / CDD 限定符、Ready 信号、CCP 系统变量类型表、主机厂 / 安全算法 —— 供对方机器缺这些依赖时一并导入。
+            </template>
           </div>
         </template>
 
@@ -441,6 +483,17 @@
               <div v-if="!fileImportGroups.length" class="grp-empty">请先选择分组文件</div>
             </div>
           </div>
+          <template v-if="fileImportDeps">
+            <div class="grp-row">
+              <span class="grp-label">依赖</span>
+              <span class="grp-meta">{{ depSummary(fileImportDeps) }}</span>
+            </div>
+            <div class="grp-hint">
+              <el-checkbox v-model="fileImportApplyDeps">
+                同时应用依赖（会覆盖本机配置参数；函数库写入全局库，影响本机所有配置）
+              </el-checkbox>
+            </div>
+          </template>
           <div class="grp-hint">
             导入后在当前配置新增分组（重名自动加「_来自&lt;来源&gt;」后缀）；改动需点「保存」落盘。
           </div>
@@ -507,8 +560,8 @@ import { useResizableSize } from '@/composables/useResizableSize'
 import FunctionGraphEditor from '@/components/graph/FunctionGraphEditor.vue'
 import type { Graph, ObjectMapping, CardLibrary, CaseGroup, ValueResource } from '@/types/functionGraph'
 import { emptyGraph, emptyMapping, emptyCardLibrary, emptyValueLibrary, emptyCaseGroup, genId } from '@/types/functionGraph'
-import { normalizeStaleSeqAnchors, injectGlobalIntoGroup } from '@/utils/functionGraph'
-import { generateFunction, expandCases, exportFunctionCases, importFunctionCases, loadGlobalSections } from '@/api/function'
+import { normalizeStaleSeqAnchors, injectGlobalIntoGroup, checkExpandLimit, expandLimitMessage, EXPAND_MAX_TOTAL } from '@/utils/functionGraph'
+import { generateFunction, expandCases, exportFunctionCases, importFunctionCases, loadGlobalSections, getGlobalLibrary, saveGlobalLibrary } from '@/api/function'
 import { getConfig, getConfigs, saveConfig, openFolder } from '@/api/config'
 import { parseCAN, parseDbcFile, parseA2lFile } from '@/api/can'
 import { useModuleStore } from '@/stores/modules'
@@ -561,12 +614,29 @@ const testCaseList = ref<PreviewCase[]>([])
 const ungroupedCases = computed(() => testCaseList.value.filter((c) => !c.group_id))
 
 const generating = ref(false)
+/** 用例预览展开中（会联网：expandCases）：给预览区一个 loading，避免「保存后没反应」 */
+const casePreviewLoading = ref(false)
 const generatedDir = ref('')
+/**
+ * 生成结果快照（#10/P1-5）：编辑器是全屏浮层，原来要看产物必须先退出。
+ * 生成成功后把结果回传给编辑器，编辑器内用「生成结果」抽屉展示，免退出。
+ */
+const generateResult = ref<{
+  dir: string
+  testCases: string
+  testFunction: string
+  arrayFuncTest: string
+  conflicts: string[]
+  message: string
+  at: number
+} | null>(null)
 
 /** 图形化用例配置：图 + 全对象映射表（随配置保存） */
 const graphEditorVisible = ref(false)
 /** 打开图形配置时定位到的用例分组 id */
 const activeGroupId = ref('')
+/** 打开图形配置时要定位到产出该 case_id 的工况（P2-3） */
+const focusCaseId = ref('')
 const graph = ref<Graph>(emptyGraph())
 const mapping = ref<ObjectMapping>(emptyMapping())
 const cards = ref<CardLibrary>(emptyCardLibrary())
@@ -576,6 +646,10 @@ const valueLibrary = ref<ValueResource[]>(emptyValueLibrary())
 const expandedGroups = ref<Set<string>>(new Set())
 
 const store = useModuleStore()
+
+/** DBC 环境变量名单（对象浏览器解析出来，CFG 的 databases 或上传的 DBC 都会写入）：
+ *  随展开 / 生成 / 导出请求下发给后端，兜底判定不带 EV_ 前缀的环境变量。 */
+const dbcEnvVarNames = computed(() => store.objDbcEnvVars.map((v) => v.name).filter(Boolean))
 
 // ==================== 对象浏览器：DBC 上传 ====================
 // 功能模块自身配置不含 DBC，且对象浏览器只读全局 store，这里提供直接上传入口：
@@ -639,17 +713,15 @@ const configPageData = ref({
   readyOffValue: '',
 })
 
-// 监听 CFG 解析数据，自动填充表单（仅在表单为空时填充，不覆盖用户输入）
+// 监听 CFG 解析数据，回填表单：每次解析 CFG 都用最新解析结果更新
+// A2L_Qualifier / CDD_Qualifier（原先只在表单为空时填充，重新解析别的 CFG 不会更新）。
+// 解析不到该项时保留已填内容，避免误清用户手工输入。
 watch(
   () => store.cfgData,
   (cfg) => {
     if (!cfg) return
-    if (cfg.a2l_qualifier && !configPageData.value.a2lQualifierLineEdit) {
-      configPageData.value.a2lQualifierLineEdit = cfg.a2l_qualifier
-    }
-    if (cfg.cdd_qualifier && !configPageData.value.cddQualifierLineEdit) {
-      configPageData.value.cddQualifierLineEdit = cfg.cdd_qualifier
-    }
+    if (cfg.a2l_qualifier) configPageData.value.a2lQualifierLineEdit = cfg.a2l_qualifier
+    if (cfg.cdd_qualifier) configPageData.value.cddQualifierLineEdit = cfg.cdd_qualifier
   },
   { deep: true, immediate: true },
 )
@@ -724,6 +796,36 @@ const currentData = computed(() => ({
   ccp_var_types: store.ccpVarTypes,
 }))
 
+// ==================== 切模块守卫：有未保存改动先询问 ====================
+/** 「已保存」快照：与 currentData 比对判断是否有未保存改动 */
+let savedSnapshot = JSON.stringify(currentData.value)
+/** 把当前内容记为「已保存」（载入配置 / 保存成功后调用） */
+function markSaved() {
+  savedSnapshot = JSON.stringify(currentData.value)
+}
+
+/** 离开 Function 模块前的守卫：有未保存改动时弹窗（保存 / 不保存） */
+async function moduleLeaveGuard(): Promise<boolean> {
+  // 没有内存归属的配置（没加载/没新建过）时无需询问
+  if (!loadedConfig.value) return true
+  if (JSON.stringify(currentData.value) === savedSnapshot) return true
+  try {
+    await ElMessageBox.confirm(
+      `当前配置「${loadedConfig.value}」有未保存的修改，是否保存？`,
+      '未保存的修改',
+      { confirmButtonText: '保存', cancelButtonText: '不保存', distinguishCancelAndClose: true, type: 'warning' },
+    )
+  } catch (action) {
+    // 「不保存」= 继续切换；关闭弹窗 = 取消切换
+    return action === 'cancel'
+  }
+  const ok = await persistConfig(loadedConfig.value)
+  if (ok) markSaved()
+  return true
+}
+
+store.registerModuleLeaveGuard('function', moduleLeaveGuard)
+
 // ==================== Drag & Drop（配置参数 Ready 信号） ====================
 const dragOverEl = ref<HTMLElement | null>(null)
 const dragOverKey = ref('')
@@ -788,6 +890,7 @@ function resetData() {
   valueLibrary.value = emptyValueLibrary()
   expandedGroups.value = new Set()
   loadedConfig.value = ''
+  markSaved()
 }
 
 /** 深拷贝（避免多个分组共享同一份配置级数组引用） */
@@ -920,6 +1023,7 @@ async function persistConfig(name: string): Promise<boolean> {
   if (!name) return false
   try {
     await saveConfig('function', name, currentData.value)
+    markSaved()
     return true
   } catch {
     return false
@@ -990,6 +1094,7 @@ async function onConfigChange(name: string) {
     }
     // 标记内存数据归属该配置，后续切换时据此安全自动保存
     loadedConfig.value = name
+    markSaved()
     // 用例列表与 TestCase.can 预览已由后端 GET 时按当前 graph 一并重算返回
     // （见 config_routes._refresh_graph_case_list），此处不再重复调 /expand-cases。
   } catch {
@@ -1147,6 +1252,7 @@ async function doGenerate() {
       cfgDir,
       relayCfg.relayModule,
       relayCfg.canChannel,
+      dbcEnvVarNames.value,
     )
     const data = res?.data
     if (data) {
@@ -1161,6 +1267,16 @@ async function doGenerate() {
     ElMessage.success(res?.message || '文件生成成功')
     // 函数库里与内置模板同名同参、实现不同的函数：生成时以内置模板为准，这里弹窗提示
     const conflicts: string[] = Array.isArray(data?.function_conflicts) ? data.function_conflicts : []
+    // 回传生成结果给编辑器（#10/P1-5：编辑器内「生成结果」抽屉免退出查看）
+    generateResult.value = {
+      dir: generatedDir.value,
+      testCases: testCases.value,
+      testFunction: testFunction.value,
+      arrayFuncTest: arrayFuncTest.value,
+      conflicts,
+      message: res?.message || '文件生成成功',
+      at: Date.now(),
+    }
     if (conflicts.length) {
       ElMessageBox.alert(
         `函数库里以下函数与内置模板同名同参数、但实现不同，本次生成已以内置模板为准：\n\n${
@@ -1179,7 +1295,18 @@ async function doGenerate() {
 function openGraphEditor(groupId?: string) {
   const groups = graph.value.groups || []
   activeGroupId.value = groupId || groups[0]?.id || ''
+  focusCaseId.value = ''
   graphEditorVisible.value = true
+}
+
+/** 用例预览 → 一键跳到「图形配置」并定位到产出该用例的工况（P2-3） */
+function locateCaseInGraph(c: PreviewCase) {
+  if (!c.group_id) {
+    ElMessage.info('该用例来自导入（无分组），没有对应的图形配置')
+    return
+  }
+  openGraphEditor(c.group_id)
+  focusCaseId.value = c.case_id || ''
 }
 
 // ==================== 用例分组 ====================
@@ -1200,6 +1327,21 @@ async function addCaseGroup() {
   const n = await applyGlobalToGroup(group)
   graph.value.groups.push(group)
   ElMessage.success(n ? `已新建分组 ${group.name}（已带出 ${n} 项全局内容）` : `已新建分组 ${group.name}（内容为空）`)
+  // 新建后自动聚焦新分组的名称并全选，便于直接改名（默认名是 GraphCaseN）
+  nextTick(() => {
+    const inst = groupNameEls[group.id]
+    const input = inst?.input || inst?.$el?.querySelector?.('input')
+    if (input && typeof input.focus === 'function') {
+      input.focus()
+      input.select?.()
+    }
+  })
+}
+
+/** 分组名输入框实例（按分组 id 存）：新建分组后自动聚焦 */
+const groupNameEls: Record<string, any> = {}
+function setGroupNameEl(id: string, el: any) {
+  if (el) groupNameEls[id] = el
 }
 /** 切换预览页某个分组的收起/展开 */
 function toggleGroupCollapse(groupId: string) {
@@ -1409,6 +1551,24 @@ function appendGroupsToCurrent(source: CaseGroup[], from: string): string[] {
   return added
 }
 
+/**
+ * #20：用源分组**原地整体替换**本地同名分组（拉取时勾选「覆盖」才走到这里）。
+ * 沿用本地分组 id：`activeGroupId` 等外部引用按 id 关联，换 id 会让当前选中的分组失配。
+ */
+function overwriteGroupsInCurrent(source: CaseGroup[]): string[] {
+  if (!Array.isArray(graph.value.groups)) graph.value.groups = []
+  const names: string[] = []
+  for (const src of source) {
+    const idx = graph.value.groups.findIndex((g) => g.name === src.name)
+    if (idx < 0) continue
+    const copy = makeGroupCopy(src, src.name)
+    copy.id = graph.value.groups[idx].id
+    graph.value.groups[idx] = copy
+    names.push(src.name)
+  }
+  return names
+}
+
 // ---- 配置之间：复制进来（拉取）/ 推送出去 ----
 
 const transferVisible = ref(false)
@@ -1420,6 +1580,8 @@ const transferTargetConfig = ref('')
 /** 弹窗里展示的分组（拉取=源配置的分组；推送=当前配置的分组） */
 const transferGroups = ref<CaseGroup[]>([])
 const transferSelected = ref<string[]>([])
+/** #20：拉取时显式勾选「覆盖」的源分组 id（不勾选则同名分组默认跳过） */
+const transferOverwrite = ref<string[]>([])
 const transferLoading = ref(false)
 /** 右击的那个分组 id：推送模式预勾选 */
 const transferPresetId = ref('')
@@ -1450,6 +1612,7 @@ async function openTransferDialog(group?: CaseGroup) {
 /** 切换方向 / 换源配置时刷新分组列表 */
 async function loadTransferGroups() {
   transferSelected.value = []
+  transferOverwrite.value = []
   if (transferMode.value === 'push') {
     transferGroups.value = graph.value.groups || []
     // 右击的那个分组预勾选
@@ -1478,11 +1641,30 @@ async function loadTransferGroups() {
   }
 }
 
+/**
+ * #20：拉取时同名分组默认跳过 —— 「全选」只覆盖非同名分组；
+ * 同名分组的替换必须逐个显式勾「覆盖」（不能靠全选一键覆盖本地内容）。
+ */
+const transferSelectableIds = computed(() =>
+  transferMode.value === 'pull'
+    ? transferGroups.value.filter((g) => !isLocalDupGroup(g)).map((g) => g.id)
+    : transferGroups.value.map((g) => g.id),
+)
+const transferAllSelected = computed(
+  () =>
+    transferSelectableIds.value.length > 0 &&
+    transferSelectableIds.value.every((id) => transferSelected.value.includes(id)),
+)
 function toggleTransferAll() {
-  transferSelected.value =
-    transferSelected.value.length === transferGroups.value.length
-      ? []
-      : transferGroups.value.map((g) => g.id)
+  const wasAll = transferAllSelected.value
+  transferSelected.value = wasAll ? [] : [...transferSelectableIds.value]
+  // 取消全选时一并清掉「覆盖」勾选，避免残留导致下次误覆盖同名分组
+  if (wasAll) transferOverwrite.value = []
+}
+
+/** #20：源分组名与当前配置里已有分组同名（拉取时默认跳过，需显式勾选「覆盖」） */
+function isLocalDupGroup(g: CaseGroup): boolean {
+  return (graph.value.groups || []).some((x) => x.name === g.name)
 }
 
 /** 确认：拉取只改内存（等用户点保存）；推送立即写目标配置 */
@@ -1494,10 +1676,33 @@ async function confirmTransfer() {
   }
   if (transferMode.value === 'pull') {
     const from = transferSourceConfig.value
-    const added = appendGroupsToCurrent(picked, from)
+    // #20：同名分组默认跳过；勾选「覆盖」才原地替换本地同名分组
+    const toAdd: CaseGroup[] = []
+    const toOverwrite: CaseGroup[] = []
+    let skipped = 0
+    for (const g of picked) {
+      if (isLocalDupGroup(g)) {
+        if (transferOverwrite.value.includes(g.id)) toOverwrite.push(g)
+        else skipped++
+      } else {
+        toAdd.push(g)
+      }
+    }
+    if (!toAdd.length && !toOverwrite.length) {
+      ElMessage.warning(
+        `选中的 ${picked.length} 个分组都与本地同名且未勾选「覆盖」，已全部跳过（未做任何改动）`,
+      )
+      return
+    }
+    const added = appendGroupsToCurrent(toAdd, from)
+    const replaced = overwriteGroupsInCurrent(toOverwrite)
     transferVisible.value = false
     await refreshCasePreview()
-    ElMessage.success(`已从「${from}」复制 ${added.length} 个分组：${added.join('、')}`)
+    const parts: string[] = []
+    if (added.length) parts.push(`新增 ${added.length} 个分组：${added.join('、')}`)
+    if (replaced.length) parts.push(`覆盖同名分组 ${replaced.length} 个：${replaced.join('、')}`)
+    if (skipped) parts.push(`跳过同名分组 ${skipped} 个`)
+    ElMessage.success(`已从「${from}」复制：${parts.join('；')}`)
     return
   }
   await pushGroupsToConfig(transferTargetConfig.value, picked)
@@ -1576,10 +1781,32 @@ const fileTransferVisible = ref(false)
 const fileMode = ref<'export' | 'import'>('export')
 const fileExportGroups = ref<CaseGroup[]>([])
 const fileExportSelected = ref<string[]>([])
+/** 导出时是否把「依赖」一并打包（函数库 + 配置参数 + CCP 类型表 + 主机厂 / 安全算法） */
+const fileExportWithDeps = ref(false)
 const fileImportGroups = ref<CaseGroup[]>([])
 const fileImportName = ref('')
 /** 导入来源标签（文件里的源配置名，或文件名），用于组名后缀 */
 const fileImportFrom = ref('')
+/** 分组文件里携带的依赖（老文件没有这个字段 → 为 null） */
+const fileImportDeps = ref<GroupFileDeps | null>(null)
+/** 导入时是否一并应用依赖（默认不勾：会覆盖本机配置参数、函数库写入全局库） */
+const fileImportApplyDeps = ref(false)
+
+/** 分组文件里的「依赖」段：函数库 + 配置级参数 */
+interface GroupFileDeps {
+  function_library?: string
+  step_library?: any[]
+  config?: {
+    a2lQualifierLineEdit?: string
+    cddQualifierLineEdit?: string
+    readySignal?: string
+    readyOnValue?: string
+    readyOffValue?: string
+    oem?: string
+    securityAlgo?: string
+    ccp_var_types?: Record<string, string>
+  }
+}
 
 function openFileTransferDialog(group?: CaseGroup) {
   fileTransferVisible.value = true
@@ -1587,9 +1814,12 @@ function openFileTransferDialog(group?: CaseGroup) {
   fileExportGroups.value = graph.value.groups || []
   fileExportSelected.value =
     group && fileExportGroups.value.some((g) => g.id === group.id) ? [group.id] : []
+  fileExportWithDeps.value = false
   fileImportGroups.value = []
   fileImportName.value = ''
   fileImportFrom.value = ''
+  fileImportDeps.value = null
+  fileImportApplyDeps.value = false
 }
 
 function toggleFileExportAll() {
@@ -1664,29 +1894,123 @@ async function pickGroupFile() {
     fileImportName.value = file.name
     fileImportFrom.value =
       String(parsed.source_config || '').trim() || file.name.replace(/\.json$/i, '')
+    // 依赖段是可选新增字段：老文件没有 → 不显示「一并应用依赖」
+    fileImportDeps.value =
+      parsed.dependencies && typeof parsed.dependencies === 'object'
+        ? (parsed.dependencies as GroupFileDeps)
+        : null
+    fileImportApplyDeps.value = false
   } catch (e: any) {
     ElMessage.error('读取文件失败：' + (e?.message || String(e)))
   }
 }
 
-/** 导出选中分组为 .json（纯前端 Blob 下载） */
-function exportGroupsToFile() {
+/** 依赖摘要（导入面板展示：这个文件里带了哪些依赖） */
+function depSummary(deps: GroupFileDeps | null): string {
+  if (!deps) return ''
+  const bits: string[] = []
+  if (deps.function_library) bits.push(`函数库 ${String(deps.function_library).length} 字符`)
+  const n = Array.isArray(deps.step_library) ? deps.step_library.length : 0
+  if (n) bits.push(`${n} 个自定义函数`)
+  const c = deps.config || {}
+  const params: string[] = []
+  if (c.a2lQualifierLineEdit) params.push('A2L 限定符')
+  if (c.cddQualifierLineEdit) params.push('CDD 限定符')
+  if (c.readySignal) params.push(`Ready 信号 ${c.readySignal}`)
+  const ccp = Object.keys(c.ccp_var_types || {}).length
+  if (ccp) params.push(`CCP 类型表 ${ccp} 项`)
+  if (c.oem) params.push(`主机厂 ${c.oem}`)
+  if (c.securityAlgo) params.push(`安全算法 ${c.securityAlgo}`)
+  if (params.length) bits.push(params.join(' / '))
+  return bits.join(' · ') || '（文件里的依赖段为空）'
+}
+
+/** 收集「依赖」段：函数库（全局库，卡片里 kind='call' 的函数体来源）+ 当前配置的配置级参数 */
+async function collectExportDependencies(): Promise<GroupFileDeps> {
+  const res: any = await getGlobalLibrary()
+  const d = res?.data?.data ?? res?.data ?? {}
+  return {
+    function_library: String(d.function_library || ''),
+    step_library: Array.isArray(d.step_library) ? deepCopy(d.step_library) : [],
+    config: {
+      a2lQualifierLineEdit: configPageData.value.a2lQualifierLineEdit || '',
+      cddQualifierLineEdit: configPageData.value.cddQualifierLineEdit || '',
+      readySignal: configPageData.value.readySignal || '',
+      readyOnValue: configPageData.value.readyOnValue || '',
+      readyOffValue: configPageData.value.readyOffValue || '',
+      oem: store.selectedOem,
+      securityAlgo: store.selectedAlgo,
+      ccp_var_types: deepCopy(store.ccpVarTypes || {}),
+    } as GroupFileDeps['config'],
+  }
+}
+
+/** 导出选中分组为 .json（纯前端 Blob 下载）；勾选「含依赖导出」时一并打包函数库与配置参数 */
+async function exportGroupsToFile() {
   const picked = fileExportGroups.value.filter((g) => fileExportSelected.value.includes(g.id))
   if (!picked.length) {
     ElMessage.warning('请先勾选要导出的分组')
     return
   }
-  const payload = {
+  let dependencies: GroupFileDeps | null = null
+  if (fileExportWithDeps.value) {
+    try {
+      dependencies = await collectExportDependencies()
+    } catch (e: any) {
+      // 明确要带依赖时读取失败就中止：否则会导出个"看起来有依赖其实没有"的文件
+      ElMessage.error('读取依赖（函数库）失败，已取消导出：' + (e?.message || String(e)))
+      return
+    }
+  }
+  const payload: any = {
     type: GROUP_FILE_TYPE,
     version: GROUP_FILE_VERSION,
     exported_at: new Date().toISOString(),
     source_config: currentConfig.value || '',
     groups: picked.map((g) => deepCopy(g)),
   }
+  if (dependencies) payload.dependencies = dependencies
   const base = (currentConfig.value || 'Function').replace(/[\\/:*?\[\]]/g, '_')
   downloadTextFile(JSON.stringify(payload, null, 2), `${base}_分组_${picked.length}个.json`)
   fileTransferVisible.value = false
-  ElMessage.success(`已导出 ${picked.length} 个分组`)
+  ElMessage.success(
+    dependencies
+      ? `已导出 ${picked.length} 个分组（含依赖：函数库 + 配置参数）`
+      : `已导出 ${picked.length} 个分组`,
+  )
+}
+
+/** 应用分组文件携带的依赖：函数库走全局库（只发这两段，不动卡片/映射/值资源），配置参数写当前配置内存 */
+async function applyImportDependencies(deps: GroupFileDeps): Promise<string[]> {
+  const applied: string[] = []
+  const fl = String(deps.function_library || '')
+  const sl = Array.isArray(deps.step_library) ? deps.step_library : []
+  if (fl || sl.length) {
+    try {
+      await saveGlobalLibrary({ function_library: fl, step_library: sl })
+      applied.push('函数库')
+    } catch (e: any) {
+      ElMessage.warning('依赖「函数库」写入失败：' + (e?.message || String(e)))
+    }
+  }
+  const c = deps.config
+  if (c && typeof c === 'object') {
+    configPageData.value = {
+      ...configPageData.value,
+      a2lQualifierLineEdit: String(c.a2lQualifierLineEdit ?? configPageData.value.a2lQualifierLineEdit),
+      cddQualifierLineEdit: String(c.cddQualifierLineEdit ?? configPageData.value.cddQualifierLineEdit),
+      readySignal: String(c.readySignal ?? configPageData.value.readySignal),
+      readyOnValue: String(c.readyOnValue ?? configPageData.value.readyOnValue),
+      readyOffValue: String(c.readyOffValue ?? configPageData.value.readyOffValue),
+    }
+    if (c.ccp_var_types && typeof c.ccp_var_types === 'object') {
+      store.setCcpVarTypes(c.ccp_var_types as Record<string, any>)
+    }
+    if (c.oem) store.setSelectedOem(String(c.oem))
+    if (c.securityAlgo) store.setSelectedAlgo(String(c.securityAlgo))
+    applied.push('配置参数')
+  }
+  return applied
 }
 
 /** 确认：从文件导入分组（追加到当前配置，不写盘） */
@@ -1696,10 +2020,17 @@ async function confirmFileImport() {
     return
   }
   const from = fileImportFrom.value || '文件'
+  const withDeps = !!(fileImportDeps.value && fileImportApplyDeps.value)
+  const depApplied = withDeps && fileImportDeps.value
+    ? await applyImportDependencies(fileImportDeps.value)
+    : []
   const added = appendGroupsToCurrent(fileImportGroups.value, from)
   fileTransferVisible.value = false
   await refreshCasePreview()
-  ElMessage.success(`已从文件导入 ${added.length} 个分组：${added.join('、')}`)
+  const depTip = withDeps
+    ? `（依赖已应用：${depApplied.length ? depApplied.join('、') : '无'}；配置参数随「保存」落盘）`
+    : ''
+  ElMessage.success(`已从文件导入 ${added.length} 个分组：${added.join('、')}${depTip}`)
 }
 
 /** 弹出系统文件选择框，选择 Excel 文件（Electron 与浏览器均可用） */
@@ -1817,6 +2148,7 @@ async function exportGroupCases(group: CaseGroup | null) {
       group_id: group?.id || '',
       save_path: savePath,
       ccp_var_types: store.ccpVarTypes,
+      env_var_names: dbcEnvVarNames.value,
     })
     const data = res?.data || {}
     if (savePath) {
@@ -1841,9 +2173,18 @@ function onGraphGenerate() {
 
 /** 保存后按当前 graph + mapping 展开用例，回填用例预览列表 */
 async function refreshCasePreview() {
+  // #21：展开前用量预检（单工况 2000 条 / 单次 20000 条），超限直接拒绝并提示拆分，
+  // 避免误操作时把几十万行一次性拉回来（保留上一次预览结果，不清空）
+  const hit = checkExpandLimit(graph.value.groups)
+  if (hit) {
+    ElMessage.warning(expandLimitMessage(hit))
+    return
+  }
+  casePreviewLoading.value = true
   try {
     const res: any = await expandCases(
       graph.value, mapping.value, cards.value, undefined, false, store.ccpVarTypes,
+      dbcEnvVarNames.value,
     )
     const data = res?.data?.data ?? res?.data ?? {}
     const cases = Array.isArray(data.cases) ? data.cases : []
@@ -1870,9 +2211,19 @@ async function refreshCasePreview() {
     })
     if (typeof data.test_cases === 'string') {
       testCases.value = data.test_cases
+      // #21 真实行数复核：预检只能按「条数」上界拦，拿到产物后再按行数提示一次
+      const lineCount = data.test_cases ? data.test_cases.split('\n').length : 0
+      if (lineCount > EXPAND_MAX_TOTAL) {
+        ElMessage.warning(
+          `本次展开的 TestCase 代码共 ${lineCount} 行，超过单次上限 ${EXPAND_MAX_TOTAL} 行；建议拆分分组或减少工况后再生成。`,
+        )
+      }
     }
-  } catch {
-    /* 预览展开失败静默处理 */
+  } catch (e: any) {
+    // 原为静默失败（保留上一次预览结果）；补一条警告，避免「保存了但预览没变」看不出原因
+    ElMessage.warning(`用例预览展开失败：${e?.message || String(e)}`)
+  } finally {
+    casePreviewLoading.value = false
   }
 }
 
@@ -2071,6 +2422,11 @@ watch(() => store.moduleStates.function.lastUploadResult, (result) => {
   cursor: pointer;
 }
 .case-item:hover { background: #f5f7fa; }
+/* #27 可访问性：键盘聚焦时给出可见焦点环 */
+.case-item:focus-visible {
+  outline: 2px solid var(--el-color-primary);
+  outline-offset: -2px;
+}
 .case-name {
   font-size: 12px;
   color: #303133;
@@ -2083,6 +2439,17 @@ watch(() => store.moduleStates.function.lastUploadResult, (result) => {
   font-size: 11px;
   color: #909399;
   flex-shrink: 0;
+}
+/* 「定位到图形配置」按钮：默认隐藏，悬停用例行时显现，避免占用窄列表宽度 */
+.case-locate {
+  margin-left: auto;
+  padding: 2px 4px;
+  height: auto;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.case-item:hover .case-locate {
+  opacity: 1;
 }
 .empty-mini {
   color: #c0c4cc;

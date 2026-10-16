@@ -65,6 +65,9 @@ export interface CardStep {
   waitNot?: boolean
   /** 限时检查：区间形式（两个值 = 下限 / 上限，生成 4 参数重载） */
   waitRange?: boolean
+  /** 限时检查：大于 / 小于期望值标记（仅用于下拉回显）。
+   *  生成仍走区间形式（waitRange=true），上下限由 applyWaitForm 按「两倍预期值」自动填入。 */
+  waitCmp?: 'gt' | 'lt'
   /** 缩进层级（循环体） */
   indent?: number
   /** 循环类型（loop_start 使用）：for=次数可控，while=条件满足退出；默认 for */

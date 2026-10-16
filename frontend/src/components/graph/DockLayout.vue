@@ -8,8 +8,13 @@
           :key="tid"
           class="dl-tab-item"
           :class="{ active: activeTab === tid }"
+          role="button"
+          :tabindex="0"
+          :aria-pressed="activeTab === tid"
           @mousedown.stop
           @click="activate(tid)"
+          @keydown.enter.prevent="activate(tid)"
+          @keydown.space.prevent="activate(tid)"
         >
           {{ titleOf(tid) }}
         </div>
@@ -305,6 +310,10 @@ function onResizeStart(e: MouseEvent, i: number) {
   flex-shrink: 0;
   border-radius: 4px 4px 0 0;
   overflow-x: auto;
+  /* 停靠栏很窄（如窗口较小时右栏被压到 ~157px）时页签会排不下：
+     允许换行，否则最后一个页签会被推到可视区外、只能靠隐藏的横向滚动才能点到 */
+  flex-wrap: wrap;
+  row-gap: 4px;
 }
 .dl-tab-item {
   font-size: 12px;

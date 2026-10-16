@@ -12,28 +12,491 @@
 
 ---
 
-## [1.0.22] - 2026-10-06
+## [1.0.27] - 2026-10-16
 
-**版本号**：`1.0.22`（`frontend/package.json` 的 `version`）
-**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.22.exe`（161,844,471 字节，SHA256 `8F2F2E6D813A2E848CD167BDD6BAB6FADA2C1C7E9A23086A651DF4AE7F7E83D1`）
+**版本号**：`1.0.27`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.27.exe`（163,188,307 字节，SHA256 `0D15D86656F02684B4AEE29038133DD7604C1FF02277E173EAC4F2F11F60D90D`）
 
 **更新配置**（`version.json`）：
 ```json
 {
-  "version": "1.0.22",
-  "release_notes": "本版本更新：\n- 多个功能增强与缺陷修复（Excel 导出平铺格式、导入校验、卡顿修复）\n- 函数库里自定义的函数没有生成到 TestFunction.cin —— 定位根因并修复（模板为基 + 追加库独有函数）",
-  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.22.exe"
+  "version": "1.0.27",
+  "release_notes": "本版本更新：\n- 对象浏览器数据源改为「优先级取一路」+ 切换模块清理与未保存提示 + 工况连线编号不再随拖拽位置重排",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.27.exe"
+}
+```
+
+
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.26 之后的 2 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.27）
+
+---
+
+### [1.0.27] - 2026-10-16
+
+**会话主题**：修复 CRC16 算法缺陷 + CRC 算法收敛为单一权威（消除 4 处副本）
+
+**问题**（本会话处理的 2 个相关问题）：
+
+1. **CRC16 算法功能缺陷（变量未统一）**：`CRC16_All` / `CRC16_Cutoff` 的外层循环用 `index`，而用于跳过 CRC 字节的 `byte_index` 声明后**从未赋值、恒为 0**。后果二选一：`bytelbit` 不含 0 时（CRC 位于末字节的常规情况）内层循环永不 `break`，走 `b = data[index]` 分支，**CRC 把 CRC 字节自身也算了进去**，结果全错；`bytelbit` 含 0 时则每个字节都被 `continue` 跳过，crc 保持初值直接返回 `0xFFFF`。
+2. **同一份算法被复制成 4 处、各自演进**：`crc_algorithms.py`（默认值）、`crc_algorithms.json`（运行时）、`canoe_capl.py` 的 `TEST_DLL`、`can_test_function.py` 各存一份且互不联动，因此出现「两份已修好、另两份仍为旧代码」的漏修。
+
+**变更内容**：
+
+1. **修复 CRC16 算法**（`backend/templates/crc_algorithms.py`、`configs/global/crc_algorithms.json`）
+   - `CRC16_All` / `CRC16_Cutoff`：外层循环变量 `index` → `byte_index`，取数 `data[index]` → `data[byte_index]`，使其既作「当前字节位置」又参与「跳过 CRC 字节」的判断。
+   - 两份文件同步修改；`#Excel转测试用例工具#\源码\configs\global\crc_algorithms.json` 副本按用户要求本次不处理。
+
+2. **CRC 算法收敛为单一权威**（`backend/templates/crc_algorithms.py`、`canoe_capl.py`、`can_test_function.py`）
+   - `crc_algorithms.py` 升级为唯一权威：新增权威函数表 `CRC_FUNCS[(函数名, 参数个数)]` 与派生 API `func_code()` / `build_legacy_section()` / `build_check_section()`；按参数个数区分重载（如 `CRC_Xor_FF` 同时有 1 参数与 3 参数版）。
+   - `canoe_capl.py`：`TEST_DLL`（约 330 行内联 CRC）与 `TEST_DLL_SKELETON` 改为「骨架三段逐字保留 + CRC 段派生」拼装，骨架拆为 `_DLL_HEAD` / `_DLL_UTIL_A` / `_DLL_UTIL_B`。
+   - `can_test_function.py`：10 个 `/// <Check>` CRC 函数（6,492 字符）替换为 `_CRC_CHECK_SECTION` 派生；`TestFunction = TestFunctionBase + CanTestFunction` 组装链保持不变。
+   - 结果：CRC 存储点由 4 处收敛为 2 处（权威定义 + 运行时 JSON）。
+
+3. **加生成标记**：`crc_algorithms.py` 新增 `AUTO_GENERATED_NOTICE`；两个模板的派生段落加 AUTO-GENERATED 注释，标明「自动生成，勿手改」及权威来源。
+
+4. **加一致性断言**
+   - `assert_crc_consistent()`：以花括号配对切分函数体（避免 `void` / `long` 等返回类型被并入前一函数体造成误判），按 (函数名, 参数个数) 逐字比对，标记行与空白归一化；在两个模板模块**导入时执行**，不一致即抛 `AssertionError`。
+   - `diff_runtime_algorithms()`：专查「默认值已修正但运行时 JSON 未同步」——即本次漏修的成因。
+
+**相关文件**：
+- `backend/templates/crc_algorithms.py`、`backend/templates/canoe_capl.py`、`backend/templates/can_test_function.py`
+- `configs/global/crc_algorithms.json`
+
+**验证**：
+- 三方（`TEST_DLL` / `CanTestFunction` / 权威默认值）函数集合：**新增 0 / 丢失 0**；CRC 函数顺序与统一前逐项一致。
+- 骨架 8 个工具函数逐字保留（`GetValueFromMessageMotorola` / `GetSigValueMask` / `GetMsglen` / `SeachValueInArrary` / `SeachMultiValueInArrary` / `SeachSubArraryInArrary` / `CompareTwoArrary` / `InitArray`），且不含任何 CRC 函数。
+- `generate_test_dll` 三条路径实测：`None` → 全内置（15 个 CRC 函数）；`[]` → 仅骨架；注入 → 骨架 + 算法。
+- 断言有效性实测：人为把 `crc ^= polynomial;` 改为 `crc ^= 0x1022;`，`CRC16_All` / `CRC16_Cutoff` 两处被准确检出。
+- `diff_runtime_algorithms` 对当前运行时 JSON：差异 0。
+- 全链路导入通过：`backend.core.function_module` / `great_canoe_module` / `can_module` / `backend.api.crc_routes`。
+- 迁移过程中发现并修复一处真实回归：外科替换脚本首次执行时误删了 `CheckCounter(signal*Sig,long Max)`（无返回类型，未被函数边界正则识别），已从基线逐字还原，并由上述「函数集合新增/丢失」校验兜住。
+
+**遗留 / 已知**：
+- 生成结果存在**纯排版差异**（功能等价、非逐字节相同）：3 处 `/// <Check>` 注释行由 2 空格缩进统一为顶格；`CRC16_All` / `CRC16_Cutoff` 的行内注释 `// initial value`、`// poly value` 随权威版本（JSON / 默认值那一版）去掉（`TEST_DLL` 4 行、`CanTestFunction` 2 行）；行尾空白规范化。CAPL 语义不受影响。
+- `diff_runtime_algorithms()` 工具已就绪但**尚未接入** `crc_routes._load_crc_algorithms`，暂未对「运行时 JSON 落后于默认值」告警。
+- 打包运行时的 `%APPDATA%\Excel2Case\configs\global\crc_algorithms.json` 仍是运行时源；一致性断言目前只覆盖「默认值 vs 模板」，不覆盖「JSON vs 模板」。
+- `#Excel转测试用例工具#\源码\configs\global\crc_algorithms.json` 副本未处理（用户明确本次不管）。
+- Function 模块的 `FuncTestFunction` 仍不含任何 CRC 函数体（现状如此，本次未改动）。
+
+---
+
+### [1.0.27] - 2026-10-16
+
+**会话主题**：对象浏览器数据源改为「优先级取一路」+ 切换模块清理与未保存提示 + 工况连线编号不再随拖拽位置重排
+
+**问题**（本会话处理的 3 个独立问题）：
+
+1. 对象浏览器（DBC / A2L / 环境变量）把「独立上传」与「CFG 解析」两路**合并去重**展示，去重键依赖列名与下标对齐，一旦两路列结构不一致就会去重失效 —— 表现为上传 DBC 后出现两份相同内容；且「上传」这一路会被 CAN 模块的编辑/重建数据长期占据（最高优先级），在 Function 里重新解析 CFG 也「覆盖不了」。
+2. CAN 的「独立上传」数据在全局 store 里跨模块常驻：切到 Function 后仍被对象浏览器复用（内容错位 + 大数据建树卡顿）。
+3. 拖拽卡片改变泳道内顺序后，连线编号跟着「从上到下的位置」重新排（卡1 的 1 变成 2、卡2 的 2 变成 1）—— 编号只应在「重新连线（从无到有）」时按位置自动排。
+
+**变更内容**：
+
+1. **对象浏览器改为按优先级取一路（替换，不再合并）**（`frontend/src/stores/modules.ts`）
+   - DBC：`objMergedDbcRaw` 由 `mergeDbcRows(上传, CFG)` 改为「上传有数据就用上传，否则用 CFG，否则 null」；删除已无用的 `mergeDbcRows` / `findDbcColumnIndex`，新增 `hasDbcRows`。
+   - A2L：拆成三路 ref（上传 / CFG / 配置自带）+ computed `objA2lVars` 取最高优先级；`setA2lVars(data, source)` 增加来源参数（默认 `'upload'` 保持既有调用语义，`'config'` 用于配置自带），`loadA2lFromPath` 写 CFG 路，`setCanMotorMode` 清空三路。
+   - 环境变量：拆成上传 / CFG 两路 + computed `objDbcEnvVars`，与 DBC 取同一路，避免「显示上传的 DBC、环境变量却来自 CFG」的错位；`setUploadDbc(null)` 时一并清空上传侧环境变量。
+   - A2L「配置自带」接线：`frontend/src/views/CANView.vue` 加载配置恢复 CCP 符号表时传 `'config'`。
+
+2. **切换模块清理 + 未保存提示**
+   - `frontend/src/stores/modules.ts` 新增 `clearModuleUploads()`：切模块时清掉「独立上传」这一路（DBC / 环境变量 / A2L）；CFG 解析与配置自带数据保留（同一个 CANoe 工程的权威数据，不随模块切换反复重建）。
+   - `modules.ts` 新增模块「离开守卫」注册表（`registerModuleLeaveGuard` / `runModuleLeaveGuard`）；`frontend/src/App.vue` 用 `router.beforeEach` 拦截换模块：先跑当前模块的守卫，返回 false 则取消本次导航。
+   - `frontend/src/views/FunctionView.vue` / `CANView.vue` 注册守卫：与「载入 / 保存时的内容快照」做 JSON 比对（Function 用 `currentData`，CAN 用 `collectConfigData()`），有未保存改动时弹窗（保存 / 不保存）；关闭弹窗 = 取消切换。加载配置、保存成功、重置数据后刷新快照。
+   - `CANView.vue`：CFG 兜底加载由 `onMounted` 挪到 `onActivated`，切回本模块时按当前 `cfgData` 重新加载。
+
+3. **连线编号固定：拖拽重排不再改编号**（`frontend/src/utils/functionGraph.ts`、`frontend/src/components/graph/CaseFrameCanvas.vue`）
+   - 新增 `freezeFrameNumbers(frame)`：把 `resolveFrameNumbers()` 得到的**当前生效编号**写回各连线的 `edge.pair`（固化为显式编号，排号只对无显式编号的连线生效，因此之后位置怎么变都不会重算）。
+   - 在改变顺序**之前**调用：`moveNodesToLane`（覆盖所有「移动卡片改泳道内顺序」，含 `onCardDrop` / `onZoneDropApply` / 新建泳道放入）、`onCardDrop`（Ctrl 复制 / 拖入新卡等分支）、`moveLane`（泳道左右移）、`applyLaneDrop`（拖拽排序泳道）。
+   - 编号仍只在「重新连线（从无到有）」时按位置自动排；已有编号固化后，新连线会落到未被占用的号上。要给某工况恢复自动排号，用连线编号弹窗里的「清空」。
+
+**相关文件**：
+- `frontend/src/stores/modules.ts`、`frontend/src/App.vue`
+- `frontend/src/views/FunctionView.vue`、`frontend/src/views/CANView.vue`
+- `frontend/src/utils/functionGraph.ts`、`frontend/src/components/graph/CaseFrameCanvas.vue`
+
+**验证**：
+- `vue-tsc --noEmit` exit=0（三项改动逐一验证）。
+- 未做真机实测：切模块弹窗 / 清理、拖拽后编号保持，需人工在 CAN 与 Function 之间实际切一次、并拖拽一次卡片确认。
+
+**遗留 / 已知**：
+- 切模块守卫目前只接入 Function、CAN；Boot / UDS / 三包 / Create CANoe 未接入（接法与前者一致：快照 + 弹窗 + 保存）。
+- 编号固定在「拖拽重排」路径生效；**删除卡片**路径未固化，删除后编号仍可能重排。
+- 解析 CFG 会改动配置参数（qualifier / cfgDir），因此会被判为「有未保存修改」，切模块时会提示保存。
+
+---
+
+## [1.0.26] - 2026-10-16
+
+**版本号**：`1.0.26`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.26.exe`（163,187,919 字节，SHA256 `927ADBD82DA988BAFC5BF9494D4C0F6CD0D6A416DCCD5CE330B3E1C896EE5A84`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.26",
+  "release_notes": "本版本更新：\n- 限时检查新增「大于 / 小于」条件（含生成期计算）+ 对象类型判定引入 DBC 环境变量名单兜底 + 全局卡片内容刷新到各分组已放置副本\n- CAN 模块有刷模式 CCP 采集链路打通（DAQ 单变量 FactorTest + 多变量 TestResult）+ CCP 系统变量收集/检索修复",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.26.exe"
 }
 ```
 **共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
 
-**说明**：本版本汇总 1.0.21 之后的 2 条会话更新记录（见下）。
+**说明**：本版本汇总 1.0.25 之后的 2 条会话更新记录（见下）。
 
-**发布状态**：已发布到共享盘（version 1.0.22）
+**发布状态**：已发布到共享盘（version 1.0.26）
 
 ---
 
-### [1.0.22] - 2026-10-09
+### [1.0.26] - 2026-10-15
+
+**会话主题**：限时检查新增「大于 / 小于」条件（含生成期计算）+ 对象类型判定引入 DBC 环境变量名单兜底 + 全局卡片内容刷新到各分组已放置副本 + 解析 CFG 后回填 A2L / CDD 限定符
+
+**问题**（本会话处理的 4 个独立问题）：
+
+1. 「限时检查」只有「等于 / 不等于 / 在区间内 / 不在区间内」四种形式，要判断「信号值大于（小于）某期望值」只能手工填两侧上下限；且上限容易与期望值本身冲突（期望值落在区间内 → 检查恒为真）。
+2. 对象类型判定只认 `sysvar::` / `EV_` 前缀（外加拖拽写入的 `argType`）：**有些 DBC 的环境变量不带 `EV_` 前缀**，会被当成普通信号生成 `setSignal(...)` 而不是 `putValue(...)`，运行时根本改不到该环境变量。
+3. 在某个分组里改「全局卡片」的内容并保存后，其它分组的**卡片列表**同步更新了，但**工况里已经放好的那张卡片副本**内容不变 —— 画布上仍是旧内容，需要手动删了重拖。
+4. 配置参数里的 `A2L_Qualifier` / `CDD_Qualifier` 回填带「仅在表单为空时填充」的条件：先解析过一次 CFG（字段已有值）后再解析**另一个** CFG，这两个字段不会更新，仍旧显示上一个 CFG 的值。
+
+**变更内容**：
+
+1. **限时检查新增「大于 / 小于」（前端下拉 + 生成期计算）**
+   - `frontend/src/utils/functionGraph.ts`：`WAIT_FORMS` 增加 `gt` / `lt`；新增 `waitCmp` 标记（**仅用于下拉回显**，生成仍走区间形式 `waitRange=true`）；`applyWaitForm` 切到 gt / lt 时调 `fillWaitCmpBounds` 按「两倍预期值」自动填两侧 —— **大于 → `[X, 2X]`**、**小于 → `[X/2, X]`**，填完排序保证 `下限 ≤ 上限`（期望值为负时 `2X < X` 也能排出合法区间）。取值优先 `value`、回退 `value2`，非数值（信号名 / 表达式 / 空）跳过。
+   - `frontend/src/types/functionGraph.ts`：`CardStep` 新增 `waitCmp?: 'gt' | 'lt'`。
+   - `frontend/src/components/graph/StepEditor.vue`、`CardEditor.vue`：下拉选项与提示文案补 gt / lt 分支。
+   - `backend/services/function_graph.py`（生成期兜底）：新增 `_to_number` / `_fmt_number` / `_fill_cmp_bound`；`_render_step` 透传 `waitCmp`，`_render_wait_check` 在**上限为空**时用（映射解析后的）下限补另一侧 —— 这样「占位符卡片」也能在映射到实际值之后再计算区间，且**不覆盖用户已填的上限**。
+
+2. **对象类型判定兜底：DBC 环境变量名单（方案 A）**
+   - `backend/services/function_graph.py`：`build_mapping_lookup(mapping, ccp_types, env_names)` 以保留键 `__env_names__` 把名单塞进 lookup（lookup 全程只用 `.get(别名)` 查条目，不会与对象别名冲突）；`_obj_class(name, arg_type, lookup)` 在「前缀 → argType」都认不出时，最后按名单命中判 `envvar`；`_looks_like_object` 同步认名单（限时检查形参行判定）；3 处调用点（`_render_set` / `_render_reset` / `_collect_reset_statements`）补传 lookup；`expand_cases` / `build_test_case_list` / `build_testcase_can` 透传 `env_names`。
+   - 路由与生成链路透传：`backend/api/function_routes.py`（`expand-cases` / `export-cases` / `generate` 读 `env_var_names`）、`backend/services/function_case_excel.py`（`export_groups_xlsx(..., env_names)`）、`backend/core/function_module.py`（`save_Function(..., env_var_names)`）。
+   - 前端下发（`frontend/src/api/function.ts`、`frontend/src/views/FunctionView.vue`、`frontend/src/components/graph/FunctionGraphEditor.vue`）：新增 `dbcEnvVarNames`（取 `store.objDbcEnvVars` 的名字列表），随**展开 / 生成 / 导出**请求一并传给后端；图形编辑器加 `dbcEnvNames` prop，供用例代码预览与生成同源。
+   - 名单来源无需单独上传 DBC：CFG 解析后会自动按 `cfgData.databases` 里的 `.dbc` 路径解析并写入 `store.objDbcEnvVars`。名单为空时行为与改动前**完全一致**。
+
+3. **全局卡片内容刷新到各分组已放置副本**
+   - `frontend/src/utils/functionGraph.ts`：把 `syncGraphRefs` 内联的 `syncCard` 抽成导出的 `syncCardRef(card, src)`（逻辑逐行不变：引用节点只同步卡片名；整份副本保留实例参数取值与步骤 id，避免打断连线锚点）；`syncGraphRefs` 改为调用它。
+   - `frontend/src/components/graph/FunctionGraphEditor.vue`：`broadcastGlobalContent` 的 cards 分支在更新完卡片列表后，遍历该分组 `frames[*].nodes`，对 `refId` 指向该卡片的实例调用 `syncCardRef` 就地刷新 —— 修掉「列表更新了、画布里已放的副本还是旧的」。活动分组在外层已跳过，仍由 `syncRefsFromLibrary` 负责（两边同一套规则）；「设为全局 / 重新发布到所有分组」走同一入口一并覆盖。
+
+4. **解析 CFG 后回填 A2L_Qualifier / CDD_Qualifier**（`frontend/src/views/FunctionView.vue`）
+   - 去掉 `configPageData` 回填 watch 里的「仅在表单为空时填充」判断，改为每次 `store.cfgData` 变化（即每次解析 CFG）都用最新解析结果覆盖这两个字段；解析结果为空时仍保留已填内容，避免误清用户手工输入。
+   - 不会误伤加载配置：`store.setCfgData` 只在侧栏的两处 CFG 解析里调用且整体替换对象，加载已保存配置时仍以配置内保存的值为准（挂载时的 `immediate` 早于配置加载）。
+
+**相关文件**：
+- `frontend/src/utils/functionGraph.ts`、`frontend/src/types/functionGraph.ts`
+- `frontend/src/components/graph/FunctionGraphEditor.vue`、`StepEditor.vue`、`CardEditor.vue`
+- `frontend/src/api/function.ts`、`frontend/src/views/FunctionView.vue`
+- `backend/services/function_graph.py`、`backend/services/function_case_excel.py`
+- `backend/api/function_routes.py`、`backend/core/function_module.py`
+
+**验证**：
+- `vue-tsc --noEmit` exit=0；`py_compile`（function_graph / function_case_excel / function_routes / function_module）exit=0。
+- 限时检查生成期实测：对象行 gt 5 → `SignalWaitCheck(SigA, 5, 10, 1000)`、lt 5 → `(2.5, 5)`；占位符卡片映射后 12 gt → `(12, 24)`；已填上限不被覆盖；形参行 gt 8 → `(8, 16)`；负期望值排序正确。
+- 对象类型兜底实测：`MyEnvNoPrefix`（无 `EV_` 前缀）带名单 → `putValue(...)`、不带名单 → `setSignal(...)`；`SpeedSig` / `EV_X` / `sysvar::A::b` 行为不变；`testReset*`、`reset_all` 收集与限时检查形参行同步一致。
+- 全局卡片副本刷新：`syncCardRef` 为 `syncGraphRefs` 的等价抽取（纯函数配桩回归全过），`vue-tsc` 通过；**画布上的实际呈现未做真机实测**，需人工在另一分组确认工况框里那张卡片已同步。
+- CFG 回填：`vue-tsc --noEmit` exit=0；改动为单文件单处 watch 条件放宽，未做真机实测。
+
+---
+
+### [1.0.26] - 2026-10-15
+
+**会话主题**：CAN 模块有刷模式 CCP 采集链路打通（DAQ 单变量 FactorTest + 多变量 TestResult）+ CCP 系统变量收集/检索修复
+
+**问题**（本会话处理的 7 个独立问题）：
+
+1. 有刷模式下 `_Signalfactor` 的变量检测永远超时：它靠 `testWaitForSignalMatch` 等 sysvar 变成期望值，而 CCP 是**单次读取**、值不刷新，等待期间读到的始终是同一帧旧值（实测用例里 CCP 报文只有 3 条：CONNECT / 一次读 / DISCONNECT）。
+2. `ns_ccp_*` DLL 的 DAQ 系列函数**没有头文件**，6 个函数的参数顺序只能从报文反推。首轮 `WRITE_DAQ` 顺序猜错，地址被当成 1 字节地址扩展，报文发成 `16 04 02 AE 00 00 00 00`（地址被截断），ECU 收到后不上传。
+3. 启动 DAQ 用 `START_STOP_ALL`（0x08）无效、ECU 不应答上传；实测必须用 `START_STOP`（0x06），而 `START_STOP_ALL` 只用于停止。
+4. 期望值浮点精确比较不成立：ECU 里存的是**整数原始值**（`10 / 0.05625 = 177.78… → 178`），而 `testWaitForSignalMatch` 要求精确相等，用例报 `网络值应为177.777778 网络值实际为178.000000`。
+5. `TestResult` / `Result` 这条多变量断言路径同样是「断言前单次读全量」：检测对象写成「对象名 / 时间」时会生成 `SignalWaitCheck`（等到值变化），单次读之后 sysvar 不再刷新，必然等满 timeout 判失败。
+6. **CCP 变量名带前缀时收集不到**：拖拽写入的是完整形式 `sysvar::NsCcp::<name>`，而符号收集只按**裸符号名**匹配 → 该变量既不进 `Configuration.ccp_var_symbols`、也不生成到 `CCP.vsysvar`，CAPL 编译报 `Error 1249 Variable name 'NsCcp::xxx' not found`。
+7. **测试参数（FactorTest）里的变量不在收集范围**：它存在信号节点的 `signals.<信号>.tp.FactorTest.variable`，`collectCcpSymbols` 只看了配置页字段 / DBC 的 `XCP_CCP_varname` 列 / `xcpVar` / DTC 列，漏了这一处；表现为「配置里明明存了变量、符号表里却没有」。
+
+**变更内容**：
+
+1. **DAQ 单变量采集（FactorTest / SignalFactor）**（`backend/templates/ns_ccp_capl.py`）
+   - 符号表由 4 个平行数组改为结构体 `struct CcpSymbol { name / addr / size / prec / offs / inAll }`。
+   - 新增 `ccpNameEq` / `ccpIndexOf` / `ccpReadByName`：按名字只读**一个**变量（单次 CONNECT，读完释放）。
+   - 新增 `ccpDaqStart(char name[])` / `ccpDaqStop()` / `ccpPublishDaq()` / `on message 0x7F1`：CONNECT → `GET_DAQ_SIZE` → `SET_DAQ_PTR` → `WRITE_DAQ` → `START_STOP`，收到数据帧后解析并写入对应 `sysvar::NsCcp::*`，结束时 `START_STOP(STOP)` + DISCONNECT。
+   - `_Signalfactor` 增加 3 个 CCP 专用重载（签名 = 原签名 + `char ccpName[]`），过程改为 `ccpDaqStart → _readXCP → ccpDaqStop`，命名与 `_readXCP` 各类型重载一一对应，避免与无刷 XCP 版互相干扰。
+   - `WRITE_DAQ` 参数按实测报文定为 `(tx, size, 0x02, addr)`；`START_STOP` 用 `(tx, mode=1, DAQ号=0, ODT 个数)`。
+   - 期望值四舍五入到整数再比较：`_readXCP(XCPvarname, (float)(long)((value-offset)/factor + 0.5))`。
+   - 规避两个 CAPL 限制：`on message` 的标识符**不能用 message 变量名**（`Error 1104 Database missing?`），改用字面 ID；**事件处理程序内不能声明数组**（`Error 1130 no array possible here`），接收缓冲改为全局。
+   - `on message` 内按 PID 过滤（只处理 `rx[0]==0` 的数据帧，`0xFF` 命令应答与其它 DAQ 列表的帧直接跳过）。
+
+2. **DAQ 多变量采集（TestResult / Result）**（`ns_ccp_capl.py`、`backend/templates/capl.py`、`backend/processors/excel_processor.py`）
+   - 新增 `ccpDaqStartAll()`：把所有 `inAll==1` 的符号加进 DAQ 表，逐元素 `SET_DAQ_PTR(0, nsccp_daq_odt(i), nsccp_daq_elem(i))` + `WRITE_DAQ(nsccp_daq_size(i), 0x02, nsccp_daq_addr(i))`。ODT / 元素号由 DLL 分配，多个元素落在同一个 ODT、元素号从 0 递增（与参照工具的多元素报文一致）。
+   - `capl.TestResult` 模板末尾新增 `/*CCP_DAQ_STOP*/` 占位；`/*CCP_READ_ALL*/` 的替换由 `ccpReadAll();` 改为 `ccpDaqStartAll();`，并新增 `/*CCP_DAQ_STOP*/` → `ccpDaqStop();`（无刷模式两处均替换成空）。
+   - 语义修正：`inAll` 只表示「是否进入 `ccpReadAll` 的批量集合」，`0` 不代表不能读 —— 每个符号都能被单独读取。
+
+3. **CCP 符号收集修复**（`frontend/src/views/CANView.vue`）
+   - `collectCcpSymbols` 的 `addName` 兼容完整 sysvar 形式：`sysvar::NsCcp::<name>` / `sysvar::XCP::<限定符>::<name>` 统一取 `::` 后最后一段再匹配符号表。
+   - 新增 `walkTp`：递归遍历 DBC（上传的 `dbcRaw` 与配置里的 `jsonDbcRaw`），收集信号节点 `tp.*.variable`（FactorTest 等测试参数里配置的变量）。
+
+4. **对象浏览器检索支持完整形式**（`frontend/src/components/ObjectPanel.vue`）
+   - A2L 检索框：查询串含 `::` 时取最后一段作为变量名，可直接粘贴 `sysvar::NsCcp::udsOneBox_VehicleSpeed` 搜索（原先整体子串匹配，永远搜不到）。
+
+5. **诊断**（`backend/api/can_routes.py`）
+   - `/generate` 增加打印每个 CCP 符号 `name / addr / size` 的临时日志，用于区分「前端没收集到」与「收集到但地址为空」；定位完成后删除。
+
+**验证**：`py_compile`（`ns_ccp_capl.py` / `capl.py` / `excel_processor.py` / `can_routes.py`）全部通过；实机（LR920D V6V8 有刷工程）确认 DAQ 上传周期约 4ms，`sysvar::NsCcp::*` 能取到 ECU 原始值（如 `10 / 0.05625 → 178`），`_Signalfactor` 检测通过。
+
+---
+
+## [1.0.25] - 2026-10-14
+
+**版本号**：`1.0.25`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.25.exe`（163,079,579 字节，SHA256 `644BDE9367FFE0175DF069B7EC8922F40579D6E9726FA291143E17F993FBB74C`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.25",
+  "release_notes": "本版本更新：\n- Function 图形化配置全局项同步 & 漂移机制修复（附：序列连线锚点、步骤类型下拉、继电器配置持久化、分组文件含依赖导出）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.25.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.24 之后的 3 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.25）
+
+---
+
+### [1.0.25] - 2026-10-13
+
+**会话主题**：Function 图形化配置全局项同步 & 漂移机制修复（附：序列连线锚点、步骤类型下拉、继电器配置持久化、分组文件含依赖导出）
+
+**问题**（本会话处理的 5 个独立问题）：
+
+1. 修改故障注入卡片内容后保存，用例里已连好的连线消失：`syncCard` 把节点 `steps` 整块换成库卡片的，节点自己的 step id 被抹掉，锚在这些步骤上的连线（`seq:<seqId>@<stepId>`）全部悬空 —— 画不出来、也不参与用例展开。
+2. 带「全局」标记的卡片 / 映射 / 值资源，在某个分组里改了内容后，其它分组与全局库都不更新（跨分组只有"标记"同步通道、没有内容通道）；同一全局项在各分组的内容已经漂移（BYD_Function 实测 **13 张卡片 + 21 条映射**内容不一致，另有 **120 条**「有徽标但全局库里没有」的孤儿条目）。
+3. 无法用"重新设置全局"纠正漂移：「设为全局」对已带标记的项是**空操作**（被 `filter` 掉、且右键菜单里也不显示），且对已有副本只改标记不动内容；「导出为全局模板」**整份覆盖**全局库，把库换成"某一分组的快照"（其它配置立刻不一致、库内原有条目集体变成孤儿）；`Function_global_library.json` 完全不参与共享推拉（`ConfigService` 只处理 `<模块>_configs.json`），等于每台机器一份 master。
+4. 步骤编辑器里「对象行类」步骤（设置 / 检查 / 限时检查 / 斜率请求 / 恢复）的「类型」下拉只列 6 项，既看不到全部类型、也回不到函数 / 弹窗提示 / Loop / 卡片引用 / 自定义，且不足一屏没有滚动条。
+5. 「导出分组为文件」只打包分组自身内容（工况框 / 卡片库 / 映射表 / 值资源库 / Excel 导入用例），**不含**生成时依赖的函数库（卡片里 `kind='call'` 只有函数名，函数体在全局库）与配置级参数（A2L / CDD 限定符、Ready 信号、CCP 系统变量类型表、主机厂 / 安全算法）—— 拿到别的机器导入后 `TestFunction.cin` 会缺函数体，生成参数也可能与本机不一致。
+
+**变更内容**：
+
+1. **保存卡片不再打断序列连线**（`frontend/src/utils/functionGraph.ts`、`frontend/src/components/graph/FunctionGraphEditor.vue`）
+   - `syncCard` 先比较节点步骤与库卡片步骤（忽略步骤 id）：逐字段一致时**保留节点自己的 `steps`**，只同步名称 / 参数。
+   - `reanchorFrameSeqPorts` 增加"按原位置索引"兜底：旧 id 与新 id 完全不相交时（整份换过 id），按原索引落到新步骤，越界吸附到边界步骤；原有"被删步骤就近改锚（先往前找）"行为不变。
+   - `syncRefsFromLibrary` 的旧步骤快照键由「节点 id」改为「工况 id + 节点 id」——历史数据里存在两个工况复用同一 node id，单键会互相覆盖。
+2. **全局项内容同步**（`FunctionGraphEditor.vue`、`MappingManager.vue`）
+   - 保存 / 删除带 `global` 标记的卡片、映射、值资源时：写回全局库对应段（按段合并）+ 覆盖 / 移除其它分组的同一条（`broadcastGlobalContent` / `removeGlobalFromGroups` / `persistGlobalChange` / `publishGlobalCard`）。
+   - 映射 / 值资源是"整表替换"提交、且字段编辑会就地改对象，故新增**按分组绑定的基线快照**（`resetGlobalBaseline` / `publishGlobalItems`）diff 出「哪一条被改 / 被删」；基线缺失或属于别的分组时只重建基线、不发布（宁可漏一次也不误删）。
+   - `MappingManager` 的「变量名 / 对象」输入补 `@change`：原先就地改 props 且**不发任何事件**，父级无从感知。
+   - 映射同一性键由 `kind|alias|name` 改为 **`kind|alias`**（映射没有稳定 id，`name` 可变），并在广播 / 移除时"清掉该 key 的全部条目 → 只留本组这一条"，收敛同分组内的重复别名（生成时映射表按 alias 查找是"后者覆盖前者"，结果取决于数组顺序）。
+3. **漂移机制修复**（`FunctionGraphEditor.vue`、`PanelBody.vue`、`MappingManager.vue`、`ValueLibraryPanel.vue`、`backend/api/function_routes.py`、`backend/api/sanbao_routes.py`）
+   - 「设为全局」不再过滤已带标记的项，并先以当前分组这一份**覆盖**其它分组的同一条，再补缺失项。
+   - 卡片 / 映射 / 值资源列表右键新增「**重新发布到所有分组**」（已带标记时显示）——这是纠正漂移的入口。
+   - 「导出为全局模板」由整份覆盖改为**增量 upsert**（只覆盖 / 新增同名条目，全局库其它条目保留）。
+   - 后端保存全局库后自动同步网络共享（按顶层段合并，共享盘不可达只告警、不影响本地保存）。
+   - 产出只读对账清单 `BYD_Function_全局项漂移对账清单.md`（各分组版本 + 影响面 + 圈定位），供人工圈定基准后一次性收敛；**本次未改动任何配置 / 全局库数据**（漂移由用户自行重设）。
+4. **步骤「类型」下拉放开为完整类型表**（`frontend/src/components/graph/StepEditor.vue`）
+   - 对象行分支的类型下拉由 `OBJECT_KINDS`（6 项）改为 `STEP_KINDS`（13 项），与另一分支及 `CardEditor.vue` 一致；列表超过 274px 自动出现滚动条，也能从对象行切回其它类型（`onKindChange` 本就能处理跨类切换）。
+5. **继电器配置持久化**（`backend/api/relay_routes.py` 新增、`backend/api/__init__.py`、`backend/app.py`、`frontend/src/api/config.ts`、`frontend/src/stores/modules.ts`、`frontend/src/App.vue`）
+   - 侧边栏（Function / CAN / 三包）的「CAN 通道 / 继电器模块」原先只在内存里、重启即丢；现落盘 `configs/global/relay_config.json`（`GET/POST /api/relay/config`，按模块部分更新 + 取值归一化），保存后自动上传网络共享，前端启动时加载。Create CANoe 仍用自己那套（随配置 JSON 保存），两套保持独立。
+6. **分组文件支持「含依赖导出」**（`frontend/src/views/FunctionView.vue`、`frontend/src/stores/modules.ts`）
+   - 导出面板新增勾选框「含依赖导出（函数库 + 配置参数）」：勾选后文件里多一个可选段 `dependencies`（全局库的 `function_library` / `step_library` + A2L / CDD 限定符、Ready 信号、CCP 系统变量类型表、主机厂 / 安全算法）；读取依赖失败会**中止导出**，避免产出"看着有依赖其实没有"的文件。
+   - 导入面板：文件带 `dependencies` 时展示依赖摘要（`depSummary`）+「同时应用依赖」勾选框（**默认不勾**）。应用时函数库走全局库接口（只发这两段，后端按顶层段合并，不动卡片 / 映射 / 值资源；注意会写全局库并同步共享盘），配置参数写入当前配置内存（随「保存」落盘），之后照旧重算用例预览。
+   - 兼容性：`dependencies` 是可选新增字段、`version` 仍为 1 —— 老文件读进来不显示依赖区，新文件在旧版本里被忽略。
+   - `stores/modules.ts` 新增 `setCcpVarTypes()`：整表回填 CCP 系统变量类型（过滤非法值，只认 `int / float / int64`）。
+
+**相关文件**：
+- `frontend/src/utils/functionGraph.ts`、`frontend/src/components/graph/FunctionGraphEditor.vue`
+- `frontend/src/components/graph/MappingManager.vue`、`PanelBody.vue`、`ValueLibraryPanel.vue`、`StepEditor.vue`
+- `frontend/src/views/FunctionView.vue`（分组文件「含依赖导出 / 同时应用依赖」）
+- `backend/api/relay_routes.py`（新增）、`backend/api/__init__.py`、`backend/app.py`、`backend/api/function_routes.py`、`backend/api/sanbao_routes.py`
+- `frontend/src/api/config.ts`、`frontend/src/stores/modules.ts`、`frontend/src/App.vue`
+- `BYD_Function_全局项漂移对账清单.md`（只读产出）
+
+**验证**：
+- `vue-tsc --noEmit` exit=0；`py_compile`（function_routes / sanbao_routes / relay_routes）exit=0；`node --check electron/main.js` exit=0。
+- 连线锚点：把 `reanchorFrameSeqPorts` / `syncRefsFromLibrary` 从 `.vue` / `.ts` 原样抽出配桩跑 **14 项**回归全过（含 CCAG 真实数据的反事实用例：改成节点自己的 step id 后同步 → 步骤 id 保留、0 条锚点悬空）。
+- 全局项内容同步：同法跑 **33 项**回归全过（含「取消全局后不误删」「基线跨分组不误删」「写回失败仍完成本地广播」）。
+- 漂移机制：跑 **13 项**回归全过（键忽略 name、重新发布覆盖不同对象名、重复别名收敛成一条、改名后其它分组同步改名、删除按别名清理且不误伤其它别名）。
+- 步骤类型下拉：浏览器实测 A47B / 结果判断555 第 4、5 步的下拉由 6 项变 **13 项**，滚动容器 `scrollHeight 454 > clientHeight 274`、`overflow-y: auto`。
+- 继电器配置：接口冒烟（默认值 / 部分更新 / 非法模块 400 / 非法值归一化 / 部分更新保留另一字段）。
+- 分组文件含依赖导出：`vue-tsc --noEmit` exit=0（模板里的 `depSummary` 与三个新增状态均过类型检查）；**弹窗实际渲染与导出文件内容未做真机实测**（自动化浏览器标签被节流，截图 / a11y 树都取不到），需人工过一遍。
+
+**发布状态**：已发布到共享盘（version 1.0.25）
+
+---
+
+## [1.0.24] - 2026-10-13
+
+**版本号**：`1.0.24`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.24.exe`（161,935,906 字节，SHA256 `9A7B8FE03C41518D9C2BF1CA5D9D9895ADCE485F6B1D4CB6A7029CE9C8896A5B`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.24",
+  "release_notes": "本版本更新：\n- 三包模块用例序列编排增强（用例库 / 测试用例 / 保存为步骤）+ 生成结构对齐 XML Testmodule",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.24.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.23 之后的 1 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.24）
+
+---
+
+### [1.0.24] - 2026-10-13
+
+**会话主题**：三包模块用例序列编排增强（用例库 / 测试用例 / 保存为步骤）+ 生成结构对齐 XML Testmodule
+
+**问题**：三包模块生成的 `SanBao_*.can` 把 `TestModuleTitle / TestModuleDescription / Init_Test_Condition` 写成 `testcase`、并用 `testcase MainTest()` 承载序列，与 XML Testmodule 的 `<capltestcase name="<配置名>">` 对不上（CAPL 里没有同名 `testcase`）；`TestFunction.cin` 用的是内联小空壳而非 Function 模块模板；预览也缺继电器声明；序列卡片拖拽排序不生效。
+
+**变更内容**：
+
+1. **生成结构对齐 XML Testmodule**（`backend/core/sanbao_module.py`、`backend/api/sanbao_routes.py`）
+   - `TestFunction.cin` 默认改用 Function 模块模板 `FuncTestFunction`（仅作默认初始值，已保存内容不变）；未传 `function_library` 时生成处也回退模板。
+   - `.can` 重排为项目既有约定（参考 `canoe_capl.CaplGenerator.FRAME_TEST`）：`void MainTest()`（`TestModuleTitle/TestModuleDescription` 为内置函数调用 + `Init_Test_Condition()` + 用例）、`Init_Test_Condition()`、`testcase <用例名>()`。
+   - 新增 `_capl_ident()`：把配置名清洗为合法 CAPL 标识符；XML `<capltestcase name>` 与 CAPL `testcase` 同名，XML Testmodule 才能定位并运行用例。
+   - `generate_xml()` 修正输出路径为 `<module_dir>/<config_name>.xml`（同名覆盖）、生成器标题取模块标题；TE / XML Test Module 名统一 `config_name`。
+   - 继电器：`/generate` 接收 `relay_module / can_channel`，写 `TestFunction.cin` 前调用 `relay.inject_relay()` 注入共用的 `RelayON/RelayOFF`。
+2. **全局库新增 `case_library`（用例库）**（`backend/api/sanbao_routes.py`）
+3. **前端三包模块**（`frontend/src/views/SanbaoView.vue` 等）
+   - 步骤库 / 函数库之后新增「用例库」tab（`SanbaoCaseLibrary.vue`，全局共享）。
+   - 用例序列右侧新增「测试用例」列表框（`SanbaoTestCaseList.vue`，随配置保存 `test_cases`）：点选回填序列、右击「保存为用例库 / 重命名 / 删除」、从用例库拖入新建。
+   - 用例序列头部新增「步骤名 / 用例名」输入框 + 「保存」下拉（`保存为步骤` / `保存为测试用例`），合并原「保存为步骤」按钮与测试用例列表里的独立保存按钮。
+   - 用例序列可整体保存为步骤库自定义步骤（`buildSequenceSnippet` + `extractPlaceholders`）；用例库用例可拖到序列（追加步骤）或测试用例列表（新建）。
+   - 预览 `buildCaplPreview()` 与后端结构 1:1，并展示继电器变量 + 操作函数片段（同步自 CAN 模块）。
+4. **继电器配置对三包可见**（`frontend/src/components/GlobalSidebar.vue`、`frontend/src/stores/modules.ts`）：`RelayConfigModule` 增加 `sanbao`，侧边栏「CFG 配置文件」上方显示 CAN 通道 / 继电器模块。
+5. **修复序列卡片拖拽排序失效**：卡片 `dragstart` 设 `effectAllowed='move'`，而容器 `dragover` 把 `dropEffect` 统一写 `'copy'` 且冒泡覆盖，浏览器判定为不允许放置、`drop` 不触发；改为按拖动来源设置 `move / copy`。`.drop-indicator` 加 `pointer-events:none`，避免在指示线处松开被误判为落到空白区。
+6. **去掉拖拽提示**：移除「已移动步骤 / 已移入循环 / 已移动步骤位置 / 已添加步骤 / 已添加到循环」等 toast。
+
+**相关文件**：
+- `backend/core/sanbao_module.py`、`backend/api/sanbao_routes.py`
+- `frontend/src/views/SanbaoView.vue`
+- `frontend/src/components/SanbaoSequenceEditor.vue`、`frontend/src/components/SanbaoCaseLibrary.vue`、`frontend/src/components/SanbaoTestCaseList.vue`
+- `frontend/src/api/sanbao.ts`、`frontend/src/components/GlobalSidebar.vue`、`frontend/src/stores/modules.ts`
+
+**验证**：`vue-tsc --noEmit` exit=0；`py_compile backend/core/sanbao_module.py backend/api/sanbao_routes.py` exit=0；前后端手动联调（预览 / 生成 / 拖拽）。
+
+**发布状态**：已发布到共享盘（version 1.0.24）
+
+---
+
+## [1.0.23] - 2026-10-12
+
+**版本号**：`1.0.23`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.23.exe`（161,910,858 字节，SHA256 `3ACAB3B6B0ABF238034D3E3CDC33D83B5BBFBBAF9780400718CEB2343471EF7C`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.23",
+  "release_notes": "本版本更新：\n- Function 模块前端交互优化（三批 + 两批新定调，v2.1~v2.14）+ Electron 客户端多窗口关闭按钮修复\n- Excel 测试参数列精简与分组调整 + 信号无效值测试支持留空",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.23.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.22 之后的 3 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.23）
+
+---
+
+### [1.0.23] - 2026-10-12
+
+**会话主题**：修复「函数库卡片视图新建的自定义函数不落盘、且不进 TestFunction.cin」
+
+**问题**：在图形化配置的「函数库」面板点 + 新建自定义函数后，退出编辑器再进来该函数消失，生成的 `TestFunction.cin` 里也没有。
+
+**根因（3 处，同源不同层）**：
+
+1. **卡片视图没有落盘入口**：`addCustomCard()` / `saveCustomCard()` / `removeCustomCard()` 只改内存 `customCards`，全组件唯一写后端的调用在「源码编辑」视图的保存按钮 `onSaveSource()` 里（按钮带 `v-if="viewMode === 'source'"`）；卡片视图只有「重新解析」→ 退出编辑器即丢。
+2. **生成链路不读 `step_library`**：`TestFunction.cin` = 内置模板 + `function_library`（`_load_global_function_library()` / `_append_library_functions`）。自定义卡片存在另一个字段 `step_library`，后端无任何生成链路读它 → 即便落盘也不进产物。
+3. **已知函数名口径不含自定义卡片**：`refreshKnownFuncNames()` 只解析 `function_library`，卡片/步骤里调用 `Custom_N` 会被误标成「调用了函数库里不存在的函数」。
+
+**变更内容**：
+
+1. **前端：卡片视图增删改即时落盘**（`frontend/src/components/FunctionLibrary.vue`）
+   - 抽出 `buildStepLibrary()`（自定义卡片 → `step_library` 字段）与 `persistCustomCards()`（写 `function_library` + `step_library` 并 emit `saved`）；
+   - `addCustomCard()` / `saveCustomCard()` / `removeCustomCard()` 改为落盘后再返回；`onSaveSource()` 复用同一 helper。
+
+2. **后端：生成 TestFunction.cin 时并入自定义卡片**（`backend/core/function_module.py`）
+   - 新增 `_load_global_step_library()` / `_custom_card_source()` / `_load_library_source_for_generation()`；
+   - `_custom_card_source()` 兼容两种卡片写法（按能否解析出函数定义自动判定）：`code` 已是完整函数定义 → 原样使用；只是函数体语句 → 按「名称 / 返回类型 / 参数」拼签名包一层；`{{参数名}}` 占位符统一替换为参数名；
+   - 生成处入参由 `_load_global_function_library()` 改为 `_load_library_source_for_generation()`，仍走既有 `_append_library_functions` 的「去重 / 同名同参冲突提示」与幂等标记块。
+
+3. **前端：已知函数名并入自定义卡片**（`frontend/src/components/graph/FunctionGraphEditor.vue`、`PanelContent.vue`、`PanelBody.vue`）
+   - `refreshKnownFuncNames()` 增加 `extraNames` 参数；初始加载与「函数库面板保存后」的事件链一并传入 `step_library` 的函数名；
+   - 源码视图为空时仍保持「跳过校验」的既有保护，避免把模板函数全标成缺失。
+
+**影响**：函数库卡片视图的自定义函数现在会立即写入全局库（`Function_global_library.json` 的 `step_library`），并在生成时作为自定义函数追加进各类 `TestFunction.cin`；与内置模板同名同参时仍以模板为准（前端即时提示冲突）。
+
+**验证**：
+- `vue-tsc --noEmit` exit=0；`py_compile backend/core/function_module.py` exit=0；
+- 生成链路冒烟（真实模板 `FuncTestFunction` + 合成卡片）：定义式卡片原样保留、语句式卡片补签名并完成 `{{x}}/{{y}}` 替换；追加块存在、无 `{{` 残留；重复生成幂等（`MyDef` / `MyWrap` 各只出现一次、标记块 1 个）；`function_conflicts` 为空。
+
+**相关文件**：
+- `frontend/src/components/FunctionLibrary.vue`（落盘 helper 与三处调用）
+- `frontend/src/components/graph/FunctionGraphEditor.vue`（`refreshKnownFuncNames` 第 3 参数 + 初始加载）
+- `frontend/src/components/graph/PanelContent.vue`（`saved` 事件透出卡片名）
+- `frontend/src/components/graph/PanelBody.vue`（`onFuncLibSaved` 透传）
+- `backend/core/function_module.py`（`_load_global_step_library` / `_custom_card_source` / `_load_library_source_for_generation` + 生成处入参）
+
+---
+
+### [1.0.23] - 2026-10-10
+
+**会话主题**：Function 模块前端交互优化（三批 + 两批新定调，v2.1~v2.14）+ Electron 客户端多窗口关闭按钮修复
+
+**变更内容**：
+
+1. **Function 模块交互优化三批全部落地**（`frontend/src/components/graph/`、`frontend/src/views/FunctionView.vue`、`frontend/src/composables/useShortcuts.ts`）
+   - 第 1 批（P0，零行为变更）：破坏性操作统一补 toast 与可撤销提示；静默删除（删工况 / 删映射行 / 删值资源 / 删自定义卡片）补二次确认；异步操作补 loading；顶部未保存标识 + 「返回」拦截确认（不保存 / 保存并返回）；连线提示文案与三态光标对齐；新增后自动聚焦名称并全选；卡片列表单击即进入编辑；画布点卡片时左侧列表按 id / 名称聚焦；`Insert`/`Delete` 焦点守卫、`Ctrl+S` 按焦点判定、`Ctrl+V` 无落点时的默认落点、`Ctrl+A` 行为说明 + 「全选全部工况」入口；隐藏手势可见化（连线 hover 出删除、拖出框显示「松手即删除」）。
+   - 第 2 批（P1）：CardEditor 与 StepEditor 能力统一（类型可改 + 故障角色 + 局部变量区）；字段级实时校验（参数名 / 用例名 / Loop 配对）；编辑引用卡片返回前脏检查；步骤默认类型记忆 + 「添加步骤」旁按类型直接创建；编辑器内「生成结果」抽屉（免退出查看）；对象浏览器手动开关 60s 内不被自动覆盖；两处「生成」入口禁用条件统一；参数取值三态显式标签（默认 / 已覆盖 / 不参与）；补齐 `Alt+Insert` / `Alt+P` 键位与 Esc 分层；告警分级（阻断红 / 提示黄）；缺失函数告警判定源改为「库解析结果 + 内置函数表」的唯一维护点。
+   - 第 3 批（P2 与边界）：步骤编辑独立撤销栈（与画布 `Ctrl+Z` 隔离）；编辑卡片时保留画布实体复制粘贴；用例预览一键跳转到图形配置并定位工况；「按映射表一键填充参数」显式按钮；引用卡片编辑改为叠层子面板；撤销栈按工况隔离 + 保存后清栈；可访问性最小集（`aria-label` / 键盘可达 / `reduced-motion`）。
+   - 两批新定调落地：#2 主序列被整体替换前二次确认（粘贴 / Ctrl+拖拽复制 / 卡片库拖入三条落点）；#12 白名单收敛为全项目唯一维护点（不改后端、行为零变更）；#20 拉取同名分组默认跳过 + 「覆盖」勾选后才原地替换；#21 展开上限 2000 / 20000（前端预检 + 拿到产物后按真实行数复核）；#8 函数库冲突即时提示（后端新增只读接口 `GET /api/function/builtin-functions`，前端在函数库保存后即时比对并提示）；P2-6（编辑器改非全屏）、P2-9（隐藏测试参数视图）按定调**不做**。
+   - 新增仅 dev 生效的性能抓手 `__CANVAS_PERF__`（`report()` 输出近 200 次重算的 P50/P95/max），供后续复测防回退。
+
+2. **全局项同步语义变更**（`frontend/src/components/graph/FunctionGraphEditor.vue`）
+   - 由「全局卡片 / 映射 / 值资源只在新建分组时带出」改为**设为全局即同步进所有分组**：设为全局 → 该项进入所有分组的卡片列表 / 对象映射表 / 值资源库（缺失则补带 `global` 标记的深拷贝）；取消全局 → 不回收内容，只清过期 `global` 标记；提示「已同步 N 项到其它分组」。
+
+3. **图形编辑器面色统一 + 默认浅色主题**（`frontend/src/styles/main.scss`、`frontend/src/App.vue`）
+   - 非实心按钮（`is-text` / `is-plain` / 无 type）统一给 EP 浅填充 `--el-fill-color-light` + 浅边框 `--el-border-color`（文字按钮用 inset 描边，不改控件尺寸），实心按钮保持原高亮色；
+   - 在 `.graph-editor` / `.ce-modal-pass` / `.ge-output-drawer` 作用域内把 EP 变量回浅色：主色阶、success / warning / danger / error / info 五族语义色阶（含 light-3/5/7/8/9、dark-2）与应用级变量（`--bg-*` / `--text-*` / `--border-*` / `--color-*`），并声明 `color-scheme: light`；
+   - 滚动条滑道由 `transparent` 改为显式 `var(--bg-page)`（避免根元素 `color-scheme: dark` 时 Chromium 用 UA 深色绘制滑道）；
+   - `App.vue` 去掉按系统 `prefers-color-scheme` 自动切深色的逻辑，改为**默认浅色**（`toggleTheme()` 保留，仍可手动切）。
+
+4. **用例 ID 序号「跟着上面走」**（`backend/services/function_graph.py` 的 `_expand_frames`）
+   - 原自动用例名 = `<前缀>_<全局计数器>`，用户双击改过的用例名既不占编号也不影响计数器；现新增 `_trailing_num()`：自定义名末尾数字段的最大数会把基准顶高，自动编号改为 `idx = max(idx, last_num + 1)`，即接着上面用过的最大尾号往下排（例：改 `..._13_14` / `..._15_16` 后，下一条从 `..._17` 起）。仅影响 `naming='default'`。
+
+5. **Electron 客户端多窗口关闭按钮修复**（`frontend/electron/main.js` 的 `createWindow`）
+   - 根因：`mainWindow` 为模块级变量，「文件 → 新建窗口」会把它指向新窗口；而窗口关闭回调里写的是 `mainWindow.hide()`，于是点**原窗口**的关闭按钮实际隐藏的是**新窗口**，原窗口不关闭（表现为「关闭按钮失效」）；
+   - 改用局部变量持有本窗口并绑定各自回调（`close` → `win.hide()`、`closed` 加 `mainWindow === win` 守卫），逐窗口独立生效。
+
+**影响**：
+- Function 模块（图形化配置）交互行为与视觉统一；图形编辑器固定为浅色，应用改为默认浅色主题；
+- 展开用例的自动编号改为「接着上面最大尾号」递增；
+- Electron 客户端多窗口下每个窗口的关闭按钮均独立生效（仍沿用「最小化到托盘」设计，需完全重启客户端生效）；
+- 新增后端只读接口 `GET /api/function/builtin-functions`（内置函数签名表，124 条）。
+
+**验证**：
+- `vue-tsc --noEmit` exit=0；Vite 对各改动模块编译 200；后端 `py_compile` 通过；
+- 浏览器自动化实测：生成结果抽屉空态、新建卡片自动聚焦、局部变量区、按类型新增步骤、撤销按钮初始禁用、参数三态标签、引用卡片叠层上下文面板、未保存返回拦截、停靠栏页签换行与键盘可达；「全局」两组同步实测（设为全局同步出现 / 取消全局不回收只清标记）；浅色作用域实测（按钮 `rgb(245,247,250)`、info 标签 `rgb(233,233,235)`、滚动条滑道 `rgb(240,242,245)`、全页「背景亮度 < 80」元素 = 0）；全页「可见按钮背景透明」数量 = 0；
+- 用例 ID 实测：真实配置 `A47D_copy`（17 工况 / 120 条用例）注入 `caseNames=['..._13_14','..._15_16']`，① 直接调用新代码、② POST 运行中的后端 `/api/function/expand-cases`，两条路径均得到 `_13_14 / _15_16 / 17 / 18 / 19 …`（断言 PASS）；
+- Electron 主进程 `node --check electron/main.js` exit=0（多窗口关闭需在客户端实机复测）。
+
+**相关文件**：
+- `frontend/src/components/graph/`（CaseFrameCanvas / StepEditor / CardEditor / FunctionGraphEditor / DockLayout / CtxMenu / PanelBody / MappingManager / ValueLibraryPanel 等）
+- `frontend/src/views/FunctionView.vue`、`frontend/src/composables/useShortcuts.ts`、`frontend/src/utils/functionGraph.ts`
+- `frontend/src/styles/main.scss`、`frontend/src/App.vue`
+- `backend/services/function_graph.py`、`backend/api/function_routes.py`、`backend/core/function_module.py`
+- `frontend/electron/main.js`
+
+---
+
+### [1.0.23] - 2026-10-09
 
 **会话主题**：Excel 测试参数列精简与分组调整 + 信号无效值测试支持留空
 
@@ -65,6 +528,27 @@
 - `frontend/src/views/CANView.vue`（逗号修复、`hasParamData` 放宽）
 - `frontend/src/utils/dbc.ts`（平铺列定义同步）
 - `frontend/src/components/ObjectPanel.vue`（帮助文案）
+
+---
+
+## [1.0.22] - 2026-10-06
+
+**版本号**：`1.0.22`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.22.exe`（161,844,471 字节，SHA256 `8F2F2E6D813A2E848CD167BDD6BAB6FADA2C1C7E9A23086A651DF4AE7F7E83D1`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.22",
+  "release_notes": "本版本更新：\n- 多个功能增强与缺陷修复（Excel 导出平铺格式、导入校验、卡顿修复）\n- 函数库里自定义的函数没有生成到 TestFunction.cin —— 定位根因并修复（模板为基 + 追加库独有函数）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.22.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.21 之后的 2 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.22）
 
 ---
 
@@ -342,6 +826,7 @@ Function 的 `TestFunction.cin` = **内置模板 + 函数库里用户自定义�
 - 右侧面板由「函数库 / 映射表 / 值资源库」三块上下堆叠 → 收敛为同一容器（先左右并排，最终改为同格页签，见第六节）。
 
 **五、回归影响分析（自查并修复 4 处潜在回归）**
+
 | # | 问题 | 修复 |
 |---|---|---|
 | 1 | Ctrl+拖拽复制卡片会继承 `global` 标记（副本不在全局库里，显示成全局却带不进新配置） | `cloneCard` / `duplicateCardTo` 置 `global = undefined` |
@@ -1445,6 +1930,7 @@ testWaitForTesterConfirmation(Str_Temp,60000);
 - XCP 工程行为一字未变（XCP 在前，命中即 return）。
 
 **验证**（真实 cfg，走 COM 实跑）：
+
 | cfg | `a2l_qualifier` | `a2l_path` | 文件 |
 |---|---|---|---|
 | A47D（XCP） | `ECUAPP_A47D_3758` | `...\ECUAPP_A47D_3758.a2l` | 441,048 字节 |
@@ -1811,6 +2297,7 @@ testWaitForTesterConfirmation(Str_Temp,60000);
   - **修掉一个会毁掉自适应的隐患**：`snapshotDbcColumnState()` 与 `moveDbcColumn()` 原来把 `c.width` 写回 state 并持久化；现在 `c.width` 可能是自适应算出来的，一写进去就被当成手动宽度存下来、自适应从此失效。两处都改成只带 `userWidthOf(c.key)`。
 
 **验证**（T1V 配置 254 行 × 15 列，重建后的 dist）：
+
 | 项 | 结果 |
 |---|---|
 | 打开配置后列宽 | `Test 56 / 发送节点 85 / 报文名称 125 / 报文标识符 59 / 报文周期时间 56 / 报文长度 56 / 信号名称 259 / 精度 59 / 偏移量 61 / 物理最小值 61 / 物理最大值 74 / 初始值 56 / 无效值 60 / 信号值描述 150 / 测试参数 118` |
@@ -1851,6 +2338,7 @@ testWaitForTesterConfirmation(Str_Temp,60000);
 **顺带修掉一个坑**：`parseDbcRecords` 里的 `get()` 会 `trim()` 整个单元格，`'\n0, 1'` 被压成 `'0, 1'` —— **行内空行没了、整列错行**（第 2 个参数的报DTC值会跑到第 1 个参数身上）。明细列改用不整串 trim 的 `getRaw()`，只按行 trim。
 
 **验证**（D008 真实配置，用真实上传走 `/api/can/parse`）：
+
 | 项 | 结果 |
 |---|---|
 | 导出列结构 | 24 列 = 14 个可见列 + 8 个明细列（替换原「测试参数」列位置）+ 末尾 2 列 JSON |
@@ -1892,6 +2380,7 @@ target.children.push(msgNode)   // 只搬了报文
 - 撤销走的是同一个函数（`undoStack` 的 `kind: 'sender'` → `moveMessageToSender(node, before, false)`），自动一起修好。
 
 **验证**（D008 真实配置，把 `ABS_0x17D` 的发送节点从 `ABS_x17D` 改成 `ABS_x17D_NEW`）：
+
 | 项 | 改之前 | 改之后 |
 |---|---|---|
 | 总行数 | 80 | **80**（没丢行） |
@@ -1982,6 +2471,7 @@ target.children.push(msgNode)   // 只搬了报文
 - 工具栏提示改回「泳道超出宽度后用滚轮左右查看（Shift+滚轮上下）」。
 
 **验证**（Vite dev + 真实 A47D 配置的图形配置画布，实测数据）：
+
 | 项 | 结果 |
 |---|---|
 | 滚轮停在宽工况上 | `scrollLeft 12 → 132`（横向生效） |
@@ -2009,6 +2499,7 @@ target.children.push(msgNode)   // 只搬了报文
 4. **`TestNoDTC()` 两份模板对齐（`backend/templates/capl.py` + `backend/templates/canoe_capl.py`）**：同一函数在两份模板里参数不一致——`capl.py` 是 `TestReadDTC(0x0, 0, gcFalse, gcNot_Unique)`（生成源码用的就是这份，被 `excel_processor` / `function_processor` 共同引用），`canoe_capl.py` 是 `TestReadDTC(0x0, 0xFF, gcFalse, gcUnique)`。按「以 0 为准」统一为 `TestReadDTC(0x0, 0, gcFalse, gcUnique)`（mask 走 `19 02 00`；该分支不使用 isExpected/unique，故 unique 对齐无行为差异）。注：`canoe_capl.py` 全仓库无 import 引用；4 个已存配置的 `array_func_test` 与 `Sanbao_global_library.json` 里仍是旧的 `gcNot_Unique`（mask 已是 0），下次生成/保存时随模板刷新。
 
 **验证**（真实文件 `D:\My RTX Files\胡张\C135_Configuration.xlsx` + Vite dev 实测）：
+
 | 项 | 结果 |
 |---|---|
 | `POST /api/can/parse`（旧表） | 200，返回 `DBC`(312 行) / `DTC`(22 行) / `DataLinkLayer`(23 行) / **`Configuration`(11 项)**，含 `cddQualifier=ABS_ESP`、`a2lQualifier=J3_F_XCPDemo`、`readyOn=$VehModMngtGlbSafe1UsgModSts=0;` |
@@ -2038,6 +2529,7 @@ target.children.push(msgNode)   // 只搬了报文
 - **连线高亮**：`editEdge()` 在进入序号就地编辑时一并设置 `selectedEdgeId`，使点击序号徽标（`.label-badge`，title「点击编辑序号」）时对应连线同步高亮（橙色加粗 + 发光），与点击连线本体的效果一致——编号相同的分叉线较多时能看清正在改哪一条。
 
 **验证**（Vite dev + 真实 A47D 配置画布，实测计算样式）：
+
 | 项 | 结果 |
 |---|---|
 | 停靠占位框 | 目标卡片带 `node-drop-before`；`::before` 计算样式 `height: 40px`、`border: dashed 2px`、`bottom: 57.39px`、`background: rgba(64,158,255,0.1)`；`::after` 为 `none`（只显示落点一侧） |
@@ -2068,6 +2560,7 @@ target.children.push(msgNode)   // 只搬了报文
   - 宽度按内容自适应：新增 `edgeInputWidth = calc(max(1, 值长度)ch + 14px)`（初始 1 个字符；14px = 左右内边距 6+6 + 左右边框 1+1，因全局 `* { box-sizing: border-box }`），去掉原固定 `width: 96px`。
 
 **验证**（真实 A47D_copy 配置 + ADS_Ang 分组画布，重建后的 dist）：
+
 | 项 | 结果 |
 |---|---|
 | 拖拽中泳道位移 | 两个工况框（3 条 / 6 条泳道）**全部为 0**；工况框宽 1813 → 1813（不再变 2023） |
@@ -2847,6 +3340,7 @@ target.children.push(msgNode)   // 只搬了报文
 **需求**：把 `SigInvalidTest` 拆成 `CRCTest` / `CounterTest` / `SigInvalidTest`；把 `SigvalueInvalidTest` 并入 `SigInvalidTest`，做成类似原来的滑块（`SigInvalid` / `SigvalueInvalid`）。
 
 **新模型**（信号级）：
+
 | 参数 | 参数体 | 已配置判定 |
 | --- | --- | --- |
 | `CRCTest` | `{ dtcValue:'2', noDtcValue:'1', dtc }`（报/不报值后台写死） | 仅 `dtc` 非空 |

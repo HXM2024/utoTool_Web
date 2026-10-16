@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed, watch } from 'vue'
-import { getConfigs } from '@/api/config'
+import { getConfigs, getRelayConfig, saveRelayConfig } from '@/api/config'
 import { parseA2lFileFromPath, parseDbcFromCfgDir } from '@/api/can'
 import { parseCddFromPath } from '@/api/sanbao'
 
@@ -67,7 +67,7 @@ function normalizeCcpScale(scale: CcpVarScale | null | undefined): CcpVarScale |
 /** 继电器模块取值：0=老 1=单刀（单掷）2=双刀（双掷），与 Create CANoe 一致 */
 export type RelayModule = 0 | 1 | 2
 
-/** 继电器配置：Function / CAN 模块生成共用 RelayON/RelayOFF 时使用 */
+/** 继电器配置：Function / CAN / 三包 模块生成共用 RelayON/RelayOFF 时使用 */
 export interface RelayConfig {
   /** 继电器模块（0=老 1=单刀 2=双刀） */
   relayModule: RelayModule
@@ -76,7 +76,7 @@ export interface RelayConfig {
 }
 
 /** 使用继电器配置的模块 */
-export type RelayConfigModule = 'function' | 'can'
+export type RelayConfigModule = 'function' | 'can' | 'sanbao'
 
 /** 默认值：双刀 + 通道 2 —— 与 Function / CAN 改造前的内联实现一致，不配置时生成结果不变 */
 export const DEFAULT_RELAY_CONFIG: RelayConfig = { relayModule: 2, canChannel: 2 }
@@ -99,48 +99,14 @@ function isDbcArrayFormat(val: any): boolean {
   return val && Array.isArray(val.columns) && Array.isArray(val.rows)
 }
 
-/** 列名模糊匹配（大小写不敏感），未找到返回 -1 */
-function findDbcColumnIndex(columns: any, keywords: string[]): number {
-  if (!Array.isArray(columns)) return -1
-  return columns.findIndex((c: any) => keywords.some((k) => String(c).toLowerCase().includes(k)))
+/** 是否为「有内容」的 A2L 变量集（对象浏览器按优先级取一路时判定用） */
+function hasA2lVars(v: A2lVars | null | undefined): boolean {
+  return !!v && ((v.measurements?.length || 0) > 0 || (v.characteristics?.length || 0) > 0)
 }
 
-/** 合并两路 { columns, rows } 的 DBC 数据，按「报文名 + 信号名」去重（保留先出现者）
- *
- *  上传的 DBC 与 CFG 引用的 DBC 可能是同一份（或高度重叠），
- *  直接拼接会让同一信号在对象浏览器里出现两次，故此处去重。
- */
-function mergeDbcRows(base: any, extra: any) {
-  const columns = base.columns
-  const rows = [...base.rows]
-  const msgIdx = findDbcColumnIndex(columns, ['msg_name', '报文名称'])
-  const sigIdx = findDbcColumnIndex(columns, ['signal_name', '信号名称'])
-
-  const keyOf = (row: any): string => {
-    if (msgIdx < 0 || sigIdx < 0) return ''
-    const sig = String(row?.[sigIdx] ?? '').trim()
-    if (!sig || sig === 'None') return ''
-    return `${String(row?.[msgIdx] ?? '').trim()}:::${sig}`
-  }
-
-  const seen = new Set<string>()
-  for (const row of rows) {
-    const key = keyOf(row)
-    if (key) seen.add(key)
-  }
-
-  let dropped = 0
-  for (const row of extra.rows) {
-    const key = keyOf(row)
-    if (key && seen.has(key)) {
-      dropped++
-      continue
-    }
-    if (key) seen.add(key)
-    rows.push(row)
-  }
-  if (dropped) console.log('[Store] 对象浏览器 DBC 合并去重，移除重复行:', dropped)
-  return { columns, rows }
+/** { columns, rows } 是否是有数据的 DBC */
+function hasDbcRows(v: any): boolean {
+  return isDbcArrayFormat(v) && v.rows.length > 0
 }
 
 export const useModuleStore = defineStore('modules', () => {
@@ -174,15 +140,21 @@ export const useModuleStore = defineStore('modules', () => {
   })
 
   // ==================== 对象浏览器共享数据 ====================
-  // 优先加载 CFG 解析的数据，上传的 Excel/A2L/DBC 覆盖刷新
-  // A2L 变量（来自 CFG 的 a2l_path 或上传的 .a2l 文件）
-  const objA2lVars = ref<A2lVars>({ measurements: [], characteristics: [] })
+  // 三个来源，按优先级取一路展示（高优先级有内容就整体替换，不合并、不续写）：
+  //   独立上传文件 > CFG 解析 > 配置自带
+  // A2L 变量：独立上传的 .a2l
+  const objUploadA2lVars = ref<A2lVars>({ measurements: [], characteristics: [] })
+  // A2L 变量：CFG 的 a2l_path 解析
+  const objCfgA2lVars = ref<A2lVars>({ measurements: [], characteristics: [] })
+  // A2L 变量：配置自带（加载配置时恢复的 CCP 符号表）
+  const objConfigA2lVars = ref<A2lVars>({ measurements: [], characteristics: [] })
   // CFG 目录解析的 DBC 数据（{ columns, rows } 格式）
   const objCfgDbcRaw = ref<any>(null)
   // 上传的 DBC / Excel DBC 数据（{ columns, rows } 格式）
   const objUploadDbcRaw = ref<any>(null)
-  // DBC 环境变量（来自 .dbc 解析）
-  const objDbcEnvVars = ref<DbcEnvVar[]>([])
+  // DBC 环境变量（来自 .dbc 解析）：分两路存，与 DBC 用同一套优先级取一路
+  const objUploadDbcEnvVars = ref<DbcEnvVar[]>([])
+  const objCfgDbcEnvVars = ref<DbcEnvVar[]>([])
   // DTC 数据（来自上传的 Excel）
   const objDtcRaw = ref<any>(null)
   // DTC 数据（来自 CDD 解析，三包模块专用）
@@ -195,24 +167,42 @@ export const useModuleStore = defineStore('modules', () => {
   const ccpVarTypes = ref<Record<string, CcpVarType>>({})
   // 有刷模式：CCP 符号的精度/偏移 {符号名: {precision, offset}}，未指定时用默认 1 / 0
   const ccpVarScales = ref<Record<string, CcpVarScale>>({})
-  // 继电器模块 / CAN 通道：Function、CAN 模块各自一份（侧边栏配置，生成时随请求下发）
+  // 继电器模块 / CAN 通道：Function、CAN、三包 模块各自一份（侧边栏配置，生成时随请求下发）
   const relayConfigs = ref<Record<RelayConfigModule, RelayConfig>>({
     function: { ...DEFAULT_RELAY_CONFIG },
     can: { ...DEFAULT_RELAY_CONFIG },
+    sanbao: { ...DEFAULT_RELAY_CONFIG },
   })
 
-  /** 合并 DBC 数据（上传 + CFG 引用），用于对象浏览器；按「报文名 + 信号名」去重 */
+  /** 对象浏览器 A2L 变量：独立上传 > CFG 解析 > 配置自带，取最高优先级的一路（不合并） */
+  const objA2lVars = computed<A2lVars>(() => {
+    if (hasA2lVars(objUploadA2lVars.value)) return objUploadA2lVars.value
+    if (hasA2lVars(objCfgA2lVars.value)) return objCfgA2lVars.value
+    return objConfigA2lVars.value
+  })
+
+  /** 对象浏览器 DBC 数据：独立上传 > CFG 解析，取最高优先级的一路（不合并）
+   *
+   *  过去这里把「上传」与「CFG」两路合并去重，去重键依赖列名/index 对齐，
+   *  一旦两路列结构不一致就会去重失效 —— 表现为上传 DBC 后对象浏览器里出现两份相同内容。
+   *  现在改为单选：有上传就整体替换 CFG 那一路。
+   */
   const objMergedDbcRaw = computed(() => {
-    const hasUpload = isDbcArrayFormat(objUploadDbcRaw.value)
-    const hasCfg = isDbcArrayFormat(objCfgDbcRaw.value)
-    if (!hasUpload && !hasCfg) return null
-    if (!hasUpload) return objCfgDbcRaw.value
-    if (!hasCfg) return objUploadDbcRaw.value
-    // 两路都存在时去重合并，避免同一信号重复显示（上传的 DBC 优先）
-    return mergeDbcRows(objUploadDbcRaw.value, objCfgDbcRaw.value)
+    if (hasDbcRows(objUploadDbcRaw.value)) return objUploadDbcRaw.value
+    if (hasDbcRows(objCfgDbcRaw.value)) return objCfgDbcRaw.value
+    return null
   })
 
-  const objHasDbc = computed(() => isDbcArrayFormat(objMergedDbcRaw.value) && objMergedDbcRaw.value.rows.length > 0)
+  const objHasDbc = computed(() => hasDbcRows(objMergedDbcRaw.value))
+
+  /** 对象浏览器 DBC 环境变量：与 DBC 同源优先级（独立上传 > CFG 解析）
+   *
+   *  必须与 objMergedDbcRaw 取同一路，否则会出现「显示的是上传的 DBC、
+   *  环境变量名单却来自 CFG」的错位。
+   */
+  const objDbcEnvVars = computed<DbcEnvVar[]>(() =>
+    objUploadDbcEnvVars.value.length ? objUploadDbcEnvVars.value : objCfgDbcEnvVars.value,
+  )
   const objHasDtc = computed(() => !!objDtcRaw.value && Array.isArray(objDtcRaw.value.rows) && objDtcRaw.value.rows.length > 0)
   const objHasA2l = computed(() => (objA2lVars.value.measurements?.length > 0 || objA2lVars.value.characteristics?.length > 0))
   const objHasCddDtc = computed(() => !!objCddDtcRaw.value && Array.isArray(objCddDtcRaw.value.rows) && objCddDtcRaw.value.rows.length > 0)
@@ -237,11 +227,11 @@ function normalizeA2lVars(list: any): A2lVar[] {
     try {
       const res: any = await parseA2lFileFromPath(a2lPath)
       const data = res?.data || {}
-      objA2lVars.value = {
+      objCfgA2lVars.value = {
         measurements: normalizeA2lVars(data.measurements),
         characteristics: normalizeA2lVars(data.characteristics),
       }
-      console.log('[Store] A2L loaded from path:', a2lPath, 'vars:', objA2lVars.value)
+      console.log('[Store] A2L loaded from path:', a2lPath, 'vars:', objCfgA2lVars.value)
     } catch (e) {
       console.warn('[Store] Failed to load A2L from path:', a2lPath, e)
     }
@@ -260,7 +250,7 @@ function normalizeA2lVars(list: any): A2lVar[] {
       if (data.columns && data.rows && data.rows.length > 0) {
         objCfgDbcRaw.value = data
         if (Array.isArray(data.environment_variables)) {
-          objDbcEnvVars.value = data.environment_variables
+          objCfgDbcEnvVars.value = data.environment_variables
         }
         console.log('[Store] CFG DBC loaded:', cfgDir, 'rows:', data.rows.length)
       } else {
@@ -290,9 +280,9 @@ function normalizeA2lVars(list: any): A2lVar[] {
   function setUploadDbc(data: any) {
     const valid = isDbcArrayFormat(data) ? data : null
     objUploadDbcRaw.value = valid
-    if (valid && Array.isArray(valid.environment_variables)) {
-      objDbcEnvVars.value = valid.environment_variables
-    }
+    // 清空上传（切配置 / 重置）时一并清掉上传侧环境变量；带 environment_variables 时覆盖
+    if (!valid) objUploadDbcEnvVars.value = []
+    else if (Array.isArray(valid.environment_variables)) objUploadDbcEnvVars.value = valid.environment_variables
   }
   /** 设置 DTC 数据 */
   function setDtc(data: any) {
@@ -302,11 +292,18 @@ function normalizeA2lVars(list: any): A2lVar[] {
   function setCddDtc(data: any) {
     objCddDtcRaw.value = data
   }
-  /** 设置 A2L 变量数据 */
-  function setA2lVars(data: A2lVars | null) {
-    objA2lVars.value = data
+  /** 设置 A2L 变量数据
+   *
+   *  source 决定写入哪一路（对象浏览器按 独立上传 > CFG解析 > 配置自带 取最高优先级）：
+   *    'upload' —— 独立上传的 .a2l（默认，保持既有调用语义）
+   *    'config' —— 配置自带（加载配置时恢复的 CCP 符号表）
+   */
+  function setA2lVars(data: A2lVars | null, source: 'upload' | 'config' = 'upload') {
+    const next = data
       ? { measurements: normalizeA2lVars(data.measurements), characteristics: normalizeA2lVars(data.characteristics) }
       : { measurements: [], characteristics: [] }
+    if (source === 'config') objConfigA2lVars.value = next
+    else objUploadA2lVars.value = next
   }
   /** 设置 A2L Qualifier */
   function setA2lQualifier(q: string) {
@@ -318,7 +315,10 @@ function normalizeA2lVars(list: any): A2lVar[] {
   function setCanMotorMode(mode: CanMotorMode) {
     if (mode === canMotorMode.value) return
     canMotorMode.value = mode
-    objA2lVars.value = { measurements: [], characteristics: [] }
+    // 三路 A2L 都清空（有刷模式用不上下拉的无刷 A2L 变量）
+    objUploadA2lVars.value = { measurements: [], characteristics: [] }
+    objCfgA2lVars.value = { measurements: [], characteristics: [] }
+    objConfigA2lVars.value = { measurements: [], characteristics: [] }
     if (mode === 'brushed') objA2lQualifier.value = ''
     else {
       ccpVarTypes.value = {}
@@ -333,6 +333,15 @@ function normalizeA2lVars(list: any): A2lVar[] {
     const next = { ...ccpVarTypes.value }
     if (type) next[key] = type
     else delete next[key]
+    ccpVarTypes.value = next
+  }
+
+  /** 整表设置 CCP 系统变量类型（加载配置 / 导入分组文件依赖时回填） */
+  function setCcpVarTypes(table: Record<string, CcpVarType> | null | undefined) {
+    const next: Record<string, CcpVarType> = {}
+    for (const [k, v] of Object.entries(table || {})) {
+      if (v === 'int' || v === 'float' || v === 'int64') next[k] = v
+    }
     ccpVarTypes.value = next
   }
 
@@ -359,12 +368,37 @@ function normalizeA2lVars(list: any): A2lVar[] {
     ccpVarScales.value = next
   }
 
-  /** 设置 Function / CAN 模块的继电器配置（部分更新） */
+  /** 设置 Function / CAN / 三包 模块的继电器配置（部分更新，并落盘到后端） */
   function setRelayConfig(module: RelayConfigModule, cfg: Partial<RelayConfig>) {
     const cur = relayConfigs.value[module]
-    relayConfigs.value[module] = {
+    const next: RelayConfig = {
       relayModule: cfg.relayModule ?? cur.relayModule,
       canChannel: cfg.canChannel ?? cur.canChannel,
+    }
+    relayConfigs.value[module] = next
+    // 落盘：原先只存内存，刷新页面 / 重启客户端即回落默认值
+    void saveRelayConfig({ module, ...next }).catch(() => {
+      /* 写入失败不打断交互：本地值已生效，下次修改会再写一次 */
+    })
+  }
+
+  /** 启动时从后端加载继电器配置（Function / CAN / 三包 共用，失败保留默认值） */
+  async function loadRelayConfig() {
+    try {
+      const res: any = await getRelayConfig()
+      const data = res?.data?.data ?? res?.data ?? {}
+      const conf = data?.relay_configs
+      if (!conf || typeof conf !== 'object') return
+      for (const module of ['function', 'can', 'sanbao'] as RelayConfigModule[]) {
+        const item = conf[module]
+        if (!item) continue
+        relayConfigs.value[module] = {
+          relayModule: Number(item.relayModule) as RelayModule,
+          canChannel: Number(item.canChannel),
+        }
+      }
+    } catch {
+      /* 加载失败保留默认值（双刀 + 通道 2） */
     }
   }
 
@@ -398,8 +432,38 @@ function normalizeA2lVars(list: any): A2lVar[] {
     moduleStates.value[module].currentConfig = name
   }
 
+  /** 切换模块时清掉「独立上传」这一路的数据（属于上一个模块的会话内容）
+   *
+   *  只清上传路，不动 CFG 解析（全局同一个工程的权威数据，重新解析代价高）与配置自带数据：
+   *  - 避免 CAN 上传的大 DBC 常驻 store，被 Function 的对象浏览器复用（内容错位 + 建树卡顿）
+   *  - 上传的文件本身是「这一次操作」，切模块后需要重新上传
+   */
+  function clearModuleUploads() {
+    objUploadDbcRaw.value = null
+    objUploadDbcEnvVars.value = []
+    objUploadA2lVars.value = { measurements: [], characteristics: [] }
+  }
+
+  // ==================== 模块离开守卫（切换模块前询问是否保存） ====================
+  /** 返回 false 表示取消离开（例如用户在弹窗上点了关闭） */
+  type ModuleLeaveGuard = () => Promise<boolean> | boolean
+  const moduleLeaveGuards = new Map<ModuleName, ModuleLeaveGuard>()
+
+  /** 注册当前模块的「离开前守卫」（各视图 setup 时注册一次） */
+  function registerModuleLeaveGuard(module: ModuleName, guard: ModuleLeaveGuard) {
+    moduleLeaveGuards.set(module, guard)
+  }
+
+  /** 执行指定模块的离开守卫：无守卫视为可直接离开 */
+  async function runModuleLeaveGuard(module: ModuleName): Promise<boolean> {
+    const guard = moduleLeaveGuards.get(module)
+    if (!guard) return true
+    return (await guard()) !== false
+  }
+
   /** 设置活跃模块 */
   function setActiveModule(module: ModuleName) {
+    if (module !== activeModule.value) clearModuleUploads()
     activeModule.value = module
   }
 
@@ -456,9 +520,11 @@ function normalizeA2lVars(list: any): A2lVar[] {
     setA2lQualifier,
     setCanMotorMode,
     setCcpVarType,
+    setCcpVarTypes,
     setCcpVarScale,
     setCcpVarScales,
     setRelayConfig,
+    loadRelayConfig,
     fetchConfigList,
     setCurrentConfig,
     setActiveModule,
@@ -466,5 +532,8 @@ function normalizeA2lVars(list: any): A2lVar[] {
     setSelectedAlgo,
     setModuleUploadResult,
     setCfgData,
+    clearModuleUploads,
+    registerModuleLeaveGuard,
+    runModuleLeaveGuard,
   }
 })

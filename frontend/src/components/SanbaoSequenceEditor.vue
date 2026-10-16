@@ -2,6 +2,24 @@
   <div class="sanbao-sequence-editor">
     <div class="seq-header">
       <span class="seq-title">用例序列</span>
+      <el-input
+        v-model="nameInput"
+        size="small"
+        class="seq-name-input"
+        placeholder="步骤名 / 用例名"
+        clearable
+      />
+      <el-dropdown trigger="click" @command="onSaveCommand" class="seq-save-dropdown">
+        <el-button size="small" type="primary" :icon="Collection" :disabled="!steps.length">
+          保存<el-icon class="el-icon--right"><ArrowDown /></el-icon>
+        </el-button>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item command="step">保存为步骤</el-dropdown-item>
+            <el-dropdown-item command="case">保存为测试用例</el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
       <span class="seq-count">共 {{ totalCount }} 步</span>
       <el-button v-if="steps.length" text size="small" :icon="Delete" @click="onClearAll">清空</el-button>
     </div>
@@ -144,7 +162,7 @@
 
 <script setup lang="ts">
 import { ref, computed, defineComponent, h, PropType } from 'vue'
-import { Plus, Top, Bottom, Delete, Refresh } from '@element-plus/icons-vue'
+import { Plus, Top, Bottom, Delete, Refresh, Collection, ArrowDown } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox, ElInput, ElInputNumber, ElButton, ElRadioGroup, ElRadioButton } from 'element-plus'
 
 /** 序列中的一个步骤实例 */
@@ -162,7 +180,27 @@ export interface SequenceStep {
 }
 
 const props = defineProps<{ steps: SequenceStep[] }>()
-const emit = defineEmits<{ 'update:steps': [SequenceStep[]] }>()
+const emit = defineEmits<{
+  'update:steps': [SequenceStep[]]
+  save: [{ type: 'step' | 'case'; name: string }]
+}>()
+
+/** 步骤名 / 用例名输入框（供「保存」下拉使用） */
+const nameInput = ref('')
+
+/** 「保存」下拉：按所选动作把当前序列保存为步骤 / 测试用例 */
+function onSaveCommand(command: string | number | object) {
+  const name = nameInput.value.trim()
+  if (!name) {
+    ElMessage.warning('请先输入步骤名或用例名')
+    return
+  }
+  if (!props.steps.length) {
+    ElMessage.warning('序列为空，请先组装用例')
+    return
+  }
+  emit('save', { type: command === 'case' ? 'case' : 'step', name })
+}
 
 const isDragOver = ref(false)
 const loopDragOver = ref('')
@@ -221,13 +259,27 @@ function genId() {
   return 'step-' + Date.now() + '-' + Math.random().toString(36).slice(2, 7)
 }
 
+/** 深拷贝用例步骤并重新分配 id（用于把「用例库」用例插入当前序列） */
+function cloneStepsWithNewIds(steps: SequenceStep[] = []): SequenceStep[] {
+  return steps.map((s) => {
+    const c: SequenceStep = { ...s, id: genId(), params: { ...(s.params || {}) } }
+    if (s.type === 'loop' && s.children) c.children = cloneStepsWithNewIds(s.children)
+    return c
+  })
+}
+
 /** 触发数据更新通知 */
 function fireUpdate() {
   emit('update:steps', [...props.steps])
 }
 
 function onDragOver(event: DragEvent) {
-  if (event.dataTransfer) event.dataTransfer.dropEffect = 'copy'
+  if (event.dataTransfer) {
+    // 与 dragstart 的 effectAllowed 保持一致：序列内搬动卡片用 move，
+    // 从步骤库/用例库新增用 copy。若这里统一写 copy，会与 move 冲突，
+    // 浏览器判定为不允许放置而不触发 drop，导致卡片拖不动。
+    event.dataTransfer.dropEffect = dragState.value ? 'move' : 'copy'
+  }
 }
 
 function onDragLeave() {
@@ -248,7 +300,6 @@ function onSequenceDrop(event: DragEvent, targetList: SequenceStep[], loopId?: s
     targetList.push(ds.step)
     onCardDragEnd()
     fireUpdate()
-    ElMessage.success(loopId ? '已移入循环' : '已移动步骤')
     return
   }
 
@@ -278,12 +329,20 @@ function onSequenceDrop(event: DragEvent, targetList: SequenceStep[], loopId?: s
         exitCondition: '',
         children: [],
       }
+    } else if (payload.type === 'case') {
+      // 从「用例库」拖入：把用例的整段序列追加到目标列表
+      const cloned = cloneStepsWithNewIds(payload.steps || [])
+      if (cloned.length) {
+        targetList.push(...cloned)
+        fireUpdate()
+        ElMessage.success(loopId ? '已把用例步骤移入循环' : `已添加用例：${payload.name}（${cloned.length} 步）`)
+      }
+      return
     }
 
     if (newStep) {
       targetList.push(newStep)
       fireUpdate()
-      ElMessage.success(loopId ? `已添加到循环` : `已添加步骤：${newStep.name}`)
     }
   } catch {
     /* ignore */
@@ -347,7 +406,6 @@ function onLoopChildrenDrop(event: DragEvent, loop: SequenceStep) {
   targetList.push(ds.step)
   onCardDragEnd()
   fireUpdate()
-  ElMessage.success('已移入循环')
 }
 
 /** 参数输入框接收拖拽：用对象的 text/plain 填充参数 */
@@ -477,7 +535,6 @@ function sortCardDrop(event: DragEvent, targetList: SequenceStep[], targetIdx: n
   targetList.splice(insertIdx, 0, ds.step)
   onCardDragEnd()
   fireUpdate()
-  ElMessage.success('已移动步骤位置')
 }
 
 /** 主序列卡片排序悬停（对外） */
@@ -868,6 +925,15 @@ const SubStepList = defineComponent({
   flex: 1;
 }
 
+.seq-name-input {
+  width: 150px;
+  flex: 0 0 auto;
+}
+
+.seq-save-dropdown {
+  flex: 0 0 auto;
+}
+
 .seq-drop-zone {
   flex: 1;
   overflow-y: auto;
@@ -1097,6 +1163,7 @@ const SubStepList = defineComponent({
   background: var(--color-primary);
   border-radius: 1px;
   margin: 2px 0;
+  pointer-events: none; /* 不参与命中测试：在指示线处松开仍作用于下方卡片，避免误判为落到空白区 */
   animation: pulse-indicator 1s ease-in-out infinite;
 }
 

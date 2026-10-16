@@ -53,10 +53,16 @@
         >
           导出Excel
         </el-button>
-        <el-button :icon="Check" :disabled="!selectedConfig" @click="$emit('save')">
+        <el-button :icon="Check" :disabled="!selectedConfig || !!busy" @click="$emit('save')">
           保存
         </el-button>
-        <el-button type="primary" :icon="Promotion" :disabled="!selectedConfig" @click="$emit('generate')">
+        <el-button
+          type="primary"
+          :icon="Promotion"
+          :loading="!!busy"
+          :disabled="!selectedConfig || !!busy"
+          @click="$emit('generate')"
+        >
           生成
         </el-button>
       </el-button-group>
@@ -192,6 +198,8 @@ import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
 
 const props = defineProps<{
   moduleName: string
+  /** 宿主模块是否正在执行耗时动作（如生成文件）：用于让「保存/生成」同步进入禁用与 loading 态 */
+  busy?: boolean
 }>()
 
 const emit = defineEmits<{

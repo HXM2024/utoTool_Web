@@ -16,8 +16,18 @@
     <div class="mm-list" @dragover.prevent @drop="onListDrop">
       <div class="mm-row-head">
         <span class="mm-drag-sp"></span>
-        <span class="mm-col">变量名</span>
-        <span class="mm-col">对象</span>
+        <span
+          class="mm-col mm-sortable"
+          :class="{ 'mm-sort-active': sortKey === 'alias' }"
+          title="点击按变量名排序（再点切换升/降序）"
+          @click="toggleSort('alias')"
+        >变量名<span class="mm-sort-mark">{{ sortMark('alias') }}</span></span>
+        <span
+          class="mm-col mm-sortable"
+          :class="{ 'mm-sort-active': sortKey === 'name' }"
+          title="点击按对象名排序（再点切换升/降序）"
+          @click="toggleSort('name')"
+        >对象<span class="mm-sort-mark">{{ sortMark('name') }}</span></span>
         <span class="mm-col-op"></span>
       </div>
       <div
@@ -32,9 +42,16 @@
         @contextmenu.prevent.stop="openMenu($event, i)"
       >
         <span class="mm-drag" draggable="true" title="拖拽变量到步骤/参数" @dragstart="onRowDragStart($event, e)">⠿</span>
-        <span v-if="e.global" class="mm-global" title="全局对象：新建配置 / 新建分组时自动带出">全局</span>
-        <el-input v-model="e.alias" size="small" placeholder="变量名" class="mm-col" />
-        <el-input v-model="e.name" size="small" placeholder="对象" class="mm-col" />
+        <span v-if="e.global" class="mm-global" title="全局对象：设为全局后自动同步到所有分组的映射表">全局</span>
+        <el-input
+          v-model="e.alias"
+          size="small"
+          placeholder="变量名"
+          class="mm-col"
+          :ref="(el: any) => setAliasInputEl(i, el)"
+          @change="commit(allEntries)"
+        />
+        <el-input v-model="e.name" size="small" placeholder="对象" class="mm-col" @change="commit(allEntries)" />
         <el-button size="small" :icon="Close" text class="mm-col-op" @click.stop="removeEntry(i)" />
       </div>
       <div v-if="!allEntries.length" class="mm-empty">暂无映射，拖入对象或点「新增变量」</div>
@@ -44,7 +61,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref } from 'vue'
 import { Plus, Close } from '@element-plus/icons-vue'
 import { ElMessage } from 'element-plus'
 import type { MappingEntry, MappingKind, ObjectMapping } from '@/types/functionGraph'
@@ -107,6 +124,9 @@ function openMenu(e: MouseEvent, i: number) {
     items.push({ key: 'global', label: list.length > 1 ? `设为全局（${list.length - globals} 条）` : '设为全局' })
   }
   if (globals > 0) {
+    // 已带「全局」标记的项再点「设为全局」会被过滤成空操作，所以单独给一个发布入口：
+    // 以当前分组这一份为准，覆盖其它分组的同别名条目（修漂移就靠它）
+    items.push({ key: 'republish', label: list.length > 1 ? `重新发布到所有分组（${globals} 条）` : '重新发布到所有分组' })
     items.push({ key: 'unglobal', label: list.length > 1 ? `取消全局（${globals} 条）` : '取消全局' })
   }
   ctxMenu.value?.open(e, items, list)
@@ -115,6 +135,7 @@ function onMenuSelect(key: string, payload: unknown) {
   const list = (payload as MappingEntry[]) || []
   if (!list.length) return
   if (key === 'global') emit('toggle-global', list.filter((x) => !x.global), true)
+  else if (key === 'republish') emit('toggle-global', list, true)
   else if (key === 'unglobal') emit('toggle-global', list.filter((x) => x.global), false)
 }
 
@@ -126,12 +147,46 @@ const kinds: Array<{ label: string; value: MappingKind }> = [
   { label: 'A2L', value: 'a2l' },
 ]
 
+// ===== 表头点击排序（按「变量名 / 对象」排序）=====
+/** 当前排序列：'' = 保持原顺序（先按分类分桶） */
+const sortKey = ref<'' | 'alias' | 'name'>('')
+const sortAsc = ref(true)
+
+/** 按当前排序列排序（不改动入参；未排序时原样返回） */
+function sortEntries(list: MappingEntry[]): MappingEntry[] {
+  const key = sortKey.value
+  if (!key) return list
+  const dir = sortAsc.value ? 1 : -1
+  return [...list].sort(
+    (a, b) => dir * String(a[key] ?? '').localeCompare(String(b[key] ?? ''), 'zh-Hans-CN', { numeric: true }),
+  )
+}
+
+/** 点击表头：同一列再点切换升/降序，点另一列则从升序开始 */
+function toggleSort(key: 'alias' | 'name') {
+  if (sortKey.value === key) {
+    sortAsc.value = !sortAsc.value
+  } else {
+    sortKey.value = key
+    sortAsc.value = true
+  }
+  // 排序后行下标全变，清掉行选中态，避免右键「设为全局」作用到别的行
+  selRows.value = []
+  anchorRow = -1
+}
+
+/** 表头排序标记：▲ 升序 / ▼ 降序 / ⇅ 未按该列排序 */
+function sortMark(key: 'alias' | 'name'): string {
+  if (sortKey.value !== key) return '⇅'
+  return sortAsc.value ? '▲' : '▼'
+}
+
 const allEntries = computed<MappingEntry[]>(() => {
   const out: MappingEntry[] = []
   for (const k of kinds) {
     out.push(...props.mapping[bucketOf(k.value)])
   }
-  return out
+  return sortEntries(out)
 })
 
 function bucketOf(kind: MappingKind): keyof ObjectMapping {
@@ -257,16 +312,40 @@ function addEntry() {
   const entries = allEntries.value.map((e) => ({ ...e }))
   entries.push({ alias: '', kind: 'signal', name: '', value: '' })
   commit(entries)
+  // 新增后自动聚焦新行的「变量名」，省掉一次点击（接着就能直接输入）；
+  // 开了排序时新行（变量名/对象都为空）不一定落在末尾，按排序后的位置定位
+  const shown = sortEntries(entries)
+  const idx = shown.findIndex((e) => !e.alias && !e.name)
+  focusAliasInput(idx >= 0 ? idx : shown.length - 1)
+}
+
+/** 变量名输入框实例（按行下标存）：新增行后用它自动聚焦 */
+const aliasInputEls: Record<number, any> = {}
+function setAliasInputEl(i: number, el: any) {
+  if (el) aliasInputEls[i] = el
+}
+function focusAliasInput(i: number) {
+  nextTick(() => {
+    const inst = aliasInputEls[i]
+    const input = inst?.input || inst?.$el?.querySelector?.('input')
+    if (input && typeof input.focus === 'function') {
+      input.focus()
+      input.select?.()
+    }
+  })
 }
 
 function removeEntry(i: number) {
   const entries = allEntries.value.map((e) => ({ ...e }))
+  const removed = entries[i]
   entries.splice(i, 1)
   // 选中态里的下标跟着左移，避免删一行后选中错位
   selRows.value = selRows.value.filter((x) => x !== i).map((x) => (x > i ? x - 1 : x))
   if (anchorRow > i) anchorRow -= 1
   else if (anchorRow === i) anchorRow = -1
   commit(entries)
+  // 删除后给个明确回执：原来静默删除，误点时看不出来
+  if (removed) ElMessage.success(`已删除映射：${removed.alias || removed.name || '未命名'}`)
 }
 </script>
 
@@ -308,6 +387,19 @@ function removeEntry(i: number) {
   font-size: 11px;
   color: #909399;
   padding: 2px 2px;
+}
+/* 可点击排序的表头：悬停/生效时高亮，右侧跟一个 ▲/▼/⇅ 标记 */
+.mm-sortable {
+  cursor: pointer;
+  user-select: none;
+}
+.mm-sortable:hover,
+.mm-sort-active {
+  color: var(--el-color-primary);
+}
+.mm-sort-mark {
+  margin-left: 2px;
+  font-size: 10px;
 }
 .mm-row {
   display: flex;

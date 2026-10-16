@@ -761,22 +761,43 @@
           <div class="sub-page">
             <div class="sub-page-header">
               <span class="sub-page-title">其他配置参数</span>
-              <el-checkbox v-model="otherSelectAll" class="other-select-all">全选</el-checkbox>
+              <div class="other-header-actions">
+                <el-button
+                  v-if="otherCardOrderChanged"
+                  size="small"
+                  link
+                  type="primary"
+                  @click="resetOtherCardOrder"
+                >
+                  重置布局
+                </el-button>
+                <el-checkbox v-model="otherSelectAll" class="other-select-all">全选</el-checkbox>
+              </div>
             </div>
-            <div class="other-form-container">
-              <!-- 简单卡片（1-3 个输入框） -->
+            <div
+              ref="otherFormRef"
+              class="other-form-container"
+              :class="{ 'other-form-container--dragging': !!dragCard }"
+              @click.capture="onOtherClickCapture"
+            >
+              <!-- 简单卡片（1-3 个输入框）。按住卡片标题栏可拖动换位 -->
               <div
                 v-for="field in otherFieldDefs"
                 :key="field.key"
                 class="other-card"
+                :data-card-key="field.key"
+                data-card-scope="grid"
+                :style="{ order: orderIdx(field.key) }"
                 :class="[
                   { 'other-card--active': otherCheckboxStates[field.key] },
                   `other-card--span-${field.span ?? getCardSpan(field.inputs.length)}`,
-                  field.layout ? `other-card--layout-${field.layout}` : ''
+                  field.layout ? `other-card--layout-${field.layout}` : '',
+                  { 'other-card--dragging': dragCard === field.key },
+                  dropMarkerClass(field.key)
                 ]"
                 @click="otherCheckboxStates[field.key] = !otherCheckboxStates[field.key]"
               >
-                <div class="other-card-header">
+                <div class="other-card-header" @pointerdown="onCardDragStart($event, field.key, 'grid')">
                   <span class="other-card-title">{{ field.label }}</span>
                   <el-popover
                     v-if="OTHER_CARD_DOCS[field.key]"
@@ -812,6 +833,8 @@
                       size="small"
                       @click.stop
                       @input="onValidateInput(inp)"
+                      @dragover.prevent
+                      @drop="inp.drop && onDropReplace($event, (v: string) => otherData[inp.key] = v)"
                     />
                   </template>
                 </div>
@@ -822,9 +845,16 @@
                 v-for="d in compoundSliderDefs"
                 :key="d.key"
                 class="other-card other-card--span-2x2"
-                :class="{ 'other-card--active': d.sliders.every(s => otherData[s.key] === 'TRUE') }"
+                :data-card-key="d.key"
+                data-card-scope="grid"
+                :style="{ order: orderIdx(d.key) }"
+                :class="[
+                  { 'other-card--active': d.sliders.every(s => otherData[s.key] === 'TRUE') },
+                  { 'other-card--dragging': dragCard === d.key },
+                  dropMarkerClass(d.key)
+                ]"
               >
-                <div class="other-card-header">
+                <div class="other-card-header" @pointerdown="onCardDragStart($event, d.key, 'grid')">
                   <span class="other-card-title">{{ d.label }}</span>
                   <el-popover
                     v-if="OTHER_CARD_DOCS[d.key]"
@@ -865,13 +895,18 @@
                 v-for="card in hexIdCardDefs"
                 :key="card.key"
                 class="other-card"
+                :data-card-key="card.key"
+                data-card-scope="grid"
+                :style="{ order: orderIdx(card.key) }"
                 :class="[
                   { 'other-card--active': otherCheckboxStates[card.key] },
-                  `other-card--span-1x1`
+                  `other-card--span-1x1`,
+                  { 'other-card--dragging': dragCard === card.key },
+                  dropMarkerClass(card.key)
                 ]"
                 @click="otherCheckboxStates[card.key] = !otherCheckboxStates[card.key]"
               >
-                <div class="other-card-header">
+                <div class="other-card-header" @pointerdown="onCardDragStart($event, card.key, 'grid')">
                   <span class="other-card-title">{{ card.label }}</span>
                   <el-popover
                     v-if="OTHER_CARD_DOCS[card.key]"
@@ -901,8 +936,15 @@
                 v-for="card in paramCardDefs"
                 :key="card.key"
                 class="other-card other-card--span-1x1 other-card--param"
+                :data-card-key="card.key"
+                data-card-scope="grid"
+                :style="{ order: orderIdx(card.key) }"
+                :class="[
+                  { 'other-card--dragging': dragCard === card.key },
+                  dropMarkerClass(card.key)
+                ]"
               >
-                <div class="other-card-header">
+                <div class="other-card-header" @pointerdown="onCardDragStart($event, card.key, 'grid')">
                   <span class="other-card-title">{{ card.label }}</span>
                   <el-popover
                     v-if="OTHER_CARD_DOCS[card.key]"
@@ -930,18 +972,24 @@
                    避免 4 列宽的卡片在外层 8 列网格里落位参差、留出大片空白 -->
               <div
                 class="other-group-wrap"
-                :style="{ gridRow: `span ${groupWrapRowSpan}` }"
+                :style="{ gridRow: `span ${groupWrapRowSpan}`, order: 9999 }"
               >
-              <!-- DiagStop Group 卡片（OTA / Sig / PwrStsFb） -->
+              <!-- DiagStop Group 卡片（OTA / Sig / PwrStsFb）。用 order 参与子网格落位，Config_Diag 同区 -->
               <div
                 v-for="card in groupCardDefs"
                 :key="card.key"
                 class="other-card other-card--group"
-                :class="{ 'other-card--active': isGroupActive(card.key) }"
-                :style="{ gridRow: `span ${getGroupRowSpan(card.groups.length)}` }"
+                :data-card-key="card.key"
+                data-card-scope="group"
+                :class="[
+                  { 'other-card--active': isGroupActive(card.key) },
+                  { 'other-card--dragging': dragCard === card.key },
+                  dropMarkerClass(card.key)
+                ]"
+                :style="{ gridRow: `span ${getGroupRowSpan(card.groups.length)}`, order: orderIdx(card.key) }"
                 @click="otherCheckboxStates[card.key] = !otherCheckboxStates[card.key]"
               >
-                <div class="other-card-header">
+                <div class="other-card-header" @pointerdown="onCardDragStart($event, card.key, 'group')">
                   <span class="other-card-title">{{ card.label }}</span>
                   <div class="other-card-header-actions">
                     <el-button
@@ -985,6 +1033,7 @@
                     v-for="(group, idx) in card.groups"
                     :key="group.id"
                     class="other-group-item"
+                    :class="{ 'other-group-item--inline': card.inlineIdx }"
                   >
                     <div class="other-group-header">
                       <span class="other-group-idx">#{{ idx + 1 }}</span>
@@ -1026,11 +1075,17 @@
                    ① 全配、② 全不配固定各一条（无删除）；③ 部分配置按「+ 添加」逐条录入 -->
               <div
                 class="other-card other-card--group"
-                :class="{ 'other-card--active': otherCheckboxStates.configDiag }"
-                :style="{ gridRow: `span ${configDiagRowSpan}` }"
+                data-card-key="configDiag"
+                data-card-scope="group"
+                :class="[
+                  { 'other-card--active': otherCheckboxStates.configDiag },
+                  { 'other-card--dragging': dragCard === 'configDiag' },
+                  dropMarkerClass('configDiag')
+                ]"
+                :style="{ gridRow: `span ${configDiagRowSpan}`, order: orderIdx('configDiag') }"
                 @click="otherCheckboxStates.configDiag = !otherCheckboxStates.configDiag"
               >
-                <div class="other-card-header">
+                <div class="other-card-header" @pointerdown="onCardDragStart($event, 'configDiag', 'group')">
                   <span class="other-card-title">Config_Diag</span>
                   <div class="other-card-header-actions">
                     <el-button
@@ -1109,12 +1164,12 @@
                     class="other-group-item"
                   >
                     <div class="other-group-header">
-                      <span class="other-group-idx">#{{ idx + 3 }} PartialConfig_Diag</span>
+                      <span class="other-group-idx">#{{ Number(idx) + 3 }} PartialConfig_Diag</span>
                       <el-button
                         size="small"
                         type="danger"
                         link
-                        @click.stop="removePartialConfig(idx)"
+                        @click.stop="removePartialConfig(Number(idx))"
                       >
                         删除
                       </el-button>
@@ -1604,7 +1659,7 @@ import { getChartData, updateParams, generateCAN, parseA2lFile, parseCAN, parseD
 import { getConfig, saveConfig, openFolder } from '@/api/config'
 import type { Column, VoltageChartData } from '@/types'
 import type { DbcTableColumn, DbcTableRow } from '@/types/dbcTable'
-import { useModuleStore, DEFAULT_CCP_PRECISION, DEFAULT_CCP_OFFSET, type A2lVars } from '@/stores/modules'
+import { useModuleStore, DEFAULT_CCP_PRECISION, DEFAULT_CCP_OFFSET, type A2lVars, type CcpVarType } from '@/stores/modules'
 import { useResizableSize } from '@/composables/useResizableSize'
 import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
 
@@ -2821,6 +2876,8 @@ interface OtherInputDef {
   inactiveText?: string
   /** 卡片 layout='rows' 时占的列数（12 列栅格）；同组参数占满 12 列即各占一行 */
   span?: number
+  /** 支持从 DBC 树/信号列表拖入（拖拽松手即填入信号名） */
+  drop?: boolean
 }
 interface OtherFieldDef {
   key: string
@@ -2842,6 +2899,8 @@ interface GroupCardDef {
   label: string
   groupFields: Array<{ key: string; placeholder: string; type?: 'text' | 'hex' }>
   groups: GroupDef[]
+  /** 分组条目里 #N 与输入框同行、删除按钮置于行尾（默认 #N/删除一行在上、输入框下一行） */
+  inlineIdx?: boolean
 }
 
 /** Hex ID 卡片 */
@@ -2882,16 +2941,18 @@ const OTHER_CARD_DOCS: Record<string, string> = {
   highBusLoadCommunication: 'HighBusLoad_communication\n开启后生成 HighBusLoad_communication 用例：把总线负载加到所填负载率并持续观察，检查总线未出现错误帧则通过。\n\n参数：负载率（%）。',
   highBusLoadDiag: 'HighBusLoad_Diag\n开启后生成 HighBusLoad_Diag 用例：先用 14 FF FF FF 清除故障并确认无当前历史网络故障，再模拟高优先级报文把总线负载加到所填负载率并持续 1min，随后读全部故障码并检查外发故障灯，要求无当前历史故障码且故障灯 = 0x0；最后停止模拟负载。\n\n参数：负载率（%）。',
   dtcAged: 'DTCAged\n开启后生成 DTC_Aged 用例：逐个制造 Fault_array 中的每个故障，确认能报出对应 DTC，同时把全部故障 DTC 去重汇总成白名单；随后按所填次数反复上下电做「老化」，每次都用 mask=8 断言这些 DTC 仍作为历史故障存在；最后再上下电一次，断言当前与历史故障码已全部清除（掩码 9）。\n\n参数：老化上下电次数（次）。',
+  angleOffset: 'Angle偏移\n开启后生成 <信号名>_TurnWheel 用例（方向盘转动角度漂移检查，重复 3 轮）：\n\n① 上电后 14 清故障并确认无当前/历史故障；同时启动全程后台监控——转动全程该信号值都不得越出 DBC 的 minimum / maximum。\n② 弹窗提示测试员随意转动方向盘并保持住，确认后记录那一刻的角度作为漂移基准（要求距 0° 不少于 5°、且在信号范围内）。\n③ 下电再上电，紧跟 IG ON 逐帧观察该信号：检查自检初值 0 → 实际值的过渡时序（不得越界、须朝目标单向推进），并比对上下电前后角度漂移是否在 ±1° 内。\n④ 三轮结束后汇总全程越界检查结果。\n\n参数：角度信号名（可从 DBC 拖入）；承载报文 ID 由信号名自动查找。',
   minDelayTime: 'Min_delayTime\n开启后生成 Min_delayTime 用例：对每个 Tx 报文统计同一 ID 报文的最小发送间隔，实测最小间隔小于所填值则失败。\n\n参数：最小间隔时间（ms，整数）。',
   shutdown: 'Shutdown\n开启后生成 Shutdown_time 用例：Ready_Off 后 IG OFF，检查通信停止时间是否落在所填 [minTime, maxTime] 区间内，超出区间判失败。\n\n参数：下电诊断停止 minTime / maxTime（ms）。',
   busOff: 'tBusOff\n开启后按三组参数生成 BusOff 相关用例：\n\n① 快恢复（tbusoffquickNum / tquickmin / tquickmax）\n生成 BusOff_quick_recovery 用例：连续制造 BusOff 并恢复，检查报文快恢复时间是否落在 [tquickmin, tquickmax] 区间内。\n\n② 慢恢复（tbusoffslowNum / tslowmin / tslowmax）\n生成 BusOff_slow_recovery 用例：连续制造 BusOff 并恢复，检查报文慢恢复时间是否落在 [tslowmin, tslowmax] 区间内。\n\n③ DTC（DTCbusoffNum / DTCbusoffrecovery / DTCbusoffrecoveryType / DTC）\n生成 BusOff DTC 检测用例。\nDTCbusoffrecovery 为恢复量，用右侧开关声明它的含义：开=时间（ms），关=报文帧数。\n\n三组参数互相独立，各自填了才会生成对应用例；Num 为busoff次数，min/max 单位为 ms。',
   disableXcp: 'DisableXCP\n开启后生成 DisableXCP 用例：先发送「关闭XCP」的 UDS 指令，随后连接 XCP 并检查指定 ID 的报文已停止发送；再发送「打开XCP」指令并重新 Init，检查该 ID 报文恢复正常发送。\n\n参数：XCP ID（16 进制，如 0x123）、关闭XCP的UDS指令、打开XCP的UDS指令。',
   configDiag: 'Config_Diag\n开启后生成 AllConfig_Diag（配置所有功能）、EraseConfig_Diag（擦除所有配置）及若干 PartialConfig_Diag_N（部分配置）：\n\n① AllConfig_Diag：Req14 → 发送「配置所有功能」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，并断言其为历史故障）→ 注入全部网络故障 → 读取全部故障（白名单=全部网络故障 DTC + 未配置DTC）→ 恢复全部网络故障 → 再次读取（网络故障 DTC 应转历史）。\n\n② EraseConfig_Diag：Req14 → 发送「擦除所有配置」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，断言其为当前故障）→ 注入全部网络故障 → 读取全部故障（白名单=未被排除的 DTC + 未配置DTC）→ 恢复全部网络故障 → 读取（未配置DTC 应为当前故障）。\n\n③ PartialConfig_Diag_N（部分配置，数量不定，点「+ 添加」逐条录入）：Req14 → 发送该条的 UDS 指令 → 正常上下电（当前应无故障）→ 按分类静默注入故障 → 读取全部故障（白名单=该分类 DTC 去掉该条「关联ID」命中的，不含未配置DTC）→ 恢复后当前应无故障。与 EraseConfig 的区别：不期望「未配置DTC」，且只排除该条填写的「关联ID」。\n\n参数：全配=配置所有功能的UDS指令；全不配=擦除所有配置的UDS指令 + 未配置DTC（如 456F00）+ 擦除后不再报出的报文ID（可多个，英文逗号分隔，如 0x123,0x456）；部分配置=每条「UDS指令 + 关联ID（可多个，英文逗号分隔）」。',
-  sliderGroup: '开关配置（四项开关，互相独立）\n· ExtendFrame：对每个 Rx 报文 ID 发送扩展帧，检查总线未出现错误帧。\n· RemotrFrame：对每个 Rx 报文 ID 发送远程帧，检查总线未出现错误帧。\n· UnexpectDlc:less：检查各 Tx 报文是否出现 DLC 小于预期的非预期长度。\n· UnexpectDlc:Greater：检查各 Tx 报文是否出现 DLC 大于预期的非预期长度。\n\n四项均依赖 DBC 中已配置的 Tx/Rx 报文列表，需先导入并配置 DBC 再勾选。',
+  sliderGroup: '开关配置（五项开关，互相独立）\n· ExtendFrame：对每个 Rx 报文 ID 发送扩展帧，检查总线未出现错误帧。\n· RemotrFrame：对每个 Rx 报文 ID 发送远程帧，检查总线未出现错误帧。\n· UnexpectDlc:less：检查各 Tx 报文是否出现 DLC 小于预期的非预期长度。\n· UnexpectDlc:Greater：检查各 Tx 报文是否出现 DLC 大于预期的非预期长度。\n· VoltDTC_Diag：开启后在「助力电压」板块生成 AssistVoltage_VoltDtcDiag_LowVolt / _HighVolt 组合用例：电压故障在诊断范围内优先诊断，网络故障不报（两者不能同时报出）；恢复电压故障后，已成熟的网络故障应立即能诊断到。需先配置助力电压参数。\n\n前四项均依赖 DBC 中已配置的 Tx/Rx 报文列表，需先导入并配置 DBC 再勾选。',
   readyOffDiagStop: 'Ready_OffDiagStop\n开启后生成 Ready_Off_Diag 用例：Ready Off 状态下，所填报文 ID 对应的故障应被禁止诊断（不置位），其它故障仍正常触发；用于验证 Ready Off 时车速类 DTC 不置位。\n\n参数：车速报文ID（如 0x123）。',
   waittime: '11ResetTime\n每个 Tx 报文都会生成 11 重启用例（xxx_11Reset_Attribute）：发送 11 01（ECU 复位）后等待该报文重新发出。\n\n参数：等待时间（ms），未填时按 3000 处理。',
   igonDag: 'IGON_OFF\n无需勾选，保存配置即生成 IGON_OFF 用例：执行 Init → Ready_Off → IG OFF（等待）→ IG ON（等待），中间先断言应无故障；随后 Ready_On → K30 OFF（等待）→ K30 ON（等待），最后读取 DTC 并断言结果。\n\n参数：IG ON 后读取的 DTC（16 进制，如 0xC12345）。留空时不读取 DTC，改用 _testnullDTC(0,1,0) 断言应无故障。',
-  signalValue: 'SignalValue\n从 DBC 拖入信号，或点「+ 添加」手动录入；每条配置生成一组上电信号检查：上电后监控该信号，检查其在所填时间内达到所填值，未达到则失败。\n\n字段：信号名（拖入）、上电发送有效值时间（ms）、无效值。\n可添加多组，每组独立生成检查语句。',
+  signalValue: 'Init_SignalValue\n从 DBC 拖入信号，或点「+ 添加」手动录入；每条配置生成一组上电信号检查：上电后监控该信号，检查其在所填时间内达到所填值，未达到则失败。\n\n字段：信号名（拖入）、上电发送有效值时间（ms）、无效值。\n可添加多组，每组独立生成检查语句。',
+  communvolt_SignalValue: 'communvolt_SignalValue\n从 DBC 拖入信号，或点「+ 添加」手动录入；生成通信电压下的信号范围检查，拆成两条用例（communvolt_SignalValue_LowVolt / communvolt_SignalValue_HighVolt），均不使用 XCP，以 0.1V 为步、用 Msgtranjudge 检测 ECU 是否仍有外发报文来判定通断：\n① 低压段：从欠压阈值+0.3V 起每 0.1V 降压，直到停止通信（无外发的电压点不检测信号值）；随后从停止通信的电压起每 0.1V 回升，恢复到有外发后继续扫 0.3V（恢复点之外再扫 3 个 0.1V 步），恢复外发的电压点才检查信号值。\n② 高压段：从过压阈值+0.3V 起每 0.1V 升压，直到停止通信；随后从停止通信的电压起每 0.1V 回落，恢复外发后继续扫 0.3V。\n\n字段：信号名（拖入）、有效值。\n有效值支持区间写法（与 Init_SignalValue 的无效值一致）：填 1 → 检查单点 [1,1]；填 [3,5] → 检查区间 [3,5]；英文逗号分隔多项（如 1,2）各生成一条单点检查。\n需先在「通信电压」板块配置电压参数（欠压值/过压值/回差），未配置时不生成。',
   otaDiagStop: 'OTA_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：通过信号值开启 OTA 网络诊断，注入故障应能正常诊断，并校验低压/高压下的 DTC；再用停止值关闭网络诊断，注入的故障应不再被诊断。\n\n字段：OTA信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔），用例按取值循环执行。',
   sigDiagStop: 'Sig_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：先设置「开启诊断的信号值」，注入故障应能诊断到 DTC；再设置「关闭诊断的信号值」，故障应不再被诊断。\n\n字段：信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔）。',
   pwrStsFbDiagStop: 'PwrStsFb_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：通过信号值切换电源状态反馈（模拟发动机/电源状态），并结合断开与恢复报文，检查网络诊断的开启与关闭行为是否符合预期。\n\n字段：信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔）。',
@@ -2924,6 +2985,11 @@ const otherFieldDefs: OtherFieldDef[] = [
     },
     { key: 'DTC', placeholder: 'DTC', validate: 'hex', span: 3 },
   ] },
+  { key: 'disableXcp', label: 'DisableXCP', inputs: [
+    { key: 'xcpId', placeholder: '输入XCP ID', validate: 'hex' },
+    { key: 'closeXcpUdsCommand', placeholder: '关闭XCP的UDS指令' },
+    { key: 'openXcpUdsCommand', placeholder: '打开XCP的UDS指令' },
+  ] },
   { key: 'busoffDiagStartTime', label: 'Busoff_DiagStartTime', inputs: [{ key: 'busoffRecoveryDiagTime', placeholder: 'busoff恢复诊断时间', validate: 'int' }] },
   { key: 'igonDiagStartTime', label: 'IGON_DiagStartTime', inputs: [{ key: 'igonDiagStartTime', placeholder: 'IGON开启诊断时间', validate: 'int' }] },
   { key: 'igoffDiagStopTime', label: 'IGOFF_DiagStopTime', inputs: [{ key: 'igoffDiagStopTime', placeholder: 'IGOFF关闭诊断时间', validate: 'int' }] },
@@ -2933,11 +2999,7 @@ const otherFieldDefs: OtherFieldDef[] = [
     { key: 'shutdownDiagStopMinTime', placeholder: '下电诊断停止minTime', validate: 'int' },
     { key: 'shutdownDiagStopMaxTime', placeholder: '下电诊断停止maxTime', validate: 'int' },
   ] },
-  { key: 'disableXcp', label: 'DisableXCP', inputs: [
-    { key: 'xcpId', placeholder: '输入XCP ID', validate: 'hex' },
-    { key: 'closeXcpUdsCommand', placeholder: '关闭XCP的UDS指令' },
-    { key: 'openXcpUdsCommand', placeholder: '打开XCP的UDS指令' },
-  ] },
+
   // Config_Diag 已改为与 SignalValue 同款的分组卡片（见模板 other-group-wrap 内），不再走 otherFieldDefs
   // 三个「总线负载率」配置集中成一排、等宽（2 列 × 1 行）。
   // 它们必须相邻：原先夹在 2×2 的 tBusOff 大卡两侧，会被隔成两段；
@@ -2953,13 +3015,24 @@ const otherFieldDefs: OtherFieldDef[] = [
   { key: 'highBusLoadTxatt', label: 'HighBusLoad_Txatt', span: '1x1', layout: 'break', inputs: [{ key: 'busLoadRate', placeholder: '负载率', validate: 'int' }] },
   { key: 'highBusLoadCommunication', label: 'HighBusLoad_communication', span: '1x1', inputs: [{ key: 'busLoadRate2', placeholder: '负载率', validate: 'int' }] },
   { key: 'highBusLoadDiag', label: 'HighBusLoad_Diag', span: '1x1', inputs: [{ key: 'busLoadRate3', placeholder: '负载率', validate: 'int' }] },
+  // Angle偏移：方向盘转动角度漂移检查，信号名可从 DBC 拖入
+  { key: 'angleOffset', label: 'Angle偏移', span: '1x1', inputs: [{ key: 'angleOffsetSignal', placeholder: '角度信号名（可拖入）', drop: true }] },
   { key: 'dtcAged', label: 'DTCAged', span: '1x1', inputs: [{ key: 'dtcAgedNum', placeholder: '老化次数', validate: 'int' }] },
 ]
 
 /** Group 卡片（拖拽 DBC 对象生成多组参数） */
 const groupCardDefs = ref<GroupCardDef[]>([
   {
-    key: 'signalValue', label: 'SignalValue',
+    key: 'communvolt_SignalValue', label: 'communvolt_SignalValue',
+    groupFields: [
+      { key: 'signalName', placeholder: '信号名（拖入）' },
+      { key: 'validValue', placeholder: '有效值（1 / [3,5]）' },
+    ],
+    groups: [],
+    inlineIdx: true,
+  },
+  {
+    key: 'signalValue', label: 'Init_SignalValue',
     groupFields: [
       { key: 'signalName', placeholder: '信号名（拖入）' },
       { key: 'switchTime', placeholder: '上电发送有效值时间' },
@@ -3021,6 +3094,7 @@ const compoundSliderDefs: CompoundSliderDef[] = [
       { key: 'remoteFrame', label: 'RemotrFrame' },
       { key: 'unexpectDlcLess', label: 'UnexpectDlc:less' },
       { key: 'unexpectDlcGreater', label: 'UnexpectDlc:Greater' },
+      { key: 'voltDtcDiag', label: 'VoltDTC_Diag' },
     ],
   },
 ]
@@ -3130,6 +3204,250 @@ const groupWrapRowSpan = computed(() => {
   for (let i = 0; i < rows.length; i += 2) total += Math.max(rows[i], rows[i + 1] ?? 0)
   return Math.max(2, total)
 })
+
+// ==================== Other 页卡片拖拽重排（顺序重排式） ====================
+// 布局 = 卡片 id 的先后顺序。顺序存进 Other.cardLayout 随配置保存，并兜底存 localStorage。
+// 分区（= 同一栅格内的可互拖范围，见模板 data-card-scope）：
+//   'grid'  = 外层 8 列栅格里的简单卡 / 开关配置 / Hex 卡 / 参数卡，可互相换位
+//   'group' = 分组卡子网格（分组卡 + Config_Diag）；两个分区之间不互拖
+const OTHER_LAYOUT_STORAGE_KEY = 'autotool.can.otherCardOrder'
+
+/** 默认顺序 = 各数组的定义顺序（Config_Diag 没有 def 对象，用它的 checkbox key 作 id） */
+function defaultOtherCardOrder(): string[] {
+  return [
+    ...otherFieldDefs.map(f => f.key),
+    ...compoundSliderDefs.map(d => d.key),
+    ...hexIdCardDefs.value.map(c => c.key),
+    ...paramCardDefs.value.map(c => c.key),
+    ...groupCardDefs.value.map(c => c.key),
+    'configDiag',
+  ]
+}
+
+/** 归一化加载到的顺序：丢弃未知 key 与重复项，缺失的 key 按默认顺序补到末尾 */
+function normalizeOtherCardOrder(raw: unknown): string[] {
+  const valid = defaultOtherCardOrder()
+  const seen = new Set<string>()
+  const out: string[] = []
+  if (Array.isArray(raw)) {
+    for (const k of raw) {
+      if (typeof k === 'string' && valid.includes(k) && !seen.has(k)) {
+        seen.add(k)
+        out.push(k)
+      }
+    }
+  }
+  for (const k of valid) if (!seen.has(k)) out.push(k)
+  return out
+}
+
+const otherCardOrder = ref<string[]>(defaultOtherCardOrder())
+
+/** 卡片在顺序表里的下标（不在表里的排最后） */
+function orderIdx(key: string): number {
+  const i = otherCardOrder.value.indexOf(key)
+  return i < 0 ? otherCardOrder.value.length : i
+}
+
+// 外层栅格（scope='grid'）与分组子网格（scope='group'）都用 CSS order 参与落位：
+// 卡片分属不同 v-for 块，只有 order 才能让它们跨块互相换位（DOM 不动，避免输入状态丢失）。
+
+const otherCardOrderChanged = computed(() =>
+  otherCardOrder.value.join('|') !== defaultOtherCardOrder().join('|'))
+
+/** 把当前顺序写进 Other（随配置一起保存）并同步 localStorage */
+function persistOtherCardOrder() {
+  otherData.value.cardLayout = [...otherCardOrder.value]
+  try {
+    localStorage.setItem(OTHER_LAYOUT_STORAGE_KEY, JSON.stringify(otherCardOrder.value))
+  } catch {
+    // localStorage 不可用（隐私模式等）时忽略：配置里仍会保存
+  }
+}
+
+/** 应用一份顺序（来自配置或 localStorage），并归一化后回写 */
+function applyOtherCardOrder(raw: unknown) {
+  otherCardOrder.value = normalizeOtherCardOrder(raw)
+  persistOtherCardOrder()
+}
+
+/** 恢复默认布局 */
+function resetOtherCardOrder() {
+  otherCardOrder.value = defaultOtherCardOrder()
+  persistOtherCardOrder()
+}
+
+// ---- 拖拽交互：拖动中只标出插入位置，松手才提交顺序（避免每帧重排卡片导致卡顿） ----
+const otherFormRef = ref<HTMLElement | null>(null)
+const dragCard = ref('')
+const dragOverCard = ref('')
+const dragInsertAfter = ref(false)
+let dragRects: Array<{ key: string; left: number; top: number; right: number; bottom: number; centerX: number; centerY: number }> = []
+/** 拖拽前同区卡片的「阅读顺序」（先上下、再左右），落点在空白/间隙时用它就近取插入位 */
+let dragReadingOrder: Array<{ key: string; centerX: number; centerY: number }> = []
+/** 被拖动卡片自身的位置：指针停在自己身上时不显示落点、松手也不换位 */
+let dragSelfRect: { left: number; top: number; right: number; bottom: number } | null = null
+let dragStartX = 0
+let dragStartY = 0
+let dragLastX = 0
+let dragLastY = 0
+let dragMoved = false
+let dragJustFinished = false
+let dragRaf = 0
+
+/** 卡片头部按下开始拖拽；头部里的按钮/图标（说明、+ 添加）不触发 */
+function onCardDragStart(e: PointerEvent, key: string, scope: string) {
+  if (e.button !== 0) return
+  const target = e.target as HTMLElement | null
+  if (target && target.closest('button, .el-button, .el-icon, input, textarea')) return
+  const container = otherFormRef.value
+  if (!container) return
+  removeDragListeners()   // 兜底：上一次拖拽若被意外中断（如拖到窗口外松开）不会残留监听
+  dragCard.value = key
+  dragStartX = dragLastX = e.clientX
+  dragStartY = dragLastY = e.clientY
+  dragMoved = false
+  dragOverCard.value = ''
+  dragInsertAfter.value = false
+  // 开始拖动前量一次同区卡片几何：移动过程中只做算术，不触发强制重排
+  dragRects = []
+  dragReadingOrder = []
+  dragSelfRect = null
+  for (const node of Array.from(container.querySelectorAll<HTMLElement>(`[data-card-scope="${scope}"]`))) {
+    const nodeKey = node.dataset.cardKey
+    if (!nodeKey) continue
+    const r = node.getBoundingClientRect()
+    if (nodeKey === key) {
+      dragSelfRect = { left: r.left, top: r.top, right: r.right, bottom: r.bottom }
+      continue
+    }
+    const centerX = (r.left + r.right) / 2
+    const centerY = (r.top + r.bottom) / 2
+    dragRects.push({ key: nodeKey, left: r.left, top: r.top, right: r.right, bottom: r.bottom, centerX, centerY })
+    dragReadingOrder.push({ key: nodeKey, centerX, centerY })
+  }
+  dragReadingOrder.sort((a, b) => (a.centerY - b.centerY) || (a.centerX - b.centerX))
+  window.addEventListener('pointermove', onCardDragMove)
+  window.addEventListener('pointerup', onCardDragEnd)
+  window.addEventListener('pointercancel', onCardDragEnd)
+  window.addEventListener('blur', onCardDragEnd)
+}
+
+/** 移除拖拽期间的全局监听 */
+function removeDragListeners() {
+  window.removeEventListener('pointermove', onCardDragMove)
+  window.removeEventListener('pointerup', onCardDragEnd)
+  window.removeEventListener('pointercancel', onCardDragEnd)
+  window.removeEventListener('blur', onCardDragEnd)
+}
+
+function onCardDragMove(e: PointerEvent) {
+  dragLastX = e.clientX
+  dragLastY = e.clientY
+  if (!dragMoved) {
+    if (Math.abs(e.clientX - dragStartX) < 4 && Math.abs(e.clientY - dragStartY) < 4) return
+    dragMoved = true
+  }
+  if (!dragRaf) dragRaf = requestAnimationFrame(updateDragTarget)
+}
+
+/** 命中同区的哪张卡、落在它前面还是后面；落点在间隙/空白时按阅读顺序就近取插入位 */
+function updateDragTarget() {
+  dragRaf = 0
+  if (!dragCard.value) return
+  // 指针还在被拖动卡片自己身上：不显示落点（松手等于没动）
+  if (dragSelfRect
+      && dragLastX >= dragSelfRect.left && dragLastX <= dragSelfRect.right
+      && dragLastY >= dragSelfRect.top && dragLastY <= dragSelfRect.bottom) {
+    dragOverCard.value = ''
+    return
+  }
+  const hit = dragRects.find(r =>
+    dragLastX >= r.left && dragLastX <= r.right && dragLastY >= r.top && dragLastY <= r.bottom)
+  if (hit) {
+    dragOverCard.value = hit.key
+    // 栅格从左到右、从上到下排列：落点在目标卡片右半 → 插到它后面
+    dragInsertAfter.value = dragLastX > hit.centerX
+    return
+  }
+  // 落在卡片之间的空隙、空白区或整块区域之外：按阅读顺序取最近的一张作为插入点，
+  // 这样「拖到空白处」也能落位、并且始终有落点提示
+  const near = findNearestInsert(dragLastX, dragLastY)
+  if (near) {
+    dragOverCard.value = near.key
+    dragInsertAfter.value = near.after
+  } else {
+    dragOverCard.value = ''
+  }
+}
+
+/** 落点不在任何卡片内时，按「先上下、再左右」的阅读顺序找插入位置：
+ *  同一行内落在某张卡中心左侧 → 插到它前面；落在整行下方 → 插到该行第一张前面；
+ *  指针在所有卡片之后 → 插到最后一张后面。 */
+function findNearestInsert(x: number, y: number): { key: string; after: boolean } | null {
+  if (!dragReadingOrder.length) return null
+  const ROW_TOL = 46   // 行高 92px，跨行卡片中心略有偏移，取半个行高做同行判定
+  for (const r of dragReadingOrder) {
+    if (Math.abs(r.centerY - y) <= ROW_TOL) {
+      if (x <= r.centerX) return { key: r.key, after: false }
+    } else if (r.centerY - ROW_TOL > y) {
+      return { key: r.key, after: false }
+    }
+  }
+  return { key: dragReadingOrder[dragReadingOrder.length - 1].key, after: true }
+}
+
+function onCardDragEnd() {
+  removeDragListeners()
+  if (dragRaf) {
+    cancelAnimationFrame(dragRaf)
+    dragRaf = 0
+  }
+  const moving = dragCard.value
+  const over = dragOverCard.value
+  dragCard.value = ''
+  dragOverCard.value = ''
+  dragRects = []
+  dragReadingOrder = []
+  dragSelfRect = null
+  if (dragMoved && moving && over && moving !== over) {
+    const order = [...otherCardOrder.value]
+    const from = order.indexOf(moving)
+    if (from >= 0 && order.indexOf(over) >= 0) {
+      order.splice(from, 1)
+      order.splice(order.indexOf(over) + (dragInsertAfter.value ? 1 : 0), 0, moving)
+      otherCardOrder.value = order
+      persistOtherCardOrder()
+    }
+  }
+  if (dragMoved) {
+    // 拖动结束后浏览器仍会补一次 click：吞掉它，避免顺带切换卡片勾选
+    dragJustFinished = true
+    setTimeout(() => { dragJustFinished = false }, 0)
+  }
+  dragMoved = false
+}
+
+/** 吞掉拖动结束后那一次 click（卡片勾选等） */
+function onOtherClickCapture(e: MouseEvent) {
+  if (!dragJustFinished) return
+  e.stopPropagation()
+  e.preventDefault()
+}
+
+/** 目标卡片上的插入位置标记类名 */
+function dropMarkerClass(key: string): string {
+  if (!dragCard.value || dragOverCard.value !== key) return ''
+  return dragInsertAfter.value ? 'other-card--drop-after' : 'other-card--drop-before'
+}
+
+// 首次进入：先用 localStorage 里的顺序；配置加载完成后会用配置里的顺序覆盖
+try {
+  const savedOrder = localStorage.getItem(OTHER_LAYOUT_STORAGE_KEY)
+  if (savedOrder) otherCardOrder.value = normalizeOtherCardOrder(JSON.parse(savedOrder))
+} catch {
+  // 读取/解析失败时保持默认顺序
+}
 
 /** Hex ID 输入校验与转换：10 进制自动转 16 进制（0x 前缀） */
 function onHexIdInput(cardKey: string) {
@@ -3353,9 +3671,14 @@ const dtcObjectNames = computed(() => {
   const qualifier = a2lQualifierForPanel.value
   function addA2lNames(name: string) {
     set.add(name)
-    // 拖拽时 A2L 变量 text/plain 统一转换为 sysvar::XCP::<qualifier>::<name::> 形式，需一并加入匹配集合
-    // （有刷模式无 A2L 限定符，拖拽直接输出符号名，无需转换形式）
-    if (qualifier) set.add(`sysvar::XCP::${qualifier}::${name.replace(/\./g, '::')}`)
+    if (store.canMotorMode === 'brushed') {
+      // 有刷模式：拖拽输出的是 sysvar::NsCcp::<符号名>（见 ObjectPanel.onDragStart），
+      // 匹配集合里必须加同一种形式，否则拖到 DTC 表头的对象名会被判为未匹配
+      set.add(`sysvar::NsCcp::${name}`)
+    } else if (qualifier) {
+      // 无刷模式：拖拽时 A2L 变量 text/plain 转换为 sysvar::XCP::<qualifier>::<name::> 形式
+      set.add(`sysvar::XCP::${qualifier}::${name.replace(/\./g, '::')}`)
+    }
   }
   for (const v of a2lVars.value.measurements) addA2lNames(typeof v === 'string' ? v : v.name)
   for (const v of a2lVars.value.characteristics) addA2lNames(typeof v === 'string' ? v : v.name)
@@ -6666,6 +6989,7 @@ async function persistConfig(name: string): Promise<boolean> {
   if (!name) return false
   try {
     await saveConfig('can', name, collectConfigData())
+    markSaved()
     return true
   } catch {
     return false
@@ -6718,6 +7042,7 @@ async function loadConfig(name: string, token: number = configChangeToken) {
     if (treeData.value.length) autoMatchMissingParams(treeData.value)
     // 标记内存数据归属该配置，后续切换时据此安全自动保存
     loadedConfig.value = name
+    markSaved()
   } catch { /* 错误由拦截器处理 */ }
 }
 
@@ -6728,6 +7053,13 @@ async function loadConfig(name: string, token: number = configChangeToken) {
 function applyConfigurationData(raw: any, merge = false) {
   const rawCfg = { ...(raw || {}) }
 
+  // 电机类型：必须先于 ccp_var_scales 回填 —— setCanMotorMode 切到无刷时会清空
+  // ccpVarTypes / ccpVarScales，顺序反了会把刚恢复的换算系数冲掉
+  if (rawCfg.motorMode === 'brushed' || rawCfg.motorMode === 'brushless') {
+    store.setCanMotorMode(rawCfg.motorMode)
+  }
+  delete rawCfg.motorMode
+
   // 有刷模式：CCP 精度/偏移回填（保存时存于 Configuration.ccp_var_scales）。
   // 加载配置（merge=false）时以配置为准，缺失即清空；上传 Excel（merge=true）时只在表里
   // 带该字段才覆盖，避免把用户已设的换算系数冲掉。
@@ -6736,6 +7068,30 @@ function applyConfigurationData(raw: any, merge = false) {
   }
   // 该字段由 store 统一持有，这里从配置表里摘掉，避免整表替换后再回写旧值
   delete rawCfg.ccp_var_scales
+
+  // 有刷模式：把配置里保存的「实际用到的 CCP 符号」回填到对象浏览器（整表替换）。
+  // 配置里只存了用到的这几条（不是整份 .mapxml），所以加载后对象浏览器里也只有这几条，
+  // 本次会话已上传的整份 .mapxml 符号会被清掉 —— 想引用新符号需重新上传 .mapxml。
+  // 只在「配置确实带了这个字段」时才动：老配置没有该字段，保持对象浏览器现状，
+  // 避免把用户本次刚上传的符号误清空。有刷配置即使没收集到符号也会存空对象，此时清空。
+  const savedSymbols = rawCfg.ccp_var_symbols
+  if (savedSymbols && typeof savedSymbols === 'object') {
+    const restored: Array<{ name: string; type: string; size?: number }> = []
+    const types: Record<string, CcpVarType> = {}
+    for (const [rawName, info] of Object.entries(savedSymbols as Record<string, any>)) {
+      const name = String(rawName || '').trim()
+      const addr = String(info?.addr ?? '').trim()
+      const size = Number(info?.size || 0)
+      if (!name || !addr || !(size > 0)) continue
+      restored.push({ name, type: addr, size })
+      const t = info?.type
+      if (t === 'int' || t === 'float' || t === 'int64') types[name] = t
+    }
+    // 写入「配置自带」这一路：对象浏览器按 独立上传 > CFG解析 > 配置自带 取最高优先级
+    store.setA2lVars({ measurements: restored, characteristics: [] }, 'config')
+    store.setCcpVarTypes(types)
+  }
+  delete rawCfg.ccp_var_symbols
 
   let readyOnParsed = { signal: '', value: '' }
   let readyOffParsed = { signal: '', value: '' }
@@ -6796,6 +7152,11 @@ function applyConfigData(data: any, syncChart: boolean = true) {
     } else {
       card.groups = []
     }
+  }
+
+  // 卡片布局顺序：配置里存了 cardLayout 就用配置的（没有则保留 localStorage/默认）
+  if (Array.isArray(otherRaw.cardLayout)) {
+    applyOtherCardOrder(otherRaw.cardLayout)
   }
 
   // 配置页数据（兼容旧 key：Configuration / config_page）
@@ -6871,6 +7232,23 @@ function collectConfigData(): any {
   // 有刷模式：CCP 符号的精度/偏移（对象浏览器双击设置）随配置保存。
   // store 是唯一来源，所以这里按当前值整体写入（清空后即为 {}）
   cfg.ccp_var_scales = { ...store.ccpVarScales }
+  // 电机类型（无刷 / 有刷）随配置保存：它决定生成脚本走 A2L/XCP 还是 mapxml+CCP，
+  // 只存在 store 里的话，重启程序后会退回默认「无刷」，再生成就不产出系统变量
+  cfg.motorMode = store.canMotorMode
+
+  // 有刷模式：把「实际用到的」CCP 符号随配置保存，只存生成时真正引用的那几条
+  // （配置区变量字段 / DBC 的 XCP_CCP_varname 列 / DTC 检测对象），不保存整份 .mapxml。
+  // 精度/偏移不在这里存：它们由 ccp_var_scales 承载（只记非默认值的覆盖项），避免两处来源。
+  if (store.canMotorMode === 'brushed') {
+    const symbols: Record<string, { addr: string; size: number; type?: CcpVarType }> = {}
+    for (const [name, info] of Object.entries(collectCcpSymbols())) {
+      const entry: { addr: string; size: number; type?: CcpVarType } = { addr: info.addr, size: info.size }
+      const t = info.type
+      if (t === 'int' || t === 'float' || t === 'int64') entry.type = t
+      symbols[name] = entry
+    }
+    cfg.ccp_var_symbols = symbols
+  }
 
   // 兜底：确保 cfgDir 来自最新的 store.cfgData（避免老配置未保存 cfgDir 时丢失）
   if (!cfg.cfgDir && store.cfgData?.cfg_dir) {
@@ -7056,21 +7434,70 @@ function collectCcpSymbols(): Record<string, { addr: string; size: number; type?
 
   const used = new Set<string>()
   const addName = (raw: any) => {
-    const name = String(raw ?? '').trim()
+    const text = String(raw ?? '').trim()
+    if (!text) return
+    // 引用有两种写法，都要认：
+    //   完整 sysvar 形式 —— 拖拽/填入的是 sysvar::NsCcp::<name>（有刷）
+    //                      或 sysvar::XCP::<限定符>::<name>（无刷）
+    //   裸符号名 —— 更早手工填的 cspd_adj2 这种
+    // 统一取 "::" 后的最后一段再匹配符号表；否则带前缀的引用会被漏收集，
+    // 导致 _ccp_ref 认名字能替换、而 vsysvar/配置里却没有这个变量。
+    const parts = text.split('::')
+    const name = parts[parts.length - 1].trim()
     if (name && table.has(name)) used.add(name)
   }
   // 配置区中作为变量引用的字段（batteryVoltage / torqueLimit 等）
   for (const val of Object.values(configPageData.value)) {
     if (typeof val === 'string') addName(val)
   }
-  // DBC 表的 XCP_CCP_varname 列
-  const dbc = dbcRaw.value
+  // DBC 表的 XCP_CCP_varname 列：优先用户上传的 DBC，其次配置里带的 DBC。
+  // 加载配置后 dbcRaw 会被清空、DBC 落在 jsonDbcRaw 里，只读 dbcRaw 会漏掉这些符号
+  // （导出配置时也是同样的「上传优先、配置兜底」取法）。
+  const dbc = dbcRaw.value || jsonDbcRaw.value
   const cols: string[] = Array.isArray(dbc?.columns) ? dbc.columns : []
   const xcpIdx = cols.findIndex((c: string) => String(c).includes('XCP_CCP_varname'))
   if (xcpIdx >= 0 && Array.isArray(dbc?.rows)) {
     for (const row of dbc.rows) {
       addName(Array.isArray(row) ? row[xcpIdx] : row?.[cols[xcpIdx]])
     }
+  }
+  // 再看对象浏览器那棵「有效 DBC」树：上传 DBC 与配置 DBC 已在 mergedDbcRaw 里按优先级
+  // 合并，treeData 即其结果。配置里保存的 DBC 是嵌套树形（没有 columns/rows），
+  // 上面那段读不到它，所以必须再走一遍树才能覆盖「加载配置后直接生成」的场景。
+  const walkXcpVar = (nodes: any[]) => {
+    for (const node of nodes || []) {
+      if (node?.type === 'signal') addName(node.fields?.xcpVar)
+      if (node?.children?.length) walkXcpVar(node.children)
+    }
+  }
+  walkXcpVar(treeData.value as any[])
+  // 信号节点上的「测试参数」(tp) 也会引用 CCP 变量 —— 例如 FactorTest 的变量存在
+  // signals.<信号>.tp.FactorTest.variable 里，值形如 sysvar::NsCcp::<name>。
+  // 这一块既不在 xcpVar、也不在 DBC 的 XCP_CCP_varname 列、也不在 DTC 列里，
+  // 必须单独递归收集，否则「配了 FactorTest 变量却不进符号表 / 不生成 vsysvar」。
+  const walkTp = (o: any) => {
+    if (!o || typeof o !== 'object') return
+    if (Array.isArray(o)) {
+      for (const it of o) walkTp(it)
+      return
+    }
+    const tp = (o as any).tp
+    if (tp && typeof tp === 'object') {
+      for (const p of Object.values(tp)) {
+        if (p && typeof p === 'object') addName((p as any).variable)
+      }
+    }
+    for (const v of Object.values(o as Record<string, any>)) walkTp(v)
+  }
+  walkTp(jsonDbcRaw.value)
+  walkTp(dbcRaw.value)
+  // DTC 检测对象：表头前 4 列是固定列，其后每一列是一个检测对象（格式「对象名 / 时间」）。
+  // 后端会把检测对象名也当 CCP 符号替换（excel_processor 里 _ccp_ref(signal_var)），
+  // 所以这里必须一并收集，否则只在 DTC 里引用的符号拿不到系统变量。
+  const dtcCols: string[] = Array.isArray(dtcRaw.value?.columns) ? dtcRaw.value.columns : []
+  for (let i = 4; i < dtcCols.length; i++) {
+    const raw = String(dtcCols[i] ?? '').replace(/^⚠\s*/, '')
+    addName(raw.split(' / ')[0])
   }
 
   // CCP 系统变量类型 / 精度 / 偏移（对象浏览器双击符号设置）：
@@ -7144,8 +7571,20 @@ async function onGenerate() {
   generateResult.value = null
   try {
     const cfgDir = store.cfgData?.cfg_dir || ''
-    // 有刷模式：把用到的符号（配置区 + DBC 的 XCP_CCP_varname 列）解析成地址/长度随请求下发
+    // 有刷模式：把用到的符号（配置区 + DBC 的 XCP_CCP_varname 列 + DTC 检测对象）解析成地址/长度随请求下发
     const ccpSymbols = store.canMotorMode === 'brushed' ? collectCcpSymbols() : {}
+    // 有刷但一个符号都没收集到：本次不会产出 CCP_Read.cin / CCP.vsysvar，
+    // CANoe 里不会有 NsCcp 系统变量。生成前就提示，避免生成完才发现（后端也会再记一条）
+    if (store.canMotorMode === 'brushed' && Object.keys(ccpSymbols).length === 0) {
+      ElMessage({
+        type: 'warning',
+        duration: 0,
+        showClose: true,
+        message: '有刷模式未收集到 CCP 符号：本次不会生成 CCP_Read.cin / CCP.vsysvar，'
+          + 'CANoe 中不会出现 NsCcp 系统变量。请确认已上传 .mapxml，'
+          + '且配置区字段 / DBC 的 XCP_CCP_varname 列 / DTC 检测对象里引用的符号来自该文件。',
+      })
+    }
     // 继电器模块 / CAN 通道：侧边栏配置，写入 TestFunction.cin 里共用的 RelayON/RelayOFF
     const relayCfg = store.relayConfigs.can
     const res: any = await generateCAN(
@@ -7162,6 +7601,20 @@ async function onGenerate() {
     if (payload?.blocked) {
       await showInvalidValueDialog(payload.invalid_values || [])
       return
+    }
+    // 后端 CCP 告警（符号为空 / .vsysvar 写入失败 / 自动导入失败）：逐条常驻提示
+    for (const warn of (payload?.ccp_warnings || []) as string[]) {
+      ElMessage({ type: 'warning', duration: 0, showClose: true, message: warn })
+    }
+    // 有刷模式 CCP.vsysvar 自动导入结果：成功时也提示，避免「成功静默」被误判成「没导入工程」
+    const vsysvarRes = payload?.ccp_vsysvar_result
+    if (vsysvarRes?.success) {
+      ElMessage({
+        type: 'success',
+        duration: 0,
+        showClose: true,
+        message: `CCP.vsysvar 已自动导入到 CANoe 工程：${vsysvarRes.path || ''}`,
+      })
     }
     generateResult.value = payload
   } catch (e) {
@@ -7239,6 +7692,7 @@ function resetData(loadChart: boolean = true) {
   signalRowSeq = 0
   testParamMap.value = new Map()
   loadedConfig.value = ''
+  markSaved()
   try {
     localStorage.removeItem(STORAGE_KEY_SIGNALS)
   } catch { /* ignore */ }
@@ -7751,14 +8205,6 @@ useShortcut({
 onMounted(() => {
   loadAllChartData()
   loadCrcAlgorithms()
-  // CFG 解析的 A2L/DBC 由 store 统一加载；此处做兜底：若 store 尚未加载则触发
-  if (store.cfgData?.cfg_dir && !store.objCfgDbcRaw) {
-    store.loadDbcFromCfgDir(store.cfgData.cfg_dir)
-  }
-  if (store.cfgData?.a2l_path && store.canMotorMode === 'brushless' && !store.objA2lVars?.measurements?.length) {
-    store.loadA2lFromPath(store.cfgData.a2l_path)
-  }
-
   // 全局事件委托：鼠标点击输入框时全选内容
   document.addEventListener('focusin', handleGlobalFocusIn)
 })
@@ -7777,7 +8223,45 @@ function handleGlobalFocusIn(e: Event) {
   }
 }
 
+// ==================== 切模块守卫：有未保存改动先询问 ====================
+/** 「已保存」快照：与 collectConfigData() 比对判断是否有未保存改动 */
+let savedSnapshot = JSON.stringify(collectConfigData())
+/** 把当前内容记为「已保存」（载入配置 / 保存成功后调用） */
+function markSaved() {
+  savedSnapshot = JSON.stringify(collectConfigData())
+}
+
+/** 离开 CAN 模块前的守卫：有未保存改动时弹窗（保存 / 不保存） */
+async function moduleLeaveGuard(): Promise<boolean> {
+  // 没有内存归属的配置（没加载/没新建过）时无需询问
+  if (!loadedConfig.value) return true
+  if (JSON.stringify(collectConfigData()) === savedSnapshot) return true
+  try {
+    await ElMessageBox.confirm(
+      `当前配置「${loadedConfig.value}」有未保存的修改，是否保存？`,
+      '未保存的修改',
+      { confirmButtonText: '保存', cancelButtonText: '不保存', distinguishCancelAndClose: true, type: 'warning' },
+    )
+  } catch (action) {
+    // 「不保存」= 继续切换；关闭弹窗 = 取消切换
+    return action === 'cancel'
+  }
+  const ok = await persistConfig(loadedConfig.value)
+  if (ok) markSaved()
+  return true
+}
+
+store.registerModuleLeaveGuard('can', moduleLeaveGuard)
+
 onActivated(() => {
+  // CFG 解析的 A2L/DBC 由 store 统一加载；切回本模块时（上传路已被 clearModuleUploads 清掉）
+  // 若 store 里还没有 CFG 数据，按当前 cfgData 重新加载一次
+  if (store.cfgData?.cfg_dir && !store.objCfgDbcRaw) {
+    store.loadDbcFromCfgDir(store.cfgData.cfg_dir)
+  }
+  if (store.cfgData?.a2l_path && store.canMotorMode === 'brushless' && !store.objA2lVars?.measurements?.length) {
+    store.loadA2lFromPath(store.cfgData.a2l_path)
+  }
 })
 </script>
 
@@ -8462,6 +8946,25 @@ onActivated(() => {
   align-content: start;
 }
 
+// 顶部「重置布局 + 全选」并排（margin-left:auto 让整组靠右，与 .sub-page-actions 同款）
+.other-header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+// 拖动中：禁止选中文字，光标保持抓取态
+.other-form-container--dragging {
+  user-select: none;
+  cursor: grabbing;
+}
+
+// 正在拖动的卡片
+.other-card--dragging {
+  opacity: 0.5;
+}
+
 .other-card {
   display: flex;
   flex-direction: column;
@@ -8512,6 +9015,24 @@ onActivated(() => {
   &--param {
     cursor: default;
   }
+}
+
+// 拖拽换位时的插入位置标记：目标卡片描边 + 对应侧竖条（左=插到它前面，右=插到它后面）。
+// 必须写在 .other-card 之后、并用双类名提升优先级：否则会被 .other-card 的 background 简写
+// 和 &:hover / &--active 的 box-shadow 覆盖掉，标记就看不见了
+.other-card.other-card--drop-before,
+.other-card.other-card--drop-after {
+  outline: 2px solid var(--primary-color);
+  outline-offset: -2px;
+  border-color: var(--primary-color);
+}
+
+.other-card.other-card--drop-before {
+  box-shadow: inset 4px 0 0 var(--primary-color);
+}
+
+.other-card.other-card--drop-after {
+  box-shadow: inset -4px 0 0 var(--primary-color);
 }
 
 // 分组卡片专用子网格：整行另起（占满外层 8 列）+ 内部两列并排，
@@ -8734,6 +9255,33 @@ onActivated(() => {
   border-radius: 6px;
   padding: 6px 8px;
   background: var(--bg-sidebar);
+}
+
+/* #N 与输入框同行、删除按钮置于行尾（卡片加 inlineIdx 时启用）：
+   把 header 摊平，让 #N、输入框、删除按钮成为同一 flex 行的三项，再用 order 排成 #N | 输入框 | 删除 */
+.other-group-item--inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.other-group-item--inline .other-group-header {
+  display: contents;
+}
+
+.other-group-item--inline .other-group-idx {
+  order: 0;
+  flex: 0 0 auto;
+}
+
+.other-group-item--inline .other-group-fields {
+  order: 1;
+  flex: 1 1 auto;
+}
+
+.other-group-item--inline .other-group-header .el-button {
+  order: 2;
+  flex: 0 0 auto;
 }
 
 .other-group-header {

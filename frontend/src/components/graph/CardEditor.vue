@@ -18,12 +18,39 @@
       <span class="ce-crumb-path">{{ crumbPath }}</span>
     </div>
 
+    <!-- P2-7 叠层子面板：编辑引用卡片时不再整表单替换，父级卡片信息在左侧保持可见 -->
+    <div class="ce-body" :class="{ 'ce-body-stacked': isSubEdit }">
+      <aside v-if="isSubEdit" class="ce-parent">
+        <div class="ce-parent-title">组合卡片（父级）</div>
+        <div v-for="(l, i) in stackLayers" :key="i" class="ce-parent-row">
+          <span class="ce-parent-idx">L{{ i + 1 }}</span>
+          <span class="ce-parent-name" :title="l.name">{{ l.name }}</span>
+          <span class="ce-parent-meta">{{ l.typeLabel }} · {{ l.stepCount }} 步</span>
+        </div>
+        <div class="ce-parent-row ce-parent-cur">
+          <span class="ce-parent-idx">编辑中</span>
+          <span class="ce-parent-name" :title="form.name">{{ form.name || '未命名' }}</span>
+          <span class="ce-parent-meta">{{ curTypeLabel }} · {{ (form.steps || []).length }} 步</span>
+        </div>
+        <div class="ce-parent-hint">父级内容未被替换：点「返回组合卡片」即可原样回到上层继续编辑。</div>
+      </aside>
+      <div class="ce-main">
     <el-form :model="form" label-width="72px" size="small">
       <el-form-item label="类型">
-        <el-select v-model="form.type" style="width: 180px" :disabled="!isNew">
+        <!-- P1-1：与 StepEditor 对齐 —— 放开「类型可改」（原来仅新建时可改） -->
+        <el-select v-model="form.type" style="width: 180px">
           <el-option label="故障注入" value="inject" />
           <el-option label="测试序列" value="sequence" />
           <el-option label="结果判断" value="result" />
+        </el-select>
+        <!-- P1-1：与 StepEditor 对齐 —— 补齐「故障角色」（inject/recover） -->
+        <el-select
+          v-if="form.type === 'inject'"
+          v-model="form.role"
+          style="width: 130px; margin-left: 8px"
+        >
+          <el-option label="故障注入" value="inject" />
+          <el-option label="故障恢复" value="recover" />
         </el-select>
       </el-form-item>
       <el-form-item label="名称">
@@ -67,9 +94,16 @@
             size="small"
             placeholder="参数名（如 dtc）"
             style="width: 140px"
+            :class="{ 'ce-input-error': !!paramNameError(params, i) }"
             @dragover.prevent
             @drop.stop.prevent="onFieldDrop($event, (v: string) => (p.name = v))"
           />
+          <!-- 参数名即时校验：原来只在点保存时用一个 toast 报一次，用户不知道是哪一行 -->
+          <span
+            v-if="paramNameError(params, i)"
+            class="ce-param-err"
+            :title="paramNameError(params, i) || ''"
+          >⚠</span>
           <template v-if="paramExtraOpen[i]">
             <el-input
               v-model="p.default"
@@ -107,11 +141,64 @@
       </div>
     </div>
 
+    <!-- P1-1：与 StepEditor 对齐 —— 补齐「局部变量」编辑区（生成时在 testcase 顶部声明） -->
+    <div class="ce-locals">
+      <div class="ce-locals-head">
+        <span class="step-title">局部变量</span>
+        <span class="step-hint">拖变量名到参数框可快速填值</span>
+        <el-button size="small" text type="primary" :icon="Plus" @click="addLocal">添加变量</el-button>
+      </div>
+      <div v-if="locals.length" class="ce-locals-list">
+        <div
+          v-for="(lv, li) in locals"
+          :key="li"
+          class="local-row"
+          :class="{ 'local-editing': editingLocalIdx === li }"
+          draggable="true"
+          @dragstart="onLocalDragStart($event, lv)"
+          @dblclick="editingLocalIdx = li"
+        >
+          <template v-if="editingLocalIdx === li">
+            <el-select v-model="lv.type" size="small" class="local-type" placeholder="类型">
+              <el-option v-for="t in CAPL_TYPES" :key="t" :label="t" :value="t" />
+            </el-select>
+            <el-input v-model="lv.name" size="small" class="local-name" placeholder="变量名" />
+            <el-input v-model="lv.value" size="small" class="local-value" placeholder="初始值" />
+            <el-button size="small" text type="primary" :icon="Check" title="完成" @click.stop="editingLocalIdx = -1" />
+          </template>
+          <template v-else>
+            <span class="local-view-type">{{ lv.type || '—' }}</span>
+            <span class="local-view-name" title="拖拽到参数框 / 双击编辑">{{ lv.name || '未命名' }}</span>
+            <span class="local-view-value">{{ lv.value !== undefined && lv.value !== '' ? lv.value : '0' }}</span>
+            <el-button size="small" text :icon="EditPen" title="双击编辑" @click.stop="editingLocalIdx = li" />
+          </template>
+          <el-button size="small" text :icon="Close" title="删除" @click.stop="locals.splice(li, 1)" />
+        </div>
+      </div>
+      <div v-else class="local-empty">无局部变量，点击「添加变量」新增</div>
+    </div>
+
     <div class="step-editor-head">
       <span class="step-title">步骤（组合卡片）</span>
       <span class="step-hint">可拖入函数 / 别名到步骤或参数</span>
       <el-button size="small" :icon="Link" type="primary" text @click="openCardPicker(-1)">添加引用卡片</el-button>
-      <el-button size="small" :icon="Plus" type="primary" text @click="addStep">添加步骤</el-button>
+      <el-button size="small" :icon="Plus" type="primary" text @click="addStep()">添加步骤</el-button>
+      <el-dropdown trigger="click" @command="(k: CardStep['kind']) => addStep(k)">
+        <el-button
+          size="small"
+          text
+          :icon="CaretBottom"
+          title="按指定类型新增步骤"
+          aria-label="按指定类型新增步骤"
+        />
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item v-for="k in stepKinds" :key="k" :command="k">
+              {{ STEP_KIND_LABEL[k] }}
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
     </div>
     <div class="step-list" @dragover.prevent @drop="onStepListDrop">
       <div
@@ -230,7 +317,7 @@
                 @setText="(v: string) => (step.prompt = v)"
               />
             </template>
-            <!-- 限时检查：判定方式（等于/不等于期望值、在/不在区间内） -->
+            <!-- 限时检查：判定方式（等于/不等于期望值、在/不在区间内、大于/小于期望值） -->
             <el-select
               v-if="step.kind === 'wait_check'"
               :model-value="waitFormOf(step)"
@@ -289,6 +376,14 @@
         <div v-if="step.kind === 'card' && cardRefParams(step).length" class="card-ref-params">
           <div class="card-ref-params-title">参数取值（未填=用卡片默认值）</div>
           <div v-for="p in cardRefParams(step)" :key="p.name" class="card-ref-param-row">
+            <el-tag
+              size="small"
+              class="card-ref-param-state"
+              :type="cardArgState(step, p.name).type"
+              :title="cardArgState(step, p.name).title"
+            >
+              {{ cardArgState(step, p.name).label }}
+            </el-tag>
             <span class="card-ref-param-name" :title="p.label || p.name">{{ p.name }}</span>
             <el-input
               :model-value="cardArgValue(step, p.name)"
@@ -372,6 +467,7 @@
                 @setText="(v: string) => (arg.value2 = v)"
               />
             </span>
+            <el-button size="small" text title="从映射表填充：按参数名查同名别名/对象并填入值" @click.stop="fillArgFromMapping(arg)">映射填充</el-button>
             <el-button size="small" :icon="Close" text @click="removeArg(i, ai)" />
           </div>
           <el-button size="small" text type="primary" :icon="Plus" @click="addArg(i)">
@@ -380,6 +476,8 @@
         </div>
       </div>
       <div v-if="!form.steps.length" class="empty-tip">暂无步骤，点击「添加步骤」</div>
+    </div>
+      </div>
     </div>
 
     <template #footer>
@@ -419,9 +517,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue'
+import { ref, computed, watch, inject } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { Plus, Close, CaretTop, CaretBottom, Link, Top, Bottom, EditPen, ArrowLeft, Search } from '@element-plus/icons-vue'
+import { Plus, Close, Check, CaretTop, CaretBottom, Link, Top, Bottom, EditPen, ArrowLeft, Search } from '@element-plus/icons-vue'
 import type { Card, CardLibrary, CardParam, CardStep, CardStepArg, CardType, MappingKind } from '@/types/functionGraph'
 import {
   newStep,
@@ -436,6 +534,7 @@ import {
   isWaitRange,
   waitCheckFunOf,
   collectStepParamNames,
+  paramNameError,
 } from '@/utils/functionGraph'
 import type { StepNumField } from '@/utils/functionGraph'
 import { CARD_PARAM_MIME } from '@/types/functionGraph'
@@ -463,6 +562,43 @@ const form = ref<Card>(newCard('inject'))
 const loadedSnapshot = ref(JSON.stringify(form.value))
 const dragOverArg = ref('')
 
+// 画布层上下文（geCtx）：提供对象映射表，供「映射填充」按钮使用（P2-4）
+const geCtx = inject<any>('geCtx', null)
+
+/**
+ * P2-4：按 arg.key 在映射表中查同名「别名 / 对象」，显式填入 arg.value。
+ * 显式按钮，不点不改值（保证产出一致性）。
+ */
+function fillArgFromMapping(arg: CardStepArg) {
+  const mp: any = geCtx?.mapping?.value
+  const keys = ['signals', 'dtcs', 'messages', 'envvars', 'a2l']
+  const entries: any[] = []
+  for (const k of keys) entries.push(...(mp?.[k] ?? []))
+  if (!entries.length) {
+    ElMessage.warning('映射表为空，请先在「对象映射表」中添加条目')
+    return
+  }
+  const query = String(arg.key ?? '').trim() || String(arg.value ?? '').trim()
+  if (!query) {
+    ElMessage.warning('请先填写参数名（或值），再按映射表填充')
+    return
+  }
+  const found = entries.find(
+    (e) => String(e.alias ?? '').trim() === query || String(e.name ?? '').trim() === query,
+  )
+  if (!found) {
+    ElMessage.warning(`映射表中未找到与「${query}」同名的别名或对象`)
+    return
+  }
+  const alias = String(found.alias ?? '').trim() || String(found.name ?? '').trim()
+  if (String(arg.value ?? '').trim() === alias) {
+    ElMessage.info(`已是映射表别名：${alias}`)
+    return
+  }
+  arg.value = alias
+  ElMessage.success(`已按映射表填入：${alias}`)
+}
+
 /**
  * 引用卡片编辑栈：非空表示当前正在编辑「被引用的库卡片」。
  * 每层存父级表单快照，返回时原样恢复（不影响外层已编辑内容）。
@@ -481,6 +617,9 @@ function sync() {
   }
   if (!Array.isArray(form.value.params)) form.value.params = []
   if (!Array.isArray(form.value.steps)) form.value.steps = []
+  // P1-1：与 StepEditor 对齐 —— 补全局部变量与故障角色默认值
+  if (!Array.isArray(form.value.locals)) form.value.locals = []
+  if (form.value.type === 'inject' && !form.value.role) form.value.role = 'inject'
   ensureParamsFromSteps()
   markLoaded()
 }
@@ -517,6 +656,17 @@ const crumbPath = computed(() => {
   const names = editStack.value.map((s) => s.form.name || '未命名')
   return [...names, form.value.name || '未命名'].join(' › ')
 })
+/** P2-7 叠层子面板：父级各层摘要（编辑栈自底向上），用于编辑引用卡片时保留上下文 */
+const CE_TYPE_LABEL: Record<string, string> = { inject: '故障注入', sequence: '测试序列', result: '结果判断' }
+const stackLayers = computed(() =>
+  editStack.value.map((l) => ({
+    name: l.form?.name || '未命名',
+    typeLabel: CE_TYPE_LABEL[l.form?.type || 'inject'] || '',
+    stepCount: (l.form?.steps || []).length,
+  })),
+)
+/** 当前正在编辑的那张卡片的类型名（叠层子面板「编辑中」一行用） */
+const curTypeLabel = computed(() => CE_TYPE_LABEL[form.value.type || 'inject'] || '')
 
 // ===== 步骤顺序调整（上移 / 下移 / 拖拽） =====
 function moveStep(i: number, dir: -1 | 1) {
@@ -660,12 +810,39 @@ function openCardRef(step: CardStep) {
   form.value = JSON.parse(JSON.stringify(found))
   markLoaded()
 }
-/** 返回上一层（丢弃当前层未保存的修改） */
-function backToParent() {
+/** 真正退栈（不询问）：恢复父级表单与它的「载入基线」 */
+function popEditStack() {
   const prev = editStack.value.pop()
   if (!prev) return
   form.value = prev.form
   loadedSnapshot.value = prev.snapshot
+}
+/**
+ * 返回上一层：原来直接退栈，本层未保存的修改会被静默丢弃。
+ * 有改动时先询问「保存 / 不保存」；取消（右上角关闭、Esc）则留在当前层。
+ */
+async function backToParent() {
+  if (!editStack.value.length) return
+  if (hasChanges()) {
+    try {
+      await ElMessageBox.confirm('被引用的卡片有未保存的修改，是否保存？', '未保存的修改', {
+        confirmButtonText: '保存',
+        cancelButtonText: '不保存',
+        distinguishCancelAndClose: true,
+        type: 'warning',
+      })
+    } catch (action) {
+      // 右上角关闭 / Esc：留在当前层继续编辑
+      if (action === 'close') return
+      // 选「不保存」：丢弃本层改动并退栈
+      popEditStack()
+      return
+    }
+    // 选「保存」：走既有 save()（子编辑态下它会 saveSub 写回库卡片并退栈）
+    save()
+    return
+  }
+  popEditStack()
 }
 /** 关闭弹窗：子编辑态先退栈，只有回到顶层才真正关闭 */
 function onVisibleChange(v: boolean) {
@@ -726,6 +903,19 @@ function clearCardArg(step: CardStep, name: string) {
   const i = step.args.findIndex((x) => x.key === name)
   if (i >= 0) step.args.splice(i, 1)
 }
+/** P1-8：三态显式化 —— 默认 / 已覆盖 / 不参与（纯视觉标注，不改取值语义与判定） */
+function cardArgState(
+  step: CardStep,
+  name: string,
+): { label: string; type: 'info' | 'success' | 'warning'; title: string } {
+  if (isCardArgSkipped(step, name)) {
+    return { label: '不参与', type: 'warning', title: '生成时跳过该参数（这一项不生成）' }
+  }
+  if (String(cardArgValue(step, name)).trim() !== '') {
+    return { label: '已覆盖', type: 'success', title: '已填自定义值，覆盖卡片默认值；点右侧 ✕ 可清空，回落默认值' }
+  }
+  return { label: '默认', type: 'info', title: '未填，使用卡片默认值' }
+}
 
 // ===== 卡片参数（接口）：声明 / 拖拽插入 / 就地提参数 / 取消参数 =====
 /** 参数占位符示例（模板里直接写 {{ }} 会被 Vue 当成插值，故用变量渲染） */
@@ -734,6 +924,29 @@ const PARAM_HINT = '{{名称}}'
 const BRACE_HINT = '{{'
 
 const params = computed(() => form.value?.params || [])
+
+// ===== P1-1：局部变量编辑区（与 StepEditor 同规则、同数据结构）=====
+const locals = computed(() => form.value?.locals || [])
+/** 常用 CAPL 变量类型（与 StepEditor 保持一致） */
+const CAPL_TYPES = [
+  'int', 'long', 'float', 'double', 'byte', 'word', 'dword', 'qword',
+  'char', 'string', 'timer', 'msTimer', 'long Array',
+]
+/** 当前处于编辑态的变量行索引（双击进入编辑） */
+const editingLocalIdx = ref(-1)
+function addLocal() {
+  if (!form.value) return
+  if (!Array.isArray(form.value.locals)) form.value.locals = []
+  form.value.locals.push({ name: '', type: 'int', value: '0' })
+  editingLocalIdx.value = form.value.locals.length - 1
+}
+/** 拖拽局部变量到参数框：写入变量名（走既有 text/plain 通道） */
+function onLocalDragStart(e: DragEvent, lv: { name: string }) {
+  if (!e.dataTransfer || !lv.name) return
+  e.dataTransfer.effectAllowed = 'copy'
+  e.dataTransfer.setData('text/plain', lv.name)
+  e.dataTransfer.setData('application/x-local-var', lv.name)
+}
 /** 「默认值 / 显示名」按行展开状态：默认收起，只留「参数名」一个输入框 */
 const paramExtraOpen = ref<Record<number, boolean>>({})
 function toggleParamExtra(i: number) {
@@ -895,6 +1108,10 @@ function stepKindHint(step: CardStep): string {
   if (kind === 'check') return '检查：下方参数行填写 信号 + 期望值'
   if (kind === 'wait_check') {
     const fun = waitCheckFunOf(step)
+    if (step.waitCmp) {
+      const dir = step.waitCmp === 'gt' ? '大于' : '小于'
+      return `限时检查：已按「${dir}期望值」自动填入信号的下限 / 上限（生成 ${fun} 区间形式），可手动修改`
+    }
     return step.waitRange
       ? `限时检查：下方参数行填写 信号 + 下限 / 上限（生成 ${fun} 区间形式）`
       : `限时检查：下方参数行填写 信号 + 期望值（生成 ${fun}）`
@@ -922,6 +1139,8 @@ function stepHasArgs(step: CardStep): boolean {
 // 切换步骤类型时重置结构字段，避免残留旧字段
 function onKindChange(step: CardStep, kind: CardStep['kind']) {
   step.kind = kind
+  // P1-4：记住用户主动选过的类型，作为下次「添加步骤」的默认
+  rememberStepKind(kind)
   if (kind === 'raw') {
     step.fun = undefined
     if (step.raw === undefined) step.raw = ''
@@ -999,8 +1218,40 @@ function onKindChange(step: CardStep, kind: CardStep['kind']) {
   }
 }
 
-function addStep() {
-  form.value.steps.push(newStep('call'))
+/**
+ * P1-4：记忆「上次选的步骤类型」，作为下次「添加步骤」的默认（localStorage 持久化，与 StepEditor 共用同一键）。
+ * 初值仍是 call；新步骤的结构初始化与「建好后手动改类型」同源（都走 onKindChange），不新增分支。
+ */
+const LAST_STEP_KIND_KEY = 'function.lastStepKind'
+/** 步骤类型白名单校验：addStep 可能被当事件处理器调用（kind 会是事件对象），localStorage 也可能被写脏 */
+function safeStepKind(k: unknown): CardStep['kind'] {
+  return typeof k === 'string' && stepKinds.includes(k as CardStep['kind']) ? (k as CardStep['kind']) : 'call'
+}
+function readLastStepKind(): CardStep['kind'] {
+  try {
+    return safeStepKind(localStorage.getItem(LAST_STEP_KIND_KEY))
+  } catch {
+    /* 隐私模式等不可用时忽略，回落默认 */
+    return 'call'
+  }
+}
+const lastStepKind = ref<CardStep['kind']>(readLastStepKind())
+function rememberStepKind(kind: unknown) {
+  const k = safeStepKind(kind)
+  lastStepKind.value = k
+  try {
+    localStorage.setItem(LAST_STEP_KIND_KEY, k)
+  } catch {
+    /* ignore */
+  }
+}
+function addStep(kind?: unknown) {
+  if (!form.value) return
+  // 下拉直接指定用传入值；否则用记忆值。两者都过白名单校验，避免把事件对象当类型。
+  const k = safeStepKind(typeof kind === 'string' ? kind : lastStepKind.value)
+  const step = newStep('call')
+  if (k !== 'call') onKindChange(step, k)
+  form.value.steps.push(step)
 }
 function removeStep(i: number) {
   const step = form.value.steps[i]
@@ -1245,6 +1496,12 @@ function save(): boolean {
   align-items: center;
   gap: 6px;
 }
+/* P1-8：三态标签（默认/已覆盖/不参与）定宽，保证各行对齐 */
+.card-ref-param-state {
+  width: 56px;
+  flex-shrink: 0;
+  text-align: center;
+}
 .card-ref-param-name {
   width: 110px;
   flex-shrink: 0;
@@ -1392,6 +1649,107 @@ function save(): boolean {
   border-radius: 8px;
   background: #fafbfc;
 }
+/* P1-1 局部变量编辑区：与 StepEditor 外观保持一致 */
+.ce-locals {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  background: #fafbfc;
+}
+.ce-locals-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.ce-locals-head .step-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #303133;
+}
+.ce-locals-head .step-hint {
+  flex: 1;
+  min-width: 0;
+  font-size: 11px;
+  color: #909399;
+}
+.ce-locals-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.local-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 6px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: default;
+}
+.local-row:hover {
+  background: #f0f6ff;
+  border-color: #d9ecff;
+}
+.local-row.local-editing {
+  background: #fff;
+  border-color: var(--el-color-primary);
+}
+.local-type {
+  width: 120px;
+  flex-shrink: 0;
+}
+.local-name {
+  width: 150px;
+  flex-shrink: 0;
+}
+.local-value {
+  flex: 1;
+  min-width: 0;
+}
+.local-view-type {
+  width: 70px;
+  flex-shrink: 0;
+  font-size: 12px;
+  color: #67c23a;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.local-view-name {
+  width: 120px;
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: #303133;
+  cursor: grab;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.local-view-name:hover {
+  color: var(--el-color-primary);
+}
+.local-view-name:active {
+  cursor: grabbing;
+}
+.local-view-value {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: #909399;
+  font-family: monospace;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.local-empty {
+  font-size: 12px;
+  color: #c0c4cc;
+  padding: 4px 0;
+}
 .ce-params-head {
   display: flex;
   align-items: center;
@@ -1436,6 +1794,16 @@ function save(): boolean {
   line-height: 1;
   padding: 0 2px;
   user-select: none;
+}
+/* 参数名即时校验：出错时输入框描红 + 行内 ⚠（与画布上「未连线卡片」的提示方式一致） */
+.ce-input-error :deep(.el-input__wrapper) {
+  box-shadow: 0 0 0 1px #f56c6c inset;
+}
+.ce-param-err {
+  flex-shrink: 0;
+  color: #f56c6c;
+  font-weight: 700;
+  cursor: help;
 }
 .ce-param-grip:hover {
   color: var(--el-color-primary);
@@ -1487,6 +1855,70 @@ function save(): boolean {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+/* P2-7 叠层子面板：仅编辑引用卡片时启用双栏，父级卡片信息保持可见 */
+.ce-body-stacked {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+.ce-main {
+  flex: 1 1 auto;
+  min-width: 0;
+  /* 主表单在左、父级上下文面板在右（DOM 顺序为「先主后附」，靠 order 调换视序） */
+  order: 1;
+}
+.ce-parent {
+  flex: 0 0 190px;
+  order: 2;
+  border: 1px solid #ebeef5;
+  border-radius: 6px;
+  background: #fafcff;
+  padding: 8px;
+}
+.ce-parent-title {
+  font-size: 12px;
+  font-weight: 600;
+  color: #606266;
+  margin-bottom: 6px;
+}
+.ce-parent-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #303133;
+}
+.ce-parent-cur {
+  background: rgba(64, 158, 255, 0.12);
+  color: var(--el-color-primary);
+}
+.ce-parent-idx {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #909399;
+}
+.ce-parent-name {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.ce-parent-meta {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: #909399;
+}
+.ce-parent-hint {
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px dashed #e4e7ed;
+  font-size: 11px;
+  line-height: 1.5;
+  color: #909399;
 }
 .step-grip {
   color: #c0c4cc;

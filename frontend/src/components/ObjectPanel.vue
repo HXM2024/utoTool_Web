@@ -944,7 +944,15 @@ const a2lDefaultExpanded = computed(() => a2lTree.value.map((n) => n.id))
 
 const filteredA2lTree = computed(() => {
   if (!a2lFilterQuery.value) return a2lTree.value
-  const rawSearch = a2lFilterQuery.value.toLowerCase()
+  let rawSearch = a2lFilterQuery.value.toLowerCase()
+  // 支持直接粘贴完整 sysvar 形式再搜索：sysvar::NsCcp::<name>（有刷）
+  // 或 sysvar::XCP::<限定符>::<name>（无刷）——统一取最后一段作为变量名。
+  // 否则整体会被当成一个子串，永远匹配不上变量名（用户从 FactorTest / CAPL
+  // 里复制出完整形式再粘到检索框是很常见的操作）。
+  if (rawSearch.includes('::')) {
+    const segs = rawSearch.split('::')
+    rawSearch = segs[segs.length - 1].trim()
+  }
   const qualifier = (props.a2lQualifier || '').toLowerCase()
 
   // 标准化：:: 替换为 .，去除任意形式的 XCP/qualifier 前缀（支持复制不全）
@@ -1082,10 +1090,16 @@ function onDragStart(event: DragEvent, data: any) {
   const name = data.name || data.label || ''
   let plain = data.type === 'attr' ? (data.value ?? name) : name
   if (data.type === 'a2l-measurement' || data.type === 'a2l-characteristic') {
-    const qualifier = props.a2lQualifier || ''
-    const varPath = name.replace(/\./g, '::')
-    // 有刷模式（mapxml 符号）无 A2L 限定符：直接输出符号名
-    plain = qualifier ? `sysvar::XCP::${qualifier}::${varPath}` : varPath
+    if (store.canMotorMode === 'brushed') {
+      // 有刷模式：mapxml 符号由生成脚本发布到 NsCcp 命名空间（见后端 ns_ccp_capl.CCP_NAMESPACE），
+      // 引用形式固定为 sysvar::NsCcp::<符号名>。这里不能带 A2L 限定符 —— 那是无刷 XCP 的写法，
+      // 用了会拼出 sysvar::XCP::<限定符>::<符号名>，CANoe 里解析不到该符号
+      plain = `sysvar::NsCcp::${name}`
+    } else {
+      const qualifier = props.a2lQualifier || ''
+      const varPath = name.replace(/\./g, '::')
+      plain = qualifier ? `sysvar::XCP::${qualifier}::${varPath}` : varPath
+    }
   }
   event.dataTransfer.setData('text/plain', String(plain))
 

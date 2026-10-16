@@ -10,14 +10,30 @@
             <el-option label="故障注入" value="inject" />
             <el-option label="故障恢复" value="recover" />
           </el-select>
-          <el-input v-model="form.name" class="se-name" size="small" placeholder="卡片名称" />
+          <el-input ref="nameInputRef" v-model="form.name" class="se-name" size="small" placeholder="卡片名称" />
           <el-button type="primary" size="small" :icon="Check" @click="save">保存</el-button>
         </div>
         <div class="se-actions">
           <el-tooltip content="从粘贴的代码段识别生成步骤" placement="bottom">
             <el-button size="small" :icon="Document" @click="codeDialogVisible = true">代码生成</el-button>
           </el-tooltip>
-          <el-button size="small" type="primary" plain :icon="Plus" @click="addStep">添加步骤</el-button>
+          <el-button size="small" type="primary" plain :icon="Plus" @click="addStep()">添加步骤</el-button>
+          <el-dropdown trigger="click" @command="(k: CardStep['kind']) => addStep(k)">
+            <el-button
+              size="small"
+              plain
+              :icon="CaretBottom"
+              title="按指定类型新增步骤"
+              aria-label="按指定类型新增步骤"
+            />
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item v-for="k in STEP_KINDS" :key="k.value" :command="k.value">
+                  {{ k.label }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
         </div>
       </div>
 
@@ -39,7 +55,19 @@
               draggable="true"
               @dragstart.stop="onParamDragStart($event, p)"
             >⠿</span>
-            <el-input v-model="p.name" size="small" placeholder="参数名（如 dtc）" style="width: 200px" />
+            <el-input
+              v-model="p.name"
+              size="small"
+              placeholder="参数名（如 dtc）"
+              style="width: 200px"
+              :class="{ 'se-input-error': !!paramNameError(params, i) }"
+            />
+            <!-- 参数名即时校验：原来只在保存时用一个 toast 报一次，指不出是哪一行 -->
+            <span
+              v-if="paramNameError(params, i)"
+              class="se-param-err"
+              :title="paramNameError(params, i) || ''"
+            >⚠</span>
             <template v-if="paramExtraOpen[i]">
               <el-input v-model="p.default" size="small" placeholder="默认值（留空=默认不参与）" style="width: 140px" />
               <el-input v-model="p.label" size="small" placeholder="显示名（可选）" style="width: 150px" />
@@ -151,9 +179,11 @@
                 class="step-kind-select step-kind-select-sm"
                 @change="(v: any) => onKindChange(step, v)"
               >
-                <el-option v-for="k in OBJECT_KINDS" :key="k.value" :label="k.label" :value="k.value" />
+                <!-- 与其它分支一致：列完整类型表。原先只列 OBJECT_KINDS（6 项），
+                     既看不到全部类型，也回不到函数/弹窗提示/Loop/卡片引用/自定义 -->
+                <el-option v-for="k in STEP_KINDS" :key="k.value" :label="k.label" :value="k.value" />
               </el-select>
-              <!-- 限时检查：判定方式（等于/不等于期望值、在/不在区间内） -->
+              <!-- 限时检查：判定方式（等于/不等于期望值、在/不在区间内、大于/小于期望值） -->
               <el-select
                 v-if="step.kind === 'wait_check'"
                 :model-value="waitFormOf(step)"
@@ -235,6 +265,7 @@
                     @setText="(v: string) => (arg.value2 = v)"
                   />
                 </div>
+                <el-button size="small" text title="从映射表填充：按参数名查同名别名/对象并填入值" @click.stop="fillArgFromMapping(arg)">映射填充</el-button>
                 <el-button size="small" text :icon="Close" title="删除" @click.stop="step.args.splice(ai, 1)" />
               </div>
               <div v-if="!step.args.length" class="obj-empty-tip">拖拽信号 / 变量对象到此处，自动生成一行</div>
@@ -267,6 +298,14 @@
             <div v-if="cardRefParams(step).length" class="card-ref-params">
               <div class="card-ref-params-title">参数取值（未填=用卡片默认值）</div>
               <div v-for="p in cardRefParams(step)" :key="p.name" class="card-ref-param-row">
+                <el-tag
+                  size="small"
+                  class="card-ref-param-state"
+                  :type="cardArgState(step, p.name).type"
+                  :title="cardArgState(step, p.name).title"
+                >
+                  {{ cardArgState(step, p.name).label }}
+                </el-tag>
                 <span class="card-ref-param-name" :title="p.label || p.name">{{ p.name }}</span>
                 <el-input
                   :model-value="cardArgValue(step, p.name)"
@@ -508,6 +547,7 @@
                     @setText="(v: string) => (arg.value = v)"
                   />
                 </div>
+                <el-button size="small" text title="从映射表填充：按参数名查同名别名/对象并填入值" @click.stop="fillArgFromMapping(arg)">映射填充</el-button>
                 <el-button size="small" text class="expand-btn" :title="isExpanded(`arg-${step.id}-${ai}`) ? '收起' : '展开'" @click.stop="toggleExpand(`arg-${step.id}-${ai}`)">
                   <el-icon><component :is="isExpanded(`arg-${step.id}-${ai}`) ? CaretTop : CaretBottom" /></el-icon>
                 </el-button>
@@ -571,7 +611,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, computed } from 'vue'
+import { ref, watch, computed, inject, onUnmounted, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import { Plus, Close, Check, Document, CaretTop, CaretBottom, Link, Edit } from '@element-plus/icons-vue'
 import type { Card, CardLibrary, CardParam, CardStep, CardStepArg, CardType, MappingKind } from '@/types/functionGraph'
@@ -586,11 +626,15 @@ import {
   applyWaitForm,
   isWaitRange,
   waitCheckFunOf,
+  paramNameError,
 } from '@/utils/functionGraph'
 import type { StepNumField, WaitFormOption } from '@/utils/functionGraph'
 import ParamFieldAssist from './ParamFieldAssist.vue'
 import { parseFunctionNames } from '@/api/function'
 import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
+
+// 画布层上下文：用于「剪贴板里没有步骤数据」时把 Ctrl+V 让给画布粘贴工况/库卡片（P2-2）
+const geCtx = inject<any>('geCtx', null)
 
 interface ParsedFunction {
   name: string
@@ -631,11 +675,15 @@ const props = defineProps<{
   functions?: ParsedFunction[]
   /** 外部保存信号（Ctrl+S 优先保存当前卡片时由父级递增触发） */
   saveSignal?: number
+  /** 新建/复制卡片后由父级置真：自动聚焦卡片名输入框并全选（P0-6）；处理完回告父级复位 */
+  focusName?: boolean
 }>()
 const emit = defineEmits<{
   (e: 'save', card: Card): void
   (e: 'add-mapping', payload: { kind: MappingKind; name: string }): void
   (e: 'open-card', cardId: string): void
+  /** 已消费一次「聚焦卡片名」请求（父级据此复位 focusName） */
+  (e: 'focus-name-done'): void
 }>()
 
 const tabs: Array<{ value: CardType; label: string }> = [
@@ -724,6 +772,10 @@ function objectKindHint(step: CardStep): string {
   if (kind === 'check') return '拖拽信号到下方参数行，填写期望值（生成 SignalCheck）'
   if (kind === 'wait_check') {
     const fun = waitCheckFunOf(step)
+    if (step.waitCmp) {
+      const dir = step.waitCmp === 'gt' ? '大于' : '小于'
+      return `拖拽信号到下方参数行；已按「${dir}期望值」自动填入区间下限 / 上限（生成 ${fun} 区间形式，超时由「时间」控制），可手动修改`
+    }
     return step.waitRange
       ? `拖拽信号到下方参数行，填下限 / 上限（生成 ${fun} 区间形式，超时由「时间」控制）`
       : `拖拽信号到下方参数行，填期望值（生成 ${fun}，超时由「时间」控制）`
@@ -940,11 +992,51 @@ watch(
     if (ser === lastCardJson) return
     lastCardJson = ser
     form.value = c ? normalize(c) : null
+    // 切到另一张卡片：重置步骤编辑撤销栈（P2-1）
+    resetStepHistory()
   },
 )
 
-function addStep() {
-  form.value?.steps.push(newStep('call'))
+/**
+ * P1-4：记忆「上次选的步骤类型」，作为下次「添加步骤」的默认类型（localStorage 持久化）。
+ * 初值仍是 call（与改动前一致）；只有在用户主动改过某步类型后才会变。
+ * 新步骤的结构初始化与「建好后手动改类型」完全同源（都走 onKindChange），不新增分支。
+ */
+const LAST_STEP_KIND_KEY = 'function.lastStepKind'
+/**
+ * 步骤类型白名单校验。
+ * 两个必要性：① `addStep` 可能被当作事件处理器直接调用（此时 kind 是事件对象）——
+ * 实测 `@click="addStep"` 会把 MouseEvent 当类型写进步骤并持久化；
+ * ② localStorage 可能被历史脏数据写入。
+ */
+function safeStepKind(k: unknown): CardStep['kind'] {
+  return typeof k === 'string' && STEP_KINDS.some((x) => x.value === k) ? (k as CardStep['kind']) : 'call'
+}
+function readLastStepKind(): CardStep['kind'] {
+  try {
+    return safeStepKind(localStorage.getItem(LAST_STEP_KIND_KEY))
+  } catch {
+    /* 隐私模式等不可用时忽略，回落默认 */
+    return 'call'
+  }
+}
+const lastStepKind = ref<CardStep['kind']>(readLastStepKind())
+function rememberStepKind(kind: unknown) {
+  const k = safeStepKind(kind)
+  lastStepKind.value = k
+  try {
+    localStorage.setItem(LAST_STEP_KIND_KEY, k)
+  } catch {
+    /* ignore */
+  }
+}
+function addStep(kind?: unknown) {
+  if (!form.value) return
+  // 下拉直接指定用传入值；否则用记忆值。两者都过白名单校验，避免把事件对象当类型。
+  const k = safeStepKind(typeof kind === 'string' ? kind : lastStepKind.value)
+  const step = newStep('call')
+  if (k !== 'call') onKindChange(step, k)
+  form.value.steps.push(step)
 }
 // 常用 CAPL 变量类型（局部变量下拉选择）
 const CAPL_TYPES = [
@@ -973,6 +1065,8 @@ function isCallLike(step: CardStep): boolean {
 }
 function onKindChange(step: CardStep, kind: CardStep['kind']) {
   step.kind = kind
+  // P1-4：记住用户主动选过的类型，作为下次「添加步骤」的默认
+  rememberStepKind(kind)
   // 依据新 kind 重置结构字段
   if (kind === 'raw') {
     step.fun = undefined
@@ -1166,13 +1260,15 @@ async function pasteFromClipboard() {
     // 剪贴板读取失败时降级到内存变量
   }
   if (!text) text = memoryClip.value
-  if (!text) {
-    ElMessage.warning('剪贴板为空或无步骤数据')
-    return
-  }
-  const steps = parseStepClip(text)
+  const steps = text ? parseStepClip(text) : []
   if (!steps.length) {
-    ElMessage.warning('剪贴板内容不是有效的步骤数据')
+    // 剪贴板里没有步骤数据：把 Ctrl+V 让给画布层粘贴「工况 / 库卡片」，
+    // 这样在编辑卡片时也能粘贴实体，而不必先退出卡片编辑（P2-2）
+    if (geCtx?.pasteEntity) {
+      geCtx.pasteEntity()
+      return
+    }
+    ElMessage.warning(text ? '剪贴板内容不是有效的步骤数据' : '剪贴板为空或无步骤数据')
     return
   }
   const copies = steps.map((s) => ({ ...JSON.parse(JSON.stringify(s)), id: genId('step') }))
@@ -1219,8 +1315,173 @@ function stepShortcuts() {
       return true
     },
   })
+  useShortcut({
+    id: 'steps:add',
+    keys: 'Alt+Insert',
+    scope: 'context',
+    desc: '新增一个步骤',
+    // 允许在输入框内触发：新建卡片后焦点会自动落在卡片名输入框（P0-6），
+    // 若跳过输入框，这条键位在最需要的时候反而是死的（Alt+Insert 不参与文本编辑）
+    allowInInput: true,
+    when: () => isModuleActive('/function') && !!form.value,
+    run: () => {
+      addStep()
+      return true
+    },
+  })
+  useShortcut({
+    id: 'params:add',
+    keys: 'Alt+P',
+    scope: 'context',
+    desc: '新增一个卡片参数',
+    // 同上：Alt+P 不是文本编辑键，输入框内也应生效
+    allowInInput: true,
+    when: () => isModuleActive('/function') && !!form.value,
+    run: () => {
+      addParam()
+      return true
+    },
+  })
+  useShortcut({
+    id: 'steps:clearSelection',
+    keys: 'Escape',
+    scope: 'context',
+    desc: '取消步骤多选（无选中时交由外层处理）',
+    when: () => isModuleActive('/function') && !!form.value,
+    run: () => {
+      if (selectedStepIds.value.size) {
+        clearSelection()
+        // soft：不拦截，输入框/弹窗的 Esc 行为照常
+        return 'soft'
+      }
+      // 无步骤选中 → 继续向外层匹配（弹窗 Esc、画布 Esc 等）
+      return false
+    },
+  })
+  useShortcut({
+    id: 'steps:undo',
+    keys: 'Ctrl+Z',
+    scope: 'context',
+    desc: '撤销步骤编辑改动（与画布撤销栈隔离）',
+    when: () => isModuleActive('/function') && !!form.value,
+    run: () => undoStepEdit(),
+  })
+  useShortcut({
+    id: 'steps:redo',
+    keys: 'Ctrl+Y',
+    scope: 'context',
+    desc: '重做步骤编辑改动',
+    when: () => isModuleActive('/function') && !!form.value,
+    run: () => redoStepEdit(),
+  })
+  useShortcut({
+    id: 'steps:redo2',
+    keys: 'Ctrl+Shift+Z',
+    scope: 'context',
+    desc: '重做步骤编辑改动',
+    when: () => isModuleActive('/function') && !!form.value,
+    run: () => redoStepEdit(),
+  })
 }
 stepShortcuts()
+
+// ===== P2-1 步骤编辑独立撤销栈（快照粒度 = form.steps + form.params；与画布 Ctrl+Z 隔离）=====
+const STEP_HISTORY_MAX = 60
+const undoStack = ref<string[]>([])
+const redoStack = ref<string[]>([])
+/** 已记录的「当前状态」快照，用来判断有没有新改动 */
+let lastStepSnapshot = ''
+let stepSnapTimer: number | null = null
+
+function stepSnapshotOf(): string {
+  const f = form.value
+  if (!f) return ''
+  return JSON.stringify({ steps: f.steps ?? [], params: f.params ?? [] })
+}
+/** 把「改动前的状态」压入撤销栈（同一状态不重复入栈） */
+function commitStepSnapshot() {
+  const s = stepSnapshotOf()
+  if (!s || s === lastStepSnapshot) return
+  // 首个快照（form 尚未就绪）只做基线，不入栈
+  if (lastStepSnapshot) {
+    if (undoStack.value.length >= STEP_HISTORY_MAX) undoStack.value.shift()
+    undoStack.value.push(lastStepSnapshot)
+    redoStack.value = []
+  }
+  lastStepSnapshot = s
+}
+/** 结束防抖、立即提交挂起的快照（撤销前调用，保证最近一次输入可回退） */
+function flushStepSnapshot() {
+  if (stepSnapTimer !== null) {
+    window.clearTimeout(stepSnapTimer)
+    stepSnapTimer = null
+  }
+  commitStepSnapshot()
+}
+function applyStepSnapshot(s: string) {
+  const f = form.value
+  if (!f || !s) return
+  try {
+    const data = JSON.parse(s)
+    f.steps = data.steps ?? []
+    f.params = data.params ?? []
+    lastStepSnapshot = s
+    clearSelection()
+  } catch {
+    /* 快照损坏：忽略 */
+  }
+}
+/** 切换卡片 / 初始化时重置撤销栈 */
+function resetStepHistory() {
+  if (stepSnapTimer !== null) {
+    window.clearTimeout(stepSnapTimer)
+    stepSnapTimer = null
+  }
+  undoStack.value = []
+  redoStack.value = []
+  lastStepSnapshot = stepSnapshotOf()
+}
+function undoStepEdit(): boolean {
+  flushStepSnapshot()
+  if (!undoStack.value.length) {
+    ElMessage.info('没有可撤销的步骤改动')
+    return true
+  }
+  const cur = stepSnapshotOf()
+  const prev = undoStack.value.pop()!
+  redoStack.value.push(cur)
+  applyStepSnapshot(prev)
+  ElMessage.success('已撤销步骤改动')
+  return true
+}
+function redoStepEdit(): boolean {
+  if (!redoStack.value.length) {
+    ElMessage.info('没有可重做的步骤改动')
+    return true
+  }
+  const cur = stepSnapshotOf()
+  const next = redoStack.value.pop()!
+  undoStack.value.push(cur)
+  applyStepSnapshot(next)
+  ElMessage.success('已重做步骤改动')
+  return true
+}
+// 监听 steps/params 变化：400ms 防抖后记录快照（避免逐字符入栈）
+watch(
+  () => stepSnapshotOf(),
+  (now) => {
+    if (now === lastStepSnapshot) return
+    if (stepSnapTimer !== null) window.clearTimeout(stepSnapTimer)
+    stepSnapTimer = window.setTimeout(() => {
+      stepSnapTimer = null
+      commitStepSnapshot()
+    }, 400)
+  },
+)
+onUnmounted(() => {
+  if (stepSnapTimer !== null) window.clearTimeout(stepSnapTimer)
+})
+resetStepHistory()
 
 // 切换卡片时清空选中
 watch(
@@ -1237,6 +1498,24 @@ watch(
   (v) => {
     if (v && v > 0) save()
   },
+)
+
+// P0-6：新建卡片后自动聚焦「卡片名称」并全选，省一次点击。
+// immediate：新建卡片是「先建卡再挂载编辑器」，置真发生在挂载之前，必须立刻检查一次。
+const nameInputRef = ref<any>(null)
+watch(
+  () => props.focusName,
+  async (v) => {
+    if (!v) return
+    await nextTick()
+    const input = nameInputRef.value?.input || nameInputRef.value?.$el?.querySelector?.('input')
+    if (input && typeof input.focus === 'function') {
+      input.focus()
+      input.select?.()
+    }
+    emit('focus-name-done')
+  },
+  { immediate: true },
 )
 
 const dragStepIdx = ref(-1)
@@ -1521,6 +1800,40 @@ function extractFillText(e: DragEvent): string {
   if (plain) return plain
   return ''
 }
+/**
+ * P2-4：按 arg.key 在映射表中查同名「别名 / 对象」，显式填入 arg.value。
+ * 显式按钮，不点不改值（保证产出一致性）。
+ */
+function fillArgFromMapping(arg: CardStepArg) {
+  const mp: any = geCtx?.mapping?.value
+  const keys = ['signals', 'dtcs', 'messages', 'envvars', 'a2l']
+  const entries: any[] = []
+  for (const k of keys) entries.push(...(mp?.[k] ?? []))
+  if (!entries.length) {
+    ElMessage.warning('映射表为空，请先在「对象映射表」中添加条目')
+    return
+  }
+  const query = String(arg.key ?? '').trim() || String(arg.value ?? '').trim()
+  if (!query) {
+    ElMessage.warning('请先填写参数名（或值），再按映射表填充')
+    return
+  }
+  const found = entries.find(
+    (e) => String(e.alias ?? '').trim() === query || String(e.name ?? '').trim() === query,
+  )
+  if (!found) {
+    ElMessage.warning(`映射表中未找到与「${query}」同名的别名或对象`)
+    return
+  }
+  const alias = String(found.alias ?? '').trim() || String(found.name ?? '').trim()
+  if (String(arg.value ?? '').trim() === alias) {
+    ElMessage.info(`已是映射表别名：${alias}`)
+    return
+  }
+  arg.value = alias
+  ElMessage.success(`已按映射表填入：${alias}`)
+}
+
 function onFillDrop(e: DragEvent, target: any, field: 'fun' | 'key' | 'value' | 'value2') {
   fillOver.value = ''
   // 参数行拖入：直接插入 {{参数名}} 占位符（生成时按引用处填的值替换）
@@ -1682,6 +1995,19 @@ function isCardArgSkipped(step: CardStep, name: string): boolean {
 function cardArgPlaceholder(p: CardParam): string {
   if (p.default !== undefined && String(p.default) !== '') return `默认 ${p.default}`
   return '未设默认，需填写'
+}
+/** P1-8：三态显式化 —— 默认 / 已覆盖 / 不参与（纯视觉标注，不改取值语义与判定） */
+function cardArgState(
+  step: CardStep,
+  name: string,
+): { label: string; type: 'info' | 'success' | 'warning'; title: string } {
+  if (isCardArgSkipped(step, name)) {
+    return { label: '不参与', type: 'warning', title: '生成时跳过该参数（这一项不生成）' }
+  }
+  if (String(cardArgValue(step, name)).trim() !== '') {
+    return { label: '已覆盖', type: 'success', title: '已填自定义值，覆盖卡片默认值；点右侧 ✕ 可清空，回落默认值' }
+  }
+  return { label: '默认', type: 'info', title: '未填，使用卡片默认值' }
 }
 /** 填值：清空=未覆盖（回落默认值）；非空=覆盖 */
 function setCardArg(step: CardStep, name: string, v: string) {
@@ -1926,6 +2252,9 @@ function save() {
   gap: 8px;
   min-width: 0;
   flex: 1;
+  /* 窄栏内让子项自身换行：否则 .se-form 可被压缩到内容宽度以下，
+     末尾的「保存」按钮会溢出到右侧 .se-actions 区域、被「添加步骤」盖住点不到 */
+  flex-wrap: wrap;
 }
 .se-actions {
   display: flex;
@@ -1998,6 +2327,16 @@ function save() {
 }
 .se-param-grip:hover {
   color: var(--el-color-primary);
+}
+/* 参数名即时校验：出错时输入框描红 + 行内 ⚠（与画布上「未连线卡片」的提示方式一致） */
+.se-input-error :deep(.el-input__wrapper) {
+  box-shadow: 0 0 0 1px #f56c6c inset;
+}
+.se-param-err {
+  flex-shrink: 0;
+  color: #f56c6c;
+  font-weight: 700;
+  cursor: help;
 }
 .se-param-def {
   font-size: 11px;
@@ -2319,7 +2658,7 @@ function save() {
   width: 72px;
   margin: 0 4px;
 }
-/* 限时检查：判定方式下拉（等于/不等于期望值、在/不在区间内） */
+/* 限时检查：判定方式下拉（等于/不等于期望值、在/不在区间内、大于/小于期望值） */
 .wait-form-select {
   flex: 0 0 auto;
   width: 118px;
@@ -2392,6 +2731,12 @@ function save() {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+/* P1-8：三态标签（默认/已覆盖/不参与）定宽，保证各行对齐 */
+.card-ref-param-state {
+  width: 56px;
+  flex-shrink: 0;
+  text-align: center;
 }
 .card-ref-param-name {
   width: 110px;

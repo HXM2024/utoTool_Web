@@ -1092,6 +1092,54 @@
           }
         ],
         "type": "inject"
+      },
+      {
+        "id": "card-mv0n6uoz-3cexl",
+        "type": "inject",
+        "name": "设置信号",
+        "description": "",
+        "steps": [
+          {
+            "id": "step-mv4yb7re-651rm",
+            "kind": "set",
+            "args": [
+              {
+                "key": "{{SigName}}",
+                "value": "{{Value}}"
+              }
+            ],
+            "indent": 0
+          },
+          {
+            "id": "step-mv0n730k-853or",
+            "kind": "call",
+            "fun": "Wait",
+            "args": [
+              {
+                "key": "time",
+                "value": "{{Time}}"
+              }
+            ],
+            "indent": 0
+          }
+        ],
+        "params": [
+          {
+            "name": "SigName",
+            "default": ""
+          },
+          {
+            "name": "Value",
+            "default": ""
+          },
+          {
+            "name": "Time",
+            "default": "1000"
+          }
+        ],
+        "locals": [],
+        "role": "inject",
+        "global": true
       }
     ],
     "sequence": [

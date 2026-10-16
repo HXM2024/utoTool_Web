@@ -20,12 +20,14 @@ export const generateFunction = (
   cfgDir?: string,
   relayModule?: number,
   canChannel?: number,
+  envVarNames?: string[],
 ) => {
   return client.post('/function/generate', {
     config_name: configName,
     cfg_dir: cfgDir,
     relay_module: relayModule,
     can_channel: canChannel,
+    env_var_names: envVarNames,
   })
 }
 
@@ -105,9 +107,17 @@ export const parseFunctions = (code: string) =>
 export const parseFunctionNames = (code: string) =>
   client.post('/function/parse-function-names', { code })
 
+/** 内置模板函数签名表（只读）
+ *  用途：#8「函数库冲突即时提示」——保存函数库后拿它与自定义函数比对（名称+参数类型序列），
+ *  命中即提示「生成时不会被采用」，不必等到生成后才报。
+ *  返回 data: { functions: [{name, param_types, key, signature}], count } */
+export const getBuiltinFunctions = () => client.get('/function/builtin-functions')
+
 /** 展开用例（口数乘积）
  *  - ccpTypes：CCP 系统变量类型表（{符号名: int|float|int64}），决定「设置」系统变量
  *    时用 sysSetVariableInt 还是 sysSetVariableFloat（与生成 TestCase.can 同源）
+ *  - envVarNames：DBC 环境变量名单（store.objDbcEnvVars 的名字），兜底判定不带 EV_
+ *    前缀的环境变量（与生成同源）
  *  - idsOnly=true：只要「工况 → 各行 case_id」的对应关系，服务端跳过 TestCase.can 生成
  *    并只回 {case_id, frame_id, frame_row}（响应从约 120KB 降到几 KB）；
  *    用例编号与全量展开一致，所以 case_id 与「用例预览」完全相同。 */
@@ -118,6 +128,7 @@ export const expandCases = (
   values?: ValueResource[],
   idsOnly = false,
   ccpTypes?: Record<string, string>,
+  envVarNames?: string[],
 ) =>
   client.post('/function/expand-cases', {
     graph,
@@ -126,6 +137,7 @@ export const expandCases = (
     values,
     ids_only: idsOnly,
     ccp_var_types: ccpTypes,
+    env_var_names: envVarNames,
   })
 
 /** 导出用例为 Excel（单分组或全部分组，每个分组一个工作表）
@@ -140,6 +152,7 @@ export const exportFunctionCases = (payload: {
   group_id?: string
   save_path?: string
   ccp_var_types?: Record<string, string>
+  env_var_names?: string[]
 }) => client.post('/function/export-cases', payload)
 
 /** 上传用例 Excel，解析出各工作表的用例（供导入到分组） */

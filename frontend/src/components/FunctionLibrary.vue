@@ -216,7 +216,7 @@
  */
 import { ref, computed, watch, onMounted } from 'vue'
 import { Check, RefreshRight, Search, Plus, Close } from '@element-plus/icons-vue'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
 import { getGlobalLibrary, saveGlobalLibrary, parseFunctions } from '@/api/function'
 import { genId, FUNC_CARD_MIME } from '@/types/functionGraph'
 import type { Card } from '@/types/functionGraph'
@@ -296,7 +296,7 @@ function openCustomEdit(fn: ParsedFunction, addParam = false) {
   if (addParam) customDraft.value.params.push({ name: '', type: '', desc: '' })
   customEditVisible.value = true
 }
-function saveCustomCard() {
+async function saveCustomCard() {
   const draft = customDraft.value
   const target = customEditTarget.value
   if (!draft || !target) return
@@ -311,6 +311,7 @@ function saveCustomCard() {
   target.signature = buildCustomSignature(target)
   customEditVisible.value = false
   ElMessage.success(`已保存自定义卡片 ${target.name}`)
+  await persistCustomCards()
 }
 /** 双击：自定义卡片打开编辑器，其余显示详情 */
 function onFuncCardDblClick(fn: ParsedFunction) {
@@ -438,16 +439,35 @@ function onScroll() {
   if (!ta) return
   if (gutterRef.value) gutterRef.value.scrollTop = ta.scrollTop
 }
+/** 组装持久化用的 step_library（自定义卡片 → 后端字段） */
+function buildStepLibrary() {
+  return customCards.value.map((c) => ({
+    name: c.name,
+    code: c.body || c.source || '',
+    description: c.description || '',
+    return_type: c.return_type || '',
+    params: (c.params || []).map((p) => ({ name: p.name || '', type: p.type || '', desc: p.desc || '' })),
+  }))
+}
+/**
+ * 卡片视图增删改后立即落盘。
+ * 原先只有「源码编辑 → 保存」才写后端，卡片视图没有保存入口：点 + 新建的自定义函数
+ * 只存在内存里，一退出编辑器就丢，再进来 loadGlobalLibrary() 从后端读到的 step_library
+ * 还是旧的（空），函数看起来就「消失」了。
+ */
+async function persistCustomCards() {
+  try {
+    const stepLibrary = buildStepLibrary()
+    await saveGlobalLibrary({ function_library: code.value, step_library: stepLibrary })
+    emit('saved', code.value, stepLibrary)
+  } catch (e: any) {
+    ElMessage.error('保存自定义函数失败：' + (e?.message || String(e)))
+  }
+}
 async function onSaveSource() {
   saving.value = true
   try {
-    const stepLibrary = customCards.value.map((c) => ({
-      name: c.name,
-      code: c.body || c.source || '',
-      description: c.description || '',
-      return_type: c.return_type || '',
-      params: (c.params || []).map((p) => ({ name: p.name || '', type: p.type || '', desc: p.desc || '' })),
-    }))
+    const stepLibrary = buildStepLibrary()
     await saveGlobalLibrary({ function_library: code.value, step_library: stepLibrary })
     emit('update:code', code.value)
     emit('saved', code.value, stepLibrary)
@@ -461,7 +481,7 @@ async function onSaveSource() {
 }
 
 // ==================== 自定义卡片 ====================
-function addCustomCard() {
+async function addCustomCard() {
   const idx = customCards.value.length + 1
   const name = `Custom_${idx}`
   const card: ParsedFunction = {
@@ -478,13 +498,25 @@ function addCustomCard() {
   card.signature = buildCustomSignature(card)
   customCards.value.unshift(card)
   ElMessage.success(`已新建自定义卡片 ${name}`)
+  await persistCustomCards()
 }
 function removeCustomCard(fn: ParsedFunction) {
   const i = customCards.value.findIndex((c) => c.name === fn.name && c.isCustom)
-  if (i >= 0) {
-    customCards.value.splice(i, 1)
-    ElMessage.success(`已删除自定义卡片 ${fn.name}`)
-  }
+  if (i < 0) return
+  // 自定义卡片会被引用到卡片/步骤里，删掉后生成时找不到该函数 → 先确认再删
+  ElMessageBox.confirm(
+    `确认删除自定义卡片「${fn.name}」？\n若已被卡片或步骤引用，生成时会出现找不到该函数的问题。`,
+    '删除自定义卡片',
+    { type: 'warning', confirmButtonText: '删除', cancelButtonText: '取消' },
+  )
+    .then(async () => {
+      customCards.value.splice(i, 1)
+      ElMessage.success(`已删除自定义卡片 ${fn.name}`)
+      await persistCustomCards()
+    })
+    .catch(() => {
+      /* 用户取消 */
+    })
 }
 
 // ==================== 拖拽到画布 ====================

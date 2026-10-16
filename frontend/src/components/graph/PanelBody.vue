@@ -34,11 +34,11 @@
           draggable="true"
           @dragstart="ctx.onCardDragStart($event, c)"
           @dblclick="ctx.selectCard(c)"
-          @click="ctx.selectCardInList(c, $event, orderedCardIds)"
+          @click="onCardRowClick(c, $event, orderedCardIds)"
           @contextmenu.prevent.stop="openCardMenu($event, c)"
         >
           <span class="obj-drag" title="拖拽到工况 / Ctrl+拖拽复制">⠿</span>
-          <span v-if="c.global" class="obj-global" title="全局卡片：新建配置 / 新建分组时自动带出">全局</span>
+          <span v-if="c.global" class="obj-global" title="全局卡片：设为全局后自动同步到所有分组的卡片列表">全局</span>
           <span
             v-if="missingFuncsOf(c).length"
             class="obj-warn"
@@ -62,11 +62,11 @@
           draggable="true"
           @dragstart="ctx.onCardDragStart($event, c)"
           @dblclick="ctx.selectCard(c)"
-          @click="ctx.selectCardInList(c, $event, orderedCardIds)"
+          @click="onCardRowClick(c, $event, orderedCardIds)"
           @contextmenu.prevent.stop="openCardMenu($event, c)"
         >
           <span class="obj-drag" title="拖拽到工况 / Ctrl+拖拽复制">⠿</span>
-          <span v-if="c.global" class="obj-global" title="全局卡片：新建配置 / 新建分组时自动带出">全局</span>
+          <span v-if="c.global" class="obj-global" title="全局卡片：设为全局后自动同步到所有分组的卡片列表">全局</span>
           <span
             v-if="missingFuncsOf(c).length"
             class="obj-warn"
@@ -91,11 +91,11 @@
         draggable="true"
         @dragstart="ctx.onCardDragStart($event, c)"
         @dblclick="ctx.selectCard(c)"
-        @click="ctx.selectCardInList(c, $event, orderedCardIds)"
+        @click="onCardRowClick(c, $event, orderedCardIds)"
         @contextmenu.prevent.stop="openCardMenu($event, c)"
       >
         <span class="obj-drag" title="拖拽到工况 / Ctrl+拖拽复制">⠿</span>
-        <span v-if="c.global" class="obj-global" title="全局卡片：新建配置 / 新建分组时自动带出">全局</span>
+        <span v-if="c.global" class="obj-global" title="全局卡片：设为全局后自动同步到所有分组的卡片列表">全局</span>
         <span
           v-if="missingFuncsOf(c).length"
           class="obj-warn"
@@ -112,14 +112,16 @@
     <div
       v-else-if="panelId === 'editor'"
       class="pb-fill"
-      @mouseenter="onEditorHover(true)"
-      @mouseleave="onEditorHover(false)"
+      @focusin="onEditorFocus(true)"
+      @focusout="onEditorFocus(false)"
     >
       <StepEditor
         v-if="ctx.editorTarget.value === 'card'"
         :card="ctx.selectedCard.value"
         :cards="ctx.cardLibrary.value"
         :save-signal="ctx.stepSaveSignal.value"
+        :focus-name="ctx.cardNameFocusPending.value"
+        @focus-name-done="ctx.consumeCardNameFocus"
         @save="ctx.saveCard"
         @add-mapping="ctx.onAddMapping"
         @open-card="ctx.selectCardById"
@@ -135,9 +137,11 @@
         :case-rows-map="ctx.frameCaseRowsMap.value"
         :load-case-code="ctx.loadCaseCode"
         :func-names="ctx.knownFuncNames.value"
+        :save-signal="ctx.canvasSaveSignal.value"
         @update:graph="ctx.onGraphChange"
         @update:active-frame-id="ctx.setActiveFrame"
         @select-card="ctx.focusLibraryCard"
+        @focus-node="ctx.onFocusNode"
         @select-frame="ctx.focusFrameItem"
         @save-card="ctx.saveCard"
       />
@@ -223,9 +227,20 @@ function missingFuncsOf(c: Card): string[] {
     (n) => !known.has(n) && !EXTERNAL_CALL_WHITELIST.has(n),
   )
 }
-/** 函数库面板保存后：用它回传的新源码刷新「已知函数名」，卡片上的告警随之更新 */
-function onFuncLibSaved(functionLibrary?: string) {
-  ctx.refreshKnownFuncNames?.(functionLibrary)
+/** 函数库面板保存后：用它回传的新源码刷新「已知函数名」，卡片上的告警随之更新；
+ *  customNames = 自定义卡片名（step_library），也计入「已知函数」；
+ *  第 2 个参数 notify=true → 顺带做一次「与内置函数同名同参」的即时提示（#8） */
+function onFuncLibSaved(functionLibrary?: string, customNames?: string[]) {
+  ctx.refreshKnownFuncNames?.(functionLibrary, true, customNames)
+}
+
+/**
+ * 卡片列表行单击：无修饰键时「选中即进入编辑」，与工况列表（单击即进编辑）保持一致；
+ * 带 Ctrl / Shift 时只做多选高亮，避免多选过程中反复把中栏切来切去。
+ */
+function onCardRowClick(c: Card, e: MouseEvent, orderedIds: string[]) {
+  ctx.selectCardInList(c, e, orderedIds)
+  if (!e.ctrlKey && !e.metaKey && !e.shiftKey) ctx.selectCard(c)
 }
 // ===== 卡片右键菜单：设为全局 / 取消全局（右键的那张在多选里时，作用于整批选中卡片） =====
 const ctxMenu = ref<InstanceType<typeof CtxMenu> | null>(null)
@@ -247,6 +262,9 @@ function openCardMenu(e: MouseEvent, c: Card) {
     items.push({ key: 'global', label: list.length > 1 ? `设为全局（${list.length - globals} 张）` : '设为全局' })
   }
   if (globals > 0) {
+    // 带「全局」标记的项再点「设为全局」会被过滤成空操作，所以单独给一个发布入口：
+    // 以当前分组这一份为准，覆盖其它分组的同名副本（修漂移就靠它）
+    items.push({ key: 'republish', label: list.length > 1 ? `重新发布到所有分组（${globals} 张）` : '重新发布到所有分组' })
     items.push({ key: 'unglobal', label: list.length > 1 ? `取消全局（${globals} 张）` : '取消全局' })
   }
   ctxMenu.value?.open(e, items, list)
@@ -255,6 +273,7 @@ function onMenuSelect(key: string, payload: unknown) {
   const list = (payload as Card[]) || []
   if (!list.length) return
   if (key === 'global') ctx.setCardsGlobal(list.filter((c) => !c.global), true)
+  else if (key === 'republish') ctx.setCardsGlobal(list, true)
   else if (key === 'unglobal') ctx.setCardsGlobal(list.filter((c) => c.global), false)
 }
 /** 把列表里对应条目滚进可视区（条目本来就在视口内时是空操作，不会跳动） */
@@ -280,9 +299,11 @@ watch(
   (id) => scrollItemIntoView('data-frame-id', id),
 )
 
-// 鼠标进入/离开编辑区时更新「是否悬停在步骤编辑框」标志；仅编辑卡片视图时有效
-function onEditorHover(v: boolean) {
-  ctx.stepEditorHovered.value = v && ctx.editorTarget.value === 'card'
+// 编辑区焦点进出时更新「焦点是否在步骤编辑框内」标志（Ctrl+S 判据）；仅编辑卡片视图时有效。
+// 用焦点而不是鼠标悬停：悬停会让 Ctrl+S 保存目标随鼠标移动而变。focusin/focusout 会冒泡，
+// 面板内子控件之间移动焦点时会先 focusout 再 focusin，最终状态仍然是「在内部」。
+function onEditorFocus(v: boolean) {
+  ctx.stepEditorFocused.value = v && ctx.editorTarget.value === 'card'
 }
 
 // 列表区允许放置（Ctrl+拖拽复制）

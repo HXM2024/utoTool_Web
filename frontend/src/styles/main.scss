@@ -138,7 +138,9 @@ a {
   height: 8px;
 }
 ::-webkit-scrollbar-track {
-  background: transparent;
+  // 不用 transparent：根元素带 color-scheme: dark 时，Chromium 会用 UA 默认的「深色」去绘制滑道，
+  // 于是浅色面板里也会出现一条深色滑道（就是「滚动条滑道没改到」那一块）。这里显式给主题色。
+  background: var(--bg-page);
 }
 ::-webkit-scrollbar-thumb {
   background: var(--border-color);
@@ -189,6 +191,130 @@ a {
   --el-button-hover-border-color: var(--color-primary-light);
   --el-button-active-bg-color: var(--color-primary-dark);
   --el-button-active-border-color: var(--color-primary-dark);
+}
+
+// ---------- 按钮底色：非实心按钮一律给「浅填充 + 边框」 ----------
+// EP 里「未指定 type」的按钮底色是 #141414（暗色下纯黑）、plain 主色档只有 #182129、
+// 文字按钮更是 transparent：三者都看不出是按钮（透明块 / 黑块）。
+// 这里把三类非实心按钮统一成 EP 的浅填充色 + 浅边框；取值全用 EP 变量，
+// 所以能随所在作用域自动适配（暗色外壳里是中灰底，浅色编辑器里是白/浅灰底）。
+//  · 实心按钮（primary/success…）不动，保留它们的高亮语义
+//  · 文字按钮原本 border-width 为 0，加真实边框会改控件尺寸 → 用 inset 描边代替
+.el-button.is-text:not(.is-disabled),
+.el-button.is-plain:not(.is-disabled),
+.el-button:not(.is-text):not(.is-plain):not(.is-disabled):not(.el-button--primary):not(.el-button--success):not(.el-button--warning):not(.el-button--danger):not(.el-button--info) {
+  background-color: var(--el-fill-color-light);
+  border-color: var(--el-border-color);
+  &:hover,
+  &:focus-visible {
+    background-color: var(--el-fill-color);
+    border-color: var(--el-border-color);
+  }
+  &:active {
+    background-color: var(--el-fill-color);
+    border-color: var(--el-border-color);
+  }
+}
+.el-button.is-text:not(.is-disabled) {
+  box-shadow: inset 0 0 0 1px var(--el-border-color);
+}
+
+// ---------- 图形化配置编辑器：内部统一浅色 ----------
+// 编辑器（FunctionGraphEditor / CaseFrameCanvas / StepEditor / DockPanel…）的自绘样式本来就是浅色
+// （白面板 #fff、浅灰画布 #f0f2f5、浅灰行 #f5f7fa），但里面的 EP 控件默认吃 html.dark 的暗色变量，
+// 于是出现「白底 + 黑按钮 / 黑输入框」。这里在编辑器作用域内把 EP 变量改回浅色档，让控件与面板一致；
+// App 外壳（深色主题）不受影响。
+//  · `.ce-modal-pass` 是 CardEditor 弹窗的 modal-class、`.ge-output-drawer` 是「生成结果」抽屉的类 ——
+//    它们 append-to-body 到 body 上、不在 .graph-editor 内，需要单独列出。
+.graph-editor,
+.ce-modal-pass,
+.ge-output-drawer {
+  // 编辑器内部一律按浅色渲染：原生滚动条、原生表单控件（checkbox/radio）等由浏览器按 color-scheme 绘制，
+  // 不声明的话它们会跟着根元素的 dark 走（浅色面板里出现深色滑道/控件）。
+  color-scheme: light;
+  --el-bg-color: #ffffff;
+  --el-bg-color-overlay: #ffffff;
+  --el-bg-color-page: #f0f2f5;
+  --el-fill-color-blank: #ffffff;
+  --el-fill-color: #f0f2f5;
+  --el-fill-color-light: #f5f7fa;
+  --el-fill-color-lighter: #fafafa;
+  --el-fill-color-dark: #ebedf0;
+  --el-text-color-primary: #303133;
+  --el-text-color-regular: #606266;
+  --el-text-color-secondary: #909399;
+  --el-text-color-placeholder: #a8abb2;
+  --el-text-color-disabled: #c0c4cc;
+  --el-border-color: #dcdfe6;
+  --el-border-color-light: #e4e7ed;
+  --el-border-color-lighter: #ebeef5;
+  --el-mask-color: rgba(255, 255, 255, 0.9);
+  // 主色阶也回到浅色档：暗色档在浅底上对比不足
+  --el-color-primary: #1890ff;
+  --el-color-primary-light-3: #5db1ff;
+  --el-color-primary-light-5: #8cc8ff;
+  --el-color-primary-light-7: #badeff;
+  --el-color-primary-light-8: #d1e9ff;
+  --el-color-primary-light-9: #e8f4ff;
+  --el-color-primary-dark-2: #1373cc;
+  // 语义色阶同样要回浅色档：EP 暗色会把各族的 light-3/5/7/8/9 整体映射成深色，
+  // 于是编辑器里的 el-tag type="info"（画布「N 个工况框」）等会变成「深底浅字」。
+  --el-color-success: #67c23a;
+  --el-color-success-light-3: #95d475;
+  --el-color-success-light-5: #b3e19d;
+  --el-color-success-light-7: #d1edc4;
+  --el-color-success-light-8: #e1f3d8;
+  --el-color-success-light-9: #f0f9eb;
+  --el-color-success-dark-2: #529b2e;
+  --el-color-warning: #e6a23c;
+  --el-color-warning-light-3: #eebe77;
+  --el-color-warning-light-5: #f3d19e;
+  --el-color-warning-light-7: #f8e3c5;
+  --el-color-warning-light-8: #faecd8;
+  --el-color-warning-light-9: #fdf6ec;
+  --el-color-warning-dark-2: #b88230;
+  --el-color-danger: #f56c6c;
+  --el-color-danger-light-3: #f89898;
+  --el-color-danger-light-5: #fab6b6;
+  --el-color-danger-light-7: #fcd3d3;
+  --el-color-danger-light-8: #fde2e2;
+  --el-color-danger-light-9: #fef0f0;
+  --el-color-danger-dark-2: #c45656;
+  --el-color-error: #f56c6c;
+  --el-color-error-light-3: #f89898;
+  --el-color-error-light-5: #fab6b6;
+  --el-color-error-light-7: #fcd3d3;
+  --el-color-error-light-8: #fde2e2;
+  --el-color-error-light-9: #fef0f0;
+  --el-color-error-dark-2: #c45656;
+  --el-color-info: #909399;
+  --el-color-info-light-3: #a6a9ad;
+  --el-color-info-light-5: #b1b3b8;
+  --el-color-info-light-7: #c8c9cc;
+  --el-color-info-light-8: #dedfe0;
+  --el-color-info-light-9: #e9e9eb;
+  --el-color-info-dark-2: #73767a;
+  // 应用级变量也要回浅色：全局的滚动条规则用的是 --border-color，
+  // 否则编辑器里的滚动滑块仍是暗色（= 「滚动滑块也是深色」）
+  --bg-page: #f0f2f5;
+  --bg-card: #ffffff;
+  --bg-header: #ffffff;
+  --bg-hover: #f5f5f5;
+  --text-primary: #303133;
+  --text-regular: #606266;
+  --text-secondary: #909399;
+  --text-placeholder: #c0c4cc;
+  --border-color: #dcdfe6;
+  --border-color-light: #e4e7ed;
+  --color-primary: #1890ff;
+  --color-primary-light: #5db1ff;
+  --color-primary-dark: #1373cc;
+  --color-secondary: #2c3e50;
+  --color-secondary-light: #0c6ab6;
+  --color-success: #52c41a;
+  --color-warning: #faad14;
+  --color-error: #f5222d;
+  --color-info: #909399;
 }
 
 .el-tabs__item.is-active {

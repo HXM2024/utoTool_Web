@@ -16,13 +16,20 @@
         @contextmenu.prevent.stop="openMenu($event, i)"
       >
         <span class="vl-drag" title="拖拽到参数框">⠿</span>
-        <span v-if="v.global" class="vl-global" title="全局值资源：新建配置 / 新建分组时自动带出">全局</span>
+        <span v-if="v.global" class="vl-global" title="全局值资源：设为全局后自动同步到所有分组的值资源库">全局</span>
         <el-select v-model="v.kind" size="small" class="vl-kind" @change="onKindChange(v)">
           <el-option label="常量" value="const" />
           <el-option label="列表" value="list" />
           <el-option label="区间" value="range" />
         </el-select>
-        <el-input v-model="v.name" size="small" class="vl-name" placeholder="引用名" @change="commit" />
+        <el-input
+          v-model="v.name"
+          size="small"
+          class="vl-name"
+          placeholder="引用名"
+          :ref="(el: any) => setNameInputEl(v.id, el)"
+          @change="commit"
+        />
 
         <template v-if="v.kind === 'const'">
           <el-input v-model="constDraft[v.id]" size="small" class="vl-values" placeholder="常量值" @change="applyConst(v)" />
@@ -47,8 +54,9 @@
 </template>
 
 <script setup lang="ts">
-import { computed, reactive, ref, watch } from 'vue'
+import { computed, nextTick, reactive, ref, watch } from 'vue'
 import { Plus, Close } from '@element-plus/icons-vue'
+import { ElMessage } from 'element-plus'
 import type { ValueResource } from '@/types/functionGraph'
 import { genId } from '@/types/functionGraph'
 import CtxMenu from './CtxMenu.vue'
@@ -110,6 +118,8 @@ function openMenu(e: MouseEvent, i: number) {
     items.push({ key: 'global', label: list.length > 1 ? `设为全局（${list.length - globals} 个）` : '设为全局' })
   }
   if (globals > 0) {
+    // 已带「全局」标记的项再点「设为全局」会被过滤成空操作，所以单独给一个发布入口
+    items.push({ key: 'republish', label: list.length > 1 ? `重新发布到所有分组（${globals} 个）` : '重新发布到所有分组' })
     items.push({ key: 'unglobal', label: list.length > 1 ? `取消全局（${globals} 个）` : '取消全局' })
   }
   ctxMenu.value?.open(e, items, list)
@@ -118,6 +128,7 @@ function onMenuSelect(key: string, payload: unknown) {
   const list = (payload as ValueResource[]) || []
   if (!list.length) return
   if (key === 'global') emit('toggle-global', list.filter((x) => !x.global), true)
+  else if (key === 'republish') emit('toggle-global', list, true)
   else if (key === 'unglobal') emit('toggle-global', list.filter((x) => x.global), false)
 }
 
@@ -188,6 +199,21 @@ function addResource() {
   emit('update:values', next)
   // 预填草稿，保证新建后立即进入可编辑状态
   constDraft[v.id] = ''
+  // 新增后自动聚焦「引用名」并全选，便于直接改名（默认名是 valueN）
+  nextTick(() => {
+    const inst = nameInputEls[v.id]
+    const input = inst?.input || inst?.$el?.querySelector?.('input')
+    if (input && typeof input.focus === 'function') {
+      input.focus()
+      input.select?.()
+    }
+  })
+}
+
+/** 引用名输入框实例（按值资源 id 存）：新增后自动聚焦 */
+const nameInputEls: Record<string, any> = {}
+function setNameInputEl(id: string, el: any) {
+  if (el) nameInputEls[id] = el
 }
 
 function removeResource(i: number) {
@@ -203,6 +229,8 @@ function removeResource(i: number) {
   if (anchorRow > i) anchorRow -= 1
   else if (anchorRow === i) anchorRow = -1
   emit('update:values', next)
+  // 删除后给个明确回执：原来静默删除，误点时看不出来
+  if (removed) ElMessage.success(`已删除值资源：${removed.name || '未命名'}`)
 }
 
 function onDragStart(e: DragEvent, v: ValueResource) {

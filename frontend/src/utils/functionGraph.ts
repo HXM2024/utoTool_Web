@@ -132,32 +132,69 @@ export function stepNumFieldsOf(kind: CardStep['kind']): StepNumField[] {
   return STEP_NUM_FIELDS[kind] || []
 }
 
-/** 限时检查的判定方式 —— 对应 func_test_function.py 里 SignalWaitCheck 的四个重载：
+/** 限时检查的判定方式 —— 对应 func_test_function.py 里 SignalWaitCheck 的重载：
  *  等于/不等于期望值  → SignalWaitCheck[Not](sig, compareValue, time)
- *  在/不在区间内      → SignalWaitCheck[Not](sig, RangeValue1, RangeValue2, time) */
+ *  在/不在区间内      → SignalWaitCheck[Not](sig, RangeValue1, RangeValue2, time)
+ *  大于/小于期望值    → 同样走区间形式，上下限按「两倍预期值」自动填入（见 fillWaitCmpBounds） */
 export interface WaitFormOption {
-  value: 'eq' | 'ne' | 'in' | 'out'
+  value: 'eq' | 'ne' | 'in' | 'out' | 'gt' | 'lt'
   label: string
   not: boolean
   range: boolean
+  /** 大于/小于：比较方向标记（落到 step.waitCmp，仅用于回显） */
+  cmp?: 'gt' | 'lt'
 }
 export const WAIT_FORMS: WaitFormOption[] = [
   { value: 'eq', label: '等于期望值', not: false, range: false },
   { value: 'ne', label: '不等于期望值', not: true, range: false },
   { value: 'in', label: '在区间内', not: false, range: true },
   { value: 'out', label: '不在区间内', not: true, range: true },
+  { value: 'gt', label: '大于期望值', not: false, range: true, cmp: 'gt' },
+  { value: 'lt', label: '小于期望值', not: false, range: true, cmp: 'lt' },
 ]
-/** 当前步骤的判定方式 value（用于下拉回显） */
+/** 数值化：能解析成有限数字才返回，否则 null（占位符 / 别名 / 空值等一律跳过） */
+function toFiniteNumber(v: unknown): number | null {
+  if (typeof v === 'number') return Number.isFinite(v) ? v : null
+  const s = String(v ?? '').trim()
+  if (!s) return null
+  const n = Number(s)
+  return Number.isFinite(n) ? n : null
+}
+/** 数字转字符串（抹掉浮点误差尾巴，如 2.5 / 10 / -8） */
+function fmtNum(n: number): string {
+  return String(Math.round(n * 1e6) / 1e6)
+}
+/** 大于/小于：按「两倍预期值」自动填入区间上下限。
+ *  X = 参数行里的期望值（优先取 value，回退 value2；非数值行跳过）。
+ *    大于 → {X, 2X}；小于 → {X/2, X}
+ *  再按数值大小排序：小者写入 value（下限）、大者写入 value2（上限），
+ *  保证「下限 ≤ 上限」不受正负号影响（负数时 2X < X）。 */
+function fillWaitCmpBounds(step: CardStep, cmp: 'gt' | 'lt') {
+  for (const arg of step.args || []) {
+    const x = toFiniteNumber(arg.value) ?? toFiniteNumber(arg.value2)
+    if (x === null) continue
+    const a = cmp === 'gt' ? x : x / 2
+    const b = cmp === 'gt' ? x * 2 : x
+    arg.value = fmtNum(Math.min(a, b))
+    arg.value2 = fmtNum(Math.max(a, b))
+  }
+}
+/** 当前步骤的判定方式 value（用于下拉回显）：大于/小于优先按 waitCmp 回显 */
 export function waitFormOf(step: CardStep): WaitFormOption['value'] {
-  const hit = WAIT_FORMS.find((f) => f.not === !!step.waitNot && f.range === !!step.waitRange)
+  if (step.waitCmp === 'gt' || step.waitCmp === 'lt') return step.waitCmp
+  const hit = WAIT_FORMS.find((f) => !f.cmp && f.not === !!step.waitNot && f.range === !!step.waitRange)
   return hit ? hit.value : 'eq'
 }
-/** 写入判定方式（落到 waitNot / waitRange 两个标记上） */
+/** 写入判定方式（落到 waitNot / waitRange 两个标记上；大于/小于另存 waitCmp 并自动填入上下限） */
 export function applyWaitForm(step: CardStep, value: WaitFormOption['value']) {
   const hit = WAIT_FORMS.find((f) => f.value === value)
   if (!hit) return
+  const prevCmp = step.waitCmp
   step.waitNot = hit.not
   step.waitRange = hit.range
+  step.waitCmp = hit.cmp
+  // 仅在实际切换方向时重算，避免重复点同一项把区间越缩越小
+  if (hit.cmp && prevCmp !== hit.cmp) fillWaitCmpBounds(step, hit.cmp)
 }
 /** 限时检查当前判定方式是否需要区间（两个值） */
 export function isWaitRange(step: CardStep): boolean {
@@ -319,6 +356,42 @@ function mergeCardParams(nodeParams?: CardParam[], libParams?: CardParam[]): Car
  * 保留画布实例 id/refId 不动（避免端口/连线引用失效），仅同步 name/description/steps/type。
  * 返回 { graph, synced }；无变化时返回原 graph 引用（synced=0）。
  */
+/**
+ * 用卡片库里的同源卡片 src 刷新一个卡片实例 card（保留实例 id / refId / 参数取值 / 步骤 id）。
+ * 返回新实例；无变化时返回原引用（调用方用 `!==` 判断）。
+ *
+ * 单独抽出来是因为「全局卡片改内容」要同时刷新**非活动分组**工况里已放置的副本，
+ * 两处必须用同一套规则，否则会出现「卡片列表更新了、画布里的副本还是旧的」。
+ */
+export function syncCardRef(card: Card, src: Card): Card {
+  // 卡片引用节点（唯一一步就是「引用该卡片」）不能整块覆盖：
+  // 它的内容是按实例填的参数取值（args）决定的，覆盖成库卡片原件会丢掉这些取值，
+  // 参数没默认值时就会退化成显示/生成 `{{参数}}`。这里只同步显示用的卡片名。
+  const isRefNode =
+    card.steps?.length === 1 && card.steps[0].kind === 'card' && card.steps[0].cardId === card.refId
+  if (isRefNode) {
+    const step = card.steps[0]
+    if (step.cardName === src.name && step.cardType === src.type) return card
+    return { ...card, steps: [{ ...step, cardName: src.name, cardType: src.type }] }
+  }
+  // 节点自己的参数值不能被库卡片覆盖：整块覆盖会把节点上填好的默认值回滚成库卡片的值
+  // （经常是空），界面随即退回显示参数名/占位符，像是「填了值没生效」。
+  // 参数声明仍以库卡片为准，只保留节点上的同名参数（含默认值/显示名）。
+  const next: Card = {
+    ...src,
+    id: card.id,
+    refId: card.refId,
+    params: mergeCardParams(card.params, src.params),
+    // 「全局卡片」是卡片库条目的作用域标记，不该带到工况节点副本上
+    global: undefined,
+  }
+  // 步骤内容与库卡片逐字段一致（只差步骤 id）时保留节点自己的 steps：步骤 id 是序列接线口
+  // 锚点（seq:<seqId>@<stepId>）的落点，仅因 id 不同就把整份步骤换成库卡片的，会把锚在这些
+  // 步骤上的连线全部打成悬空（画不出来、也不参与用例展开）。这种情况只同步名称 / 参数。
+  if (sameStepsIgnoringId(card.steps, src.steps)) next.steps = card.steps
+  return JSON.stringify(next) !== JSON.stringify(card) ? next : card
+}
+
 export function syncGraphRefs(
   graph: Graph,
   library: CardLibrary,
@@ -334,33 +407,9 @@ export function syncGraphRefs(
     if (!card.refId) return card
     const src = libIndex.get(card.refId)
     if (!src) return card
-    // 卡片引用节点（唯一一步就是「引用该卡片」）不能整块覆盖：
-    // 它的内容是按实例填的参数取值（args）决定的，覆盖成库卡片原件会丢掉这些取值，
-    // 参数没默认值时就会退化成显示/生成 `{{参数}}`。这里只同步显示用的卡片名。
-    const isRefNode =
-      card.steps?.length === 1 && card.steps[0].kind === 'card' && card.steps[0].cardId === card.refId
-    if (isRefNode) {
-      const step = card.steps[0]
-      if (step.cardName === src.name && step.cardType === src.type) return card
-      synced += 1
-      return { ...card, steps: [{ ...step, cardName: src.name, cardType: src.type }] }
-    }
-    // 节点自己的参数值不能被库卡片覆盖：整块覆盖会把节点上填好的默认值回滚成库卡片的值
-    // （经常是空），界面随即退回显示参数名/占位符，像是「填了值没生效」。
-    // 参数声明仍以库卡片为准，只保留节点上的同名参数（含默认值/显示名）。
-    const next: Card = {
-      ...src,
-      id: card.id,
-      refId: card.refId,
-      params: mergeCardParams(card.params, src.params),
-      // 「全局卡片」是卡片库条目的作用域标记，不该带到工况节点副本上
-      global: undefined,
-    }
-    if (JSON.stringify(next) !== JSON.stringify(card)) {
-      synced += 1
-      return next
-    }
-    return card
+    const next = syncCardRef(card, src)
+    if (next !== card) synced += 1
+    return next
   }
 
   const nodes = graph.nodes.map((node) => {
@@ -402,6 +451,15 @@ export function syncGraphRefs(
 /** 步骤签名：忽略步骤 id（每个副本各自生成 id），其余字段逐字段比较 */
 function stepSignature(step: CardStep): string {
   return JSON.stringify({ ...step, id: '' })
+}
+
+/** 两组步骤是否逐字段一致（忽略步骤 id）。步骤 id 是接线口锚点的落点，
+ *  仅 id 不同不算内容变化——把这种「变化」当成内容更新会打断锚点。 */
+function sameStepsIgnoringId(a?: CardStep[], b?: CardStep[]): boolean {
+  const x = a ?? []
+  const y = b ?? []
+  if (x.length !== y.length) return false
+  return x.every((s, i) => stepSignature(s) === stepSignature(y[i]))
 }
 
 /** 节点是否只是库卡片的一份整份副本（步骤逐条一致）→ 换成卡片引用后生成结果不变。
@@ -700,6 +758,8 @@ export function migrateSeqPortKeys(graph: Graph): number {
  * 主序列步骤变化后修正接线口锚点（保存主序列卡片 / 从卡片库同步后调用）：
  * - 锚定的步骤仍在 → 不动（锚点自动跟随，这正是锚定的意义）；
  * - 锚定的步骤被删 → 就近改锚到相邻的存活步骤（先往前找，再往后找）；
+ * - 整份步骤被换过 id（节点步骤被库卡片覆盖等，旧 id 与新 id 完全不相交）→
+ *   按原来的位置索引改锚到新步骤上；
  * - 旧序号格式 → 转成锚定格式（序号越界时吸附到最近的合法步骤）。
  * 返回被修正的连线条数。
  */
@@ -717,6 +777,13 @@ export function reanchorFrameSeqPorts(frame: CaseFrame, oldSeqSteps: CardStep[])
     for (let i = k + 1; i < oldIds.length; i++) if (live.has(oldIds[i])) return oldIds[i]
     return null
   }
+  /** 兜底：整份步骤换过 id 时旧 id 在新集合里一个都找不到，nearestAlive 必然返回 null，
+   *  但原来的位置索引仍然有效，按索引落到新步骤上（越界吸附到边界步骤）。 */
+  const nearestByOldIndex = (stepId: string): string | null => {
+    const k = oldIds.indexOf(stepId)
+    if (k < 0) return null
+    return steps[Math.min(Math.max(k, 0), steps.length - 1)]?.id ?? null
+  }
   let fixed = 0
   for (const eid of Object.keys(frame.edges)) {
     const e = frame.edges[eid]
@@ -727,7 +794,7 @@ export function reanchorFrameSeqPorts(frame: CaseFrame, oldSeqSteps: CardStep[])
       if (port.stepId !== undefined && live.has(port.stepId)) continue
       const stepId =
         port.stepId !== undefined
-          ? nearestAlive(port.stepId)
+          ? nearestAlive(port.stepId) ?? nearestByOldIndex(port.stepId)
           : steps[Math.min(Math.max(port.idx ?? 0, 0), steps.length - 1)]?.id ?? null
       if (!stepId) continue
       e[end] = seqPortKey(seqId, stepId)
@@ -1222,9 +1289,36 @@ export function collectCalledFunctionNames(steps?: CardStep[]): string[] {
 }
 
 /**
+ * 卡片参数名的「即时校验」：返回 null=通过，否则错误文案。
+ *
+ * 判据与两个编辑器保存时的 `normalizeParams` 完全同源（仅字母数字下划线、不可重名），
+ * 只是把结果提前到输入时展示。**唯一的差别**：空名字这里返回 null 不报错 ——
+ * 刚点「添加参数」的空行不该立刻标红；「参数名不能为空」仍由保存时的 normalizeParams 拦截。
+ * 因此通过 / 拒绝的集合不变，只多了一次提前展示。
+ */
+export function paramNameError(params: CardParam[] | undefined, index: number): string | null {
+  const list = params ?? []
+  const name = String(list[index]?.name ?? '').trim()
+  if (!name) return null
+  if (!/^\w+$/.test(name)) return '参数名只能包含字母、数字、下划线'
+  for (let i = 0; i < list.length; i++) {
+    if (i === index) continue
+    if (String(list[i]?.name ?? '').trim() === name) return `参数名「${name}」重复`
+  }
+  return null
+}
+
+/**
  * 「外部函数」白名单：不属于函数库、但生成出的 CAPL 里仍然可用（CANoe 内置 test / 系统变量 API、
  * 以及 .cin 里定义的公共函数）。这些不会出现在函数库解析结果里，属于正常调用，
- * 不参与「调用了函数库里不存在的函数」的告警。遇到新的外部函数，往这里追加即可。
+ * 不参与「调用了函数库里不存在的函数」的告警。
+ *
+ * #12（2026-10-10 定调）：**这是全项目唯一一处维护点** —— 判定源仍是「函数库解析结果 + 本表」，
+ * 不改后端、不新增只读接口；白名单只在展示层过滤告警，不参与任何生成逻辑。
+ * 遇到新的外部函数，只在此处追加，不要在组件里另写一份。
+ *
+ * 依据：CANoe Test Feature Set / 系统变量 API（putValue/getValue/testEnableMsg/testDisableMsg），
+ * 以及本项目 .cin 中定义的公共封装（setSignal/testenableMsg）。
  */
 export const EXTERNAL_CALL_WHITELIST: ReadonlySet<string> = new Set<string>([
   // CANoe 系统变量 API
@@ -1258,6 +1352,30 @@ interface FrameLink {
 /** 工况框连线的稳定 key（优先用边 id） */
 export function frameEdgeKey(e: FrameEdge): string {
   return e.id || `${e.from}->${e.to}`
+}
+
+/** 把当前「生效编号」固化为显式编号（写回各连线的 pair）
+ *
+ *  编号只在「重新连线（从无到有）」时才按泳道位置自动排；
+ *  已经连好的连线在拖拽卡片 / 移动泳道改变顺序时不应该跟着位置重排 ——
+ *  重排动作发生前先调用本函数把生效编号写死即可。
+ *
+ *  返回是否发生了改动（用于决定要不要写回）。
+ */
+export function freezeFrameNumbers(frame: CaseFrame): boolean {
+  const { edgeNums } = resolveFrameNumbers(frame)
+  if (!edgeNums.size) return false
+  let changed = false
+  for (const e of Object.values(frame.edges ?? {})) {
+    const nums = edgeNums.get(frameEdgeKey(e))
+    if (!nums || !nums.length) continue
+    const next = [...nums].sort((a, b) => a - b)
+    const cur = [...(e.pair ?? [])].sort((a, b) => a - b)
+    if (cur.length === next.length && cur.every((v, i) => v === next[i])) continue
+    e.pair = next
+    changed = true
+  }
+  return changed
 }
 
 /**
@@ -1921,6 +2039,62 @@ export function frameCaseRows(
   valueLibrary?: ValueResource[],
 ): FrameCaseRow[] {
   return frameCaseRowsWithLookups(frame, buildCardLookup(cardLibrary), buildValueLookup(valueLibrary))
+}
+
+/**
+ * #21 用例展开上限（前端预检）。
+ *
+ * 口径说明：前端只能预知「用例条数」（用 frameCaseRows 逐工况估算，与后端展开口径一致：
+ * 每个连线路径 1 条，再按 @list/@range(split) 做笛卡尔积），无法预知产物 CAPL 的行数，
+ * 因此总量上限按「条数」这一同量纲口径执行；产物真实行数在拿到结果后另行复核（见用例预览）。
+ */
+export const EXPAND_MAX_PER_FRAME = 2000
+export const EXPAND_MAX_TOTAL = 20000
+
+export interface ExpandLimitHit {
+  kind: 'per-frame' | 'total'
+  /** 触发单工况上限的工况名 */
+  frameName?: string
+  /** 该工况的用例条数 */
+  frameCount: number
+  /** 本次展开的用例总条数 */
+  total: number
+}
+
+/** 分组级展开用量（含该组自己的卡片库/值资源库，拆分维度取自值资源库） */
+export interface ExpandLimitGroup {
+  name?: string
+  frames?: CaseFrame[]
+  cards?: CardLibrary
+  valueLibrary?: ValueResource[]
+}
+
+/**
+ * 展开前预检：超限返回命中信息（调用方据此拒绝并提示拆分），未超限返回 null。
+ * 注意：单工况超限会立即返回，不再继续计算后续工况。
+ */
+export function checkExpandLimit(groups: ExpandLimitGroup[] | undefined): ExpandLimitHit | null {
+  let total = 0
+  for (const g of groups || []) {
+    for (const f of g.frames || []) {
+      const n = frameCaseRows(f, g.cards, g.valueLibrary).length
+      total += n
+      if (n > EXPAND_MAX_PER_FRAME) {
+        return { kind: 'per-frame', frameName: f.name || '未命名工况', frameCount: n, total }
+      }
+    }
+  }
+  if (total > EXPAND_MAX_TOTAL) return { kind: 'total', frameCount: 0, total }
+  return null
+}
+
+/** 把 checkExpandLimit 的命中信息转成给用户看的文案（统一措辞，两处调用共用） */
+export function expandLimitMessage(hit: ExpandLimitHit): string {
+  const cap = `单工况 ${EXPAND_MAX_PER_FRAME} 条 / 单次 ${EXPAND_MAX_TOTAL} 条`
+  if (hit.kind === 'per-frame') {
+    return `「${hit.frameName}」约 ${hit.frameCount} 条用例，超过展开上限（${cap}）。请拆分该工况（减少编号组合或值资源拆分）后再试。`
+  }
+  return `本次展开约 ${hit.total} 条用例，超过展开上限（${cap}）。请拆分分组或减少工况后再试。`
 }
 
 /**

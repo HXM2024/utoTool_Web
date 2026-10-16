@@ -83,13 +83,14 @@ function toggleTheme() {
 }
 
 onMounted(() => {
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-  if (prefersDark) {
-    isDark.value = true
-    document.documentElement.classList.add('dark')
-  }
-  
+  // 默认浅色主题：不再跟随系统 prefers-color-scheme 自动切深色。
+  // 原因：图形化配置编辑器（CaseFrameCanvas / StepEditor / DockLayout 等）的自绘样式是浅色设计，
+  // 而外壳切深色时两者的控件配色会打架（白面板 + 黑按钮 / 深色滚动条滑道）。一律从浅色开始，
+  // 需要深色再手动切换（toggleTheme）。
   updateActiveModule()
+  // 继电器配置（Function / CAN / 三包 共用的 CAN 通道 + 继电器模块）存后端，
+  // 启动时拉一次，避免刷新后回落默认值
+  store.loadRelayConfig()
 })
 
 watch(() => route.path, () => {
@@ -105,6 +106,17 @@ function updateActiveModule() {
 
 // ---------- 全局快捷键：Ctrl+1..6 切换模块、Ctrl+F 聚焦当前模块搜索框 ----------
 const router = useRouter()
+
+// 切换模块前的守卫：当前模块若有「未保存的配置改动」，由该模块注册的守卫弹窗询问
+// （保存 / 不保存）；用户关闭弹窗 → 守卫返回 false → 取消本次导航，留在当前模块。
+// 视图被 keep-alive 缓存，注册的守卫在切走期间依然有效。
+router.beforeEach(async (to) => {
+  if (!tabs.some((t) => t.path === to.path)) return true
+  const target = to.path.replace('/', '').replace('-', '_')
+  if (target === store.activeModule) return true
+  return await store.runModuleLeaveGuard(store.activeModule)
+})
+
 tabs.forEach((tab, i) => {
   useShortcut({
     id: `global:module${i + 1}`,

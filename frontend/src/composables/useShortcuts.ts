@@ -109,6 +109,20 @@ export function isModuleActive(path: string): boolean {
   return p === path || p.startsWith(path + '/')
 }
 
+/**
+ * 指针当前是否位于指定元素内（含其子孙）。
+ * 供「只有指针在画布上时才生效」的快捷键使用：`Insert` / `Delete` 在右侧面板按到时，
+ * 不应误建 / 误删画布内容。元素未挂载（null）时返回 false。
+ */
+export function isPointerIn(el: HTMLElement | null | undefined): boolean {
+  if (!el) return false
+  try {
+    return el.matches(':hover')
+  } catch {
+    return false
+  }
+}
+
 /** 注册一个快捷键，返回注销函数 */
 export function registerShortcut(def: ShortcutDef): () => void {
   const item: RegisteredShortcut = { scope: 'module', ...def, seq: sharedShortcuts.seq++ }
@@ -141,6 +155,19 @@ export function installShortcutDispatcher() {
     list: () => listShortcuts(),
     log: shortcutLog,
     keyOf: (e: KeyboardEvent) => shortcutKeyOf(e),
+    /**
+     * 按 id 直接执行某个已注册快捷键的处理体（自查/回归用）。
+     * 用途：某些组合键会被浏览器自身吃掉（例如 Ctrl+Z 的原生撤销），页面上按不出来时，
+     * 可以用它确认「注册项与处理体本身是否正常」，把「键位没生效」与「处理逻辑有 bug」区分开。
+     */
+    run: (id: string) => {
+      const d = registry.find((x) => x.id === id)
+      if (!d) return 'not-registered'
+      if (d.when && !d.when()) return 'when-false'
+      const r = d.run(new KeyboardEvent('keydown'))
+      pushLog(d.id)
+      return r === undefined ? 'handled' : r
+    },
   }
   window.addEventListener(
     'keydown',

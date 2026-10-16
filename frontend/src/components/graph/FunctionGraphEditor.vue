@@ -2,8 +2,9 @@
   <div class="graph-editor">
     <div class="ge-header">
       <div class="ge-title-group">
-        <el-button text :icon="Back" @click="emit('close')" />
+        <el-button text :icon="Back" title="返回（有未保存修改会先询问）" aria-label="返回" @click="requestClose" />
         <span class="ge-title">功能用例配置</span>
+        <el-tag v-if="dirty" size="small" type="warning">未保存</el-tag>
         <el-tag v-if="caseCount" size="small" type="success">当前工况 {{ caseCount }} 条用例</el-tag>
       </div>
       <div class="ge-actions">
@@ -15,7 +16,10 @@
         <el-button size="small" plain :type="panelStates.value.visible ? 'primary' : 'default'" :icon="Grid" @click="toggleValueDrawer">值资源库</el-button>
         <el-button size="small" plain :type="panelStates.obj.visible ? 'primary' : 'default'" :icon="Grid" @click="toggleObjDrawer">对象浏览器</el-button>
         <el-button size="small" type="primary" :icon="Check" @click="onSaveClick">保存</el-button>
-        <el-button size="small" type="success" :icon="Promotion" @click="emit('generate')">生成</el-button>
+        <el-button size="small" type="success" :icon="Promotion" :loading="!!generating" @click="emit('generate')">生成</el-button>
+        <el-button size="small" :icon="FolderOpened" @click="outputDrawerVisible = true">
+          生成结果<span v-if="generateResult?.conflicts?.length" class="ge-out-dot" title="有函数库与内置模板冲突">!</span>
+        </el-button>
       </div>
     </div>
 
@@ -32,9 +36,10 @@
       >
         {{ g.name || '未命名' }}
       </el-tag>
-      <el-button size="small" text :icon="Plus" @click="addGroup">新建分组</el-button>
+      <el-button size="small" text :icon="Plus" :loading="addingGroup" @click="addGroup">新建分组</el-button>
       <el-input
         v-if="activeGroup"
+        ref="groupNameInputRef"
         v-model="activeGroupName"
         size="small"
         class="ge-group-name"
@@ -42,11 +47,11 @@
         @change="onGroupNameChange"
       />
       <span class="ge-groups-hint">组内用例命名：分组名_1、分组名_2…（卡片库/映射表/值资源库均按分组隔离）</span>
-      <el-button size="small" text @click="importGlobalTemplate">导入全局模板</el-button>
-      <el-button size="small" text @click="exportGlobalTemplate">导出为全局模板</el-button>
+      <el-button size="small" text :loading="importingTemplate" @click="importGlobalTemplate">导入全局模板</el-button>
+      <el-button size="small" text :loading="exportingTemplate" @click="exportGlobalTemplate">导出为全局模板</el-button>
     </div>
 
-    <div ref="dockBodyEl" class="ge-body">
+    <div ref="dockBodyEl" class="ge-body" v-loading="globalLoading">
       <DockLayout
         v-if="visibleDockRoot"
         :node="visibleDockRoot"
@@ -89,18 +94,69 @@
       <div class="dock-zone dz-right" :class="{ active: dockHover === 'right' }">右</div>
       <div class="dock-zone dz-center" :class="{ active: dockHover === 'center' }">中</div>
     </div>
+
+    <!-- 生成结果抽屉（#10/P1-5）：保留全屏编辑器，产物与冲突提示在编辑器内直接看，不必退出 -->
+    <el-drawer
+      v-model="outputDrawerVisible"
+      title="生成结果"
+      size="640px"
+      :modal="false"
+      append-to-body
+      destroy-on-close
+      class="ge-output-drawer"
+    >
+      <div v-if="generating" class="ge-out-empty">正在生成…</div>
+      <div v-else-if="!generateResult" class="ge-out-empty">
+        还没有生成结果。点顶部「生成」后，这里会显示产物与冲突提示，无需退出编辑器。
+      </div>
+      <template v-else>
+        <div class="ge-out-head">
+          <span class="ge-out-msg">{{ generateResult.message }}</span>
+          <el-button size="small" text :icon="FolderOpened" @click="emit('open-output-dir')">打开目录</el-button>
+        </div>
+        <div class="ge-out-dir" :title="generateResult.dir">
+          {{ generateResult.dir || '（未返回输出目录）' }}
+        </div>
+        <div v-if="generateResult.conflicts && generateResult.conflicts.length" class="ge-out-conflict">
+          以下函数与内置模板同名同参、实现不同，本次生成已以内置模板为准：{{
+            generateResult.conflicts.join('、')
+          }}
+        </div>
+        <el-tabs v-model="outputTab" class="ge-out-tabs">
+          <el-tab-pane label="TestCase" name="tc">
+            <div class="ge-out-code-head">
+              <el-button size="small" text :icon="DocumentCopy" @click="copyOutput(generateResult.testCases)">复制</el-button>
+            </div>
+            <pre class="ge-out-pre"><code>{{ generateResult.testCases || '（空）' }}</code></pre>
+          </el-tab-pane>
+          <el-tab-pane label="Function" name="fn">
+            <div class="ge-out-code-head">
+              <el-button size="small" text :icon="DocumentCopy" @click="copyOutput(generateResult.testFunction)">复制</el-button>
+            </div>
+            <pre class="ge-out-pre"><code>{{ generateResult.testFunction || '（空）' }}</code></pre>
+          </el-tab-pane>
+          <el-tab-pane label="ArrayFunc" name="af">
+            <div class="ge-out-code-head">
+              <el-button size="small" text :icon="DocumentCopy" @click="copyOutput(generateResult.arrayFuncTest)">复制</el-button>
+            </div>
+            <pre class="ge-out-pre"><code>{{ generateResult.arrayFuncTest || '（空）' }}</code></pre>
+          </el-tab-pane>
+        </el-tabs>
+        <div class="ge-out-at">生成时间：{{ outGeneratedAt }}</div>
+      </template>
+    </el-drawer>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, provide, nextTick, toRaw } from 'vue'
-import { Back, Check, Promotion, Files, Grid, Plus } from '@element-plus/icons-vue'
+import { Back, Check, Promotion, Files, Grid, Plus, FolderOpened, DocumentCopy } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import type { Card, CardLibrary, CardType, CardStep, CaseFrame, CaseGroup, Graph, InjectRole, MappingEntry, MappingKind, ObjectMapping, ValueResource } from '@/types/functionGraph'
 import { emptyCardLibrary, emptyCaseGroup, emptyMapping, emptyValueLibrary, genId, EMPTY_CARDS, EMPTY_MAPPING, EMPTY_VALUES } from '@/types/functionGraph'
-import { newCard, frameCaseRowsWithLookups, buildCardLookup, buildValueLookup, syncGraphRefs, migrateRefCopyNodes, reanchorFrameSeqPorts, frameSequenceId, migrateSeqPortKeys, extractCaseBlock, injectGlobalIntoGroup, cloneFrameWithNewIds } from '@/utils/functionGraph'
+import { newCard, frameCaseRowsWithLookups, buildCardLookup, buildValueLookup, syncGraphRefs, syncCardRef, migrateRefCopyNodes, reanchorFrameSeqPorts, frameSequenceId, migrateSeqPortKeys, extractCaseBlock, injectGlobalIntoGroup, cloneFrameWithNewIds, checkExpandLimit, expandLimitMessage } from '@/utils/functionGraph'
 import type { FrameCaseRow } from '@/utils/functionGraph'
-import { getGlobalLibrary, saveGlobalLibrary, expandCases, loadGlobalSections, saveGlobalCards, saveGlobalMapping, saveGlobalValueLibrary, parseFunctions } from '@/api/function'
+import { getGlobalLibrary, expandCases, loadGlobalSections, saveGlobalCards, saveGlobalMapping, saveGlobalValueLibrary, parseFunctions, getBuiltinFunctions } from '@/api/function'
 import DockPanel from './DockPanel.vue'
 import DockLayout from './DockLayout.vue'
 import type { LayoutNode } from './DockLayout.vue'
@@ -117,8 +173,24 @@ const props = defineProps<{
   valueLibrary?: ValueResource[]
   /** 打开时定位到的用例分组 id */
   activeGroupId?: string
+  /** 打开后定位到「产出该 case_id 的工况」（用例预览 → 图形配置 直达，P2-3） */
+  focusCaseId?: string
   /** CCP 系统变量类型表（{符号名: int|float|int64}）：供用例代码预览与生成同源 */
   ccpVarTypes?: Record<string, string>
+  /** DBC 环境变量名单：供用例代码预览兜底判定不带 EV_ 前缀的环境变量（与生成同源） */
+  dbcEnvNames?: string[]
+  /** 生成进行中（父级状态）：供编辑器内「生成结果」抽屉展示进度 */
+  generating?: boolean
+  /** 生成结果快照（父级生成成功后回传）：编辑器内抽屉展示产物，免退出全屏编辑器（#10/P1-5） */
+  generateResult?: {
+    dir: string
+    testCases: string
+    testFunction: string
+    arrayFuncTest: string
+    conflicts: string[]
+    message: string
+    at: number
+  } | null
 }>()
 const emit = defineEmits<{
   (e: 'update:graph', graph: Graph): void
@@ -126,6 +198,8 @@ const emit = defineEmits<{
   (e: 'close'): void
   (e: 'save'): void
   (e: 'generate'): void
+  /** 打开生成产物目录（由父级执行，编辑器不直接碰文件系统） */
+  (e: 'open-output-dir'): void
 }>()
 
 const graph = ref<Graph>(JSON.parse(JSON.stringify(props.graph)))
@@ -207,6 +281,34 @@ function focusLibraryCard(payload: { cardId: string; type: CardType }) {
   listAnchorId = payload.cardId
 }
 
+/** 按名称在卡片库里找卡片（用于「独立副本」点击时的兜底定位） */
+function findCardByName(name: string): Card | null {
+  const key = String(name || '').trim()
+  if (!key) return null
+  for (const t of cardTabs) {
+    const found = cardLibrary.value[t.value].find((c) => String(c.name || '').trim() === key)
+    if (found) return found
+  }
+  return null
+}
+/**
+ * 画布上点了「独立副本」卡片（无 refId，卡片库没有对应条目）：必须有反馈，
+ * 否则点了卡片左侧列表毫无动静，看起来像点击失效。
+ * - 按名称能匹配到库卡片 → 定位高亮它，并说明二者只是同名、未建立关联；
+ * - 匹配不到 → 给出说明（同一张卡片反复点用 grouping 合并提示）。
+ */
+function onFocusNode(payload: { frameId: string; nodeId: string; name: string }) {
+  if (!payload?.nodeId) return
+  const name = String(payload.name || '').trim()
+  const hit = name ? findCardByName(name) : null
+  if (hit) {
+    focusLibraryCard({ cardId: hit.id, type: hit.type })
+    ElMessage({ message: `「${name}」是独立副本（未与卡片库条目关联），已定位到同名库卡片`, type: 'info', grouping: true })
+    return
+  }
+  ElMessage({ message: `「${name || '未命名'}」是独立副本，卡片库中没有对应条目`, type: 'info', grouping: true })
+}
+
 /** 画布上点了工况框：让左侧工况列表聚焦到该工况。
  *  只动工况高亮，不碰卡片选中态（否则点工况里的卡片时会把刚聚焦的卡片清掉）。 */
 function focusFrameItem(frameId: string) {
@@ -224,8 +326,67 @@ const entityClip = ref<ClipEntity | null>(null)
 const selectionKind = ref<'frame' | 'card'>('frame')
 // 编辑卡片时触发 StepEditor 保存的信号（Ctrl+S 优先保存当前卡片）
 const stepSaveSignal = ref(0)
-// 鼠标是否悬停在步骤编辑框（StepEditor）上，用于 Ctrl+S 判断保存目标
-const stepEditorHovered = ref(false)
+// 保存配置时递增：通知画布清空撤销栈（#22 撤销边界）
+const canvasSaveSignal = ref(0)
+// 新建卡片后置真：通知 StepEditor 聚焦卡片名并全选（P0-6）；StepEditor 消费后回告复位
+const cardNameFocusPending = ref(false)
+
+// ===== 生成结果抽屉（#10/P1-5）：编辑器保持全屏，产物在编辑器内直接看 =====
+const outputDrawerVisible = ref(false)
+const outputTab = ref<'tc' | 'fn' | 'af'>('tc')
+const outGeneratedAt = computed(() =>
+  props.generateResult?.at ? new Date(props.generateResult.at).toLocaleString() : '',
+)
+/** 生成成功后自动展开抽屉，省掉「退出编辑器 → 找产物」两步 */
+watch(
+  () => props.generateResult?.at,
+  (at) => {
+    if (at) outputDrawerVisible.value = true
+  },
+)
+async function copyOutput(text: string) {
+  const s = String(text || '')
+  if (!s) {
+    ElMessage.warning('没有可复制的内容')
+    return
+  }
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(s)
+    } else {
+      const ta = document.createElement('textarea')
+      ta.value = s
+      ta.style.position = 'fixed'
+      ta.style.opacity = '0'
+      document.body.appendChild(ta)
+      ta.select()
+      document.execCommand('copy')
+      document.body.removeChild(ta)
+    }
+    ElMessage.success('已复制')
+  } catch {
+    ElMessage.warning('复制失败，请手动选择文本')
+  }
+}
+// 焦点是否在步骤编辑框（StepEditor）内，用于 Ctrl+S 判断保存目标。
+// 用「焦点」而不是「鼠标悬停」：悬停会让 Ctrl+S 的语义随鼠标位置漂移，无法预期。
+const stepEditorFocused = ref(false)
+
+// 异步操作的进行中标志（新建分组 / 导入·导出全局模板 / 加载全局库）：
+// 这几个动作会联网，原来没有任何进行中反馈，慢网下点完像没反应。
+const addingGroup = ref(false)
+const importingTemplate = ref(false)
+const exportingTemplate = ref(false)
+const globalLoading = ref(false)
+
+/**
+ * 「未保存」标识：以「有内容改动」为判据。
+ * 刻意不逐次序列化整图比对 —— 拖拽时每次改动都 JSON.stringify 上百个节点会明显掉帧。
+ * 内容回写（emitGraph / onGraphChange）时置位；保存成功 / 载入完成 / 外部整体替换时清零。
+ */
+const dirty = ref(false)
+/** 为 true 时 emitGraph 不改动 dirty（用于切换分组这类纯导航回写） */
+let suppressDirty = false
 
 const frames = computed<CaseFrame[]>(() => graph.value.frames || [])
 
@@ -413,6 +574,8 @@ function emitGraph() {
   const payload = JSON.parse(JSON.stringify(toRaw(graph.value)))
   lastEmittedGraph = payload
   emit('update:graph', payload)
+  // 内容回写即视为「有未保存改动」（切换分组等纯导航场景由 suppressDirty 抑制）
+  if (!suppressDirty) dirty.value = true
 }
 /** 切换活动分组：保存当前分组后载入目标分组 */
 function switchGroup(id: string) {
@@ -423,7 +586,12 @@ function switchGroup(id: string) {
   graph.value.frames = grp ? grp.frames : []
   selectedFrameId.value = ''
   editorTarget.value = 'frames'
+  // 切换分组只是「换个分组看」：这次整图回写不代表用户改了内容，不要置「未保存」
+  suppressDirty = true
   emitGraph()
+  suppressDirty = false
+  // 全局项内容同步的基线按分组绑定：换分组后重建，避免拿上一个分组的快照去 diff
+  resetGlobalBaseline()
   scheduleCaseIdRefresh()
   nextTick(() => {
     if (frames.value.length) selectFrame(frames.value[0].id)
@@ -435,13 +603,35 @@ async function addGroup() {
   const g = graph.value
   if (!Array.isArray(g.groups)) g.groups = []
   const grp = emptyCaseGroup(`GraphCase${g.groups.length + 1}`)
-  const n = await applyGlobalToGroup(grp)
-  g.groups.push(grp)
-  activeGroupId.value = grp.id
-  g.frames = grp.frames
-  selectedFrameId.value = ''
-  emitGraph()
-  ElMessage.success(n ? `已新建分组 ${grp.name}（已带出 ${n} 项全局内容）` : `已新建分组 ${grp.name}（内容为空）`)
+  // 会联网（读全局库带出全局项）：按钮进入 loading，慢网下不再「点完没反应」
+  addingGroup.value = true
+  try {
+    const n = await applyGlobalToGroup(grp)
+    g.groups.push(grp)
+    activeGroupId.value = grp.id
+    g.frames = grp.frames
+    selectedFrameId.value = ''
+    emitGraph()
+    ElMessage.success(n ? `已新建分组 ${grp.name}（已带出 ${n} 项全局内容）` : `已新建分组 ${grp.name}（内容为空）`)
+    // 全局项内容同步的基线按分组绑定：切到新分组后重建
+    resetGlobalBaseline()
+    // 新建后自动聚焦「当前分组名」并全选，便于直接改名（默认名是 GraphCaseN）
+    focusGroupNameInput()
+  } finally {
+    addingGroup.value = false
+  }
+}
+/** 聚焦「当前分组名」输入框并全选（新建分组后调用） */
+const groupNameInputRef = ref<any>(null)
+function focusGroupNameInput() {
+  nextTick(() => {
+    const inst = groupNameInputRef.value
+    const input = inst?.input || inst?.$el?.querySelector?.('input')
+    if (input && typeof input.focus === 'function') {
+      input.focus()
+      input.select?.()
+    }
+  })
 }
 /** 分组名变更：写回并通知父级 */
 function onGroupNameChange() {
@@ -599,6 +789,8 @@ function createCard(type: CardType, role?: InjectRole) {
   next[type].push(card)
   cardLibrary.value = next
   emitGroupUpdate()
+  // P0-6：进入编辑后自动聚焦卡片名并全选
+  cardNameFocusPending.value = true
 }
 function saveCard(card: Card) {
   const next: CardLibrary = {
@@ -613,6 +805,17 @@ function saveCard(card: Card) {
   cardLibrary.value = next
   syncRefsFromLibrary(cardLibrary.value, true)
   emitGroupUpdate()
+  if (card.global) {
+    // 带「全局」标记的卡片：内容改动要外传（覆盖其它分组的同 id 副本 + 写回全局库）
+    void publishGlobalCard(card)
+      .then((touched) => {
+        ElMessage.success(`卡片已保存${touched ? `（已同步 ${touched} 处全局副本）` : ''}`)
+      })
+      .catch((e: any) => {
+        ElMessage.warning(`卡片已保存，但写回全局库失败：${e?.message || String(e)}`)
+      })
+    return
+  }
   ElMessage.success('卡片已保存')
 }
 function removeCard(card: Card) {
@@ -629,6 +832,12 @@ function removeCard(card: Card) {
       if (selectionCardId.value === card.id) selectionCardId.value = ''
       selectionCardIds.value = selectionCardIds.value.filter((id) => id !== card.id)
       emitGroupUpdate()
+      // 全局卡片：其它分组里那份副本与全局库里的条目一并删除
+      if (card.global) {
+        void publishGlobalCardRemoved([card]).catch((e: any) => {
+          ElMessage.warning(`已删除卡片，但从全局库移除失败：${e?.message || String(e)}`)
+        })
+      }
     })
     .catch(() => {})
 }
@@ -639,9 +848,8 @@ function removeCardSelection(card: Card) {
     return
   }
   const ids = new Set(selectionCardIds.value)
-  const names = [...ids]
-    .map((id) => findCardById(id))
-    .filter((c): c is Card => !!c)
+  const removedCards = [...ids].map((id) => findCardById(id)).filter((c): c is Card => !!c)
+  const names = removedCards
     .map((c) => c.name)
     .slice(0, 3)
     .join('、')
@@ -657,6 +865,11 @@ function removeCardSelection(card: Card) {
       selectionCardId.value = ''
       selectionCardIds.value = []
       emitGroupUpdate()
+      if (removedCards.some((c) => c.global)) {
+        void publishGlobalCardRemoved(removedCards).catch((e: any) => {
+          ElMessage.warning(`已删除卡片，但从全局库移除失败：${e?.message || String(e)}`)
+        })
+      }
     })
     .catch(() => {})
 }
@@ -667,9 +880,24 @@ function addFrame() {
   selectFrame(f.id)
 }
 function removeFrame(id: string) {
-  const next: Graph = { ...graph.value, frames: frames.value.filter((f) => f.id !== id) }
-  onGraphChange(next)
-  if (selectedFrameId.value === id) selectedFrameId.value = ''
+  const target = frames.value.find((f) => f.id === id)
+  if (!target) return
+  const label = target.name || '未命名'
+  // 原来直接删除且无任何提示：误点在列表 ✕ 上会静默丢工况
+  ElMessageBox.confirm(`确认删除工况「${label}」？删除后可按 Ctrl+Z 撤销。`, '删除工况', {
+    type: 'warning',
+    confirmButtonText: '删除',
+    cancelButtonText: '取消',
+  })
+    .then(() => {
+      const next: Graph = { ...graph.value, frames: frames.value.filter((f) => f.id !== id) }
+      onGraphChange(next)
+      if (selectedFrameId.value === id) selectedFrameId.value = ''
+      ElMessage.success(`已删除工况「${label}」`)
+    })
+    .catch(() => {
+      /* 用户取消 */
+    })
 }
 function genFrameId(): string {
   return `frame-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
@@ -968,6 +1196,9 @@ function activateTab(id: string) {
 // 对象浏览器与映射表/值资源库/函数库同格：
 // 1) 只有真正加载了对象（DBC/DTC/A2L）时才让该页签出现（它不再常驻渲染，无法靠自身折叠来隐藏）
 // 2) 一旦可见就自动高亮该页签
+// 3) 用户手动开关后 60s 内不再自动覆盖（见 toggleObjDrawer 与下方 watcher）
+const OBJ_MANUAL_HOLD_MS = 60_000
+let userObjOverrideUntil = 0
 const objStore = useModuleStore()
 const objHasData = computed(() => {
   const raw = (v: any) => !!(v && ((Array.isArray(v) && v.length > 0) || (v.rows && v.rows.length > 0)))
@@ -981,6 +1212,8 @@ const objHasData = computed(() => {
 watch(
   objHasData,
   (has) => {
+    // 用户刚手动开关过（60s 内），不自动覆盖其选择（P1-6）
+    if (Date.now() < userObjOverrideUntil) return
     panelStates.value.obj.visible = has
   },
   { immediate: true },
@@ -1145,6 +1378,8 @@ function toggleFuncDrawer() {
 function toggleObjDrawer() {
   const p = panelStates.value.obj
   p.visible = !p.visible
+  // 手动开关后短暂锁定该面板的显隐，避免被对象数据加载/清空自动覆盖（P1-6）
+  userObjOverrideUntil = Date.now() + OBJ_MANUAL_HOLD_MS
 }
 function toggleValueDrawer() {
   const p = panelStates.value.value
@@ -1161,6 +1396,34 @@ function emitGroupUpdate() {
 function onSaveClick() {
   emitGroupUpdate()
   emit('save')
+  // 保存以父级为准（失败会由父级提示）；这里先清掉「未保存」标记
+  dirty.value = false
+  // #22：保存后清空画布撤销栈（撤销不应回退到已保存状态之前）
+  canvasSaveSignal.value++
+}
+/**
+ * 返回守卫：有未保存修改时先问「保存并返回 / 不保存」。
+ * 原来直接关闭，改动会静默丢失（编辑器是全屏浮层，关掉就找不回来了）。
+ */
+async function requestClose() {
+  if (!dirty.value) {
+    emit('close')
+    return
+  }
+  try {
+    await ElMessageBox.confirm('当前分组有未保存的修改，是否保存后返回？', '未保存的修改', {
+      confirmButtonText: '保存并返回',
+      cancelButtonText: '不保存',
+      // 区分「取消按钮」与「右上角关闭/ESC」：前者=不保存直接返回，后者=留在编辑器
+      distinguishCancelAndClose: true,
+      type: 'warning',
+    })
+  } catch (action) {
+    if (action === 'cancel') emit('close')
+    return
+  }
+  onSaveClick()
+  emit('close')
 }
 function onGraphChange(g: Graph) {
   // 画布回写的是「本编辑器 graph 的浅拷贝 + 新 frames」：只就地换 frames 即可。
@@ -1172,13 +1435,18 @@ function onGraphChange(g: Graph) {
   else graph.value = g
   syncActiveGroupFrames()
   emitGraph()
+  // 画布上的改动（拖拽/增删/连线）同样算「未保存」
+  dirty.value = true
   scheduleCaseIdRefresh()
 }
 function onMappingChange(m: ObjectMapping) {
-  // 只写入当前分组的映射表（不再写回全局库）
+  // 只写入当前分组；带 global 标记的项由 publishGlobalItems 另行发布（基线缺失时只重建基线）
   mapping.value = m
   emit('update:mapping', JSON.parse(JSON.stringify(m)))
   emitGroupUpdate()
+  void publishGlobalItems('mapping').catch((e: any) => {
+    ElMessage.warning(`全局映射写回失败：${e?.message || String(e)}`)
+  })
 }
 function bucketOfMapping(kind: MappingKind): keyof ObjectMapping {
   const map: Record<MappingKind, keyof ObjectMapping> = {
@@ -1254,11 +1522,14 @@ function mergeMappingEntries(m: ObjectMapping, vars: Array<{ kind: MappingKind; 
   return next
 }
 function syncRefsFromLibrary(lib: CardLibrary, notify: boolean) {
-  // 同步会整块覆盖引用节点的步骤：先按节点 id 记下旧步骤，供被删步骤上的连线就近改锚
+  // 同步会整块覆盖引用节点的步骤：先记下各节点的旧步骤，供被删步骤上的连线就近改锚。
+  // 键用「工况 id + 节点 id」：历史数据里存在不同工况复用同一 node id 的情况（复制分组的残留），
+  // 只按 node id 建键会互相覆盖，后一个工况会拿到别人的旧步骤。
+  const portKeyOf = (frameId: string, nodeId: string) => `${frameId}|${nodeId}`
   const oldStepsByNode = new Map<string, CardStep[]>()
   for (const f of graph.value.frames || []) {
     for (const [nid, n] of Object.entries(f.nodes || {})) {
-      if (n.refId) oldStepsByNode.set(nid, [...(n.steps ?? [])])
+      if (n.refId) oldStepsByNode.set(portKeyOf(f.id, nid), [...(n.steps ?? [])])
     }
   }
   const { graph: synced, synced: n } = syncGraphRefs(graph.value, lib)
@@ -1269,7 +1540,7 @@ function syncRefsFromLibrary(lib: CardLibrary, notify: boolean) {
     for (const f of graph.value.frames || []) {
       const sid = frameSequenceId(f)
       if (!sid) continue
-      portFixed += reanchorFrameSeqPorts(f, oldStepsByNode.get(sid) ?? [])
+      portFixed += reanchorFrameSeqPorts(f, oldStepsByNode.get(portKeyOf(f.id, sid)) ?? [])
     }
     syncActiveGroupFrames()
   }
@@ -1296,6 +1567,9 @@ function migrateCopyNodes(notify: boolean): number {
 function onValueLibraryChange(values: ValueResource[]) {
   valueLibrary.value = values
   emitGroupUpdate()
+  void publishGlobalItems('values').catch((e: any) => {
+    ElMessage.warning(`全局值资源写回失败：${e?.message || String(e)}`)
+  })
 }
 
 // ===== 全局化：卡片 / 映射表对象 / 值资源（列表里右键「设为全局 / 取消全局」） =====
@@ -1304,7 +1578,9 @@ async function applyGlobalToGroup(grp: CaseGroup): Promise<number> {
   try {
     const g = await loadGlobalSections()
     return injectGlobalIntoGroup(grp, g)
-  } catch {
+  } catch (e: any) {
+    // 读全局库失败 ≠ 内容为空：明确区分，避免把失败误读成「这个分组本来就是空的」
+    ElMessage.warning(`读取全局库失败，新分组未带出全局内容：${e?.message || String(e)}`)
     return 0
   }
 }
@@ -1314,9 +1590,368 @@ function globalLabel(names: string[], unit: string): string {
   if (list.length <= 1) return `「${list[0] ?? ''}」`
   return `${list.length} 个${unit}（${list.slice(0, 2).join('、')}${list.length > 2 ? '…' : ''}）`
 }
+/**
+ * 把「刚改了全局标记」的项同步进**所有分组**。
+ *
+ * 语义（2026-10-10 定调）：
+ * - 设为全局（on=true）→ 该项进入所有分组的卡片列表 / 对象映射表 / 值资源库；缺失的补一份带 `global` 标记的深拷贝
+ * - 取消全局（on=false）→ **不回收**：其它分组里已同步过去的副本内容原样保留（避免删掉别人在各自分组里改过的副本），
+ *   只把副本上过期的 `global` 标记清掉 —— 保证「有全局徽标 ⟺ 该项确实在全局库里」
+ *
+ * 当前分组本来就有这些项（标记就是在它上面改的），直接跳过。返回受影响的其它分组条目数。
+ */
+function syncGlobalToAllGroups(
+  payload: { cards?: Card[]; mapping?: MappingEntry[]; values?: ValueResource[] },
+  on: boolean,
+): number {
+  const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
+  const mappingKeyOf = mappingIdentity
+  let n = 0
+  for (const grp of groupsList.value) {
+    if (!grp || grp.id === activeGroupId.value) continue
+    // 卡片：按 id 认为同一条（全局卡片在各分组里是同 id 的副本）
+    for (const c of payload.cards || []) {
+      const hit = grp.cards?.[c.type]?.find((x) => x.id === c.id)
+      if (hit) {
+        // 副本已在 → 标记以「是否在全局库里」为准，两个方向都对齐（其它字段一律不动）
+        if (on ? !hit.global : hit.global) {
+          hit.global = on ? true : undefined
+          n++
+        }
+        continue
+      }
+      if (!on) continue
+      grp.cards = grp.cards || emptyCardLibrary()
+      const bucket = grp.cards[c.type] || (grp.cards[c.type] = [])
+      bucket.push(clone({ ...c, global: true }))
+      n++
+    }
+    // 对象映射：同 kind + alias + name 视为同一条
+    for (const e of payload.mapping || []) {
+      const hit = grp.mapping?.[bucketOfMapping(e.kind)]?.find((x) => mappingKeyOf(x) === mappingKeyOf(e))
+      if (hit) {
+        // 副本已在 → 标记以「是否在全局库里」为准，两个方向都对齐（其它字段一律不动）
+        if (on ? !hit.global : hit.global) {
+          hit.global = on ? true : undefined
+          n++
+        }
+        continue
+      }
+      if (!on) continue
+      grp.mapping = grp.mapping || emptyMapping()
+      const bucket = grp.mapping[bucketOfMapping(e.kind)] || (grp.mapping[bucketOfMapping(e.kind)] = [])
+      bucket.push(clone({ ...e, global: true }))
+      n++
+    }
+    // 值资源：按 name 视为同一条
+    for (const v of payload.values || []) {
+      const hit = grp.valueLibrary?.find((x) => x.name === v.name)
+      if (hit) {
+        // 副本已在 → 标记以「是否在全局库里」为准，两个方向都对齐（其它字段一律不动）
+        if (on ? !hit.global : hit.global) {
+          hit.global = on ? true : undefined
+          n++
+        }
+        continue
+      }
+      if (!on) continue
+      grp.valueLibrary = grp.valueLibrary || []
+      grp.valueLibrary.push(clone({ ...v, global: true }))
+      n++
+    }
+  }
+  return n
+}
+
+// ===== 全局项的「内容」同步：编辑 / 删除时写回全局库并广播给其它分组 =====
+/**
+ * 背景：卡片库 / 映射表 / 值资源库都是**分组级深拷贝**，上面的 syncGlobalToAllGroups
+ * 只在「设为全局 / 取消全局」那一刻同步过标记，之后在任何分组里改内容都不会外传，
+ * 连全局库那份 master 也不更新（新建分组 / 新建配置带出的还是旧内容）。这里补上这条通道。
+ */
+/**
+ * 同一条映射的判定：`kind + alias`（**不含 name**）。
+ * 映射没有稳定 id，name 是可以改的字段；若把 name 也纳入键，改一次对象名就会被当成
+ * 「旧的删掉 + 新的新增」，既同步不过去、又会在各处留下同别名的重复条目
+ * （生成时映射表按 alias 查找，后者覆盖前者 —— 结果取决于数组顺序）。
+ */
+const mappingIdentity = (e: MappingEntry) => `${e.kind}|${e.alias}`
+/** 同一条值资源的判定：值资源有稳定 id，改名也能识别；老数据缺 id 时回落到 name */
+const valueIdentity = (v: ValueResource) => String(v.id || v.name || '')
+const cardIdentity = (c: Card) => `${c.type}|${c.id}`
+/** 指纹：比较时把 global 标记视作恒为 true，避免「标记本身」被当成内容变化 */
+const globalFingerprint = (v: unknown) => JSON.stringify({ ...(v as object), global: true })
+const MAPPING_BUCKETS = ['signals', 'dtcs', 'messages', 'envvars', 'a2l'] as const
+const CARD_BUCKETS: CardType[] = ['inject', 'sequence', 'result']
+
+/**
+ * 当前分组里「带 global 标记」的项快照（键 → 深拷贝对象），按分组 id 绑定。
+ * 映射表 / 值资源库是以「整表替换」形式提交的，且字段编辑会就地改对象，
+ * 只有留下上一版快照才能 diff 出「哪一条全局项被改了 / 被删了」。
+ * 分组切换后旧快照立即失效（只重建基线、不发布），避免拿 A 组的表去 diff B 组。
+ */
+let globalBaseline: {
+  groupId: string
+  cards: Map<string, Card>
+  mapping: Map<string, MappingEntry>
+  values: Map<string, ValueResource>
+} | null = null
+function resetGlobalBaseline() {
+  const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
+  const cards = new Map<string, Card>()
+  for (const b of CARD_BUCKETS) for (const c of cardLibrary.value[b] || []) if (c.global) cards.set(cardIdentity(c), clone(c))
+  const mappingMap = new Map<string, MappingEntry>()
+  for (const b of MAPPING_BUCKETS) for (const e of mapping.value[b] || []) if (e.global) mappingMap.set(mappingIdentity(e), clone(e))
+  const values = new Map<string, ValueResource>()
+  for (const v of valueLibrary.value || []) if (v.global) values.set(valueIdentity(v), clone(v))
+  globalBaseline = { groupId: activeGroupId.value, cards, mapping: mappingMap, values }
+}
+
+/**
+ * 把全局项的**内容**覆盖到其它分组的同一条上（缺失的不补：补缺失是「设为全局」的职责）。
+ *
+ * 命中即"整条替换"，而不是只替换第一条：历史漂移会让同一个别名在某个分组里残留**多条**
+ * （例如 `x57_Checksum_057_S` 同时指向 `x57_…` 和 `EV_x57_…`），只替换首条会留下脏数据；
+ * 生成时映射表按 alias 查找是"后者覆盖前者"，结果取决于数组顺序 —— 必须收敛成一条。
+ * 返回被更新的分组条目数（每个分组命中一次算一处）。
+ */
+function broadcastGlobalContent(payload: {
+  cards?: Card[]
+  mapping?: MappingEntry[]
+  values?: ValueResource[]
+}): number {
+  const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
+  /** 命中则返回"去掉所有同 key 条目后的列表"，未命中返回 null（不改动） */
+  const strip = <T>(list: T[] | undefined, keyOf: (x: T) => string, key: string): T[] | null => {
+    if (!list) return null
+    const kept = list.filter((x) => keyOf(x) !== key)
+    return kept.length === list.length ? null : kept
+  }
+  let n = 0
+  for (const grp of groupsList.value) {
+    if (!grp || grp.id === activeGroupId.value) continue
+    for (const c of payload.cards || []) {
+      const bucket = grp.cards?.[c.type]
+      const kept = strip(bucket, cardIdentity, cardIdentity(c))
+      if (bucket && kept) {
+        kept.push(clone({ ...c, global: true }))
+        bucket.splice(0, bucket.length, ...kept)
+        n++
+      }
+      // 工况里已放置的卡片实例（refId 指向这张卡片）也要按同一套规则刷新内容：
+      // 只更新卡片列表会出现「列表里是新内容、画布里已放的副本还是旧的」。
+      // 活动分组在外层已跳过，它的工况由 syncRefsFromLibrary 负责。
+      for (const f of grp.frames || []) {
+        const nodes = f.nodes || {}
+        for (const [nid, node] of Object.entries(nodes)) {
+          if (!node || node.refId !== c.id) continue
+          const next = syncCardRef(node, c)
+          if (next !== node) {
+            nodes[nid] = next
+            n++
+          }
+        }
+      }
+    }
+    for (const e of payload.mapping || []) {
+      const b = bucketOfMapping(e.kind)
+      const bucket = grp.mapping?.[b]
+      const kept = strip(bucket, mappingIdentity, mappingIdentity(e))
+      if (bucket && kept) {
+        kept.push(clone({ ...e, global: true }))
+        bucket.splice(0, bucket.length, ...kept)
+        n++
+      }
+    }
+    for (const v of payload.values || []) {
+      const bucket = grp.valueLibrary
+      const kept = strip(bucket, valueIdentity, valueIdentity(v))
+      if (bucket && kept) {
+        kept.push(clone({ ...v, global: true }))
+        bucket.splice(0, bucket.length, ...kept)
+        n++
+      }
+    }
+  }
+  return n
+}
+
+/** 把全局项从其它分组移除（当前分组由调用方自己删；同 key 的多条一并移除） */
+function removeGlobalFromGroups(payload: {
+  cards?: Card[]
+  mapping?: MappingEntry[]
+  values?: ValueResource[]
+}): number {
+  /** 命中则返回"去掉全部同 key 条目后的列表"，未命中返回 null */
+  const strip = <T>(list: T[] | undefined, keyOf: (x: T) => string, key: string): T[] | null => {
+    if (!list) return null
+    const kept = list.filter((x) => keyOf(x) !== key)
+    return kept.length === list.length ? null : kept
+  }
+  let n = 0
+  for (const grp of groupsList.value) {
+    if (!grp || grp.id === activeGroupId.value) continue
+    for (const c of payload.cards || []) {
+      const bucket = grp.cards?.[c.type]
+      const kept = strip(bucket, cardIdentity, cardIdentity(c))
+      if (bucket && kept) {
+        bucket.splice(0, bucket.length, ...kept)
+        n++
+      }
+    }
+    for (const e of payload.mapping || []) {
+      const bucket = grp.mapping?.[bucketOfMapping(e.kind)]
+      const kept = strip(bucket, mappingIdentity, mappingIdentity(e))
+      if (bucket && kept) {
+        bucket.splice(0, bucket.length, ...kept)
+        n++
+      }
+    }
+    for (const v of payload.values || []) {
+      const bucket = grp.valueLibrary
+      const kept = strip(bucket, valueIdentity, valueIdentity(v))
+      if (bucket && kept) {
+        bucket.splice(0, bucket.length, ...kept)
+        n++
+      }
+    }
+  }
+  return n
+}
+
+/**
+ * 把全局项的增 / 删 / 改写回全局库对应段（按段合并：只发有变化的段，不动其它段）。
+ * 失败由调用方兜住：本地编辑结果不受影响，只提示写回失败。
+ */
+async function persistGlobalChange(payload: {
+  upsert?: { cards?: Card[]; mapping?: MappingEntry[]; values?: ValueResource[] }
+  remove?: { cards?: Card[]; mapping?: MappingEntry[]; values?: ValueResource[] }
+}): Promise<void> {
+  const up = payload.upsert ?? {}
+  const rm = payload.remove ?? {}
+  const touched = [up.cards, rm.cards, up.mapping, rm.mapping, up.values, rm.values].some((l) => !!l?.length)
+  if (!touched) return
+  const g = await loadGlobalSections()
+
+  if (up.cards?.length || rm.cards?.length) {
+    const rmIds = new Set((rm.cards ?? []).map((c) => c.id))
+    for (const b of CARD_BUCKETS) {
+      let list = g.cards[b] || []
+      if (rmIds.size) list = list.filter((c) => !rmIds.has(c.id))
+      for (const c of (up.cards ?? []).filter((x) => x.type === b)) {
+        const i = list.findIndex((x) => x.id === c.id)
+        const item = JSON.parse(JSON.stringify({ ...c, global: true })) as Card
+        if (i >= 0) list[i] = item
+        else list.push(item)
+      }
+      g.cards[b] = list
+    }
+    await saveGlobalCards(g.cards)
+  }
+  if (up.mapping?.length || rm.mapping?.length) {
+    const rmKeys = new Set((rm.mapping ?? []).map(mappingIdentity))
+    for (const b of MAPPING_BUCKETS) {
+      let list = g.mapping[b] || []
+      if (rmKeys.size) list = list.filter((x) => !rmKeys.has(mappingIdentity(x)))
+      for (const e of (up.mapping ?? []).filter((x) => bucketOfMapping(x.kind) === b)) {
+        const i = list.findIndex((x) => mappingIdentity(x) === mappingIdentity(e))
+        const item = JSON.parse(JSON.stringify({ ...e, global: true })) as MappingEntry
+        if (i >= 0) list[i] = item
+        else list.push(item)
+      }
+      g.mapping[b] = list
+    }
+    await saveGlobalMapping(g.mapping)
+  }
+  if (up.values?.length || rm.values?.length) {
+    const rmKeys = new Set((rm.values ?? []).map(valueIdentity))
+    const list = (g.valueLibrary || []).filter((x) => !rmKeys.has(valueIdentity(x)))
+    for (const v of up.values ?? []) {
+      const i = list.findIndex((x) => valueIdentity(x) === valueIdentity(v))
+      const item = JSON.parse(JSON.stringify({ ...v, global: true })) as ValueResource
+      if (i >= 0) list[i] = item
+      else list.push(item)
+    }
+    await saveGlobalValueLibrary(list)
+  }
+}
+
+/**
+ * 映射表 / 值资源库编辑后的发布：与基线对比，把带 global 标记的项分三类处理 ——
+ * 新增 / 内容变了 → 覆盖其它分组的副本并写回全局库；本地已删 → 从两边一并移除。
+ * 基线缺失或属于别的分组 → 只重建基线、不发布（宁可漏同步一次，也不拿别的分组去误删）。
+ * 返回受影响的其它分组条目数。
+ */
+async function publishGlobalItems(which: 'mapping' | 'values'): Promise<number> {
+  if (!globalBaseline || globalBaseline.groupId !== activeGroupId.value) {
+    resetGlobalBaseline()
+    return 0
+  }
+  const base = globalBaseline[which]
+  const cur = new Map<string, MappingEntry | ValueResource>()
+  if (which === 'mapping') {
+    for (const b of MAPPING_BUCKETS) for (const e of mapping.value[b] || []) if (e.global) cur.set(mappingIdentity(e), e)
+  } else {
+    for (const v of valueLibrary.value || []) if (v.global) cur.set(valueIdentity(v), v)
+  }
+  const upsert: (MappingEntry | ValueResource)[] = []
+  for (const [k, item] of cur) {
+    const old = base.get(k)
+    if (!old || globalFingerprint(old) !== globalFingerprint(item)) upsert.push(item)
+  }
+  const removed: (MappingEntry | ValueResource)[] = []
+  for (const [k, old] of base) if (!cur.has(k)) removed.push(old)
+  // 先把基线推进到当前状态：写回失败也不该让下一次编辑重复发布同一批
+  const clone = <T>(v: T): T => JSON.parse(JSON.stringify(v)) as T
+  const nextMap = new Map<string, any>()
+  for (const [k, item] of cur) nextMap.set(k, clone(item))
+  ;(globalBaseline as any)[which] = nextMap
+  if (!upsert.length && !removed.length) return 0
+
+  // 先广播给其它分组（纯内存），再写回全局库：写回失败也不影响本地一致性
+  const n =
+    which === 'mapping'
+      ? broadcastGlobalContent({ mapping: upsert as MappingEntry[] }) +
+        removeGlobalFromGroups({ mapping: removed as MappingEntry[] })
+      : broadcastGlobalContent({ values: upsert as ValueResource[] }) +
+        removeGlobalFromGroups({ values: removed as ValueResource[] })
+  if (n) emitGroupUpdate()
+  await persistGlobalChange(
+    which === 'mapping'
+      ? { upsert: { mapping: upsert as MappingEntry[] }, remove: { mapping: removed as MappingEntry[] } }
+      : { upsert: { values: upsert as ValueResource[] }, remove: { values: removed as ValueResource[] } },
+  )
+  return n
+}
+
+/** 卡片内容变动的发布（单条精确事件：saveCard 传出的是刚保存的那张卡片） */
+async function publishGlobalCard(card: Card): Promise<number> {
+  if (!card.global) return 0
+  const touched = broadcastGlobalContent({ cards: [card] })
+  await persistGlobalChange({ upsert: { cards: [card] } })
+  if (globalBaseline?.groupId === activeGroupId.value) {
+    globalBaseline.cards.set(cardIdentity(card), JSON.parse(JSON.stringify(card)) as Card)
+  }
+  if (touched) emitGroupUpdate()
+  return touched
+}
+
+/** 卡片删除的发布：同时从全局库与其它分组移除（仅对带 global 标记的卡片） */
+async function publishGlobalCardRemoved(cards: Card[]): Promise<number> {
+  const globals = cards.filter((c) => c.global)
+  if (!globals.length) return 0
+  const touched = removeGlobalFromGroups({ cards: globals })
+  for (const c of globals) globalBaseline?.cards.delete(cardIdentity(c))
+  await persistGlobalChange({ remove: { cards: globals } })
+  if (touched) emitGroupUpdate()
+  return touched
+}
+
 /** 设为 / 取消全局卡片（支持多选批量）：同步全局库 cards 段 + 本地标记（同步失败回滚标记） */
 async function setCardsGlobal(cards: Card[], on: boolean) {
-  const list = cards.filter((c) => !!c.global !== on)
+  // on=true（设为全局 / 重新发布）时不过滤已带 global 标记的项：
+  // 「重新发布」要的就是"以当前分组这一份为准"覆盖所有分组，把已标记的过滤掉会让它变成空操作。
+  const list = on ? cards.slice() : cards.filter((c) => c.global)
   if (!list.length) return
   list.forEach((c) => {
     c.global = on
@@ -1338,7 +1973,16 @@ async function setCardsGlobal(cards: Card[], on: boolean) {
       g.cards[b] = remain
     }
     await saveGlobalCards(g.cards)
-    ElMessage.success(on ? `已设为全局卡片：${globalLabel(list.map((c) => c.name), '卡片')}` : `已取消全局：${globalLabel(list.map((c) => c.name), '卡片')}`)
+    // on=true：先以当前分组这一份**覆盖**其它分组的同名副本（内容），再补缺失项；
+    // 取消全局不回收副本，只清掉副本上的过期标记
+    const touched =
+      (on ? broadcastGlobalContent({ cards: list }) : 0) + syncGlobalToAllGroups({ cards: list }, on)
+    if (touched) emitGroupUpdate()
+    ElMessage.success(
+      on
+        ? `已设为全局卡片：${globalLabel(list.map((c) => c.name), '卡片')}${touched ? `（已同步 ${touched} 处其它分组副本，保存后生效）` : ''}`
+        : `已取消全局：${globalLabel(list.map((c) => c.name), '卡片')}${touched ? `（其它分组的 ${touched} 处副本已保留，仅清除全局标记）` : ''}`,
+    )
   } catch (e: any) {
     list.forEach((c) => {
       c.global = !on
@@ -1346,12 +1990,15 @@ async function setCardsGlobal(cards: Card[], on: boolean) {
     emitGroupUpdate()
     ElMessage.warning(`全局库同步失败：${e?.message || String(e)}`)
   }
+  // 全局标记变了 → 内容同步的基线要跟着重建（否则下一次编辑会把「刚取消全局」误判成删除）
+  resetGlobalBaseline()
 }
-/** 设为 / 取消全局映射对象（支持多选批量；同 kind + alias + name 视为同一条） */
+/** 设为 / 取消全局映射对象（支持多选批量；同 kind + alias 视为同一条） */
 async function setMappingsGlobal(entries: MappingEntry[], on: boolean) {
-  const list = entries.filter((e) => !!e.global !== on)
+  // on=true 时不过滤已带标记的项：支持「重新发布」（以当前分组这一份覆盖所有分组）
+  const list = on ? entries.slice() : entries.filter((e) => e.global)
   if (!list.length) return
-  const keyOf = (e: MappingEntry) => `${e.kind}|${e.alias}|${e.name}`
+  const keyOf = mappingIdentity
   list.forEach((e) => {
     e.global = on
   })
@@ -1372,8 +2019,16 @@ async function setMappingsGlobal(entries: MappingEntry[], on: boolean) {
       g.mapping[b] = remain
     }
     await saveGlobalMapping(g.mapping)
+    // on=true：先以当前分组这一份覆盖其它分组的同别名条目（内容 + 对象名），再补缺失项
+    const touched =
+      (on ? broadcastGlobalContent({ mapping: list }) : 0) + syncGlobalToAllGroups({ mapping: list }, on)
+    if (touched) emitGroupUpdate()
     const names = list.map((e) => e.alias || e.name)
-    ElMessage.success(on ? `已设为全局：${globalLabel(names, '映射')}` : `已取消全局：${globalLabel(names, '映射')}`)
+    ElMessage.success(
+      on
+        ? `已设为全局：${globalLabel(names, '映射')}${touched ? `（已同步 ${touched} 处其它分组副本，保存后生效）` : ''}`
+        : `已取消全局：${globalLabel(names, '映射')}${touched ? `（其它分组的 ${touched} 处副本已保留，仅清除全局标记）` : ''}`,
+    )
   } catch (e: any) {
     list.forEach((e) => {
       e.global = !on
@@ -1381,10 +2036,13 @@ async function setMappingsGlobal(entries: MappingEntry[], on: boolean) {
     emitGroupUpdate()
     ElMessage.warning(`全局库同步失败：${e?.message || String(e)}`)
   }
+  // 全局标记变了 → 内容同步的基线要跟着重建（否则下一次编辑会把「刚取消全局」误判成删除）
+  resetGlobalBaseline()
 }
 /** 设为 / 取消全局值资源（支持多选批量；按 name 视为同一条） */
 async function setValuesGlobal(items: ValueResource[], on: boolean) {
-  const list = items.filter((v) => !!v.global !== on)
+  // on=true 时不过滤已带标记的项：支持「重新发布」（以当前分组这一份覆盖所有分组）
+  const list = on ? items.slice() : items.filter((v) => v.global)
   if (!list.length) return
   list.forEach((v) => {
     v.global = on
@@ -1398,8 +2056,16 @@ async function setValuesGlobal(items: ValueResource[], on: boolean) {
       next.push(...list.map((v) => JSON.parse(JSON.stringify({ ...v, global: true })) as ValueResource))
     }
     await saveGlobalValueLibrary(next)
+    // on=true：先以当前分组这一份覆盖其它分组的同一条（按 id），再补缺失项
+    const touched =
+      (on ? broadcastGlobalContent({ values: list }) : 0) + syncGlobalToAllGroups({ values: list }, on)
+    if (touched) emitGroupUpdate()
     const labels = list.map((v) => v.name)
-    ElMessage.success(on ? `已设为全局：${globalLabel(labels, '值资源')}` : `已取消全局：${globalLabel(labels, '值资源')}`)
+    ElMessage.success(
+      on
+        ? `已设为全局：${globalLabel(labels, '值资源')}${touched ? `（已同步 ${touched} 处其它分组副本，保存后生效）` : ''}`
+        : `已取消全局：${globalLabel(labels, '值资源')}${touched ? `（其它分组的 ${touched} 处副本已保留，仅清除全局标记）` : ''}`,
+    )
   } catch (e: any) {
     list.forEach((v) => {
       v.global = !on
@@ -1407,10 +2073,14 @@ async function setValuesGlobal(items: ValueResource[], on: boolean) {
     emitGroupUpdate()
     ElMessage.warning(`全局库同步失败：${e?.message || String(e)}`)
   }
+  // 全局标记变了 → 内容同步的基线要跟着重建（否则下一次编辑会把「刚取消全局」误判成删除）
+  resetGlobalBaseline()
 }
 
 /** 加载全局库到模板（不修改任何分组内容） */
 async function loadGlobal() {
+  // 会联网：慢网下给编辑区一个遮罩，避免「点完没反应」
+  globalLoading.value = true
   try {
     const res: any = await getGlobalLibrary()
     const data = res?.data?.data ?? res?.data ?? {}
@@ -1430,20 +2100,40 @@ async function loadGlobal() {
       valueLibrary: Array.isArray(data.value_library) ? data.value_library : [],
     }
     // 顺带把函数库解析成「已知函数名」，供卡片上「调用了不存在的函数」告警使用
-    await refreshKnownFuncNames(String(data.function_library || ''))
+    // （自定义卡片 step_library 的名字也一并带上，否则卡片里调用它们会被误报）
+    await refreshKnownFuncNames(
+      String(data.function_library || ''),
+      false,
+      Array.isArray(data.step_library)
+        ? data.step_library.map((s: any) => String(s?.name || '')).filter(Boolean)
+        : [],
+    )
   } catch (e: any) {
     ElMessage.warning('加载全局库失败：' + (e?.message || String(e)))
+  } finally {
+    globalLoading.value = false
   }
 }
 
-/** 解析函数库源码 → 刷新已知函数名（source 省略时从全局库现取） */
-async function refreshKnownFuncNames(source?: string) {
+/** 解析函数库源码 → 刷新已知函数名（source 省略时从全局库现取）
+ *  notifyBuiltinConflicts=true 时（函数库面板保存后）额外做一次内置冲突即时提示（#8）
+ *  extraNames：自定义卡片（step_library）的函数名，一并算作「已知函数」 */
+async function refreshKnownFuncNames(
+  source?: string,
+  notifyBuiltinConflicts = false,
+  extraNames?: string[],
+) {
   try {
     let src = source
     if (src === undefined) {
       const res: any = await getGlobalLibrary()
       const data = res?.data?.data ?? res?.data ?? {}
       src = String(data.function_library || '')
+      if (!extraNames?.length) {
+        extraNames = (Array.isArray(data.step_library) ? data.step_library : [])
+          .map((s: any) => String(s?.name || ''))
+          .filter(Boolean)
+      }
     }
     const raw = String(src || '').trim()
     if (!raw) {
@@ -1454,10 +2144,57 @@ async function refreshKnownFuncNames(source?: string) {
     const res: any = await parseFunctions(raw)
     const data = res?.data?.data ?? res?.data ?? res ?? {}
     const list = Array.isArray(data.functions) ? data.functions : []
-    knownFuncNames.value = list.map((f: any) => String(f?.name || '')).filter(Boolean)
+    const names = list.map((f: any) => String(f?.name || '')).filter(Boolean)
+    // 自定义卡片（step_library）里的函数名也并入「已知」：它们不在源码视图文本里，
+    // 不并入的话卡片/步骤里调用它们会被误标成「调用了函数库里不存在的函数」
+    for (const n of extraNames || []) if (!names.includes(n)) names.push(n)
+    knownFuncNames.value = names
+    // #8：保存函数库后即时提示「与内置模板同名同参」的冲突（原先要等到点「生成」才知道）
+    if (notifyBuiltinConflicts) await reportBuiltinConflicts(list)
   } catch {
     // 解析失败不阻塞编辑：保持上一次结果（空数组时画布会跳过这项校验）
   }
+}
+
+// ===== #8 函数库冲突即时提示 =====
+/** 内置模板函数签名键集合（懒加载一次；接口不可用时为 null → 跳过提示，不改原有行为） */
+let builtinFuncKeys: Set<string> | null = null
+async function loadBuiltinFuncKeys(): Promise<Set<string> | null> {
+  if (builtinFuncKeys) return builtinFuncKeys
+  try {
+    const res: any = await getBuiltinFunctions()
+    const data = res?.data?.data ?? res?.data ?? {}
+    const list = Array.isArray(data.functions) ? data.functions : []
+    const keys = new Set<string>(
+      list.map((f: any) => String(f?.key || '')).filter((k: string) => !!k),
+    )
+    if (!keys.size) return null
+    builtinFuncKeys = keys
+    return keys
+  } catch {
+    return null
+  }
+}
+/** 签名键（与后端 function_module._fn_key 同规则）：`函数名|参数类型1,参数类型2`，类型去掉空白 */
+function funcKeyOf(f: any): string {
+  const name = String(f?.name || '')
+  const params = Array.isArray(f?.params) ? f.params : []
+  const types = params.map((p: any) => String(p?.type || '').replace(/\s+/g, ''))
+  return `${name}|${types.join(',')}`
+}
+/** 列出「与内置函数同名同参」的自定义函数名并提示：这些函数生成时不会被追加（内置优先） */
+async function reportBuiltinConflicts(list: any[]) {
+  const keys = await loadBuiltinFuncKeys()
+  if (!keys) return
+  const names = [
+    ...new Set(list.map(funcKeyOf).filter((k) => keys.has(k)).map((k) => k.split('|')[0])),
+  ].filter(Boolean)
+  if (!names.length) return
+  ElMessage.warning({
+    message: `函数库中的 ${names.join('、')} 与内置函数同名同参，生成时不会被采用（以内置模板为准）。`,
+    duration: 8000,
+    showClose: true,
+  })
 }
 
 /** 把全局模板导入到当前分组（覆盖式） */
@@ -1473,18 +2210,25 @@ async function importGlobalTemplate() {
   } catch {
     return
   }
-  await loadGlobal()
-  grp.cards = JSON.parse(JSON.stringify(globalTemplate.value.cards))
-  grp.mapping = JSON.parse(JSON.stringify(globalTemplate.value.mapping))
-  grp.valueLibrary = JSON.parse(JSON.stringify(globalTemplate.value.valueLibrary))
-  // 卡片步骤里引用的对象补齐到映射表
-  const vars = collectCardVariables()
-  if (vars.length && grp.mapping) {
-    grp.mapping = mergeMappingEntries(grp.mapping, vars)
+  importingTemplate.value = true
+  try {
+    await loadGlobal()
+    grp.cards = JSON.parse(JSON.stringify(globalTemplate.value.cards))
+    grp.mapping = JSON.parse(JSON.stringify(globalTemplate.value.mapping))
+    grp.valueLibrary = JSON.parse(JSON.stringify(globalTemplate.value.valueLibrary))
+    // 卡片步骤里引用的对象补齐到映射表
+    const vars = collectCardVariables()
+    if (vars.length && grp.mapping) {
+      grp.mapping = mergeMappingEntries(grp.mapping, vars)
+    }
+    syncRefsFromLibrary(cardLibrary.value, true)
+    emitGroupUpdate()
+    ElMessage.success('已导入全局模板到当前分组')
+    // 当前分组的卡片 / 映射 / 值资源被整份替换 → 内容同步基线重建
+    resetGlobalBaseline()
+  } finally {
+    importingTemplate.value = false
   }
-  syncRefsFromLibrary(cardLibrary.value, true)
-  emitGroupUpdate()
-  ElMessage.success('已导入全局模板到当前分组')
 }
 
 /** 把当前分组导出为全局模板 */
@@ -1493,22 +2237,32 @@ async function exportGlobalTemplate() {
   if (!grp) return
   try {
     await ElMessageBox.confirm(
-      `把当前分组「${grp.name}」的卡片库 / 对象映射表 / 值资源库导出为全局模板？\n这将覆盖全局库（其它分组不受影响）。`,
+      `把当前分组「${grp.name}」的卡片库 / 对象映射表 / 值资源库合并进全局模板？\n只会覆盖 / 新增这些同名条目，全局库里的其它条目保留，其它分组也不受影响。`,
       '导出为全局模板',
       { confirmButtonText: '导出', cancelButtonText: '取消', type: 'warning' },
     )
   } catch {
     return
   }
+  exportingTemplate.value = true
   try {
-    await saveGlobalLibrary({
-      cards: JSON.parse(JSON.stringify(cardLibrary.value)),
-      mapping: JSON.parse(JSON.stringify(mapping.value)),
-      value_library: JSON.parse(JSON.stringify(valueLibrary.value)),
+    // 增量合并进全局库：只覆盖 / 新增当前分组里这些条目，**不删除**全局库里的其它条目。
+    // 原先是整份覆盖 —— 会把全局库换成"这个分组的快照"，其它配置立刻与全局库不一致，
+    // 且全局库原有条目会在所有分组里集体变成「有徽标但库里没有」的孤儿。
+    const allCards = CARD_BUCKETS.flatMap((b) => cardLibrary.value[b] || [])
+    const allMapping = MAPPING_BUCKETS.flatMap((b) => mapping.value[b] || [])
+    await persistGlobalChange({
+      upsert: {
+        cards: JSON.parse(JSON.stringify(allCards)) as Card[],
+        mapping: JSON.parse(JSON.stringify(allMapping)) as MappingEntry[],
+        values: JSON.parse(JSON.stringify(valueLibrary.value || [])) as ValueResource[],
+      },
     })
-    ElMessage.success('已导出为全局模板')
-  } catch {
-    /* 错误由拦截器处理 */
+    ElMessage.success('已合并进全局模板（全局库其它条目保留）。如需让其它分组也用上这份内容，请在卡片 / 映射 / 值资源列表右键「重新发布到所有分组」。')
+  } catch (e: any) {
+    ElMessage.warning('导出为全局模板失败：' + (e?.message || String(e)))
+  } finally {
+    exportingTemplate.value = false
   }
 }
 
@@ -1521,6 +2275,9 @@ watch(
     if (toRaw(v) === lastEmittedGraph) return
     graph.value = JSON.parse(JSON.stringify(toRaw(v)))
     ensureGroups()
+    // 外部整体替换（父级载入了别的配置/数据）：以新内容为已保存基线
+    dirty.value = false
+    resetGlobalBaseline()
   },
 )
 watch(
@@ -1529,6 +2286,7 @@ watch(
     // 仅在外部值确与当前分组不同时应用，避免回写自身 emit 覆盖分组内容
     if (JSON.stringify(mapping.value) === JSON.stringify(v)) return
     mapping.value = JSON.parse(JSON.stringify(v))
+    resetGlobalBaseline()
   },
 )
 watch(selectedFrameId, (v) => { if (v) selectionKind.value = 'frame' })
@@ -1540,6 +2298,8 @@ watch(selectionCardId, (v) => { if (v) selectionKind.value = 'card' })
 // 用户在画布上改过的名字存在 frame.caseNames 里，由后端优先使用。
 /** frameId → 该工况各行用例的 case_id（行序与画布 caseRows 一致） */
 const frameCaseIds = ref<Record<string, string[]>>({})
+/** 待定位的 case_id（打开编辑器时由 props.focusCaseId 带入，定位成功即清空）（P2-3） */
+let pendingFocusCaseId = String(props.focusCaseId || '')
 let caseIdsTimer: number | undefined
 // 用例代码预览：整图展开的 TestCase.can 与「case_id → 该用例代码块」缓存（见下方 loadCaseCode）。
 // 只用 id 的 expandCases 拿不到代码，所以预览这一次要 idsOnly=false（响应约 120KB）；
@@ -1558,6 +2318,13 @@ async function refreshCaseIds() {
   // 用例代码预览缓存的是「整图展开的 TestCase.can」，图变了就作废，下次预览重新拿最新的
   caseCanCache = null
   caseCodeCache.value = {}
+  // #21：展开用量预检（与用例预览同一口径）。超限就跳过本次用例名刷新：
+  // 只是拿 case_id 而已，画布可回落到自定义名/「用例N」，不值得为它触发一次超大展开。
+  const hit = checkExpandLimit(graph.value.groups)
+  if (hit) {
+    ElMessage({ message: expandLimitMessage(hit), type: 'warning', grouping: true })
+    return
+  }
   try {
     // idsOnly：画布只要「工况 → 各行 case_id」的对应关系。带上每条用例的 steps / CAPL 正文
     // 与整份 TestCase.can 时响应约 120KB（前端只用三个字段），只回 id 后降到几 KB。
@@ -1570,6 +2337,7 @@ async function refreshCaseIds() {
       activeGroup.value?.valueLibrary,
       true,
       props.ccpVarTypes,
+      props.dbcEnvNames,
     )
     const data = res?.data?.data ?? res?.data ?? {}
     const cases = Array.isArray(data.cases) ? data.cases : []
@@ -1582,6 +2350,18 @@ async function refreshCaseIds() {
       map[fid][row] = String(c?.case_id || '')
     }
     frameCaseIds.value = map
+    // 打开时若指定了要定位的用例：等 case_id ↔ 工况 的对应关系就绪后跳到该工况（P2-3）
+    if (pendingFocusCaseId) {
+      const cid = pendingFocusCaseId
+      pendingFocusCaseId = ''
+      const fid = Object.keys(map).find((k) => (map[k] || []).includes(cid))
+      if (fid) {
+        selectFrame(fid)
+        ElMessage.info(`已定位到用例「${cid}」所在工况`)
+      } else {
+        ElMessage.warning(`未找到用例「${cid}」对应的工况`)
+      }
+    }
   } catch {
     // 展开失败（后端未就绪等）保留上一次结果，画布回落到自定义名 /「用例N」
   }
@@ -1593,6 +2373,12 @@ async function loadCaseCode(caseId: string): Promise<string> {
   const hit = caseCodeCache.value[caseId]
   if (hit !== undefined) return hit
   if (caseCanCache === null) {
+    // #21：同一次「整图展开」，超限不发起（避免为看一条用例把整份产物拉回来）
+    const limitHit = checkExpandLimit(graph.value.groups)
+    if (limitHit) {
+      ElMessage({ message: expandLimitMessage(limitHit), type: 'warning', grouping: true })
+      return ''
+    }
     const res: any = await expandCases(
       graph.value,
       mapping.value,
@@ -1600,6 +2386,7 @@ async function loadCaseCode(caseId: string): Promise<string> {
       activeGroup.value?.valueLibrary,
       false,
       props.ccpVarTypes,
+      props.dbcEnvNames,
     )
     const data = res?.data?.data ?? res?.data ?? {}
     caseCanCache = String(data.test_cases || '')
@@ -1628,6 +2415,7 @@ provide('geCtx', {
   isCardSelected,
   selectCardInList,
   focusLibraryCard,
+  onFocusNode,
   focusFrameItem,
   removeCardSelection,
   editorTarget,
@@ -1635,7 +2423,15 @@ provide('geCtx', {
   graph,
   mapping,
   stepSaveSignal,
-  stepEditorHovered,
+  /** 新建卡片后置真：StepEditor 据此聚焦卡片名（P0-6） */
+  cardNameFocusPending,
+  /** StepEditor 已消费一次聚焦请求 → 复位，避免下次打开卡片被误聚焦 */
+  consumeCardNameFocus: () => {
+    cardNameFocusPending.value = false
+  },
+  /** 保存配置信号：画布监听后清空撤销栈（#22 撤销边界） */
+  canvasSaveSignal,
+  stepEditorFocused,
   selectFrame,
   removeFrame,
   addFrame,
@@ -1656,8 +2452,12 @@ provide('geCtx', {
   setCardsGlobal,
   setMappingsGlobal,
   setValuesGlobal,
+  /** 供卡片编辑面板在「剪贴板无步骤数据」时兜底粘贴工况 / 库卡片（P2-2） */
+  pasteEntity,
   hideObj: () => {
     panelStates.value.obj.visible = false
+    // 与 toggleObjDrawer 一致：手动关闭后也不被自动覆盖（P1-6）
+    userObjOverrideUntil = Date.now() + OBJ_MANUAL_HOLD_MS
   },
 })
 
@@ -1672,13 +2472,12 @@ function editorShortcuts() {
     allowInInput: true,
     when: () => isModuleActive('/function'),
     run: () => {
-      if (editorTarget.value === 'card' && stepEditorHovered.value) {
+      if (editorTarget.value === 'card' && stepEditorFocused.value) {
         // 卡片步骤编辑状态下把保存转交给 StepEditor
         stepSaveSignal.value++
       } else {
-        // 保存当前分组内容并通知父级保存配置（不再写全局库）
-        emitGroupUpdate()
-        emit('save')
+        // 保存当前分组内容并通知父级保存配置（与顶部「保存」按钮同一入口，避免两处语义漂移）
+        onSaveClick()
       }
       return true
     },
@@ -1687,8 +2486,11 @@ function editorShortcuts() {
     id: 'graph:copyEntity',
     keys: 'Ctrl+C',
     scope: 'module',
-    desc: '复制选中的工况/库卡片',
-    when: () => isModuleActive('/function') && editorTarget.value !== 'card',
+    desc: '复制选中的工况/库卡片（编辑卡片时若无选中步骤同样生效）',
+    // 不再限定「非卡片编辑态」：编辑卡片时画布已卸载，canvas:copy 会自动注销，
+    // 而步骤复制 steps:copy 是更内层的 context 作用域，有选中步骤时它先接管；
+    // 无选中步骤则落到这里，复制当前分组/库卡片 —— 免得为了复制工况先退出卡片编辑。
+    when: () => isModuleActive('/function'),
     run: () => {
       copySelectedEntity()
       return true
@@ -1698,8 +2500,8 @@ function editorShortcuts() {
     id: 'graph:pasteEntity',
     keys: 'Ctrl+V',
     scope: 'module',
-    desc: '粘贴工况/库卡片',
-    when: () => isModuleActive('/function') && editorTarget.value !== 'card',
+    desc: '粘贴工况/库卡片（编辑卡片时若无步骤剪贴板同样生效）',
+    when: () => isModuleActive('/function'),
     run: () => {
       pasteEntity()
       return true
@@ -1722,9 +2524,13 @@ onMounted(async () => {
   }
   // 打开配置时做一次无损迁移：副本形态的工况节点 → 卡片引用（可填「参数取值」）
   migrateCopyNodes(true)
+  // 载入期的补全/迁移都结束 → 建立「全局项内容同步」的基线（此后编辑才能 diff 出增删改）
+  resetGlobalBaseline()
   if (frames.value.length) selectFrame(frames.value[0].id)
   // 画布「用例展开」的默认用例名（后端生成的 case_id）
   scheduleCaseIdRefresh()
+  // 载入期的迁移/补全不算「未保存的修改」：全部完成后清掉标记
+  dirty.value = false
 })
 </script>
 
@@ -1745,6 +2551,10 @@ onMounted(async () => {
   background: #fff;
   border-bottom: 1px solid #ebeef5;
   flex-shrink: 0;
+  /* 顶部按钮较多（工况/注入/序列/检查/函数库/值资源库/对象浏览器/保存/生成/生成结果），
+     窄窗口下允许换行：否则右侧按钮会被挤出可视区、点不到 */
+  flex-wrap: wrap;
+  row-gap: 6px;
 }
 .ge-title-group {
   display: flex;
@@ -1859,4 +2669,88 @@ onMounted(async () => {
 .dz-left { top: 26%; bottom: 26%; left: 8px; width: 12%; }
 .dz-right { top: 26%; bottom: 26%; right: 8px; width: 12%; }
 .dz-center { left: 32%; right: 32%; top: 32%; bottom: 32%; }
+
+/* ===== 生成结果抽屉（#10/P1-5）===== */
+.ge-out-dot {
+  display: inline-block;
+  margin-left: 4px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: var(--el-color-warning);
+  color: #fff;
+  font-size: 11px;
+  line-height: 14px;
+}
+.ge-out-empty {
+  color: #909399;
+  font-size: 13px;
+  line-height: 1.8;
+  padding: 8px 0;
+}
+.ge-out-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.ge-out-msg {
+  font-size: 13px;
+  font-weight: 600;
+  color: #303133;
+}
+.ge-out-dir {
+  margin: 6px 0 10px;
+  padding: 6px 8px;
+  border-radius: 4px;
+  background: #f5f7fa;
+  color: #606266;
+  font-size: 12px;
+  font-family: Consolas, Monaco, monospace;
+  word-break: break-all;
+}
+.ge-out-conflict {
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--el-color-warning-light-5);
+  background: var(--el-color-warning-light-9);
+  color: #b88230;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.ge-out-tabs {
+  margin-top: 4px;
+}
+.ge-out-code-head {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 4px;
+}
+.ge-out-pre {
+  margin: 0;
+  padding: 10px 12px;
+  max-height: 52vh;
+  overflow: auto;
+  border-radius: 4px;
+  background: #282c34;
+  color: #abb2bf;
+  font-size: 12px;
+  line-height: 1.55;
+  font-family: Consolas, Monaco, 'Courier New', monospace;
+}
+.ge-out-at {
+  margin-top: 10px;
+  font-size: 11px;
+  color: #c0c4cc;
+}
+
+/* #27 可访问性：系统开启「减少动态效果」时关闭过渡/动画 */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+  }
+}
 </style>

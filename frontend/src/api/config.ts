@@ -31,3 +31,14 @@ export const getRemoteConfigs = (module: string) =>
 /** 打开指定文件夹（在文件资源管理器中显示） */
 export const openFolder = (path: string) =>
   client.post('/open-folder', { path })
+
+/** 继电器配置（Function / CAN / 三包 三个模块共用的 CAN 通道 + 继电器模块，全局持久化） */
+export const getRelayConfig = () =>
+  client.get('/relay/config')
+
+/** 保存继电器配置（按模块部分更新：module + relayModule / canChannel） */
+export const saveRelayConfig = (data: {
+  module: 'function' | 'can' | 'sanbao'
+  relayModule?: number
+  canChannel?: number
+}) => client.post('/relay/config', data)
