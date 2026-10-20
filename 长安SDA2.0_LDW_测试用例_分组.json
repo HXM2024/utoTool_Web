@@ -1314,18 +1314,6 @@
                   "indent": 0
                 },
                 {
-                  "id": "step-f03-apa-4",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
                   "id": "step-f03-apa-5",
                   "kind": "reset_all",
                   "fun": "",
@@ -1361,11 +1349,29 @@
             "node-f03-apa-i2": {
               "id": "node-f03-apa-i2",
               "type": "inject",
-              "name": "0011_震动中改强度=3",
+              "name": "0011_请求1→震动中改强度2",
               "description": "",
               "steps": [
                 {
-                  "id": "step-node-f03-apa-i2-s1",
+                  "id": "step-node-f03-apa-i2-a",
+                  "kind": "card",
+                  "cardId": "card-ldw-req",
+                  "cardType": "inject",
+                  "cardName": "设置LDW震动请求",
+                  "args": [
+                    {
+                      "key": "Cmd",
+                      "value": "1"
+                    },
+                    {
+                      "key": "Time",
+                      "value": "100"
+                    }
+                  ],
+                  "indent": 0
+                },
+                {
+                  "id": "step-node-f03-apa-i2-b",
                   "kind": "card",
                   "cardId": "card-shake-level",
                   "cardType": "inject",
@@ -1373,7 +1379,25 @@
                   "args": [
                     {
                       "key": "Lev",
-                      "value": "3"
+                      "value": "1"
+                    },
+                    {
+                      "key": "Time",
+                      "value": "100"
+                    }
+                  ],
+                  "indent": 0
+                },
+                {
+                  "id": "step-node-f03-apa-i2-c",
+                  "kind": "card",
+                  "cardId": "card-shake-level",
+                  "cardType": "inject",
+                  "cardName": "设置震动强度",
+                  "args": [
+                    {
+                      "key": "Lev",
+                      "value": "2"
                     },
                     {
                       "key": "Time",
@@ -1472,27 +1496,36 @@
             "node-f03-apa-r2": {
               "id": "node-f03-apa-r2",
               "type": "result",
-              "name": "0011_期望_维持一周期 强度不变",
+              "name": "0011_期望_三次震动且强度请求不被响应",
               "description": "",
               "steps": [
                 {
-                  "id": "step-node-f03-apa-r2-s1",
+                  "id": "step-node-f03-apa-r2-x1",
+                  "kind": "card",
+                  "cardId": "card-check-shake-3x",
+                  "cardType": "result",
+                  "cardName": "检测震动三次",
+                  "args": [],
+                  "indent": 0
+                },
+                {
+                  "id": "step-node-f03-apa-r2-x2",
                   "kind": "card",
                   "cardId": "card-check-keep",
-                  "cardType": "inject",
+                  "cardType": "result",
                   "cardName": "检测信号保持",
                   "args": [
                     {
                       "key": "sig",
-                      "value": "x170_EpsTq1"
+                      "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
-                      "value": "0-2"
+                      "key": "val",
+                      "value": "1"
                     },
                     {
                       "key": "time",
-                      "value": "880"
+                      "value": "980"
                     }
                   ],
                   "indent": 0
@@ -1504,7 +1537,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -1514,7 +1547,7 @@
               ],
               "locals": [],
               "global": true,
-              "refId": "card-check-keep"
+              "refId": "card-check-shake-3x"
             }
           },
           "edges": {
@@ -1538,7 +1571,7 @@
             },
             "edge-f03-apa-3": {
               "id": "edge-f03-apa-3",
-              "from": "seq:node-f03-apa-seq@step-f03-apa-4",
+              "from": "seq:node-f03-apa-seq@step-f03-apa-3",
               "to": "node:node-f03-apa-r1",
               "pair": [
                 1
@@ -1546,7 +1579,7 @@
             },
             "edge-f03-apa-4": {
               "id": "edge-f03-apa-4",
-              "from": "seq:node-f03-apa-seq@step-f03-apa-4",
+              "from": "seq:node-f03-apa-seq@step-f03-apa-3",
               "to": "node:node-f03-apa-r2",
               "pair": [
                 2
@@ -2077,18 +2110,6 @@
                   "indent": 0
                 },
                 {
-                  "id": "step-f05-consistency-3",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
                   "id": "step-f05-consistency-4",
                   "kind": "reset_all",
                   "fun": "",
@@ -2268,7 +2289,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -2285,7 +2306,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -2315,7 +2336,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -2332,7 +2353,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -2375,7 +2396,7 @@
             },
             "edge-f05-consistency-4": {
               "id": "edge-f05-consistency-4",
-              "from": "seq:node-f05-consistency-seq@step-f05-consistency-3",
+              "from": "seq:node-f05-consistency-seq@step-f05-consistency-2",
               "to": "node:node-f05-consistency-r1",
               "pair": [
                 1
@@ -2383,7 +2404,7 @@
             },
             "edge-f05-consistency-5": {
               "id": "edge-f05-consistency-5",
-              "from": "seq:node-f05-consistency-seq@step-f05-consistency-3",
+              "from": "seq:node-f05-consistency-seq@step-f05-consistency-2",
               "to": "node:node-f05-consistency-r2",
               "pair": [
                 2
@@ -2391,7 +2412,7 @@
             },
             "edge-f05-consistency-6": {
               "id": "edge-f05-consistency-6",
-              "from": "seq:node-f05-consistency-seq@step-f05-consistency-3",
+              "from": "seq:node-f05-consistency-seq@step-f05-consistency-2",
               "to": "node:node-f05-consistency-r3",
               "pair": [
                 3
@@ -2456,18 +2477,6 @@
                 },
                 {
                   "id": "step-f06-timing-2",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f06-timing-3",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -2849,7 +2858,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -2866,7 +2875,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -2896,7 +2905,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -2913,7 +2922,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -2943,7 +2952,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -2960,7 +2969,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -3021,7 +3030,7 @@
             },
             "edge-f06-timing-6": {
               "id": "edge-f06-timing-6",
-              "from": "seq:node-f06-timing-seq@step-f06-timing-3",
+              "from": "seq:node-f06-timing-seq@step-f06-timing-2",
               "to": "node:node-f06-timing-r1",
               "pair": [
                 1
@@ -3029,7 +3038,7 @@
             },
             "edge-f06-timing-7": {
               "id": "edge-f06-timing-7",
-              "from": "seq:node-f06-timing-seq@step-f06-timing-3",
+              "from": "seq:node-f06-timing-seq@step-f06-timing-2",
               "to": "node:node-f06-timing-r2",
               "pair": [
                 2
@@ -3037,7 +3046,7 @@
             },
             "edge-f06-timing-8": {
               "id": "edge-f06-timing-8",
-              "from": "seq:node-f06-timing-seq@step-f06-timing-3",
+              "from": "seq:node-f06-timing-seq@step-f06-timing-2",
               "to": "node:node-f06-timing-r3",
               "pair": [
                 3
@@ -3045,7 +3054,7 @@
             },
             "edge-f06-timing-9": {
               "id": "edge-f06-timing-9",
-              "from": "seq:node-f06-timing-seq@step-f06-timing-3",
+              "from": "seq:node-f06-timing-seq@step-f06-timing-2",
               "to": "node:node-f06-timing-r4",
               "pair": [
                 4
@@ -3053,7 +3062,7 @@
             },
             "edge-f06-timing-10": {
               "id": "edge-f06-timing-10",
-              "from": "seq:node-f06-timing-seq@step-f06-timing-3",
+              "from": "seq:node-f06-timing-seq@step-f06-timing-2",
               "to": "node:node-f06-timing-r5",
               "pair": [
                 5
@@ -3401,7 +3410,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -3418,7 +3427,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -3448,7 +3457,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -3465,7 +3474,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -3495,7 +3504,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -3512,7 +3521,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -3542,7 +3551,7 @@
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "compareValue",
+                      "key": "val",
                       "value": "1"
                     },
                     {
@@ -3559,7 +3568,7 @@
                   "default": ""
                 },
                 {
-                  "name": "compareValue",
+                  "name": "val",
                   "default": ""
                 },
                 {
@@ -5424,18 +5433,6 @@
                   "indent": 0
                 },
                 {
-                  "id": "step-f11-avail-unavail-4",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
                   "id": "step-f11-avail-unavail-5",
                   "kind": "reset_all",
                   "fun": "",
@@ -5980,7 +5977,7 @@
             },
             "edge-f11-avail-unavail-6": {
               "id": "edge-f11-avail-unavail-6",
-              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-4",
+              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-3",
               "to": "node:node-f11-avail-unavail-r1",
               "pair": [
                 1
@@ -5988,7 +5985,7 @@
             },
             "edge-f11-avail-unavail-7": {
               "id": "edge-f11-avail-unavail-7",
-              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-4",
+              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-3",
               "to": "node:node-f11-avail-unavail-r2",
               "pair": [
                 2
@@ -5996,7 +5993,7 @@
             },
             "edge-f11-avail-unavail-8": {
               "id": "edge-f11-avail-unavail-8",
-              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-4",
+              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-3",
               "to": "node:node-f11-avail-unavail-r3",
               "pair": [
                 3
@@ -6004,7 +6001,7 @@
             },
             "edge-f11-avail-unavail-9": {
               "id": "edge-f11-avail-unavail-9",
-              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-4",
+              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-3",
               "to": "node:node-f11-avail-unavail-r4",
               "pair": [
                 4
@@ -6012,7 +6009,7 @@
             },
             "edge-f11-avail-unavail-10": {
               "id": "edge-f11-avail-unavail-10",
-              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-4",
+              "from": "seq:node-f11-avail-unavail-seq@step-f11-avail-unavail-3",
               "to": "node:node-f11-avail-unavail-r5",
               "pair": [
                 5
@@ -6085,18 +6082,6 @@
                 },
                 {
                   "id": "step-f12-avail-progress-3",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f12-avail-progress-4",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -6238,7 +6223,7 @@
             },
             "edge-f12-avail-progress-2": {
               "id": "edge-f12-avail-progress-2",
-              "from": "seq:node-f12-avail-progress-seq@step-f12-avail-progress-4",
+              "from": "seq:node-f12-avail-progress-seq@step-f12-avail-progress-3",
               "to": "node:node-f12-avail-progress-r1"
             }
           },
@@ -6312,18 +6297,6 @@
                 },
                 {
                   "id": "step-f13-avail-fail-3",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f13-avail-fail-4",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -6895,7 +6868,7 @@
             },
             "edge-f13-avail-fail-6": {
               "id": "edge-f13-avail-fail-6",
-              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-4",
+              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-3",
               "to": "node:node-f13-avail-fail-r1",
               "pair": [
                 1
@@ -6903,7 +6876,7 @@
             },
             "edge-f13-avail-fail-7": {
               "id": "edge-f13-avail-fail-7",
-              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-4",
+              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-3",
               "to": "node:node-f13-avail-fail-r2",
               "pair": [
                 2
@@ -6911,7 +6884,7 @@
             },
             "edge-f13-avail-fail-8": {
               "id": "edge-f13-avail-fail-8",
-              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-4",
+              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-3",
               "to": "node:node-f13-avail-fail-r3",
               "pair": [
                 3
@@ -6919,7 +6892,7 @@
             },
             "edge-f13-avail-fail-9": {
               "id": "edge-f13-avail-fail-9",
-              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-4",
+              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-3",
               "to": "node:node-f13-avail-fail-r4",
               "pair": [
                 4
@@ -6927,7 +6900,7 @@
             },
             "edge-f13-avail-fail-10": {
               "id": "edge-f13-avail-fail-10",
-              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-4",
+              "from": "seq:node-f13-avail-fail-seq@step-f13-avail-fail-3",
               "to": "node:node-f13-avail-fail-r5",
               "pair": [
                 5
@@ -7028,18 +7001,6 @@
                 },
                 {
                   "id": "step-f14-progress-switch-4",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f14-progress-switch-5",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -7785,7 +7746,7 @@
             },
             "edge-f14-progress-switch-7": {
               "id": "edge-f14-progress-switch-7",
-              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-5",
+              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-4",
               "to": "node:node-f14-progress-switch-r1",
               "pair": [
                 1
@@ -7793,7 +7754,7 @@
             },
             "edge-f14-progress-switch-8": {
               "id": "edge-f14-progress-switch-8",
-              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-5",
+              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-4",
               "to": "node:node-f14-progress-switch-r2",
               "pair": [
                 2
@@ -7801,7 +7762,7 @@
             },
             "edge-f14-progress-switch-9": {
               "id": "edge-f14-progress-switch-9",
-              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-5",
+              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-4",
               "to": "node:node-f14-progress-switch-r3",
               "pair": [
                 3
@@ -7809,7 +7770,7 @@
             },
             "edge-f14-progress-switch-10": {
               "id": "edge-f14-progress-switch-10",
-              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-5",
+              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-4",
               "to": "node:node-f14-progress-switch-r4",
               "pair": [
                 4
@@ -7817,7 +7778,7 @@
             },
             "edge-f14-progress-switch-11": {
               "id": "edge-f14-progress-switch-11",
-              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-5",
+              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-4",
               "to": "node:node-f14-progress-switch-r5",
               "pair": [
                 5
@@ -7825,7 +7786,7 @@
             },
             "edge-f14-progress-switch-12": {
               "id": "edge-f14-progress-switch-12",
-              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-5",
+              "from": "seq:node-f14-progress-switch-seq@step-f14-progress-switch-4",
               "to": "node:node-f14-progress-switch-r6",
               "pair": [
                 6
@@ -7917,18 +7878,6 @@
                 },
                 {
                   "id": "step-f15-progress-avail-4",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f15-progress-avail-5",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -8070,7 +8019,7 @@
             },
             "edge-f15-progress-avail-2": {
               "id": "edge-f15-progress-avail-2",
-              "from": "seq:node-f15-progress-avail-seq@step-f15-progress-avail-5",
+              "from": "seq:node-f15-progress-avail-seq@step-f15-progress-avail-4",
               "to": "node:node-f15-progress-avail-r1"
             }
           },
@@ -8162,18 +8111,6 @@
                 },
                 {
                   "id": "step-f16-progress-unavail-4",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f16-progress-unavail-5",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -8729,7 +8666,7 @@
             },
             "edge-f16-progress-unavail-6": {
               "id": "edge-f16-progress-unavail-6",
-              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-5",
+              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-4",
               "to": "node:node-f16-progress-unavail-r1",
               "pair": [
                 1
@@ -8737,7 +8674,7 @@
             },
             "edge-f16-progress-unavail-7": {
               "id": "edge-f16-progress-unavail-7",
-              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-5",
+              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-4",
               "to": "node:node-f16-progress-unavail-r2",
               "pair": [
                 2
@@ -8745,7 +8682,7 @@
             },
             "edge-f16-progress-unavail-8": {
               "id": "edge-f16-progress-unavail-8",
-              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-5",
+              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-4",
               "to": "node:node-f16-progress-unavail-r3",
               "pair": [
                 3
@@ -8753,7 +8690,7 @@
             },
             "edge-f16-progress-unavail-9": {
               "id": "edge-f16-progress-unavail-9",
-              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-5",
+              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-4",
               "to": "node:node-f16-progress-unavail-r4",
               "pair": [
                 4
@@ -8761,7 +8698,7 @@
             },
             "edge-f16-progress-unavail-10": {
               "id": "edge-f16-progress-unavail-10",
-              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-5",
+              "from": "seq:node-f16-progress-unavail-seq@step-f16-progress-unavail-4",
               "to": "node:node-f16-progress-unavail-r5",
               "pair": [
                 5
@@ -8860,18 +8797,6 @@
                 },
                 {
                   "id": "step-f17-progress-fail-4",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f17-progress-fail-5",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -9443,7 +9368,7 @@
             },
             "edge-f17-progress-fail-6": {
               "id": "edge-f17-progress-fail-6",
-              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-5",
+              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-4",
               "to": "node:node-f17-progress-fail-r1",
               "pair": [
                 1
@@ -9451,7 +9376,7 @@
             },
             "edge-f17-progress-fail-7": {
               "id": "edge-f17-progress-fail-7",
-              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-5",
+              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-4",
               "to": "node:node-f17-progress-fail-r2",
               "pair": [
                 2
@@ -9459,7 +9384,7 @@
             },
             "edge-f17-progress-fail-8": {
               "id": "edge-f17-progress-fail-8",
-              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-5",
+              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-4",
               "to": "node:node-f17-progress-fail-r3",
               "pair": [
                 3
@@ -9467,7 +9392,7 @@
             },
             "edge-f17-progress-fail-9": {
               "id": "edge-f17-progress-fail-9",
-              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-5",
+              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-4",
               "to": "node:node-f17-progress-fail-r4",
               "pair": [
                 4
@@ -9475,7 +9400,7 @@
             },
             "edge-f17-progress-fail-10": {
               "id": "edge-f17-progress-fail-10",
-              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-5",
+              "from": "seq:node-f17-progress-fail-seq@step-f17-progress-fail-4",
               "to": "node:node-f17-progress-fail-r5",
               "pair": [
                 5
@@ -9570,18 +9495,6 @@
                 },
                 {
                   "id": "step-f18-fail-unavail-4",
-                  "kind": "call",
-                  "fun": "Wait",
-                  "args": [
-                    {
-                      "key": "time",
-                      "value": "1000"
-                    }
-                  ],
-                  "indent": 0
-                },
-                {
-                  "id": "step-f18-fail-unavail-5",
                   "kind": "call",
                   "fun": "Wait",
                   "args": [
@@ -9698,17 +9611,25 @@
                 {
                   "id": "step-node-f18-fail-unavail-r1-s1",
                   "kind": "card",
-                  "cardId": "card-check-signals",
-                  "cardType": "inject",
-                  "cardName": "信号检测",
+                  "cardId": "card-check-switch",
+                  "cardType": "result",
+                  "cardName": "检测信号状态切换",
                   "args": [
                     {
-                      "key": "Sig1",
+                      "key": "sig",
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "Sig1_Value",
+                      "key": "oldVal",
+                      "value": "2"
+                    },
+                    {
+                      "key": "newVal",
                       "value": "0"
+                    },
+                    {
+                      "key": "time",
+                      "value": "1000"
                     }
                   ],
                   "indent": 0
@@ -9758,7 +9679,7 @@
               ],
               "locals": [],
               "global": true,
-              "refId": "card-check-signals"
+              "refId": "card-check-switch"
             },
             "node-f18-fail-unavail-r2": {
               "id": "node-f18-fail-unavail-r2",
@@ -9769,17 +9690,25 @@
                 {
                   "id": "step-node-f18-fail-unavail-r2-s1",
                   "kind": "card",
-                  "cardId": "card-check-signals",
-                  "cardType": "inject",
-                  "cardName": "信号检测",
+                  "cardId": "card-check-switch",
+                  "cardType": "result",
+                  "cardName": "检测信号状态切换",
                   "args": [
                     {
-                      "key": "Sig1",
+                      "key": "sig",
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "Sig1_Value",
+                      "key": "oldVal",
+                      "value": "2"
+                    },
+                    {
+                      "key": "newVal",
                       "value": "0"
+                    },
+                    {
+                      "key": "time",
+                      "value": "1000"
                     }
                   ],
                   "indent": 0
@@ -9829,7 +9758,7 @@
               ],
               "locals": [],
               "global": true,
-              "refId": "card-check-signals"
+              "refId": "card-check-switch"
             },
             "node-f18-fail-unavail-r3": {
               "id": "node-f18-fail-unavail-r3",
@@ -9840,17 +9769,25 @@
                 {
                   "id": "step-node-f18-fail-unavail-r3-s1",
                   "kind": "card",
-                  "cardId": "card-check-signals",
-                  "cardType": "inject",
-                  "cardName": "信号检测",
+                  "cardId": "card-check-switch",
+                  "cardType": "result",
+                  "cardName": "检测信号状态切换",
                   "args": [
                     {
-                      "key": "Sig1",
+                      "key": "sig",
                       "value": "x170_ConcussAvailabilityStatus"
                     },
                     {
-                      "key": "Sig1_Value",
+                      "key": "oldVal",
+                      "value": "2"
+                    },
+                    {
+                      "key": "newVal",
                       "value": "0"
+                    },
+                    {
+                      "key": "time",
+                      "value": "1000"
                     }
                   ],
                   "indent": 0
@@ -9900,7 +9837,7 @@
               ],
               "locals": [],
               "global": true,
-              "refId": "card-check-signals"
+              "refId": "card-check-switch"
             }
           },
           "edges": {
@@ -9933,7 +9870,7 @@
             },
             "edge-f18-fail-unavail-4": {
               "id": "edge-f18-fail-unavail-4",
-              "from": "seq:node-f18-fail-unavail-seq@step-f18-fail-unavail-5",
+              "from": "seq:node-f18-fail-unavail-seq@step-f18-fail-unavail-4",
               "to": "node:node-f18-fail-unavail-r1",
               "pair": [
                 1
@@ -9941,7 +9878,7 @@
             },
             "edge-f18-fail-unavail-5": {
               "id": "edge-f18-fail-unavail-5",
-              "from": "seq:node-f18-fail-unavail-seq@step-f18-fail-unavail-5",
+              "from": "seq:node-f18-fail-unavail-seq@step-f18-fail-unavail-4",
               "to": "node:node-f18-fail-unavail-r2",
               "pair": [
                 2
@@ -9949,7 +9886,7 @@
             },
             "edge-f18-fail-unavail-6": {
               "id": "edge-f18-fail-unavail-6",
-              "from": "seq:node-f18-fail-unavail-seq@step-f18-fail-unavail-5",
+              "from": "seq:node-f18-fail-unavail-seq@step-f18-fail-unavail-4",
               "to": "node:node-f18-fail-unavail-r3",
               "pair": [
                 3
@@ -9980,18 +9917,6 @@
                     "key": "{{SigName}}",
                     "value": "{{Value}}",
                     "argType": "signal"
-                  }
-                ],
-                "indent": 0
-              },
-              {
-                "id": "step-set-signal-2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "{{Time}}"
                   }
                 ],
                 "indent": 0
@@ -10161,18 +10086,6 @@
                   }
                 ],
                 "indent": 0
-              },
-              {
-                "id": "step-lost-node-2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "{{Time}}"
-                  }
-                ],
-                "indent": 0
               }
             ],
             "params": [
@@ -10207,18 +10120,6 @@
                   }
                 ],
                 "indent": 0
-              },
-              {
-                "id": "card-speed-invalid-s2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "500"
-                  }
-                ],
-                "indent": 0
               }
             ],
             "params": [],
@@ -10241,18 +10142,6 @@
                     "key": "x1B1_PwrTrainSts",
                     "value": "0",
                     "argType": "signal"
-                  }
-                ],
-                "indent": 0
-              },
-              {
-                "id": "card-engine-off-s2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "1000"
                   }
                 ],
                 "indent": 0
@@ -10280,18 +10169,6 @@
                   }
                 ],
                 "indent": 0
-              },
-              {
-                "id": "card-engine-lost-s2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "1500"
-                  }
-                ],
-                "indent": 0
               }
             ],
             "params": [],
@@ -10313,18 +10190,6 @@
                   {
                     "key": "Value",
                     "value": "{{Value}}"
-                  }
-                ],
-                "indent": 0
-              },
-              {
-                "id": "card-volt-s2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "2000"
                   }
                 ],
                 "indent": 0
@@ -10357,18 +10222,6 @@
                   }
                 ],
                 "indent": 0
-              },
-              {
-                "id": "card-sensor-off-s2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "1000"
-                  }
-                ],
-                "indent": 0
               }
             ],
             "params": [],
@@ -10387,18 +10240,6 @@
                 "kind": "call",
                 "fun": "BusOff_ON",
                 "args": [],
-                "indent": 0
-              },
-              {
-                "id": "card-busoff-s2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "2000"
-                  }
-                ],
                 "indent": 0
               }
             ],
@@ -10458,18 +10299,6 @@
                   }
                 ],
                 "indent": 0
-              },
-              {
-                "id": "card-apa-on-s3",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "500"
-                  }
-                ],
-                "indent": 0
               }
             ],
             "params": [],
@@ -10492,18 +10321,6 @@
                     "key": "x2D2_CdcSteerModSet",
                     "value": "{{Mode}}",
                     "argType": "signal"
-                  }
-                ],
-                "indent": 0
-              },
-              {
-                "id": "card-steer-mode-s2",
-                "kind": "call",
-                "fun": "Wait",
-                "args": [
-                  {
-                    "key": "time",
-                    "value": "100"
                   }
                 ],
                 "indent": 0
@@ -10724,27 +10541,29 @@
             "id": "card-check-keep",
             "type": "result",
             "name": "检测信号保持",
-            "description": "",
+            "description": "保持判定(单值)：SignalWaitCheckKeep(信号, 期望值, 时长)。重载支持单值与区间两版，此处用单值版。形参行写法(key=形参名/value=实参)",
             "steps": [
               {
                 "id": "step-check-keep-1",
                 "kind": "call",
                 "fun": "SignalWaitCheckKeep",
+                "indent": 0,
                 "args": [
                   {
-                    "key": "sig",
+                    "argType": "signal",
+                    "key": "1",
                     "value": "{{sig}}"
                   },
                   {
+                    "argType": "signal",
                     "key": "compareValue",
-                    "value": "{{compareValue}}"
+                    "value": "{{val}}"
                   },
                   {
                     "key": "time",
                     "value": "{{time}}"
                   }
-                ],
-                "indent": 0
+                ]
               }
             ],
             "params": [
@@ -10753,7 +10572,7 @@
                 "default": ""
               },
               {
-                "name": "compareValue",
+                "name": "val",
                 "default": ""
               },
               {
@@ -10800,27 +10619,29 @@
             "id": "card-check-shake-timing",
             "type": "result",
             "name": "检测震动时序",
-            "description": "检测震动时序：用信号保持判定(振动期间保持，周期结束后回落)。依据11.2：一周期连续振动3次×220ms、间隔110ms、周期总长980ms，单次上升沿最多3周期",
+            "description": "震动保持判定(单值)：SignalWaitCheckKeep(sig, 期望值, 时长)。依据11.2：每周期连续振动3次×220ms、间隔110ms、总长980ms，单次上升沿最多3周期(2940ms)",
             "steps": [
               {
                 "id": "card-check-shake-timing-s1",
                 "kind": "call",
                 "fun": "SignalWaitCheckKeep",
+                "indent": 0,
                 "args": [
                   {
-                    "key": "sig",
+                    "argType": "signal",
+                    "key": "1",
                     "value": "{{sig}}"
                   },
                   {
+                    "argType": "signal",
                     "key": "compareValue",
-                    "value": "{{compareValue}}"
+                    "value": "{{val}}"
                   },
                   {
                     "key": "time",
                     "value": "{{time}}"
                   }
-                ],
-                "indent": 0
+                ]
               }
             ],
             "params": [
@@ -10829,12 +10650,124 @@
                 "default": ""
               },
               {
-                "name": "compareValue",
+                "name": "val",
                 "default": ""
               },
               {
                 "name": "time",
                 "default": ""
+              }
+            ],
+            "locals": [],
+            "global": true
+          },
+          {
+            "id": "card-check-shake-3x",
+            "type": "result",
+            "name": "检测震动三次",
+            "description": "一个振动周期内连续振动3次(各220ms、间隔110ms)，按周期逐次判定 x170_ConcussAvailabilityStatus 处于激活(1)。依据11.2",
+            "steps": [
+              {
+                "id": "step-check-shake-3x-1",
+                "kind": "wait_check",
+                "waitNot": false,
+                "waitRange": false,
+                "time": "220",
+                "indent": 0,
+                "args": [
+                  {
+                    "argType": "signal",
+                    "key": "x170_ConcussAvailabilityStatus",
+                    "value": "1"
+                  }
+                ]
+              },
+              {
+                "id": "step-check-shake-3x-2",
+                "kind": "wait_check",
+                "waitNot": false,
+                "waitRange": false,
+                "time": "220",
+                "indent": 0,
+                "args": [
+                  {
+                    "argType": "signal",
+                    "key": "x170_ConcussAvailabilityStatus",
+                    "value": "1"
+                  }
+                ]
+              },
+              {
+                "id": "step-check-shake-3x-3",
+                "kind": "wait_check",
+                "waitNot": false,
+                "waitRange": false,
+                "time": "220",
+                "indent": 0,
+                "args": [
+                  {
+                    "argType": "signal",
+                    "key": "x170_ConcussAvailabilityStatus",
+                    "value": "1"
+                  }
+                ]
+              }
+            ],
+            "params": [],
+            "locals": [],
+            "global": true
+          },
+          {
+            "id": "card-check-switch",
+            "type": "result",
+            "name": "检测信号状态切换",
+            "description": "状态切换判定：先 SignalCheck(信号, 旧值) 断言操作前的状态，再 SignalWaitCheck(信号, 新值, 超时) 限时等待切换到位，体现“从旧值切到新值”的动作。典型：ConcussAvailabilityStatus 2(故障不可用)→0(可用未震动)。",
+            "steps": [
+              {
+                "id": "step-check-switch-1",
+                "kind": "check",
+                "fun": "",
+                "indent": 0,
+                "args": [
+                  {
+                    "key": "{{sig}}",
+                    "value": "{{oldVal}}",
+                    "argType": "signal"
+                  }
+                ]
+              },
+              {
+                "id": "step-check-switch-2",
+                "kind": "wait_check",
+                "time": "{{time}}",
+                "waitNot": false,
+                "waitRange": false,
+                "indent": 0,
+                "args": [
+                  {
+                    "key": "{{sig}}",
+                    "value": "{{newVal}}",
+                    "argType": "signal"
+                  }
+                ]
+              }
+            ],
+            "params": [
+              {
+                "name": "sig",
+                "default": ""
+              },
+              {
+                "name": "oldVal",
+                "default": ""
+              },
+              {
+                "name": "newVal",
+                "default": ""
+              },
+              {
+                "name": "time",
+                "default": "1000"
               }
             ],
             "locals": [],

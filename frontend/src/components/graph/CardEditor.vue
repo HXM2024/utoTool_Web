@@ -9,6 +9,7 @@
     draggable
     modal-class="ce-modal-pass"
     :style="{ marginLeft: '16px' }"
+    :before-close="beforeClose"
     @update:model-value="onVisibleChange"
     @open="sync"
   >
@@ -481,7 +482,7 @@
     </div>
 
     <template #footer>
-      <el-button @click="onVisibleChange(false)">{{ isSubEdit ? '返回组合卡片' : '取消' }}</el-button>
+      <el-button @click="onCancelClick">{{ isSubEdit ? '返回组合卡片' : '取消' }}</el-button>
       <el-button type="primary" @click="save">{{ isSubEdit ? '保存引用卡片' : '保存' }}</el-button>
     </template>
   </el-dialog>
@@ -847,6 +848,23 @@ async function backToParent() {
 /** 关闭弹窗：子编辑态先退栈，只有回到顶层才真正关闭 */
 function onVisibleChange(v: boolean) {
   if (v) return
+  emit('update:visible', false)
+}
+/**
+ * 关闭前置钩子（点右上角 X / Esc / 遮罩时触发；只有调用 done() 才真正关闭）。
+ * 子编辑态：语义是「返回父卡片」而不是关掉整个弹窗 —— 拦截关闭、退栈回到父卡片，
+ * 不调用 done()，弹窗保持打开。避免 el-dialog 受控关闭后与父组件 visible 失配
+ * （弹窗已关但父组件仍以为在编辑 → 回画布双击卡片打不开）。
+ */
+function beforeClose(done: () => void) {
+  if (isSubEdit.value) {
+    backToParent()
+    return
+  }
+  done()
+}
+/** 「取消 / 返回组合卡片」按钮：与关闭钩子同一套语义 —— 子编辑态返回父卡片，顶层才真正关闭 */
+function onCancelClick() {
   if (isSubEdit.value) {
     backToParent()
     return

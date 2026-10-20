@@ -87,63 +87,142 @@
       </el-dropdown>
     </div>
 
-    <!-- 拉取 / 推送配置弹窗（可多选、全选） -->
+    <!-- 拉取 / 推送配置弹窗（可多选、全选；拉取支持按时间戳选择历史版本） -->
     <el-dialog
       v-model="remoteVisible"
       :title="remoteMode === 'pull' ? '拉取配置' : '推送配置'"
-      width="560px"
+      width="640px"
     >
       <div class="remote-desc">
         {{ remoteMode === 'pull'
-          ? '从共享盘拉取勾选的配置项到本地，未勾选的本地配置不受影响。'
-          : '把勾选的配置项上传到共享盘，未勾选的远程配置不受影响。' }}
+          ? '从共享盘拉取配置到本地。可拉取「最新」或按时间戳选择历史版本；本地同名配置会被直接覆盖。'
+          : '把勾选的配置项上传到共享盘并生成新版本（不覆盖服务端已存在的同名配置），可填写备注便于追溯。' }}
       </div>
 
-      <div class="remote-toolbar">
-        <el-checkbox
-          :model-value="remoteAllChecked"
-          :indeterminate="remoteIndeterminate"
-          :disabled="!remoteItems.length"
-          @change="onRemoteCheckAllChange"
-        >
-          全选
-        </el-checkbox>
-        <span class="remote-count">已选 {{ remoteChecked.length }} / {{ remoteItems.length }}</span>
-        <div class="remote-toolbar-right">
-          <el-button link type="primary" :disabled="!remoteItems.length" @click="invertRemoteChecked">
-            反选
-          </el-button>
-          <el-button link type="primary" :icon="Refresh" :loading="remoteLoading" @click="loadRemoteList">
-            刷新
-          </el-button>
+      <!-- 拉取模式：最新 / 历史版本 切换 -->
+      <el-radio-group
+        v-if="remoteMode === 'pull'"
+        v-model="pullSource"
+        class="remote-source"
+        @change="onPullSourceChange"
+      >
+        <el-radio-button label="latest">最新配置</el-radio-button>
+        <el-radio-button label="version">历史版本</el-radio-button>
+      </el-radio-group>
+
+      <!-- 历史版本：按时间戳筛选 -->
+      <div v-if="remoteMode === 'pull' && pullSource === 'version'" class="remote-filter">
+        <span class="remote-filter-label">时间戳筛选：</span>
+        <el-date-picker
+          v-model="versionRange"
+          type="datetimerange"
+          value-format="YYYYMMDD-HHmmss"
+          range-separator="至"
+          start-placeholder="起始时间"
+          end-placeholder="结束时间"
+          size="default"
+          @change="loadVersionList"
+        />
+        <el-button link type="primary" :icon="Refresh" :loading="versionLoading" @click="loadVersionList">
+          刷新版本
+        </el-button>
+      </div>
+
+      <div v-if="remoteMode === 'push'" class="remote-remark">
+        <span class="remote-filter-label">用户备注：</span>
+        <el-input
+          v-model="pushRemark"
+          placeholder="填写本次推送备注（可选，例如：修正信号映射）"
+          maxlength="120"
+          show-word-limit
+        />
+      </div>
+
+      <template v-if="remoteMode === 'pull' && pullSource === 'version'">
+        <!-- 历史版本列表 -->
+        <div class="remote-toolbar">
+          <span class="remote-count">共 {{ versionTotal }} 个历史版本（单选拉取）</span>
+          <div class="remote-toolbar-right">
+            <el-button link type="primary" :icon="Refresh" :loading="versionLoading" @click="loadVersionList">
+              刷新
+            </el-button>
+          </div>
         </div>
-      </div>
+        <el-alert
+          v-if="versionWarn"
+          :title="versionWarn"
+          type="warning"
+          :closable="false"
+          show-icon
+          class="remote-alert"
+        />
+        <div v-loading="versionLoading" class="remote-list">
+          <el-radio-group v-model="selectedVersionKey" class="version-group">
+            <el-radio
+              v-for="item in versionItems"
+              :key="item.key"
+              :value="item.key"
+              class="remote-item version-item"
+            >
+              <span class="version-name">{{ item.name }}</span>
+              <el-tag size="small" type="info" effect="plain">{{ item.timestamp }}</el-tag>
+              <span v-if="item.remark" class="version-remark">备注：{{ item.remark }}</span>
+              <span v-if="item.user" class="version-user">by {{ item.user }}</span>
+            </el-radio>
+          </el-radio-group>
+          <div v-if="!versionLoading && !versionItems.length" class="remote-empty">
+            所选时间范围内没有历史版本
+          </div>
+        </div>
+      </template>
 
-      <el-alert
-        v-if="remoteWarn"
-        :title="remoteWarn"
-        type="warning"
-        :closable="false"
-        show-icon
-        class="remote-alert"
-      />
-
-      <div v-loading="remoteLoading" class="remote-list">
-        <el-checkbox-group v-model="remoteChecked">
+      <template v-else>
+        <div class="remote-toolbar">
           <el-checkbox
-            v-for="item in remoteItems"
-            :key="item.name"
-            :value="item.name"
-            class="remote-item"
+            :model-value="remoteAllChecked"
+            :indeterminate="remoteIndeterminate"
+            :disabled="!remoteItems.length"
+            @change="onRemoteCheckAllChange"
           >
-            <span class="remote-item-name">{{ item.name }}</span>
-            <el-tag size="small" :type="item.tagType" effect="plain">{{ item.tagText }}</el-tag>
+            全选
           </el-checkbox>
-        </el-checkbox-group>
-        <div v-if="!remoteLoading && !remoteItems.length" class="remote-empty">
-          {{ remoteMode === 'pull' ? '共享盘上没有可拉取的配置项' : '本地没有可推送的配置项' }}
+          <span class="remote-count">已选 {{ remoteChecked.length }} / {{ remoteItems.length }}</span>
+          <div class="remote-toolbar-right">
+            <el-button link type="primary" :disabled="!remoteItems.length" @click="invertRemoteChecked">
+              反选
+            </el-button>
+            <el-button link type="primary" :icon="Refresh" :loading="remoteLoading" @click="loadRemoteList">
+              刷新
+            </el-button>
+          </div>
         </div>
-      </div>
+
+        <el-alert
+          v-if="remoteWarn"
+          :title="remoteWarn"
+          type="warning"
+          :closable="false"
+          show-icon
+          class="remote-alert"
+        />
+
+        <div v-loading="remoteLoading" class="remote-list">
+          <el-checkbox-group v-model="remoteChecked">
+            <el-checkbox
+              v-for="item in remoteItems"
+              :key="item.name"
+              :value="item.name"
+              class="remote-item"
+            >
+              <span class="remote-item-name">{{ item.name }}</span>
+              <el-tag size="small" :type="item.tagType" effect="plain">{{ item.tagText }}</el-tag>
+            </el-checkbox>
+          </el-checkbox-group>
+          <div v-if="!remoteLoading && !remoteItems.length" class="remote-empty">
+            {{ remoteMode === 'pull' ? '共享盘上没有可拉取的配置项' : '本地没有可推送的配置项' }}
+          </div>
+        </div>
+      </template>
 
       <div class="remote-path">共享盘：{{ remoteSharePath || '默认远程存储路径' }}</div>
 
@@ -152,7 +231,7 @@
         <el-button
           type="primary"
           :loading="remoteSubmitting"
-          :disabled="!remoteChecked.length"
+          :disabled="remoteSubmitDisabled"
           @click="confirmRemote"
         >
           {{ remoteMode === 'pull' ? '确定拉取' : '确定推送' }}
@@ -193,7 +272,7 @@ import {
   Document,
 } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getConfigs, copyConfig, deleteConfig, pullConfig, pushConfig, getRemoteConfigs } from '@/api/config'
+import { getConfigs, copyConfig, deleteConfig, pullConfig, pushConfig, getRemoteConfigs, getRemoteVersions, pullConfigVersion } from '@/api/config'
 import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
 
 const props = defineProps<{
@@ -371,12 +450,42 @@ const remoteWarn = ref('')
 const remoteChecked = ref<string[]>([])
 const remoteItems = ref<RemoteItem[]>([])
 
+// 推送备注（写入版本元数据）
+const pushRemark = ref('')
+
+// 拉取来源：最新配置 / 历史版本
+const pullSource = ref<'latest' | 'version'>('latest')
+// 历史版本
+interface VersionItem {
+  key: string
+  name: string
+  version: string
+  timestamp: string
+  remark: string
+  user: string
+}
+const versionLoading = ref(false)
+const versionWarn = ref('')
+const versionItems = ref<VersionItem[]>([])
+const selectedVersionKey = ref('')
+const versionRange = ref<[string, string] | null>(null)
+
+const versionTotal = computed(() => versionItems.value.length)
+
 const remoteAllChecked = computed(
   () => remoteItems.value.length > 0 && remoteChecked.value.length === remoteItems.value.length
 )
 const remoteIndeterminate = computed(
   () => remoteChecked.value.length > 0 && remoteChecked.value.length < remoteItems.value.length
 )
+
+// 确定按钮是否禁用：历史版本模式需选中一个版本；否则需勾选至少一个配置项
+const remoteSubmitDisabled = computed(() => {
+  if (remoteMode.value === 'pull' && pullSource.value === 'version') {
+    return !selectedVersionKey.value
+  }
+  return !remoteChecked.value.length
+})
 
 /** 打开拉取/推送弹窗 */
 function openRemoteDialog(mode: RemoteMode) {
@@ -385,7 +494,20 @@ function openRemoteDialog(mode: RemoteMode) {
   remoteChecked.value = []
   remoteItems.value = []
   remoteWarn.value = ''
+  pushRemark.value = ''
+  pullSource.value = 'latest'
+  versionItems.value = []
+  selectedVersionKey.value = ''
+  versionRange.value = null
+  versionWarn.value = ''
   loadRemoteList()
+}
+
+/** 切换拉取来源：最新 / 历史版本 */
+function onPullSourceChange(val: string | number | boolean | undefined) {
+  if (val === 'version') {
+    loadVersionList()
+  }
 }
 
 /** 加载可勾选项：拉取=远程已有的配置项；推送=本地已有的配置项 */
@@ -443,19 +565,93 @@ function invertRemoteChecked() {
   remoteChecked.value = remoteItems.value.filter((i) => !checked.has(i.name)).map((i) => i.name)
 }
 
+/** 加载历史版本列表（按时间戳范围筛选） */
+async function loadVersionList() {
+  versionLoading.value = true
+  versionWarn.value = ''
+  selectedVersionKey.value = ''
+  try {
+    const opts: { since?: string; until?: string } = {}
+    if (versionRange.value && versionRange.value.length === 2) {
+      opts.since = versionRange.value[0]
+      opts.until = versionRange.value[1]
+    }
+    const res: any = await getRemoteVersions(props.moduleName, opts)
+    const data = res?.data ?? res ?? {}
+    remoteSharePath.value = data.share_path || remoteSharePath.value
+    const versionsMap: Record<string, any[]> = data.versions || {}
+
+    const items: VersionItem[] = []
+    Object.keys(versionsMap).forEach((name) => {
+      (versionsMap[name] || []).forEach((v) => {
+        const version = String(v.version || v.timestamp || '')
+        if (!version) return
+        items.push({
+          key: `${name}::${version}`,
+          name,
+          version,
+          timestamp: String(v.timestamp || version),
+          remark: v.remark || '',
+          user: v.user || '',
+        })
+      })
+    })
+    // 按时间戳倒序（最新在前）
+    items.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+    versionItems.value = items
+    if (!items.length) {
+      versionWarn.value = data.available === false
+        ? '共享盘不可访问，或该模块还没有任何历史版本'
+        : '所选时间范围内没有历史版本'
+    }
+  } catch {
+    versionItems.value = []
+    versionWarn.value = '获取历史版本失败，请检查共享盘是否可访问'
+  } finally {
+    versionLoading.value = false
+  }
+}
+
 /** 确认拉取 / 推送 */
 async function confirmRemote() {
+  const isPull = remoteMode.value === 'pull'
+
+  // 拉取历史版本：单选，按版本号拉取
+  if (isPull && pullSource.value === 'version') {
+    if (!selectedVersionKey.value) {
+      ElMessage.warning('请选择一个历史版本')
+      return
+    }
+    const [name, version] = selectedVersionKey.value.split('::')
+    remoteSubmitting.value = true
+    try {
+      const res: any = await pullConfigVersion(props.moduleName, name, version)
+      ElMessage.success(res?.message || `已拉取 ${name} @ ${version}`)
+      remoteVisible.value = false
+      await loadConfigs()
+      if (configList.value.includes(name)) {
+        selectedConfig.value = name
+        emit('config-change', name)
+      }
+    } catch {
+      // 错误提示已由请求拦截器统一弹出
+    } finally {
+      remoteSubmitting.value = false
+    }
+    return
+  }
+
+  // 最新配置拉取 / 推送：多选
   const names = [...remoteChecked.value]
   if (!names.length) {
     ElMessage.warning('请至少选择一个配置项')
     return
   }
-  const isPull = remoteMode.value === 'pull'
   remoteSubmitting.value = true
   try {
     const res: any = isPull
       ? await pullConfig(props.moduleName, names, true)
-      : await pushConfig(props.moduleName, names, true)
+      : await pushConfig(props.moduleName, names, true, pushRemark.value.trim())
     ElMessage.success(res?.message || (isPull ? '拉取成功' : '推送成功'))
     remoteVisible.value = false
     await loadConfigs()
@@ -567,6 +763,72 @@ defineExpose({ loadConfigs, refreshAndSelect, selectedConfig, configList })
 
 .remote-alert {
   margin-top: 10px;
+}
+
+/* 拉取来源切换（最新 / 历史版本） */
+.remote-source {
+  margin-bottom: 12px;
+}
+
+/* 历史版本时间戳筛选 / 推送备注行 */
+.remote-filter,
+.remote-remark {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.remote-filter-label {
+  font-size: 13px;
+  color: var(--text-regular);
+  white-space: nowrap;
+}
+
+.remote-remark .el-input {
+  flex: 1;
+  min-width: 240px;
+}
+
+/* 历史版本单选列表 */
+.version-group {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.version-item {
+  height: auto;
+  margin-right: 0;
+
+  :deep(.el-radio__label) {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+    overflow: hidden;
+  }
+}
+
+.version-name {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.version-remark {
+  color: var(--text-secondary);
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.version-user {
+  color: var(--text-secondary);
+  font-size: 12px;
+  white-space: nowrap;
+  margin-left: auto;
 }
 
 .remote-list {

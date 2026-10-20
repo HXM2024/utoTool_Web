@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>功能用例 · 工况框连线编排原型 v4</title>
+<script src="https://cdn.jsdelivr.net/npm/vue@3/dist/vue.global.prod.js"></script>
+<style>
+  :root {
+    --bg:#f0f2f5; --panel:#fff; --line:#e4e7ed; --text:#303133; --muted:#909399;
+    --brand:#409eff; --inject:#e6a23c; --sequence:#409eff; --result:#67c23a;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; }
+  body { font-family:"PingFang SC","Microsoft YaHei",system-ui,sans-serif; color:var(--text); background:var(--bg); overflow:hidden; }
+  #app { height:100vh; display:flex; flex-direction:column; }
+
+  .toolbar { display:flex; align-items:center; gap:12px; padding:10px 16px; background:#fff; border-bottom:1px solid var(--line); flex-shrink:0; }
+  .toolbar .title { font-size:15px; font-weight:700; }
+  .toolbar .hint { font-size:12px; color:var(--muted); }
+  .btn { border:1px solid var(--line); background:#fff; color:var(--text); padding:6px 14px; border-radius:6px; cursor:pointer; font-size:13px; }
+  .btn:hover { border-color:var(--brand); color:var(--brand); }
+  .btn.primary { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .btn.primary:hover { opacity:.9; }
+
+  .main { flex:1; display:flex; min-height:0; }
+
+  .library { width:240px; flex-shrink:0; background:var(--panel); border-right:1px solid var(--line); padding:12px; overflow-y:auto; }
+  .lib-group { margin-bottom:16px; }
+  .lib-group h4 { margin:0 0 8px; font-size:12px; color:var(--muted); display:flex; align-items:center; gap:6px; }
+  .lib-dot { width:8px; height:8px; border-radius:50%; display:inline-block; }
+  .lib-card { background:#f7f9fc; border:1px solid var(--line); border-left:3px solid #ccc; border-radius:6px; padding:8px 10px; margin-bottom:8px; cursor:grab; font-size:13px; user-select:none; }
+  .lib-card:hover { box-shadow:0 2px 8px rgba(0,0,0,.08); }
+  .lib-card .steps { font-size:11px; color:var(--muted); margin-top:2px; }
+  .lib-inject { border-left-color:var(--inject); }
+  .lib-sequence { border-left-color:var(--sequence); }
+  .lib-result { border-left-color:var(--result); }
+
+  .canvas { flex:1; overflow-y:auto; overflow-x:hidden; padding:16px; position:relative; }
+  .canvas-empty { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; color:var(--muted); gap:12px; }
+
+  .frame { background:var(--panel); border:1px solid var(--line); border-radius:10px; box-shadow:0 1px 4px rgba(0,0,0,.06); margin-bottom:20px; width:100%; }
+  .frame-head { display:flex; align-items:center; gap:10px; padding:10px 14px; border-bottom:1px solid var(--line); }
+  .frame-head .badge { font-size:11px; padding:2px 8px; border-radius:10px; background:#ecf5ff; color:var(--brand); font-weight:600; white-space:nowrap; }
+  .frame-head .badge.green { background:#f0f9eb; color:#67c23a; }
+  .frame-head input { flex:1; border:1px solid transparent; background:transparent; font-size:15px; font-weight:700; padding:4px 6px; border-radius:6px; }
+  .frame-head input:hover,.frame-head input:focus { border-color:var(--line); background:#fafafa; outline:none; }
+  .frame-head .actions { display:flex; gap:6px; }
+  .icon-btn { border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:13px; padding:4px 6px; border-radius:6px; }
+  .icon-btn:hover { background:#f0f2f5; color:var(--text); }
+  .icon-btn.danger:hover { color:#f56c6c; }
+
+  .frame-body { display:flex; align-items:stretch; position:relative; min-height:220px; gap:56px; }
+  .edge-svg { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:5; }
+  .edge-svg path { fill:none; }
+  .edge-svg path.auto { stroke:#c0c4cc; stroke-dasharray:4,3; }
+  .edge-svg path.explicit { stroke:#409eff; stroke-width:2; }
+  .edge-svg path.temp { stroke:#409eff; stroke-width:2; stroke-dasharray:5,3; }
+  .edge-svg path.hit { pointer-events:stroke; cursor:pointer; }
+  .edge-label { position:absolute; transform:translate(-50%, -50%); z-index:999; }
+  .edge-label .label-badge { display:inline-block; background:#409eff; color:#fff; font-size:12px; font-weight:700; padding:3px 9px; border-radius:12px; cursor:pointer; line-height:1; box-shadow:0 1px 3px rgba(0,0,0,.2); white-space:nowrap; }
+  .edge-label .label-badge:hover { background:#337ecc; }
+  .edge-label .edge-input { width:64px; padding:2px 6px; font-size:12px; border:1px solid var(--brand); border-radius:6px; text-align:center; outline:none; }
+
+  .zone { flex:1; min-width:0; padding:12px; display:flex; flex-direction:column; background:#fafbfc; }
+  .split-zone { width:28px; flex-shrink:0; display:flex; align-items:center; justify-content:center; cursor:copy; transition:background .15s; }
+  .split-zone .sz-tip { writing-mode:vertical-lr; font-size:11px; color:#c0c4cc; letter-spacing:2px; white-space:nowrap; }
+  .split-zone:hover { background:rgba(64,158,255,.08); }
+  .split-zone.drop-hover { background:rgba(64,158,255,.15); }
+  .split-zone.drop-hover .sz-tip { color:var(--brand); }
+  .zone-inject { border-right:1px solid var(--line); background:rgba(230,162,60,.04); }
+  .zone-result { border-left:1px solid var(--line); background:rgba(103,194,58,.04); }
+  .zone-sequence { flex:1.6; background:#f6f9ff; }
+  .zone.drop-hover { outline:2px dashed var(--brand); outline-offset:-4px; }
+  .zone-head { display:flex; align-items:center; gap:6px; margin-bottom:10px; }
+  .zone-head .zt { font-size:12px; font-weight:700; color:var(--muted); letter-spacing:1px; flex:1; }
+  .zone-head .zr { font-size:11px; color:var(--muted); }
+  .zone-body { flex:1; display:flex; flex-direction:column; }
+
+  /* 注入/结果节点 */
+  .node { background:#fff; border:1px solid var(--line); border-left:4px solid #ccc; border-radius:6px; padding:7px 22px 7px 10px; margin-bottom:6px; cursor:grab; user-select:none; position:relative; }
+  .node:hover { box-shadow:0 2px 8px rgba(0,0,0,.1); }
+  .node.dragging { opacity:.4; }
+  .node.n-inject { border-left-color:var(--inject); }
+  .node.n-result { border-left-color:var(--result); }
+  .node-name { font-size:13px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .node-sub { font-size:11px; color:var(--muted); margin-top:2px; }
+  .node-ops { display:none; position:absolute; top:3px; right:24px; gap:2px; }
+  .node:hover .node-ops { display:flex; }
+  .node-ops .mini { font-size:11px; color:var(--muted); cursor:pointer; padding:1px 4px; border-radius:4px; }
+  .node-ops .mini:hover { background:#f0f2f5; color:var(--text); }
+
+  /* 序列卡片 */
+  .seq-card { background:#fff; border:1px solid var(--sequence); border-radius:8px; overflow:visible; position:relative; }
+  .seq-card-head { display:flex; align-items:center; gap:6px; padding:8px 10px; border-bottom:1px solid var(--line); background:#ecf5ff; }
+  .seq-card-head .sn { flex:1; font-size:13px; font-weight:700; color:#303133; }
+  .seq-card-head .sc { font-size:11px; color:var(--muted); }
+  .seq-card-body { padding:6px 0; display:flex; flex-direction:column; }
+  .seq-step { position:relative; padding:7px 22px 7px 22px; margin:0 6px; border-radius:6px; cursor:default; }
+  .seq-step:hover { background:#f0f7ff; }
+  .seq-step .step-name { font-size:12px; font-weight:600; color:#303133; }
+  .seq-step .step-sub { font-size:11px; color:var(--muted); }
+
+  /* 端口 */
+  .port { position:absolute; top:50%; transform:translateY(-50%); width:14px; height:14px; border-radius:50%; background:#fff; border:2px solid #c0c4cc; z-index:6; cursor:crosshair; }
+  .port:hover { transform:translateY(-50%) scale(1.4); }
+  .port-in { left:-7px; border-color:#67c23a; }
+  .port-out { right:-7px; border-color:#409eff; }
+  .port-in:hover { background:#67c23a; border-color:#67c23a; }
+  .port-out:hover { background:#409eff; border-color:#409eff; }
+
+  .frame-foot { padding:10px 14px; border-top:1px solid var(--line); background:#fafbfc; border-radius:0 0 10px 10px; }
+  .frame-foot .f-title { font-size:12px; font-weight:600; color:var(--muted); margin-bottom:6px; }
+  .case-row { font-size:12px; padding:3px 0; color:var(--text); }
+  .case-row .seq { color:var(--brand); font-weight:600; }
+  .case-row .chain { color:var(--muted); }
+
+  .mask { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:100; display:flex; align-items:center; justify-content:center; }
+  .dialog { background:#fff; border-radius:10px; width:560px; max-width:90vw; max-height:82vh; display:flex; flex-direction:column; box-shadow:0 10px 40px rgba(0,0,0,.2); }
+  .dialog-head { padding:14px 18px; border-bottom:1px solid var(--line); display:flex; align-items:center; justify-content:space-between; }
+  .dialog-head h3 { margin:0; font-size:15px; }
+  .dialog-body { padding:16px 18px; overflow-y:auto; }
+  .field { margin-bottom:12px; }
+  .field label { display:block; font-size:12px; color:var(--muted); margin-bottom:4px; }
+  .field input,.field select { width:100%; padding:6px 10px; border:1px solid var(--line); border-radius:6px; font-size:13px; }
+  .step-row { display:flex; gap:6px; margin-bottom:6px; align-items:center; }
+  .step-row select { width:90px; padding:5px; border:1px solid var(--line); border-radius:6px; font-size:12px; }
+  .step-row input { flex:1; padding:5px 8px; border:1px solid var(--line); border-radius:6px; font-size:12px; }
+  .dialog-foot { padding:12px 18px; border-top:1px solid var(--line); display:flex; justify-content:flex-end; gap:8px; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="toolbar">
+    <span class="title">工况框连线编排 · 原型 v4</span>
+    <span class="hint">序列=可复用卡片(拖入中间) · 注入右口→序列步骤左口 · 序列步骤右口→结果左口 · 双击编辑</span>
+    <span style="flex:1"></span>
+    <button class="btn primary" @click="addFrame">＋ 新建工况</button>
+  </div>
+
+  <div class="main">
+    <div class="library">
+      <div class="lib-group" v-for="g in libGroups" :key="g.type">
+        <h4><span class="lib-dot" :style="{ background: g.color }"></span>{{ g.label }}</h4>
+        <div v-for="c in g.cards" :key="c.id" class="lib-card" :class="'lib-' + c.type" draggable="true"
+             @dragstart="onLibDragStart($event, c.id)" @dragend="onDragEnd" @dblclick.stop="editLibraryCard(c.id)">
+          <div>{{ c.name }}</div>
+          <div class="steps">{{ c.steps.length }} 步</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="canvas" @dragover.prevent @drop="onCanvasDrop" @scroll.passive="scheduleRecompute">
+      <div v-if="!frames.length" class="canvas-empty">
+        <div>画布为空</div>
+        <button class="btn primary" @click="addFrame">＋ 新建第一个工况</button>
+      </div>
+
+      <div class="frame" v-for="(f, fi) in frames" :key="f.id">
+        <div class="frame-head">
+          <span class="badge">工况 #{{ fi + 1 }}</span>
+          <input v-model="f.name" placeholder="工况名（用例名）" />
+          <span class="badge green">展开 {{ expandOf(f).length }} 条用例</span>
+          <div class="actions">
+            <button class="icon-btn" title="复制工况" @click="copyFrame(f.id)">⧉</button>
+            <button class="icon-btn danger" title="删除工况" @click="removeFrame(f.id)">✕</button>
+          </div>
+        </div>
+
+        <div class="frame-body" :ref="el => setBodyEl(f.id, el)">
+          <svg class="edge-svg">
+            <path v-for="p in edgePaths(f.id)" :key="p.key" :d="p.d" :class="p.cls" @click="p.explicit && removeEdge(f.id, p.edgeId)" />
+            <path v-if="tempLine.frameId === f.id" :d="tempLine.d" class="temp" />
+          </svg>
+          <div v-for="p in edgePaths(f.id)" :key="'l' + p.key" class="edge-label" :style="{ left: p.mid.x + 'px', top: p.mid.y + 'px' }">
+            <input v-if="editingEdgeId === p.edgeId" v-model="editingEdgeValue" class="edge-input" @keydown.enter.stop.prevent="saveEdgeInline" @keydown.esc.stop.prevent="cancelEdgeEdit" @blur="saveEdgeInline" @mousedown.stop @click.stop />
+            <span v-else class="label-badge" title="点击编辑序号" @mousedown.stop.prevent="editEdge(f.id, p.edgeId)">{{ p.label }}</span>
+          </div>
+
+          <!-- 左热区：拖入故障注入 -->
+          <div class="split-zone" :class="{ 'drop-hover': dropHover.frameId === f.id && dropHover.zone === 'inject' }"
+               @dragover.prevent="onZoneOver(f.id, 'inject')" @dragleave="onZoneLeave" @drop.prevent.stop="onZoneDrop(f.id, 'inject')">
+            <span class="sz-tip">＋ 故障注入</span>
+          </div>
+
+          <!-- 左：故障注入（有内容才显示） -->
+          <div v-if="f.injects.length" class="zone zone-inject" :class="{ 'drop-hover': dropHover.frameId === f.id && dropHover.zone === 'inject' }"
+               @dragover.prevent="onZoneOver(f.id, 'inject')" @dragleave="onZoneLeave" @drop.prevent.stop="onZoneDrop(f.id, 'inject')">
+            <div class="zone-head"><span class="zt">故障注入</span><span class="zr">{{ f.injects.length }} 个</span></div>
+            <div class="zone-body">
+              <template v-for="nid in f.injects" :key="nid">
+                <div class="node n-inject" :class="{ dragging: draggingId === nid }" draggable="true"
+                     @dragstart="onNodeDragStart($event, f.id, 'injects', nid)" @dragend="onDragEnd" @dblclick.stop="openEditor(f.id, nid)">
+                  <div class="node-name">{{ f.nodes[nid].name }}</div>
+                  <div class="node-sub">{{ summarize(f.nodes[nid]) }}</div>
+                  <div class="node-ops">
+                    <span class="mini" title="上移" @click.stop="moveNode(f.id, 'injects', nid, -1)">↑</span>
+                    <span class="mini" title="下移" @click.stop="moveNode(f.id, 'injects', nid, 1)">↓</span>
+                    <span class="mini" title="编辑" @click.stop="openEditor(f.id, nid)">✎</span>
+                    <span class="mini" title="移除" @click.stop="removeNode(f.id, 'injects', nid)">✕</span>
+                  </div>
+                  <div class="port port-out" :ref="el => setPortEl(f.id, 'inj:' + nid, 'out', el)" @mousedown.stop="onPortOutDown($event, f.id, 'inj:' + nid)"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- 中：测试序列（可复用卡片） -->
+          <div class="zone zone-sequence" :class="{ 'drop-hover': dropHover.frameId === f.id && dropHover.zone === 'sequence' }"
+               @dragover.prevent="onZoneOver(f.id, 'sequence')" @dragleave="onZoneLeave" @drop.prevent.stop="onZoneDrop(f.id, 'sequence')">
+            <div class="zone-head"><span class="zt">测试序列</span><span class="zr">拖序列卡片到此处</span></div>
+            <div class="zone-body">
+              <div v-if="f.sequenceId && f.nodes[f.sequenceId]" class="seq-card" @dblclick.stop="openEditor(f.id, f.sequenceId)">
+                <div class="seq-card-head">
+                  <span class="sn">⧉ {{ f.nodes[f.sequenceId].name }}</span>
+                  <span class="sc">{{ f.nodes[f.sequenceId].steps.length }} 步</span>
+                  <button class="icon-btn" title="编辑序列" @click.stop="openEditor(f.id, f.sequenceId)">✎</button>
+                  <button class="icon-btn danger" title="移除序列" @click.stop="removeSequence(f.id)">✕</button>
+                </div>
+                <div class="seq-card-body">
+                  <div v-for="(s, si) in f.nodes[f.sequenceId].steps" :key="si" class="seq-step">
+                    <div class="step-name">{{ stepLabel(s) }}</div>
+                    <div class="step-sub">{{ s.kind }}{{ s.fun ? ':' + s.fun : '' }}</div>
+                    <div class="port port-in" :ref="el => setPortEl(f.id, 'seq:' + f.sequenceId + ':' + si, 'in', el)" @mousedown.stop="onPortInDown"></div>
+                    <div class="port port-out" :ref="el => setPortEl(f.id, 'seq:' + f.sequenceId + ':' + si, 'out', el)" @mousedown.stop="onPortOutDown($event, f.id, 'seq:' + f.sequenceId + ':' + si)"></div>
+                  </div>
+                </div>
+              </div>
+              <div v-else class="node-sub" style="text-align:center;padding:24px 0;color:#c0c4cc">拖入一张序列卡片</div>
+            </div>
+          </div>
+
+          <!-- 右：结果判断（有内容才显示） -->
+          <div v-if="f.results.length" class="zone zone-result" :class="{ 'drop-hover': dropHover.frameId === f.id && dropHover.zone === 'result' }"
+               @dragover.prevent="onZoneOver(f.id, 'result')" @dragleave="onZoneLeave" @drop.prevent.stop="onZoneDrop(f.id, 'result')">
+            <div class="zone-head"><span class="zt">结果判断</span><span class="zr">{{ f.results.length }} 个</span></div>
+            <div class="zone-body">
+              <template v-for="nid in f.results" :key="nid">
+                <div class="node n-result" :class="{ dragging: draggingId === nid }" draggable="true"
+                     @dragstart="onNodeDragStart($event, f.id, 'results', nid)" @dragend="onDragEnd" @dblclick.stop="openEditor(f.id, nid)">
+                  <div class="node-name">{{ f.nodes[nid].name }}</div>
+                  <div class="node-sub">{{ summarize(f.nodes[nid]) }}</div>
+                  <div class="node-ops">
+                    <span class="mini" title="上移" @click.stop="moveNode(f.id, 'results', nid, -1)">↑</span>
+                    <span class="mini" title="下移" @click.stop="moveNode(f.id, 'results', nid, 1)">↓</span>
+                    <span class="mini" title="编辑" @click.stop="openEditor(f.id, nid)">✎</span>
+                    <span class="mini" title="移除" @click.stop="removeNode(f.id, 'results', nid)">✕</span>
+                  </div>
+                  <div class="port port-in" :ref="el => setPortEl(f.id, 'res:' + nid, 'in', el)" @mousedown.stop="onPortInDown"></div>
+                </div>
+              </template>
+            </div>
+          </div>
+
+          <!-- 右热区：拖入结果判断 -->
+          <div class="split-zone" :class="{ 'drop-hover': dropHover.frameId === f.id && dropHover.zone === 'result' }"
+               @dragover.prevent="onZoneOver(f.id, 'result')" @dragleave="onZoneLeave" @drop.prevent.stop="onZoneDrop(f.id, 'result')">
+            <span class="sz-tip">＋ 结果判断</span>
+          </div>
+        </div>
+
+        <!-- 展开预览 -->
+        <div class="frame-foot">
+          <div class="f-title">本工况展开为 {{ expandOf(f).length }} 条用例（序列 × 注入分配 × 结果）：</div>
+          <div class="case-row" v-for="(path, pi) in expandOf(f)" :key="pi">
+            <span class="seq">用例{{ pi + 1 }}</span>
+            <span style="margin:0 6px">·</span>
+            <span class="chain">{{ chainLabel(f, path) }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 编辑弹窗 -->
+  <div class="mask" v-if="editor.visible" @click.self="closeEditor">
+    <div class="dialog">
+      <div class="dialog-head"><h3>编辑{{ editor.isLib ? '库卡片' : '节点' }}</h3><button class="icon-btn" @click="closeEditor">✕</button></div>
+      <div class="dialog-body">
+        <div class="field"><label>名称</label><input v-model="editor.node.name" /></div>
+        <div class="field"><label>步骤（就地编辑，序列=多个步骤）</label>
+          <div class="step-row" v-for="(s, si) in editor.node.steps" :key="si">
+            <select v-model="s.kind"><option v-for="k in stepKinds" :key="k" :value="k">{{ k }}</option></select>
+            <input v-model="s.fun" placeholder="函数名" />
+            <input v-model="s.args" placeholder="参数（逗号分隔）" />
+            <button class="icon-btn danger" @click="editor.node.steps.splice(si, 1)">✕</button>
+          </div>
+          <button class="btn" style="margin-top:6px" @click="editor.node.steps.push({ kind: 'call', fun: '', args: '' })">＋ 添加步骤</button>
+        </div>
+      </div>
+      <div class="dialog-foot">
+        <button class="btn" @click="closeEditor">取消</button>
+        <button class="btn primary" @click="saveEditor">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 连线编号编辑弹窗 -->
+  <div class="mask" v-if="false"></div>
+</div>
+
+<script>
+const { createApp, reactive, nextTick } = Vue
+
+const STEP_KINDS = ['call', 'set', 'wait', 'check', 'loop_start', 'loop_end', 'raw']
+const TYPE_LABEL = { inject: '注入', sequence: '序列', result: '结果' }
+const TYPE_COLOR = { inject: '#e6a23c', sequence: '#409eff', result: '#67c23a' }
+
+let uid = 0
+function genId(p) { return p + '-' + (++uid) + '-' + Math.random().toString(36).slice(2, 6) }
+function makeNode(type, name, steps) {
+  return { id: genId('node'), type, name, steps: steps.map((s) => ({ id: genId('step'), ...s })) }
+}
+function cloneNode(n) { return JSON.parse(JSON.stringify({ ...n, id: genId('node') })) }
+function makeFrame(name) {
+  return { id: genId('frame'), name, injects: [], sequenceId: null, results: [], nodes: {}, edges: {} }
+}
+
+const LIBRARY = [
+  makeNode('inject', '注入通信丢失', [{ kind: 'set', fun: 'setSignal', args: 'CommState, 0' }, { kind: 'wait', fun: '', args: '500' }]),
+  makeNode('inject', '注入电压异常', [{ kind: 'set', fun: 'setSignal', args: 'KL30_Voltage, 6.0' }]),
+  makeNode('inject', '注入报文超时', [{ kind: 'call', fun: 'InjectMsgTimeout', args: 'Msg_BCM' }]),
+  makeNode('sequence', '标准上电流程', [
+    { kind: 'call', fun: 'PowerOnInit', args: '' },
+    { kind: 'call', fun: 'SendDiagReq', args: '0x10, 0x03' },
+    { kind: 'call', fun: 'ReadSignal', args: 'VehicleSpeed' },
+    { kind: 'call', fun: 'ReadSignal', args: 'EngineSpeed' },
+  ]),
+  makeNode('sequence', '报文周期测试', [
+    { kind: 'call', fun: 'StartCycleCheck', args: 'Msg_BCM' },
+    { kind: 'wait', fun: '', args: '2000' },
+    { kind: 'call', fun: 'StopCycleCheck', args: '' },
+  ]),
+  makeNode('result', '检查无故障', [{ kind: 'check', fun: 'CheckNoDtc', args: '' }]),
+  makeNode('result', '检查信号值', [{ kind: 'check', fun: 'CheckSignalEq', args: 'VehicleSpeed, 60' }]),
+  makeNode('result', '检查报文周期', [{ kind: 'check', fun: 'CheckCycleTime', args: 'Msg_BCM, 10' }]),
+]
+
+createApp({
+  setup() {
+    const state = reactive({
+      frames: [],
+      library: LIBRARY,
+      dropHover: { frameId: '', zone: '' },
+      draggingId: '',
+      dragPayload: null,
+      tempLine: { frameId: '', d: '' },
+      linkDrag: null,
+      editor: { visible: false, isLib: false, libId: '', frameId: '', nodeId: '', node: null },
+      editingEdgeId: '',
+      editingEdgeFrameId: '',
+      editingEdgeValue: '',
+    })
+
+    const portEls = {}
+    const bodyEls = {}
+
+    const libGroups = [
+      { type: 'inject', label: '故障注入（左）', color: TYPE_COLOR.inject, cards: LIBRARY.filter((c) => c.type === 'inject') },
+      { type: 'sequence', label: '测试序列（中，可复用）', color: TYPE_COLOR.sequence, cards: LIBRARY.filter((c) => c.type === 'sequence') },
+      { type: 'result', label: '结果判断（右）', color: TYPE_COLOR.result, cards: LIBRARY.filter((c) => c.type === 'result') },
+    ]
+
+    // 解析端口 key
+    function isInjectKey(k) { return k.startsWith('inj:') }
+    function isResultKey(k) { return k.startsWith('res:') }
+    function minUnusedSeq(f, isInject) {
+      const used = new Set()
+      for (const e of Object.values(f.edges)) {
+        if (isInjectKey(e.from) === isInject) {
+          if (isInject) {
+            if (typeof e.seq === 'number' && e.seq > 0) used.add(e.seq)
+          } else if (Array.isArray(e.pair)) {
+            e.pair.forEach((n) => used.add(n))
+          }
+        }
+      }
+      let s = 1
+      while (used.has(s)) s++
+      return s
+    }
+    function parseSeqStep(k) {
+      // seq:<seqId>:<idx>
+      if (!k.startsWith('seq:')) return null
+      const p = k.lastIndexOf(':')
+      return { seqId: k.slice(4, p), idx: Number(k.slice(p + 1)) }
+    }
+    function nodeNameOf(frame, key) {
+      if (key.startsWith('inj:')) { const n = frame.nodes[key.slice(4)]; return n ? n.name : key }
+      if (key.startsWith('res:')) { const n = frame.nodes[key.slice(4)]; return n ? n.name : key }
+      const s = parseSeqStep(key)
+      if (s) { const n = frame.nodes[s.seqId]; return n ? stepLabel(n.steps[s.idx]) : key }
+      return key
+    }
+    function stepLabel(s) { return s.fun || s.kind || '(空)' }
+
+    // 展开：按连线编号配对——注入线有序号，结果线配对序号；匹配多个结果时按端口顺序累积生成用例
+    function expandOf(f) {
+      const seqNode = f.sequenceId ? f.nodes[f.sequenceId] : null
+      if (!seqNode || !seqNode.steps.length) return []
+      const injectEdges = []
+      const resultEdges = []
+      for (const e of Object.values(f.edges)) {
+        const to = parseSeqStep(e.to)
+        if (to && to.seqId === f.sequenceId && isInjectKey(e.from)) {
+          injectEdges.push({ key: e.from, stepIdx: to.idx, seq: e.seq ?? 0 })
+        }
+        const from = parseSeqStep(e.from)
+        if (from && from.seqId === f.sequenceId && isResultKey(e.to)) {
+          resultEdges.push({ key: e.to, stepIdx: from.idx, pair: e.pair || [] })
+        }
+      }
+      if (!injectEdges.length) {
+        return [seqNode.steps.map((_, i) => 'seq:' + seqNode.id + ':' + i)]
+      }
+      const buildPath = (inj, results) => {
+        const seg = []
+        for (let i = 0; i < seqNode.steps.length; i++) {
+          if (i === inj.stepIdx) seg.push(inj.key)
+          seg.push('seq:' + seqNode.id + ':' + i)
+          for (const r of results) {
+            if (i === r.stepIdx) seg.push(r.key)
+          }
+        }
+        return seg
+      }
+      const seqs = [...new Set(injectEdges.map((e) => e.seq))].sort((a, b) => a - b)
+      const paths = []
+      for (const s of seqs) {
+        const injs = injectEdges.filter((e) => e.seq === s)
+        const res = resultEdges.filter((e) => !e.pair.length || e.pair.includes(s))
+          .sort((a, b) => a.stepIdx - b.stepIdx)
+        for (const inj of injs) {
+          if (!res.length) {
+            paths.push(buildPath(inj, []))
+          } else {
+            for (let k = 1; k <= res.length; k++) {
+              paths.push(buildPath(inj, res.slice(0, k)))
+            }
+          }
+        }
+      }
+      return paths
+    }
+    function chainLabel(f, path) { return path.map((k) => nodeNameOf(f, k)).join(' → ') }
+
+    // 连线坐标（端口元素）
+    function portPos(frameId, key, side) {
+      const el = portEls[frameId + ':' + key + ':' + side]
+      const body = bodyEls[frameId]
+      if (!el || !body) return null
+      const r = el.getBoundingClientRect(), b = body.getBoundingClientRect()
+      return { x: r.left - b.left + r.width / 2, y: r.top - b.top + r.height / 2 }
+    }
+    function bezier(x1, y1, x2, y2) {
+      const dx = Math.max(30, Math.abs(x2 - x1) * 0.5)
+      return `M ${x1},${y1} C ${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`
+    }
+    const edgePathCache = reactive({})
+    function edgePaths(frameId) { return edgePathCache[frameId] || [] }
+    function recompute() {
+      for (const f of state.frames) {
+        const arr = []
+        for (const e of Object.values(f.edges)) {
+          const a = portPos(f.id, e.from, 'out'), b = portPos(f.id, e.to, 'in')
+          if (a && b) {
+            const label = isInjectKey(e.from) ? String(e.seq ?? '') : ((e.pair && e.pair.length) ? e.pair.join(',') : '全部')
+            arr.push({
+              key: e.from + '->' + e.to,
+              d: bezier(a.x, a.y, b.x, b.y),
+              cls: 'explicit hit',
+              explicit: true,
+              edgeId: e.id,
+              mid: { x: (a.x + b.x) / 2, y: (a.y + b.y) / 2 },
+              label,
+            })
+          }
+        }
+        edgePathCache[f.id] = arr
+      }
+    }
+    function scheduleRecompute() { nextTick(recompute) }
+
+    // 工况
+    function addFrame() { state.frames.push(makeFrame('工况' + (state.frames.length + 1))); scheduleRecompute() }
+    function removeFrame(id) { const i = state.frames.findIndex((f) => f.id === id); if (i >= 0) state.frames.splice(i, 1); scheduleRecompute() }
+    function copyFrame(id) {
+      const f = state.frames.find((x) => x.id === id); if (!f) return
+      const cp = JSON.parse(JSON.stringify(f)); cp.id = genId('frame'); cp.name = f.name + ' 副本'
+      const idx = state.frames.findIndex((x) => x.id === id); state.frames.splice(idx + 1, 0, cp); scheduleRecompute()
+    }
+    function removeSequence(frameId) {
+      const f = state.frames.find((x) => x.id === frameId); if (!f) return
+      const sid = f.sequenceId
+      f.sequenceId = null
+      if (sid) { delete f.nodes[sid]; for (const k in f.edges) if (f.edges[k].from.startsWith('seq:') || f.edges[k].to.startsWith('seq:')) delete f.edges[k] }
+      scheduleRecompute()
+    }
+
+    // 拖拽
+    function onLibDragStart(e, cardId) {
+      const c = state.library.find((x) => x.id === cardId); if (!c) return
+      state.dragPayload = { source: 'library', type: c.type, node: c }
+      state.draggingId = cardId
+      e.dataTransfer.effectAllowed = 'copy'; e.dataTransfer.setData('text/plain', cardId)
+    }
+    function onNodeDragStart(e, frameId, list, nodeId) {
+      state.dragPayload = { source: 'node', frameId, list, nodeId }
+      state.draggingId = nodeId
+      e.dataTransfer.effectAllowed = 'move'; e.dataTransfer.setData('text/plain', nodeId)
+    }
+    function onDragEnd() {
+      state.draggingId = ''; state.dragPayload = null
+      state.dropHover.frameId = ''; state.dropHover.zone = ''
+      scheduleRecompute()
+    }
+    function onZoneOver(frameId, zone) { if (state.dragPayload) { state.dropHover.frameId = frameId; state.dropHover.zone = zone } }
+    function onZoneLeave() { state.dropHover.frameId = ''; state.dropHover.zone = '' }
+    function zoneOfType(t) { return t === 'inject' ? 'inject' : t === 'result' ? 'result' : 'sequence' }
+    function onZoneDrop(frameId, zone) {
+      const f = state.frames.find((x) => x.id === frameId); const p = state.dragPayload
+      if (!f || !p) return
+      if (p.source === 'library') {
+        if (zoneOfType(p.type) !== zone) { onDragEnd(); return }
+        const n = cloneNode(p.node)
+        f.nodes[n.id] = n
+        if (zone === 'inject') f.injects.push(n.id)
+        else if (zone === 'result') f.results.push(n.id)
+        else { if (f.sequenceId) { delete f.nodes[f.sequenceId] } f.sequenceId = n.id }
+      } else if (p.source === 'node') {
+        const src = state.frames.find((x) => x.id === p.frameId); if (!src) return
+        const i = src[p.list].indexOf(p.nodeId); if (i < 0) return
+        if (zoneOfType(src.nodes[p.nodeId].type) !== zone) { onDragEnd(); return }
+        src[p.list].splice(i, 1)
+        if (zone === 'inject') f.injects.push(p.nodeId)
+        else if (zone === 'result') f.results.push(p.nodeId)
+      }
+      onDragEnd()
+    }
+    function onCanvasDrop() {
+      const p = state.dragPayload
+      if (p && p.source === 'library') {
+        const f = makeFrame('工况' + (state.frames.length + 1))
+        const n = cloneNode(p.node); f.nodes[n.id] = n
+        if (p.type === 'inject') f.injects.push(n.id)
+        else if (p.type === 'result') f.results.push(n.id)
+        else f.sequenceId = n.id
+        state.frames.push(f)
+      }
+      onDragEnd()
+    }
+
+    // 连线（端口拖拽）
+    function onPortOutDown(e, frameId, key) {
+      e.preventDefault()
+      const pos = portPos(frameId, key, 'out'); if (!pos) return
+      state.linkDrag = { frameId, fromKey: key }
+      state.tempLine = { frameId, d: bezier(pos.x, pos.y, pos.x, pos.y) }
+      window.addEventListener('mousemove', onLinkMove); window.addEventListener('mouseup', onLinkUp)
+    }
+    function onPortInDown() { /* 仅落点 */ }
+    function onLinkMove(e) {
+      if (!state.linkDrag) return
+      const body = bodyEls[state.linkDrag.frameId]; if (!body) return
+      const b = body.getBoundingClientRect()
+      const x = e.clientX - b.left, y = e.clientY - b.top
+      const from = portPos(state.linkDrag.frameId, state.linkDrag.fromKey, 'out')
+      if (from) state.tempLine = { frameId: state.linkDrag.frameId, d: bezier(from.x, from.y, x, y) }
+    }
+    function onLinkUp(e) {
+      const drag = state.linkDrag
+      state.linkDrag = null; state.tempLine = { frameId: '', d: '' }
+      window.removeEventListener('mousemove', onLinkMove); window.removeEventListener('mouseup', onLinkUp)
+      if (!drag) return
+      const target = document.elementFromPoint(e.clientX, e.clientY)
+      const portEl = target && target.closest ? target.closest('.port-in') : null
+      if (portEl && portEl.__portKey) {
+        const toKey = portEl.__portKey
+        const ok = (isInjectKey(drag.fromKey) && toKey.startsWith('seq:')) ||
+                   (drag.fromKey.startsWith('seq:') && isResultKey(toKey))
+        if (ok) {
+          const f = state.frames.find((x) => x.id === drag.frameId)
+          if (f) {
+            const eid = genId('edge')
+            const edge = { id: eid, from: drag.fromKey, to: toKey }
+            if (isInjectKey(drag.fromKey)) {
+              edge.seq = minUnusedSeq(f, true)
+            } else {
+              edge.pair = [minUnusedSeq(f, false)]
+            }
+            f.edges[eid] = edge
+          }
+        }
+      }
+      scheduleRecompute()
+    }
+    function removeEdge(frameId, edgeId) {
+      const f = state.frames.find((x) => x.id === frameId); if (f) delete f.edges[edgeId]
+      scheduleRecompute()
+    }
+
+    // 节点操作
+    function moveNode(frameId, list, nodeId, dir) {
+      const f = state.frames.find((x) => x.id === frameId); if (!f) return
+      const arr = f[list]; const i = arr.indexOf(nodeId), j = i + dir
+      if (j < 0 || j >= arr.length) return
+      [arr[i], arr[j]] = [arr[j], arr[i]]; scheduleRecompute()
+    }
+    function removeNode(frameId, list, nodeId) {
+      const f = state.frames.find((x) => x.id === frameId); if (!f) return
+      f[list] = f[list].filter((x) => x !== nodeId)
+      const prefix = list === 'injects' ? 'inj:' + nodeId : 'res:' + nodeId
+      delete f.nodes[nodeId]
+      for (const k in f.edges) if (f.edges[k].from === prefix || f.edges[k].to === prefix) delete f.edges[k]
+      scheduleRecompute()
+    }
+
+    // 编辑
+    function openEditor(frameId, nodeId) {
+      const f = state.frames.find((x) => x.id === frameId); const n = f && f.nodes[nodeId]
+      if (!n) return
+      state.editor.visible = true; state.editor.isLib = false; state.editor.frameId = frameId; state.editor.nodeId = nodeId
+      state.editor.node = JSON.parse(JSON.stringify(n))
+    }
+    function editLibraryCard(cardId) {
+      const c = state.library.find((x) => x.id === cardId); if (!c) return
+      state.editor.visible = true; state.editor.isLib = true; state.editor.libId = cardId
+      state.editor.node = JSON.parse(JSON.stringify(c))
+    }
+    function saveEditor() {
+      if (state.editor.isLib) {
+        const c = state.library.find((x) => x.id === state.editor.libId)
+        if (c) Object.assign(c, state.editor.node)
+      } else {
+        const f = state.frames.find((x) => x.id === state.editor.frameId)
+        const n = f && f.nodes[state.editor.nodeId]
+        if (n) Object.assign(n, state.editor.node)
+      }
+      closeEditor()
+    }
+    function closeEditor() {
+      state.editor.visible = false; state.editor.isLib = false; state.editor.libId = ''
+      state.editor.frameId = ''; state.editor.nodeId = ''; state.editor.node = null
+    }
+    function moveStep(si, dir) {
+      const steps = state.editor.node && state.editor.node.steps
+      if (!steps) return
+      const j = si + dir
+      if (j < 0 || j >= steps.length) return
+      const tmp = steps[si]; steps[si] = steps[j]; steps[j] = tmp
+    }
+    function editEdge(frameId, edgeId) {
+      const f = state.frames.find((x) => x.id === frameId); const e = f && f.edges[edgeId]
+      if (!e) return
+      const isInj = isInjectKey(e.from)
+      state.editingEdgeId = edgeId
+      state.editingEdgeFrameId = frameId
+      state.editingEdgeValue = isInj ? String(e.seq ?? '') : (e.pair || []).join(',')
+    }
+    function saveEdgeInline() {
+      const f = state.frames.find((x) => x.id === state.editingEdgeFrameId)
+      const e = f && f.edges[state.editingEdgeId]
+      if (e) {
+        if (isInjectKey(e.from)) e.seq = Number(state.editingEdgeValue) || 0
+        else {
+          const raw = state.editingEdgeValue.trim()
+          e.pair = raw ? raw.split(/[,，\s]+/).map((s) => Number(s)).filter((n) => Number.isInteger(n) && n > 0) : []
+        }
+      }
+      cancelEdgeEdit()
+      scheduleRecompute()
+    }
+    function cancelEdgeEdit() {
+      state.editingEdgeId = ''
+      state.editingEdgeFrameId = ''
+      state.editingEdgeValue = ''
+    }
+
+    // 辅助
+    function summarize(n) { return n.steps.slice(0, 2).map((s) => s.kind + (s.fun ? ':' + s.fun : '')).join(' · ') + (n.steps.length > 2 ? ' …' : '') }
+    function setPortEl(frameId, key, side, el) { if (el) { portEls[frameId + ':' + key + ':' + side] = el; el.__portKey = key } else delete portEls[frameId + ':' + key + ':' + side] }
+    function setBodyEl(frameId, el) { if (el) bodyEls[frameId] = el; else delete bodyEls[frameId] }
+
+    // 示例：分配法（序列卡片复用）
+    function seed() {
+      const f = makeFrame('工况1')
+      // 序列：标准上电流程（4步）
+      const seq = cloneNode(LIBRARY.find((c) => c.type === 'sequence'))
+      f.nodes[seq.id] = seq; f.sequenceId = seq.id
+      // 注入 1,2,3,4
+      const injSrc = [LIBRARY[0], LIBRARY[1], LIBRARY[2], LIBRARY[0]]
+      const injNames = ['1-注入通信丢失', '2-注入电压异常', '3-注入报文超时', '4-注入通信丢失2']
+      for (let i = 0; i < 4; i++) {
+        const n = cloneNode(injSrc[i]); n.name = injNames[i]; f.nodes[n.id] = n; f.injects.push(n.id)
+      }
+      // 结果 check
+      const rc = cloneNode(LIBRARY.find((c) => c.type === 'result')); rc.name = 'check-检查信号'
+      f.nodes[rc.id] = rc; f.results.push(rc.id)
+
+      // 注入连到序列第3步(c, idx=2)的左口(序号1..4)；序列第4步(d, idx=3)右口连结果(配对1,2,3,4)
+      f.injects.forEach((pid, i) => {
+        const e = genId('edge'); f.edges[e] = { id: e, from: 'inj:' + pid, to: 'seq:' + seq.id + ':2', seq: i + 1 }
+      })
+      const e = genId('edge'); f.edges[e] = { id: e, from: 'seq:' + seq.id + ':3', to: 'res:' + rc.id, pair: [] }
+
+      state.frames.push(f)
+    }
+    seed()
+
+    Object.assign(state, {
+      libGroups, stepKinds: STEP_KINDS,
+      addFrame, removeFrame, copyFrame, removeSequence,
+      onLibDragStart, onNodeDragStart, onDragEnd,
+      onZoneOver, onZoneLeave, onZoneDrop, onCanvasDrop,
+      onPortOutDown, onPortInDown, removeEdge,
+      moveNode, removeNode,
+      openEditor, editLibraryCard, saveEditor, closeEditor,
+      editEdge, saveEdgeInline, cancelEdgeEdit,
+      summarize, stepLabel,
+      setPortEl, setBodyEl,
+      expandOf, chainLabel, edgePaths, scheduleRecompute,
+    })
+    nextTick(recompute)
+    window.addEventListener('resize', scheduleRecompute)
+    return state
+  },
+}).mount('#app')
+</script>
+</body>
+</html>

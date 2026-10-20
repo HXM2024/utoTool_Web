@@ -1,0 +1,14 @@
+{
+  "function": {
+    "relayModule": 2,
+    "canChannel": 2
+  },
+  "can": {
+    "relayModule": 2,
+    "canChannel": 2
+  },
+  "sanbao": {
+    "relayModule": 1,
+    "canChannel": 2
+  }
+}

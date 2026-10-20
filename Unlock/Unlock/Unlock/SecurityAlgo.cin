@@ -1,0 +1,1389 @@
+/*@!Encoding:936*/
+/* ============================================================================
+ * SecurityAlgo.cin  —— 纯 CAPL 安全算法库
+ * ----------------------------------------------------------------------------
+ * 本文件为独立算法库，不含任何可变全局状态、不依赖任何外部 DLL。
+ * 所有算法均以「主机厂_算法」命名，入参即全部依赖，可直接被任意工程 include 后调用。
+ *
+ * 目录：
+ *   一、AES-128 内核（供 CBC / CMAC 复用）
+ *   二、AES-128-CBC  加解密（通用，主机厂差异通过 keyVal / iv 入参体现）
+ *   三、AES-128-CMAC 各主机厂封装
+ *   四、32 位 Seed -> Key 各主机厂算法
+ *   五、AES-128 自检（可用 TestAES_SelfTest() 验证内核）
+ *   六、全流程解锁函数 Xxx_Unlock（会话/取种/算钥/送钥/判定，风格参照 ChangAnUnlock）
+ *
+ * 说明：
+ *   1) 下方 S 盒 / 轮常量均为只读常量表，非可变全局状态；算法函数本身不读写任何可变全局量。
+ *   2) CMAC 采用 RFC 4493 标准：AES_CMAC(keyVal, msg, len, mac)，keyVal 为 16 字节密钥、msg 为消息。
+ *      原 EPS.can 中 aes_128_cmac(M, fixByte, mic) 的语义为 (消息=M, 密钥=fixByte)，
+ *      故各主机厂封装按 CMAC(keyVal=Mask, msg=Seed) 调用；若实测与 DLL 结果不一致，交换 keyVal/msg 即可。
+ * ==========================================================================*/
+
+variables
+{
+  /* ---- AES-128 正向 S 盒 ---- */
+  byte _aes_Sbox[256] =
+  {
+    0x63,0x7c,0x77,0x7b,0xf2,0x6b,0x6f,0xc5,0x30,0x01,0x67,0x2b,0xfe,0xd7,0xab,0x76,
+    0xca,0x82,0xc9,0x7d,0xfa,0x59,0x47,0xf0,0xad,0xd4,0xa2,0xaf,0x9c,0xa4,0x72,0xc0,
+    0xb7,0xfd,0x93,0x26,0x36,0x3f,0xf7,0xcc,0x34,0xa5,0xe5,0xf1,0x71,0xd8,0x31,0x15,
+    0x04,0xc7,0x23,0xc3,0x18,0x96,0x05,0x9a,0x07,0x12,0x80,0xe2,0xeb,0x27,0xb2,0x75,
+    0x09,0x83,0x2c,0x1a,0x1b,0x6e,0x5a,0xa0,0x52,0x3b,0xd6,0xb3,0x29,0xe3,0x2f,0x84,
+    0x53,0xd1,0x00,0xed,0x20,0xfc,0xb1,0x5b,0x6a,0xcb,0xbe,0x39,0x4a,0x4c,0x58,0xcf,
+    0xd0,0xef,0xaa,0xfb,0x43,0x4d,0x33,0x85,0x45,0xf9,0x02,0x7f,0x50,0x3c,0x9f,0xa8,
+    0x51,0xa3,0x40,0x8f,0x92,0x9d,0x38,0xf5,0xbc,0xb6,0xda,0x21,0x10,0xff,0xf3,0xd2,
+    0xcd,0x0c,0x13,0xec,0x5f,0x97,0x44,0x17,0xc4,0xa7,0x7e,0x3d,0x64,0x5d,0x19,0x73,
+    0x60,0x81,0x4f,0xdc,0x22,0x2a,0x90,0x88,0x46,0xee,0xb8,0x14,0xde,0x5e,0x0b,0xdb,
+    0xe0,0x32,0x3a,0x0a,0x49,0x06,0x24,0x5c,0xc2,0xd3,0xac,0x62,0x91,0x95,0xe4,0x79,
+    0xe7,0xc8,0x37,0x6d,0x8d,0xd5,0x4e,0xa9,0x6c,0x56,0xf4,0xea,0x65,0x7a,0xae,0x08,
+    0xba,0x78,0x25,0x2e,0x1c,0xa6,0xb4,0xc6,0xe8,0xdd,0x74,0x1f,0x4b,0xbd,0x8b,0x8a,
+    0x70,0x3e,0xb5,0x66,0x48,0x03,0xf6,0x0e,0x61,0x35,0x57,0xb9,0x86,0xc1,0x1d,0x9e,
+    0xe1,0xf8,0x98,0x11,0x69,0xd9,0x8e,0x94,0x9b,0x1e,0x87,0xe9,0xce,0x55,0x28,0xdf,
+    0x8c,0xa1,0x89,0x0d,0xbf,0xe6,0x42,0x68,0x41,0x99,0x2d,0x0f,0xb0,0x54,0xbb,0x16
+  };
+
+  /* ---- AES-128 逆向 S 盒 ---- */
+  byte _aes_InvSbox[256] =
+  {
+    0x52,0x09,0x6a,0xd5,0x30,0x36,0xa5,0x38,0xbf,0x40,0xa3,0x9e,0x81,0xf3,0xd7,0xfb,
+    0x7c,0xe3,0x39,0x82,0x9b,0x2f,0xff,0x87,0x34,0x8e,0x43,0x44,0xc4,0xde,0xe9,0xcb,
+    0x54,0x7b,0x94,0x32,0xa6,0xc2,0x23,0x3d,0xee,0x4c,0x95,0x0b,0x42,0xfa,0xc3,0x4e,
+    0x08,0x2e,0xa1,0x66,0x28,0xd9,0x24,0xb2,0x76,0x5b,0xa2,0x49,0x6d,0x8b,0xd1,0x25,
+    0x72,0xf8,0xf6,0x64,0x86,0x68,0x98,0x16,0xd4,0xa4,0x5c,0xcc,0x5d,0x65,0xb6,0x92,
+    0x6c,0x70,0x48,0x50,0xfd,0xed,0xb9,0xda,0x5e,0x15,0x46,0x57,0xa7,0x8d,0x9d,0x84,
+    0x90,0xd8,0xab,0x00,0x8c,0xbc,0xd3,0x0a,0xf7,0xe4,0x58,0x05,0xb8,0xb3,0x45,0x06,
+    0xd0,0x2c,0x1e,0x8f,0xca,0x3f,0x0f,0x02,0xc1,0xaf,0xbd,0x03,0x01,0x13,0x8a,0x6b,
+    0x3a,0x91,0x11,0x41,0x4f,0x67,0xdc,0xea,0x97,0xf2,0xcf,0xce,0xf0,0xb4,0xe6,0x73,
+    0x96,0xac,0x74,0x22,0xe7,0xad,0x35,0x85,0xe2,0xf9,0x37,0xe8,0x1c,0x75,0xdf,0x6e,
+    0x47,0xf1,0x1a,0x71,0x1d,0x29,0xc5,0x89,0x6f,0xb7,0x62,0x0e,0xaa,0x18,0xbe,0x1b,
+    0xfc,0x56,0x3e,0x4b,0xc6,0xd2,0x79,0x20,0x9a,0xdb,0xc0,0xfe,0x78,0xcd,0x5a,0xf4,
+    0x1f,0xdd,0xa8,0x33,0x88,0x07,0xc7,0x31,0xb1,0x12,0x10,0x59,0x27,0x80,0xec,0x5f,
+    0x60,0x51,0x7f,0xa9,0x19,0xb5,0x4a,0x0d,0x2d,0xe5,0x7a,0x9f,0x93,0xc9,0x9c,0xef,
+    0xa0,0xe0,0x3b,0x4d,0xae,0x2a,0xf5,0xb0,0xc8,0xeb,0xbb,0x3c,0x83,0x53,0x99,0x61,
+    0x17,0x2b,0x04,0x7e,0xba,0x77,0xd6,0x26,0xe1,0x69,0x14,0x63,0x55,0x21,0x0c,0x7d
+  };
+
+  /* ---- AES-128 轮常量 ---- */
+  byte _aes_Rcon[11] = {0x00,0x01,0x02,0x04,0x08,0x10,0x20,0x40,0x80,0x1B,0x36};
+}
+
+/* ==========================================================================
+ * 一、AES-128 内核
+ * ========================================================================*/
+
+/* GF(2^8) 乘法 */
+byte _aes_gmul(byte a, byte b)
+{
+  byte r;
+  byte aa;
+  byte bb;
+  int i;
+
+  r = 0;
+  aa = a;
+  bb = b;
+  for(i = 0; i < 8; i++)
+  {
+    if((bb & 0x01) != 0)
+      r = r ^ aa;
+    if((aa & 0x80) != 0)
+      aa = ((aa << 1) & 0xFF) ^ 0x1B;
+    else
+      aa = (aa << 1) & 0xFF;
+    bb = (bb >> 1) & 0xFF;
+  }
+  return r;
+}
+
+/* GF(2^8) 乘以 0x02（xtime），供 MixColumns 使用 */
+byte _aes_xtime(byte a)
+{
+  if((a & 0x80) != 0)
+    return ((a << 1) & 0xFF) ^ 0x1B;
+  return (a << 1) & 0xFF;
+}
+
+/* AES-128 密钥扩展：keyVal[16] -> rk[176] */
+void _aes128_keyExpansion(byte keyVal[], byte rk[])
+{
+  byte temp[4];
+  byte t;
+  int i;
+  int j;
+
+  for(i = 0; i < 16; i++)
+    rk[i] = keyVal[i];
+
+  for(i = 4; i < 44; i++)
+  {
+    for(j = 0; j < 4; j++)
+      temp[j] = rk[(i - 1) * 4 + j];
+
+    if((i % 4) == 0)
+    {
+      /* RotWord */
+      t = temp[0];
+      temp[0] = temp[1];
+      temp[1] = temp[2];
+      temp[2] = temp[3];
+      temp[3] = t;
+      /* SubWord */
+      for(j = 0; j < 4; j++)
+        temp[j] = _aes_Sbox[temp[j]];
+      /* Rcon */
+      temp[0] = temp[0] ^ _aes_Rcon[i / 4];
+    }
+
+    for(j = 0; j < 4; j++)
+      rk[i * 4 + j] = rk[(i - 4) * 4 + j] ^ temp[j];
+  }
+}
+
+/* AES-128 单块加密：in[16] -> out[16]（in/out 可同一数组） */
+void _aes128_encryptBlock(byte in[], byte out[], byte rk[])
+{
+  byte st[16];
+  byte tmp[16];
+  byte a0;
+  byte a1;
+  byte a2;
+  byte a3;
+  int i;
+  int c;
+  int round;
+
+  for(i = 0; i < 16; i++)
+    st[i] = in[i];
+
+  for(i = 0; i < 16; i++)
+    st[i] = st[i] ^ rk[i];
+
+  for(round = 1; round <= 9; round++)
+  {
+    /* SubBytes */
+    for(i = 0; i < 16; i++)
+      st[i] = _aes_Sbox[st[i]];
+
+    /* ShiftRows（列主序：index = 列*4 + 行） */
+    for(c = 0; c < 4; c++)
+    {
+      tmp[c * 4 + 0] = st[((c + 0) % 4) * 4 + 0];
+      tmp[c * 4 + 1] = st[((c + 1) % 4) * 4 + 1];
+      tmp[c * 4 + 2] = st[((c + 2) % 4) * 4 + 2];
+      tmp[c * 4 + 3] = st[((c + 3) % 4) * 4 + 3];
+    }
+    for(i = 0; i < 16; i++)
+      st[i] = tmp[i];
+
+    /* MixColumns */
+    for(c = 0; c < 4; c++)
+    {
+      a0 = st[c * 4 + 0];
+      a1 = st[c * 4 + 1];
+      a2 = st[c * 4 + 2];
+      a3 = st[c * 4 + 3];
+      st[c * 4 + 0] = _aes_xtime(a0) ^ (_aes_xtime(a1) ^ a1) ^ a2 ^ a3;
+      st[c * 4 + 1] = a0 ^ _aes_xtime(a1) ^ (_aes_xtime(a2) ^ a2) ^ a3;
+      st[c * 4 + 2] = a0 ^ a1 ^ _aes_xtime(a2) ^ (_aes_xtime(a3) ^ a3);
+      st[c * 4 + 3] = (_aes_xtime(a0) ^ a0) ^ a1 ^ a2 ^ _aes_xtime(a3);
+    }
+
+    /* AddRoundKey */
+    for(i = 0; i < 16; i++)
+      st[i] = st[i] ^ rk[round * 16 + i];
+  }
+
+  /* 末轮：无 MixColumns */
+  for(i = 0; i < 16; i++)
+    st[i] = _aes_Sbox[st[i]];
+  for(c = 0; c < 4; c++)
+  {
+    tmp[c * 4 + 0] = st[((c + 0) % 4) * 4 + 0];
+    tmp[c * 4 + 1] = st[((c + 1) % 4) * 4 + 1];
+    tmp[c * 4 + 2] = st[((c + 2) % 4) * 4 + 2];
+    tmp[c * 4 + 3] = st[((c + 3) % 4) * 4 + 3];
+  }
+  for(i = 0; i < 16; i++)
+    st[i] = tmp[i];
+  for(i = 0; i < 16; i++)
+    st[i] = st[i] ^ rk[160 + i];
+
+  for(i = 0; i < 16; i++)
+    out[i] = st[i];
+}
+
+/* AES-128 单块解密：in[16] -> out[16]（in/out 可同一数组） */
+void _aes128_decryptBlock(byte in[], byte out[], byte rk[])
+{
+  byte st[16];
+  byte tmp[16];
+  byte a0;
+  byte a1;
+  byte a2;
+  byte a3;
+  int i;
+  int c;
+  int round;
+
+  for(i = 0; i < 16; i++)
+    st[i] = in[i] ^ rk[160 + i];
+
+  for(round = 9; round >= 1; round--)
+  {
+    /* InvShiftRows */
+    for(c = 0; c < 4; c++)
+    {
+      tmp[c * 4 + 0] = st[((c + 4) % 4) * 4 + 0];
+      tmp[c * 4 + 1] = st[((c + 3) % 4) * 4 + 1];
+      tmp[c * 4 + 2] = st[((c + 2) % 4) * 4 + 2];
+      tmp[c * 4 + 3] = st[((c + 1) % 4) * 4 + 3];
+    }
+    for(i = 0; i < 16; i++)
+      st[i] = tmp[i];
+
+    /* InvSubBytes */
+    for(i = 0; i < 16; i++)
+      st[i] = _aes_InvSbox[st[i]];
+
+    /* AddRoundKey */
+    for(i = 0; i < 16; i++)
+      st[i] = st[i] ^ rk[round * 16 + i];
+
+    /* InvMixColumns */
+    for(c = 0; c < 4; c++)
+    {
+      a0 = st[c * 4 + 0];
+      a1 = st[c * 4 + 1];
+      a2 = st[c * 4 + 2];
+      a3 = st[c * 4 + 3];
+      st[c * 4 + 0] = _aes_gmul(a0,0x0e) ^ _aes_gmul(a1,0x0b) ^ _aes_gmul(a2,0x0d) ^ _aes_gmul(a3,0x09);
+      st[c * 4 + 1] = _aes_gmul(a0,0x09) ^ _aes_gmul(a1,0x0e) ^ _aes_gmul(a2,0x0b) ^ _aes_gmul(a3,0x0d);
+      st[c * 4 + 2] = _aes_gmul(a0,0x0d) ^ _aes_gmul(a1,0x09) ^ _aes_gmul(a2,0x0e) ^ _aes_gmul(a3,0x0b);
+      st[c * 4 + 3] = _aes_gmul(a0,0x0b) ^ _aes_gmul(a1,0x0d) ^ _aes_gmul(a2,0x09) ^ _aes_gmul(a3,0x0e);
+    }
+  }
+
+  /* 末轮 */
+  for(c = 0; c < 4; c++)
+  {
+    tmp[c * 4 + 0] = st[((c + 4) % 4) * 4 + 0];
+    tmp[c * 4 + 1] = st[((c + 3) % 4) * 4 + 1];
+    tmp[c * 4 + 2] = st[((c + 2) % 4) * 4 + 2];
+    tmp[c * 4 + 3] = st[((c + 1) % 4) * 4 + 3];
+  }
+  for(i = 0; i < 16; i++)
+    st[i] = tmp[i];
+  for(i = 0; i < 16; i++)
+    st[i] = _aes_InvSbox[st[i]];
+  for(i = 0; i < 16; i++)
+    st[i] = st[i] ^ rk[i];
+
+  for(i = 0; i < 16; i++)
+    out[i] = st[i];
+}
+
+/* 128 位左移一位，carry 返回最高位（MSB），供 CMAC 子密钥生成使用 */
+void _aes128_shift1(byte in[], byte out[], byte& carry)
+{
+  byte cur;
+  int i;
+
+  carry = 0;
+  for(i = 15; i >= 0; i--)
+  {
+    cur = in[i];
+    out[i] = ((cur << 1) & 0xFF) | carry;
+    carry = (cur >> 7) & 0x01;
+  }
+}
+
+/* ==========================================================================
+ * 二、AES-128-CBC（通用；主机厂差异仅体现在 keyVal / iv 入参）
+ *   参数顺序与 C 库 AES128_CBC_encrypt_buffer / _decrypt_buffer 保持一致：
+ *   (output, input, length, keyVal[16], iv[16])
+ * ========================================================================*/
+
+/* AES-128-CBC 加密：length 需为 16 的整数倍 */
+void AES_CBC_Encrypt(byte output[], byte input[], int length, byte keyVal[], byte iv[])
+{
+  byte rk[176];
+  byte prev[16];
+  byte blk[16];
+  int i;
+  int j;
+
+  _aes128_keyExpansion(keyVal, rk);
+  for(j = 0; j < 16; j++)
+    prev[j] = iv[j];
+
+  for(i = 0; i + 16 <= length; i = i + 16)
+  {
+    for(j = 0; j < 16; j++)
+      blk[j] = input[i + j] ^ prev[j];
+    _aes128_encryptBlock(blk, blk, rk);
+    for(j = 0; j < 16; j++)
+    {
+      output[i + j] = blk[j];
+      prev[j] = blk[j];
+    }
+  }
+}
+
+/* AES-128-CBC 解密：length 需为 16 的整数倍 */
+void AES_CBC_Decrypt(byte output[], byte input[], int length, byte keyVal[], byte iv[])
+{
+  byte rk[176];
+  byte prev[16];
+  byte blk[16];
+  byte cur[16];
+  int i;
+  int j;
+
+  _aes128_keyExpansion(keyVal, rk);
+  for(j = 0; j < 16; j++)
+    prev[j] = iv[j];
+
+  for(i = 0; i + 16 <= length; i = i + 16)
+  {
+    for(j = 0; j < 16; j++)
+    {
+      blk[j] = input[i + j];
+      cur[j] = input[i + j];
+    }
+    _aes128_decryptBlock(blk, blk, rk);
+    for(j = 0; j < 16; j++)
+    {
+      output[i + j] = blk[j] ^ prev[j];
+      prev[j] = cur[j];
+    }
+  }
+}
+
+/* Geely3.0 上电解锁第一步：用固定 ECU Key / IV 对 16 字节序列号做 CBC 加密得到密钥
+ * 原 EPS.can 中 ECU_Key / Iv 为全局变量，此处内联为函数内常量，调用不再依赖全局 */
+void Geely30_CBC_Encrypt(byte input[], byte output[])
+{
+  byte ecuKey[16] = {0x7d,0x0b,0xa5,0xb6,0xb5,0x7c,0x49,0x05,0x8d,0xf3,0xf9,0xad,0x2f,0x31,0x92,0xfb};
+  byte ecuIv[16]  = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0x00,0x66,0x55,0x44,0x33,0x22,0x11};
+
+  AES_CBC_Encrypt(output, input, 16, ecuKey, ecuIv);
+}
+
+/* ==========================================================================
+ * 三、AES-128-CMAC（RFC 4493）
+ *   入参：keyVal[16] 密钥，msg[] 消息（任意长度），len 消息字节数；mac[16] 输出
+ * ========================================================================*/
+
+void AES_CMAC(byte keyVal[], byte msg[], int len, byte mac[])
+{
+  byte rk[176];
+  byte K1[16];
+  byte K2[16];
+  byte L[16];
+  byte zero[16];
+  byte X[16];
+  byte M[16];
+  byte blk[16];
+  byte carry;
+  byte lastComplete;
+  int i;
+  int j;
+  int nb;
+
+  _aes128_keyExpansion(keyVal, rk);
+
+  /* L = AES(keyVal, 0^128) */
+  for(i = 0; i < 16; i++)
+    zero[i] = 0x00;
+  _aes128_encryptBlock(zero, L, rk);
+
+  /* K1 = L<<1 (+0x87) ; K2 = K1<<1 (+0x87) */
+  _aes128_shift1(L, K1, carry);
+  if(carry != 0)
+    K1[15] = K1[15] ^ 0x87;
+  _aes128_shift1(K1, K2, carry);
+  if(carry != 0)
+    K2[15] = K2[15] ^ 0x87;
+
+  if(len == 0)
+  {
+    nb = 1;
+    lastComplete = 0;
+  }
+  else
+  {
+    nb = (len + 15) / 16;
+    if((len % 16) == 0)
+      lastComplete = 1;
+    else
+      lastComplete = 0;
+  }
+
+  for(i = 0; i < 16; i++)
+    X[i] = 0x00;
+
+  /* 非末块：X = AES(keyVal, X ^ M_i) */
+  for(j = 0; j < nb - 1; j++)
+  {
+    for(i = 0; i < 16; i++)
+      blk[i] = msg[j * 16 + i] ^ X[i];
+    _aes128_encryptBlock(blk, X, rk);
+  }
+
+  /* 末块处理 */
+  if(lastComplete == 1)
+  {
+    for(i = 0; i < 16; i++)
+      M[i] = msg[(nb - 1) * 16 + i] ^ K1[i];
+  }
+  else
+  {
+    int rest;
+    rest = len - (nb - 1) * 16;
+    for(i = 0; i < 16; i++)
+      M[i] = 0x00;
+    for(i = 0; i < rest; i++)
+      M[i] = msg[(nb - 1) * 16 + i];
+    M[rest] = 0x80;
+    for(i = 0; i < 16; i++)
+      M[i] = M[i] ^ K2[i];
+  }
+
+  for(i = 0; i < 16; i++)
+    blk[i] = M[i] ^ X[i];
+  _aes128_encryptBlock(blk, mac, rk);
+}
+
+/* ---- 各主机厂 CMAC 封装：keyVal 为对应 Mask 常量，msg 为 16 字节 Seed ---- */
+
+void Geely_CMAC(byte seed[], byte mac[])
+{
+  byte cmacKey[16] = {0x40,0x21,0x07,0x49,0x10,0xD0,0x27,0x15,0x2A,0x19,0x0F,0x1F,0xAC,0x3E,0xFD,0x75};
+  AES_CMAC(cmacKey, seed, 16, mac);
+}
+
+void RC_CMAC(byte seed[], byte mac[])
+{
+  byte cmacKey[16] = {0xEA,0xCA,0xEE,0x20,0x4C,0x42,0x35,0x8D,0x34,0x2A,0xEF,0xDE,0x5E,0xE5,0x92,0x4F};
+  AES_CMAC(cmacKey, seed, 16, mac);
+}
+
+void Chery_CMAC(byte seed[], byte mac[])
+{
+  byte cmacKey[16] = {0x6C,0xA7,0xEB,0xBA,0xD8,0xE2,0x8B,0xFA,0x03,0x58,0x8F,0x35,0x3F,0xD7,0x14,0x02};
+  AES_CMAC(cmacKey, seed, 16, mac);
+}
+
+void DongFeng_CMAC(byte seed[], byte mac[])
+{
+  byte cmacKey[16] = {0x52,0x3E,0x0D,0x8A,0x9F,0x6C,0x1B,0x47,0x26,0x3A,0x8D,0x0F,0x5E,0x9B,0x1C,0x7A};
+  AES_CMAC(cmacKey, seed, 16, mac);
+}
+
+void CCAG_CMAC(byte seed[], byte mac[])
+{
+  byte cmacKey[16] = {0x58,0x94,0x93,0x03,0x62,0xEB,0x75,0x94,0xCD,0x10,0x16,0x50,0x25,0x0D,0x4C,0xD2};
+  AES_CMAC(cmacKey, seed, 16, mac);
+}
+
+/* ==========================================================================
+ * 四、32 位 Seed -> Key 各主机厂算法（纯 CAPL，入参仅 seed）
+ * ========================================================================*/
+
+/* SGMW 使用的旋转 / 乘法辅助（私有，避免与外部同名函数冲突） */
+word _sk_croshortright(word c, word b)
+{
+  word right;
+  word left;
+  right = c >> b;
+  left = c << (16 - b);
+  return left | right;
+}
+
+dword _sk_croleft(dword c, word b)
+{
+  dword left;
+  dword right;
+  left = c << b;
+  right = c >> (32 - b);
+  return left | right;
+}
+
+dword _sk_mulu32(dword val1, dword val2)
+{
+  dword x;
+  dword y;
+  dword z;
+  dword p;
+  dword keyMask;
+  keyMask = 0x5C7D4EF3;
+  x = (val1 & keyMask) | ((~val1) & val2);
+  y = ((_sk_croleft(val1,1)) & (_sk_croleft(val2,14))) | ((_sk_croleft(keyMask,21)) & (~(_sk_croleft(val1,30))));
+  z = (_sk_croleft(val1,17)) ^ (_sk_croleft(val2,4)) ^ (_sk_croleft(keyMask,11));
+  p = x ^ y ^ z;
+  return p;
+}
+
+/* BYD */
+dword BYD_SeedKey(dword seed)
+{
+  dword keyK;
+  dword keyResult;
+  keyK = 0x00000137;
+  keyResult = ((((seed >> 1) ^ seed) << 3) ^ (seed >> 2));
+  return keyResult ^ keyK;
+}
+
+/* ChangAn */
+dword ChangAn_SeedKey(dword seed)
+{
+  dword key1;
+  dword key2;
+  dword getSeed1;
+  dword getSeed2;
+  dword appKeyConst;
+  int i;
+
+  appKeyConst = 0x70F77302;
+  key1 = 0;
+  key2 = 0;
+  getSeed2 = 0;
+  getSeed1 = seed;
+  key1 = appKeyConst ^ getSeed1;
+  for(i = 32; i > 0; i--)
+  {
+    getSeed2 |= ((getSeed1 & 0x80000000) >> (i - 1));
+    getSeed1 = getSeed1 << 1;
+  }
+  key2 = appKeyConst ^ getSeed2;
+  return (dword)(key1 + key2);
+}
+
+/* SGMW */
+dword SGMW_SeedKey(dword seed)
+{
+  word udsKeyMul[32] =
+  {
+    0x7678,0x9130,0xd753,0x750f,0x72cb,0x55f7,0x13da,0x786b,
+    0x372a,0x4932,0x0e7c,0x3687,0x3261,0xa82c,0x8935,0xd00c,
+    0x1995,0x4311,0xb854,0x0d8d,0x9863,0x1a21,0xf753,0xd6d3,
+    0xb15d,0x7f3d,0x6821,0x791c,0x26c5,0x2e37,0x0e69,0x64a0
+  };
+  dword temp;
+  word index;
+  word mult1;
+  word mult2;
+  dword ncDefaultSeed;
+  dword ncUdsKeyMask;
+
+  ncDefaultSeed = 0xA548FD85;
+  ncUdsKeyMask = 0x5C7D4EF3;
+  index = 0x5D39;
+  if(seed == 0)
+    seed = ncDefaultSeed;
+  for(temp = 0x80000000; temp != 0; temp >>= 1)
+  {
+    if((temp & seed) != 0)
+    {
+      index = _sk_croshortright(index,1);
+      if((temp & ncUdsKeyMask) != 0)
+        index ^= 0x74c9;
+    }
+  }
+  mult1 = (udsKeyMul[(index >> 2) & ((1 << 5) - 1)] ^ index);
+  mult2 = (udsKeyMul[(index >> 8) & ((1 << 5) - 1)] ^ index);
+  temp = (((dword)mult1) << 16) | ((dword)mult2);
+  temp = _sk_mulu32(seed, temp);
+  return temp;
+}
+
+/* Geely1.0 */
+dword Geely10_SeedKey(dword seed)
+{
+  byte i;
+  byte xorArray[4] = {0xC1,0x1C,0x12,0x81};
+  byte calData[4];
+  byte skeyByte[4];
+  dword keyVal;
+
+  for(i = 0; i < 4; i++)
+    calData[i] = 0;
+  for(i = 0; i < 4; i++)
+    calData[i] = ((seed >> (24 - 8 * i)) & 0xFF) ^ xorArray[i];
+  skeyByte[0] = ((calData[3] & 0x0F) << 4) | (calData[3] & 0xF0);
+  skeyByte[1] = ((calData[1] & 0x0F) << 4) | ((calData[0] & 0xF0) >> 4);
+  skeyByte[2] = (calData[1] & 0xF0) | ((calData[2] & 0xF0) >> 4);
+  skeyByte[3] = ((calData[0] & 0x0F) << 4) | (calData[2] & 0x0F);
+  keyVal = skeyByte[0];
+  keyVal = (keyVal << 8) | skeyByte[1];
+  keyVal = (keyVal << 8) | skeyByte[2];
+  keyVal = (keyVal << 8) | skeyByte[3];
+  return keyVal;
+}
+
+/* BaoTeng */
+dword BaoTeng_SeedKey(dword seed)
+{
+  byte i;
+  byte xorArray[4] = {0x53,0x4E,0x22,0xCD};
+  byte calData[4];
+  byte skeyByte[4];
+  dword keyVal;
+
+  for(i = 0; i < 4; i++)
+    calData[i] = 0;
+  for(i = 0; i < 4; i++)
+    calData[i] = ((seed >> (24 - 8 * i)) & 0xFF) ^ xorArray[i];
+  skeyByte[0] = ((calData[3] & 0x0F) << 4) | (calData[3] & 0xF0);
+  skeyByte[1] = ((calData[1] & 0x0F) << 4) | ((calData[0] & 0xF0) >> 4);
+  skeyByte[2] = (calData[1] & 0xF0) | ((calData[2] & 0xF0) >> 4);
+  skeyByte[3] = ((calData[0] & 0x0F) << 4) | (calData[2] & 0x0F);
+  keyVal = skeyByte[0];
+  keyVal = (keyVal << 8) | skeyByte[1];
+  keyVal = (keyVal << 8) | skeyByte[2];
+  keyVal = (keyVal << 8) | skeyByte[3];
+  return keyVal;
+}
+
+/* DongFeng */
+dword DongFeng_SeedKey(dword seed)
+{
+  byte i;
+  byte xorArray[4] = {0xD1,0x31,0x54,0x07};
+  byte calData[4];
+  byte skeyByte[4];
+  dword keyVal;
+
+  for(i = 0; i < 4; i++)
+  {
+    calData[i] = 0;
+    skeyByte[i] = 0;
+  }
+  for(i = 0; i < 4; i++)
+    calData[i] = ((seed >> (24 - 8 * i)) & 0xFF) ^ xorArray[i];
+  skeyByte[0] = ((calData[0] & 0x0F) << 4) | (calData[1] & 0xF0);
+  skeyByte[1] = ((calData[1] & 0x0F) << 4) | ((calData[2] & 0xF0) >> 4);
+  skeyByte[2] = (calData[2] & 0xF0) | ((calData[3] & 0xF0) >> 4);
+  skeyByte[3] = ((calData[3] & 0x0F) << 4) | (calData[0] & 0x0F);
+  keyVal = skeyByte[0];
+  keyVal = (keyVal << 8) | skeyByte[1];
+  keyVal = (keyVal << 8) | skeyByte[2];
+  keyVal = (keyVal << 8) | skeyByte[3];
+  return keyVal;
+}
+
+/* Seres（与 DongFeng 同算法，独立命名便于调用） */
+dword Seres_SeedKey(dword seed)
+{
+  byte i;
+  byte xorArray[4] = {0xD1,0x31,0x54,0x07};
+  byte calData[4];
+  byte skeyByte[4];
+  dword keyVal;
+
+  for(i = 0; i < 4; i++)
+  {
+    calData[i] = 0;
+    skeyByte[i] = 0;
+  }
+  for(i = 0; i < 4; i++)
+    calData[i] = ((seed >> (24 - 8 * i)) & 0xFF) ^ xorArray[i];
+  skeyByte[0] = ((calData[0] & 0x0F) << 4) | (calData[1] & 0xF0);
+  skeyByte[1] = ((calData[1] & 0x0F) << 4) | ((calData[2] & 0xF0) >> 4);
+  skeyByte[2] = (calData[2] & 0xF0) | ((calData[3] & 0xF0) >> 4);
+  skeyByte[3] = ((calData[3] & 0x0F) << 4) | (calData[0] & 0x0F);
+  keyVal = skeyByte[0];
+  keyVal = (keyVal << 8) | skeyByte[1];
+  keyVal = (keyVal << 8) | skeyByte[2];
+  keyVal = (keyVal << 8) | skeyByte[3];
+  return keyVal;
+}
+
+/* SRM */
+dword SRM_SeedKey(dword seed)
+{
+  byte i;
+  byte xorArray[4] = {0xA1,0x59,0xD4,0x30};
+  byte getKey[4];
+  byte getSeed[4];
+  byte cal[4];
+  dword keyVal;
+
+  keyVal = 0;
+  for(i = 0; i < 4; i++)
+  {
+    cal[i] = 0;
+    getKey[i] = 0;
+    getSeed[i] = 0;
+  }
+  getSeed[0] = (seed >> 24) & 0xFF;
+  getSeed[1] = (seed >> 16) & 0xFF;
+  getSeed[2] = (seed >> 8) & 0xFF;
+  getSeed[3] = (seed) & 0xFF;
+  for(i = 0; i < 4; i++)
+    cal[i] = getSeed[i] ^ xorArray[i];
+
+  getKey[0] = ((cal[3] & 0x0F) << 4) | (cal[0] & 0xFF);
+  getKey[1] = (cal[1] & 0xD8) | ((cal[2] & 0xF0) >> 4);
+  getKey[2] = (cal[2] & 0xCF) | (cal[0] & 0xF0);
+  getKey[3] = (cal[3] & 0xF0) | ((cal[1] & 0xD0) >> 4);
+
+  keyVal |= getKey[0] << 24;
+  keyVal |= getKey[1] << 16;
+  keyVal |= getKey[2] << 8;
+  keyVal |= getKey[3];
+  return keyVal;
+}
+
+/* Chery */
+dword Chery_SeedKey(dword seed)
+{
+  byte bSeed[2];
+  word remainder;
+  byte n;
+  byte i;
+
+  bSeed[0] = (byte)(seed >> 8);
+  bSeed[1] = (byte)seed;
+  remainder = 0xFFFE;
+  for(n = 0; n < 2; n++)
+  {
+    remainder ^= ((bSeed[n]) << 8);
+    for(i = 0; i < 8; i++)
+    {
+      if((remainder & 0x8000) != 0)
+      {
+        if((remainder & 0x0080) != 0)
+          remainder = (remainder << 1) ^ 0x8408;
+        else
+          remainder = (remainder << 1) ^ 0x8025;
+      }
+      else
+        remainder = remainder << 1;
+    }
+  }
+  return remainder;
+}
+
+/* GAC */
+dword GAC_SeedKey(dword seed)
+{
+  dword keyVal;
+  dword appKeyConst;
+  byte seedB[4];
+  byte keyB[4];
+  byte appConst[4];
+  int i;
+
+  appKeyConst = 0x20F77302;
+  keyVal = 0;
+  for(i = 0; i < 4; i++)
+  {
+    seedB[i] = (seed >> (8 * (4 - i - 1))) & 0xFF;
+    appConst[i] = (appKeyConst >> (8 * (4 - i - 1))) & 0xFF;
+    keyB[i] = seedB[i] ^ appConst[i];
+  }
+  for(i = 0; i < 4; i++)
+    keyVal = keyVal + (keyB[i] << (8 * (4 - 1 - i)));
+  return keyVal;
+}
+
+/* ==========================================================================
+ * 五、AES-128 自检（单块 FIPS-197 C.1 / CBC NIST SP 800-38A / CMAC RFC 4493，成功返回 1）
+ * ========================================================================*/
+int TestAES_SelfTest()
+{
+  byte keyVal[16] = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f};
+  byte pt[16]  = {0x00,0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xaa,0xbb,0xcc,0xdd,0xee,0xff};
+  byte exp[16] = {0x69,0xc4,0xe0,0xd8,0x6a,0x7b,0x04,0x30,0xd8,0xcd,0xb7,0x80,0x70,0xb4,0xc5,0x5a};
+  byte rk[176];
+  byte ct[16];
+  byte back[16];
+  byte cKey[16] = {0x2b,0x7e,0x15,0x16,0x28,0xae,0xd2,0xa6,0xab,0xf7,0x15,0x88,0x09,0xcf,0x4f,0x3c};
+  byte cIv[16]  = {0x00,0x01,0x02,0x03,0x04,0x05,0x06,0x07,0x08,0x09,0x0a,0x0b,0x0c,0x0d,0x0e,0x0f};
+  byte cPt[64]  =
+  {
+    0x6b,0xc1,0xbe,0xe2,0x2e,0x40,0x9f,0x96,0xe9,0x3d,0x7e,0x11,0x73,0x93,0x17,0x2a,
+    0xae,0x2d,0x8a,0x57,0x1e,0x03,0xac,0x9c,0x9e,0xb7,0x6f,0xac,0x45,0xaf,0x8e,0x51,
+    0x30,0xc8,0x1c,0x46,0xa3,0x5c,0xe4,0x11,0xe5,0xfb,0xc1,0x19,0x1a,0x0a,0x52,0xef,
+    0xf6,0x9f,0x24,0x45,0xdf,0x4f,0x9b,0x17,0xad,0x2b,0x41,0x7b,0xe6,0x6c,0x37,0x10
+  };
+  byte cCt[64]  =
+  {
+    0x76,0x49,0xab,0xac,0x81,0x19,0xb2,0x46,0xce,0xe9,0x8e,0x9b,0x12,0xe9,0x19,0x7d,
+    0x50,0x86,0xcb,0x9b,0x50,0x72,0x19,0xee,0x95,0xdb,0x11,0x3a,0x91,0x76,0x78,0xb2,
+    0x73,0xbe,0xd6,0xb8,0xe3,0xc1,0x74,0x3b,0x71,0x16,0xe6,0x9e,0x22,0x22,0x95,0x16,
+    0x3f,0xf1,0xca,0xa1,0x68,0x1f,0xac,0x09,0x12,0x0e,0xca,0x30,0x75,0x86,0xe1,0xa7
+  };
+  byte cOut[64];
+  byte mKey[16] = {0x2b,0x7e,0x15,0x16,0x28,0xae,0xd2,0xa6,0xab,0xf7,0x15,0x88,0x09,0xcf,0x4f,0x3c};
+  byte mMsg[16] = {0x6b,0xc1,0xbe,0xe2,0x2e,0x40,0x9f,0x96,0xe9,0x3d,0x7e,0x11,0x73,0x93,0x17,0x2a};
+  byte mExp[16] = {0x07,0x0a,0x16,0xb4,0x6b,0x4d,0x41,0x44,0xf7,0x9b,0xdd,0x9d,0xd0,0x4a,0x28,0x7c};
+  byte mac[16];
+  int i;
+
+  /* 1) AES-128 单块加解密（FIPS-197 C.1） */
+  _aes128_keyExpansion(keyVal, rk);
+  _aes128_encryptBlock(pt, ct, rk);
+  _aes128_decryptBlock(ct, back, rk);
+  for(i = 0; i < 16; i++)
+  {
+    if(ct[i] != exp[i])
+      return 0;
+    if(back[i] != pt[i])
+      return 0;
+  }
+
+  /* 2) AES-128-CBC 加解密（NIST SP 800-38A F.2.1 / F.2.2，4 块） */
+  AES_CBC_Encrypt(cOut, cPt, 64, cKey, cIv);
+  for(i = 0; i < 64; i++)
+  {
+    if(cOut[i] != cCt[i])
+      return 0;
+  }
+  AES_CBC_Decrypt(cOut, cCt, 64, cKey, cIv);
+  for(i = 0; i < 64; i++)
+  {
+    if(cOut[i] != cPt[i])
+      return 0;
+  }
+
+  /* 3) AES-CMAC（RFC 4493，16 字节消息） */
+  AES_CMAC(mKey, mMsg, 16, mac);
+  for(i = 0; i < 16; i++)
+  {
+    if(mac[i] != mExp[i])
+      return 0;
+  }
+
+  return 1;
+}
+
+/* ==========================================================================
+ * 六、全流程解锁函数（风格参照 ChangAnUnlock：会话 -> 取种 -> 算钥 -> 送钥 -> 判定）
+ *   全部为自包含函数，只需传入诊断目标名 target，不依赖任何全局变量。
+ *   调用示例：
+ *     BYD_SeedKey_Unlock("ABS_ESP");
+ *     Geely_CMAC_Unlock("ABS_ESP");
+ *     Geely30_CBC_Unlock("ABS_ESP");
+ *   子功能号按既有分支取值固定：32 位 Seed-Key 类 = 0x01 / 0x02；CMAC、CBC 类 = 0x05 / 0x06。
+ *   若目标 ECU 不同，改对应流程函数里的 seedLevel / keyLevel 入参即可。
+ * ========================================================================*/
+
+/* 字节数组前后反转 */
+void _algo_reverse(byte num[], dword size)
+{
+  dword startNum;
+  dword endNum;
+  dword temp;
+
+  startNum = 0;
+  endNum = size - 1;
+  while(startNum < endNum)
+  {
+    temp = num[startNum];
+    num[startNum] = num[endNum];
+    num[endNum] = temp;
+    startNum++;
+    endNum--;
+  }
+}
+
+/* 16 字节数组整体左移 bit 位 */
+void _algo_leftMove(byte num[], byte bit)
+{
+  int i;
+  byte current;
+  byte carry;
+  byte shif;
+
+  carry = 0;
+  for(i = 15; i >= 0; i--)
+  {
+    current = num[i];
+    shif = current << bit;
+    shif |= carry;
+    num[i] = shif & 0xFF;
+    carry = (current >> (8 - bit)) & ((1 << bit) - 1);
+  }
+}
+
+/* -------------------- 32 位 Seed-Key 类 -------------------- */
+
+/* 按算法编号计算 32 位密钥 */
+dword _seedKeyByAlgo(int algoId, dword seed)
+{
+  switch(algoId)
+  {
+    case 0:  return BYD_SeedKey(seed);
+    case 1:  return ChangAn_SeedKey(seed);
+    case 2:  return SGMW_SeedKey(seed);
+    case 3:  return Geely10_SeedKey(seed);
+    case 4:  return BaoTeng_SeedKey(seed);
+    case 5:  return DongFeng_SeedKey(seed);
+    case 6:  return Seres_SeedKey(seed);
+    case 7:  return SRM_SeedKey(seed);
+    case 8:  return Chery_SeedKey(seed);
+    case 9:  return GAC_SeedKey(seed);
+    default: return 0;
+  }
+}
+
+/* 32 位 Seed-Key 通用解锁流程；返回 1=成功 0=失败 */
+int _unlockSeedKeyFlow(char target[], byte seedLevel, byte keyLevel, int algoId)
+{
+  diagRequest * req;
+  dword seed;
+  dword keyVal;
+
+  diagSetTarget(target);
+
+  /* 1) 进入扩展会话 10 03 */
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x10);
+  DiagSetPrimitiveByte(req, 1, 0x03);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+
+  /* 2) 请求种子 27 <seedLevel> */
+  testCaseComment("请求解锁ECU");
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, seedLevel);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  if(diagGetLastResponseCode(req) != -1)
+  {
+    testStepFail("请求种子失败");
+    return 0;
+  }
+
+  seed = ((dword)DiagGetRespPrimitiveByte(req, 2) << 24) |
+         ((dword)DiagGetRespPrimitiveByte(req, 3) << 16) |
+         ((dword)DiagGetRespPrimitiveByte(req, 4) << 8)  |
+         ((dword)DiagGetRespPrimitiveByte(req, 5));
+
+  /* 3) 计算密钥 */
+  keyVal = _seedKeyByAlgo(algoId, seed);
+
+  /* 4) 发送密钥 27 <keyLevel> */
+  diagResize(req, 6);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, keyLevel);
+  DiagSetPrimitiveByte(req, 2, (byte)(keyVal >> 24));
+  DiagSetPrimitiveByte(req, 3, (byte)(keyVal >> 16));
+  DiagSetPrimitiveByte(req, 4, (byte)(keyVal >> 8));
+  DiagSetPrimitiveByte(req, 5, (byte)keyVal);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  writeex(-3, 0, "seed=%08X keyVal=%08X", seed, keyVal);
+
+  /* 5) 判定 */
+  if(diagGetLastResponseCode(req) == -1)
+  {
+    testStepPass("ECU解锁成功");
+    return 1;
+  }
+  testStepFail("ECU解锁失败");
+  return 0;
+}
+
+/* ---- 各主机厂 32 位 Seed-Key 解锁入口 ---- */
+void BYD_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 0);
+}
+
+void ChangAn_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 1);
+}
+
+void SGMW_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 2);
+}
+
+void Geely10_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 3);
+}
+
+void BaoTeng_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 4);
+}
+
+void DongFeng_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 5);
+}
+
+void Seres_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 6);
+}
+
+void SRM_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 7);
+}
+
+void Chery_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 8);
+}
+
+void GAC_SeedKey_Unlock(char target[])
+{
+  _unlockSeedKeyFlow(target, 0x01, 0x02, 9);
+}
+
+/* -------------------- AES-128-CMAC 类 -------------------- */
+
+/* 按算法编号计算 16 字节 CMAC */
+void _cmacByAlgo(int algoId, byte seed[], byte mac[])
+{
+  int i;
+
+  switch(algoId)
+  {
+    case 0: Geely_CMAC(seed, mac); break;
+    case 1: RC_CMAC(seed, mac); break;
+    case 2: Chery_CMAC(seed, mac); break;
+    case 3: DongFeng_CMAC(seed, mac); break;
+    case 4: CCAG_CMAC(seed, mac); break;
+    default:
+      for(i = 0; i < 16; i++)
+        mac[i] = 0x00;
+      break;
+  }
+}
+
+/* AES-128-CMAC 通用解锁流程（16 字节种子/密钥）；返回 1=成功 0=失败 */
+int _unlockCmacFlow(char target[], byte seedLevel, byte keyLevel, int algoId)
+{
+  diagRequest * req;
+  byte seed[16];
+  byte mac[16];
+  int i;
+
+  diagSetTarget(target);
+
+  /* 1) 进入扩展会话 10 03 */
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x10);
+  DiagSetPrimitiveByte(req, 1, 0x03);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  testWaitForTimeout(150);
+
+  /* 2) 请求 16 字节种子 27 <seedLevel> */
+  testCaseComment("请求解锁ECU");
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, seedLevel);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  if(diagGetLastResponseCode(req) == 0)
+    testWaitForDiagResponse(req, 200);
+  if(diagGetLastResponseCode(req) != -1)
+  {
+    testStepFail("请求种子失败");
+    return 0;
+  }
+
+  for(i = 0; i < 16; i++)
+    seed[i] = DiagGetRespPrimitiveByte(req, i + 2);
+
+  /* 3) 计算 CMAC */
+  _cmacByAlgo(algoId, seed, mac);
+
+  /* 4) 发送 16 字节密钥 27 <keyLevel> */
+  diagResize(req, 18);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, keyLevel);
+  for(i = 0; i < 16; i++)
+    DiagSetPrimitiveByte(req, i + 2, mac[i]);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+
+  /* 5) 判定 */
+  if(diagGetLastResponseCode(req) == -1)
+  {
+    testStepPass("ECU解锁成功");
+    return 1;
+  }
+  testStepFail("ECU解锁失败");
+  return 0;
+}
+
+/* ---- 各主机厂 CMAC 解锁入口 ---- */
+void Geely_CMAC_Unlock(char target[])
+{
+  _unlockCmacFlow(target, 0x05, 0x06, 0);
+}
+
+void RC_CMAC_Unlock(char target[])
+{
+  _unlockCmacFlow(target, 0x05, 0x06, 1);
+}
+
+void Chery_CMAC_Unlock(char target[])
+{
+  _unlockCmacFlow(target, 0x05, 0x06, 2);
+}
+
+void DongFeng_CMAC_Unlock(char target[])
+{
+  _unlockCmacFlow(target, 0x05, 0x06, 3);
+}
+
+void CCAG_CMAC_Unlock(char target[])
+{
+  _unlockCmacFlow(target, 0x05, 0x06, 4);
+}
+
+/* -------------------- AES-128-CBC 类（Geely3.0） -------------------- */
+
+/* Geely3.0 CBC 解锁全流程：读序列号 22 F1 8C -> 派生密钥 -> 会话 -> 取种 -> 解密/反转/加密 -> 送钥 */
+void Geely30_CBC_Unlock(char target[])
+{
+  diagRequest * req;
+  byte serial[16];
+  byte secretKey[16];
+  byte ra[16];
+  byte r[16];
+  byte ecuKey[16] = {0x7d,0x0b,0xa5,0xb6,0xb5,0x7c,0x49,0x05,0x8d,0xf3,0xf9,0xad,0x2f,0x31,0x92,0xfb};
+  byte iv[16]     = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0x00,0x66,0x55,0x44,0x33,0x22,0x11};
+  int m;
+
+  diagSetTarget(target);
+
+  /* 1) 读取序列号 22 F1 8C，取响应第 6..21 字节 */
+  testCaseComment("读取序列号");
+  diagResize(req, 3);
+  DiagSetPrimitiveByte(req, 0, 0x22);
+  DiagSetPrimitiveByte(req, 1, 0xF1);
+  DiagSetPrimitiveByte(req, 2, 0x8C);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  if(diagGetLastResponseCode(req) == 0)
+    testWaitForDiagResponse(req, 200);
+  if(diagGetLastResponseCode(req) != -1)
+  {
+    testStepFail("读取序列号失败");
+    return;
+  }
+  if(DiagGetRespPrimitiveSize(req) != 22)
+  {
+    testStepFail("序列号长度错误");
+    return;
+  }
+  for(m = 0; m < 16; m++)
+    serial[m] = DiagGetRespPrimitiveByte(req, m + 6);
+
+  /* 2) 序列号左移 3 位，再用 ECU Key / IV 做 CBC 加密得到密钥 KEY */
+  _algo_leftMove(serial, 3);
+  AES_CBC_Encrypt(secretKey, serial, 16, ecuKey, iv);
+
+  /* 3) 进入扩展会话 10 03 */
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x10);
+  DiagSetPrimitiveByte(req, 1, 0x03);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  testWaitForTimeout(150);
+
+  /* 4) 请求种子 27 05 */
+  testCaseComment("请求解锁ECU");
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, 0x05);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  if(diagGetLastResponseCode(req) == 0)
+    testWaitForDiagResponse(req, 200);
+  if(diagGetLastResponseCode(req) != -1)
+  {
+    testStepFail("请求种子失败");
+    return;
+  }
+  for(m = 0; m < 16; m++)
+    ra[m] = DiagGetRespPrimitiveByte(req, m + 2);
+
+  /* 5) 用 KEY 解密 RA 得 ra'，再字节反转 */
+  AES_CBC_Decrypt(ra, ra, 16, secretKey, iv);
+  _algo_reverse(ra, 16);
+
+  /* 6) 用 KEY 加密得 R */
+  AES_CBC_Encrypt(r, ra, 16, secretKey, iv);
+
+  /* 7) 发送密钥 27 06 */
+  diagResize(req, 18);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, 0x06);
+  for(m = 0; m < 16; m++)
+    DiagSetPrimitiveByte(req, m + 2, r[m]);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+
+  /* 8) 判定 */
+  if(diagGetLastResponseCode(req) == -1)
+    testStepPass("ECU解锁成功");
+  else
+    testStepFail("ECU解锁失败");
+}
+
+/* BYD CBC 解锁全流程：会话 -> 读 F18C DID -> 派生密钥 -> 取种 -> 送钥
+ * 抓包确认（BYD）：10 03 -> 22 F1 8C -> 27 03 取 16 字节种子 -> 27 04 送 16 字节密钥。
+ * 结构与 Geely3.0 的 CBC 分支同构：取 F18C 响应第 6..21 字节 -> 左移 3 位 -> CBC 加密得密钥；
+ * 再用该密钥解密种子、字节反转、再加密得到送钥。
+ * 时序对齐 EPS.can 的 _SendAndWriteReport：testWaitForDiagRequestSent(500) -> diagSetP2Extended(-1)
+ *   -> testWaitForDiagResponse(50) -> NRC78 再等 5000ms。
+ * 注意：10 03 与 22 F1 8C 的响应为多帧，50ms 内未完成重组时再补 200ms 等待。
+ * 注意：ECU_Key / IV 目前沿用 EPS.can 的取值，若实车不符，替换下面两个常量即可。 */
+void BYD_CBC_Unlock(char target[])
+{
+  diagRequest * req;
+  byte serial[16];
+  byte secretKey[16];
+  byte ra[16];
+  byte r[16];
+  byte ecuKey[16] = {0x7d,0x0b,0xa5,0xb6,0xb5,0x7c,0x49,0x05,0x8d,0xf3,0xf9,0xad,0x2f,0x31,0x92,0xfb};
+  byte iv[16]     = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0x00,0x66,0x55,0x44,0x33,0x22,0x11};
+  int m;
+
+  diagSetTarget(target);
+
+  /* 1) 先进入扩展会话 10 03 */
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x10);
+  DiagSetPrimitiveByte(req, 1, 0x03);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  testWaitForTimeout(150);
+
+  /* 2) 读取序列号 22 F1 8C（22 字节响应，取第 6..21 字节）—— 多帧，补 200ms */
+  testCaseComment("读取序列号");
+  diagResize(req, 3);
+  DiagSetPrimitiveByte(req, 0, 0x22);
+  DiagSetPrimitiveByte(req, 1, 0xF1);
+  DiagSetPrimitiveByte(req, 2, 0x8C);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  if(diagGetLastResponseCode(req) == 0)
+    testWaitForDiagResponse(req, 200);
+  if(diagGetLastResponseCode(req) != -1)
+  {
+    testStepFail("读取序列号失败");
+    return;
+  }
+  if(DiagGetRespPrimitiveSize(req) != 22)
+  {
+    testStepFail("序列号长度错误");
+    return;
+  }
+  for(m = 0; m < 16; m++)
+    serial[m] = DiagGetRespPrimitiveByte(req, m + 6);
+
+  /* 3) 序列号左移 3 位，再用 ECU Key / IV 做 CBC 加密得到密钥 */
+  _algo_leftMove(serial, 3);
+  AES_CBC_Encrypt(secretKey, serial, 16, ecuKey, iv);
+
+  /* 4) 请求种子 27 03（16 字节）—— 多帧，补 200ms */
+  testCaseComment("请求解锁ECU");
+  diagResize(req, 2);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, 0x03);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+  if(diagGetLastResponseCode(req) == 0)
+    testWaitForDiagResponse(req, 200);
+  if(diagGetLastResponseCode(req) != -1)
+  {
+    testStepFail("请求种子失败");
+    return;
+  }
+  for(m = 0; m < 16; m++)
+    ra[m] = DiagGetRespPrimitiveByte(req, m + 2);
+
+  /* 5) 用密钥解密种子得 ra'，再字节反转 */
+  AES_CBC_Decrypt(ra, ra, 16, secretKey, iv);
+  _algo_reverse(ra, 16);
+
+  /* 6) 用密钥加密得 R */
+  AES_CBC_Encrypt(r, ra, 16, secretKey, iv);
+
+  /* 7) 发送密钥 27 04（16 字节，响应短） */
+  diagResize(req, 18);
+  DiagSetPrimitiveByte(req, 0, 0x27);
+  DiagSetPrimitiveByte(req, 1, 0x04);
+  for(m = 0; m < 16; m++)
+    DiagSetPrimitiveByte(req, m + 2, r[m]);
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req, 500);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(req, 50);
+  if(diagGetLastResponseCode(req) == 0x78)
+    testWaitForDiagResponse(req, 5000);
+
+  /* 8) 判定 */
+  if(diagGetLastResponseCode(req) == -1)
+    testStepPass("ECU解锁成功");
+  else
+    testStepFail("ECU解锁失败");
+}
