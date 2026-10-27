@@ -1,0 +1,72 @@
+/*@!Encoding:936*/
+includes
+{
+  #include "..\Extend_UDS.can"
+}
+
+variables
+{
+  enum Addressing {phyID=0x783,funID=0x7DF};/*使用物理寻址或功能寻址*/
+  word p2cmax=1000;/*客户端等待单帧响应的最大等待时长ms，响应是多帧不要使用此参数*/
+
+}
+
+
+//使用物理寻址或功能寻址发送消息
+_diagSendMsg(enum Addressing msgID,diagRequest* obj)
+{
+  if(msgID==phyID)
+    diagSendRequest(obj);
+  else if(msgID==funID)
+    diagSendFunctional(obj);
+}
+
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,enum Addressing msgID)
+{
+  char comment[70];
+  byte primitiveRaw[30];
+  long size;
+  byte i;
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  
+  if(msgID==phyID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  
+  for(i=0;i<size;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  }
+  _diagSendMsg(msgID,obj);
+  testCaseComment(comment);
+  testReportWriteDiagObject(obj);
+  testWaitForDiagResponse(obj,p2cmax);
+  testReportWriteDiagResponse(obj);
+}
+
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,enum Addressing msgID,word waittime)
+{
+  char comment[70];
+  byte primitiveRaw[30];
+  long size;
+  byte i;
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  
+  if(msgID==phyID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  
+  for(i=0;i<size;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  }
+  _diagSendMsg(msgID,obj);
+  testCaseComment(comment);
+  testReportWriteDiagObject(obj);
+  testWaitForDiagResponse(obj,waittime);
+  testReportWriteDiagResponse(obj);
+}

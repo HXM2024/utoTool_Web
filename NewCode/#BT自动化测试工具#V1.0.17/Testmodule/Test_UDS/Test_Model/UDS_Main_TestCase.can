@@ -1,0 +1,905 @@
+/*@!Encoding:936*/
+includes
+{
+  #include "BTUDS_EM2E.can"
+}
+
+variables
+{
+  
+}
+
+
+testcase ToolTest()/*工具验证*/
+{
+  int i;
+//  char basePath[1024] = "C:\\Users\\Administrator\\Desktop\\#BT自动化测试工具_LRA101(T79-G2)#V1.0.01\\Testmodule";
+  writeEx(-3,1,"/*---------------工具验证----------------*/");
+  MainInit(defsession);
+//  writeEx(-3,0,"---------------------------------");
+//  sysExec("C:\\Users\\Administrator\\Desktop\\#Excel2Case#V1.0.00.exe & exit","" );
+//  sysExecCmd("C:\\Users\\Administrator\\Desktop\\#Excel2Case#V1.0.00.exe & exit","" );
+}
+
+testcase Security_Test()
+{ 
+  MainInit(prosession);
+//  diagStartTesterPresent(Cdd_Name);
+  _unlockECU();
+}
+testcase Case_K15_ON()
+{
+  Get_value();
+  _K15_ON();
+}
+testcase Case_K15_OFF()
+{
+  Get_value();
+  _K15_OFF();
+}
+testcase Case_K30_ON()
+{
+  Get_value();
+  _K30_ON();
+}
+testcase Case_K30_OFF()
+{
+  Get_value();
+  _K30_OFF();
+}
+
+testcase ID_Loop()
+{
+  message * Msg;
+  int i,Flage;
+  MainInit(defsession);
+  
+  Msg.dlc = 8;
+  Msg.byte(0) = 0x02;
+  Msg.byte(1) = 0x10;
+  Msg.byte(2) = 0x01;
+  for(i=3;i<8;i++)
+    Msg.byte(i) = 0x55;
+  Flage = 0;
+  for(i = 0;i<=0xFFF;i++)
+  {
+    Msg.id = i;
+    if(i == phyreq_ID || i == funreq_ID)
+      continue;
+    output(Msg);
+    if(i == Response_ID)
+      testWaitForTimeout(1);
+    if(testWaitForMessage(Response_ID,50))
+    {
+      testStepFail("","当前ID:0x%03X,出现应答",i);
+      Flage = 1;
+    }
+  }
+  {
+    Msg.id = phyreq_ID;
+    output(Msg);
+    if(testWaitForMessage(Response_ID,50))
+      testStepPass("","当前ID:0x%03X,能够响应",phyreq_ID);
+    else
+      testStepFail("","当前ID:0x%03X,未响应",phyreq_ID);
+    Msg.id = funreq_ID;
+    output(Msg);
+    if(testWaitForMessage(Response_ID,50))
+      testStepPass("","当前ID:0x%03X,能够响应",funreq_ID);
+    else
+      testStepFail("","当前ID:0x%03X,未响应",funreq_ID);
+  }
+  if(Flage == 0)
+    testStepPass("","响应ID符合主机厂定义");
+}
+testcase Case_10_Phy_Def_01() /*10 01*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_02()/*10 02*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_Def_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_03()/*10 03*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_04()/*肯定响应抑制位*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_07()/*NRC13>12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_08()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_09()/*NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_09(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_NRC22_Auto()
+{
+  MainInit(defsession);
+  _NRC22_Test(phyreq_ID,defsession,0x10,0);
+  End_Main();
+}
+testcase Case_10_Phy_Ex_2()/*10 02*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_Ex_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Ex_NRC22_Auto()
+{
+  MainInit(exsession);
+  _NRC22_Test(phyreq_ID,exsession,0x10,0);
+  End_Main();
+}
+testcase Case_10_Phy_Ex_3_GAC()/*NRC22*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_Ex_03_GAC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Pro_2()/*10 02*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_Pro_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Pro_3()/*10 03*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _10_Phy_Pro_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Pro_NRC22_Auto()
+{
+  MainInit(prosession);
+  _NRC22_Test(phyreq_ID,prosession,0x10,0);
+  End_Main();
+}
+
+testcase Case_11_Phy_Def_01()/*遍历子功能*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _11_Phy_Def_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_02()/*11 81|83*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _11_Phy_Def_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_03()/*NRC13>NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _11_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_04()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _11_Phy_Def_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_05()/*NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _11_Phy_Def_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_01()/*遍历DID 22 XX XX*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _22_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_02()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _22_Serve_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_03()/*NRC31*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _22_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_04()/*NRC13>NRC31*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _22_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_05()/*一次性读多个DID*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _Serve22_06(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_06()/*一次性读三个相同的DID*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _Serve22_07(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_07()/*一次性读多个DID（其中一个或多个不支持）*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _Serve22_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_08()/*其他*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _Serve22_09(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_2E_Phy_Def_01()/*NRC7F>NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _2E_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_2E_Phy_Pro_01()/*遍历DID 2E XX XX*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _2E_Serve_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_2E_Phy_Pro_02()/*NRC31*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _2E_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_2E_Phy_Pro_03()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _2E_Serve_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_2E_Phy_Pro_04()/*NRC33*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _2E_Serve_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_2E_Phy_Pro_05()/*NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _2E_Serve_06(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_27_Phy_Def_01()/*NRC7F>NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_01()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_02()/*NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_03()/*NRC24*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_04()/*NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+//testcase Case_27_Phy_Pro_05()/*下电对错误计数影响测试*/
+//{
+//  GetInformationFromTitle();
+//  MainInit(Session_From_Title);
+//  _27_Serve_06_2(ID_From_Title,Session_From_Title);
+//  End_Main();
+//}
+//testcase Case_27_Phy_Pro_06()/*重启对错误计数影响测试*/
+//{
+//  GetInformationFromTitle();
+//  MainInit(Session_From_Title);
+//  _27_Serve_07_2(ID_From_Title,Session_From_Title);
+//  End_Main();
+//}
+testcase Case_27_Phy_Pro_07()/*不正确报文对错误计数影响测试*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_08()/*解锁情况下再次请求种子*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_09(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_09()/*满延时错误计数器变化测试*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_10(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+//testcase Case_27_Phy_Pro_10()/*会话切换对10s延时的影响测试*/
+//{
+//  GetInformationFromTitle();
+//  MainInit(Session_From_Title);
+//  _27_Serve_11(ID_From_Title,Session_From_Title);
+//  End_Main();
+//}
+//testcase Case_27_Phy_Pro_11()/*断电对10s延时的影响测试*/
+//{
+//  GetInformationFromTitle();
+//  MainInit(Session_From_Title);
+//  _27_Serve_12(ID_From_Title,Session_From_Title);
+//  End_Main();
+//}
+testcase Case_27_Phy_Pro_12()/*检测安全访问解锁状态*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_13(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_13()/*连续请求种子*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_14(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_14()/*延时时间测试*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_15(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_15()/*连续请求种子验证重复率*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_16(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_16()/*支持的子功能测试*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_17(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_17()/*解锁后计数器清零*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_18(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_18()/*已解锁状态-上下电/11复位*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_19(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_19()/*已解锁状态-会话切换*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_20(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_20()/*未解锁状态-11复位*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_21(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_21()/*未解锁状态-上下电*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_22(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_22()/*未解锁状态-会话切换*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_23(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_22_01()/*未解锁状态-会话切换02切02*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_23_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_23()/*长度不正确的正确秘钥*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_24(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Pro_24()/*子功能错误的正确秘钥*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _27_Serve_25(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+
+testcase Case_3E_Phy_Def_01()/*3E 00*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _3E_Serve_01(ID_From_Title);
+  End_Main();
+}
+testcase Case_3E_Phy_Def_02()/*3E 80*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _3E_Serve_02(ID_From_Title);  
+  End_Main();
+}
+testcase Case_3E_Phy_Def_03()/*NRC13>NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _3E_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_3E_Phy_Def_04()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _3E_Serve_04(ID_From_Title);
+  End_Main();
+}
+
+testcase Case_3E_Phy_Def_05()/*NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _3E_Serve_05(ID_From_Title);
+  End_Main();
+}
+testcase Case_Not_Support_Phy_Def()/*不支持服务*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _Not_Support_Fun(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_85_Phy_Def_01()/*NRC7F*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _85_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_85_Phy_Pro_01()/*85 01/02*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _85_Serve_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_85_Phy_Pro_02()/*85 81/82*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _85_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_85_Phy_Pro_03()/*NRC13>12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _85_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_85_Phy_Pro_04()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _85_Serve_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_85_Phy_Pro_05()/*NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _85_Serve_06(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_85_Phy_Pro_NRC22_Auto()
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _NRC22_Test(ID_From_Title,Session_From_Title,Serve_Form_Title,0);
+  End_Main();
+}
+
+
+testcase Case_28_Phy_Def_01()/*NRC7F*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _28_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_28_Phy_Pro_01()/*子功能及肯定响应抑制位*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _28_Serve_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_28_Phy_Pro_02()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _28_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_28_Phy_Pro_03()/*NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _28_Serve_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_28_Phy_Pro_04()/*NRC31*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _28_Serve_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_28_Phy_Pro_05()/*NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _28_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_28_Phy_Pro_NRC22_Auto()
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _NRC22_Test(ID_From_Title,Session_From_Title,Serve_Form_Title,0);
+  End_Main();
+}
+
+testcase Case_34_Phy_Def_01()/*NRC7F*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_34_Phy_Pro_01()/*NRC22/24*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_34_Phy_Pro_02()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_34_Phy_Pro_03()/*NRC33*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_34_Phy_Pro_04()/*NRC31*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_34_Phy_Pro_05()/*驱动地址NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_06(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_34_Phy_Pro_05_GAC()/*驱动地址NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_06_GAC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_34_Phy_Pro_06()/*APP地址NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _34_Serve_07(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_36_Phy_Def_01()/*NRC7F*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _36_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_36_Phy_Pro_01()/*NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _36_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_36_Phy_Pro_02()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _36_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_37_Phy_Def_01()/*NRC7F*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _37_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_37_Phy_Pro_01()/*NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _37_Serve_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_37_Phy_Pro_02()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _37_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_37_Phy_Pro_03()/*NRC22/24*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _37_Serve_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_31_Phy_Def_01()/*NRC7F*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_01()/*Response*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_02()/*NRC13*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_03()/*NRC12*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_04()/*NRC33*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_05()/*NRC31*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_06()/*NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_06(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_06_GAC()/*NRC优先级*/
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _31_Serve_06_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Pro_NRC22_Auto()
+{
+  GetInformationFromTitle();
+  MainInit(Session_From_Title);
+  _NRC22_Test(ID_From_Title,Session_From_Title,Serve_Form_Title,0);
+  End_Main();
+}
+
+//
+//testcase Case_Other_GAC_01()/*默认会话下休眠验证-300s*/
+//{
+//  MainInit(defsession);
+//  Other_GAC_01();
+//  End_Main();
+//}
+//testcase Case_Other_GAC_02()/*默认会话下休眠验证-301s*/
+//{
+//  MainInit(defsession);
+//  Other_GAC_02();
+//  End_Main();
+//}
+//testcase Case_Other_GAC_03()/*默认会话下休眠验证-298s*/
+//{
+//  MainInit(defsession);
+//  Other_GAC_03();
+//  End_Main();
+//}
+//testcase Case_Other_GAC_04()/*默认会话下休眠验证-100s*/
+//{
+//  MainInit(defsession);
+//  Other_GAC_04();
+//  End_Main();
+//}
+//testcase Case_Other_GAC_05()/*默认会话下休眠验证-300s内有诊断报文请求*/
+//{
+//  MainInit(defsession);
+//  Other_GAC_05();
+//  End_Main();
+//}
+//testcase Case_Other_GAC_06()/*默认会话下休眠验证-默认会话切换*/
+//{
+//  MainInit(defsession);
+//  Other_GAC_06();
+//  End_Main();
+//}
+//testcase Case_Other_GAC_07()/*默认会话下休眠验证-拓展会话切换默认会话*/
+//{
+//  MainInit(defsession);
+//  Other_GAC_07();
+//  End_Main();
+//}
+testcase Case_Other_GAC_08()/*1101响应后时间测试-拓展会话*/
+{
+  MainInit(defsession);
+  Other_GAC_08();
+  End_Main();
+}
+testcase Case_Other_GAC_09()/*1101响应后时间测试-11复位*/
+{
+  MainInit(defsession);
+  Other_GAC_09();
+  End_Main();
+}
+testcase Case_Other_GAC_10()/*1101响应后时间测试-高负载*/
+{
+  MainInit(defsession);
+  Other_GAC_10();
+  End_Main();
+}
+testcase Case_Other_GAC_11()/*1002响应后时间测试-请求种子*/
+{
+  MainInit(exsession);
+  Other_GAC_11();
+  End_Main();
+}
+testcase Case_Other_GAC_12()/*1002响应后时间测试-11复位*/
+{
+  MainInit(exsession);
+  Other_GAC_12();
+  End_Main();
+}
+testcase Case_Other_GAC_13()/*1002响应后时间测试-高负载*/
+{
+  MainInit(exsession);
+  Other_GAC_13();
+  End_Main();
+}

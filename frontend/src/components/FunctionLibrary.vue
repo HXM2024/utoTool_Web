@@ -82,7 +82,7 @@
               size="small"
               effect="light"
               class="func-cat"
-              :title="fn.builtin ? '内置共用函数（来自 ArrayFuncTest.cin 模板）' : ''"
+              :title="fn.builtin ? '内置函数（生成时自动注入，如继电器控制、数组工具等）' : ''"
             >
               {{ categoryLabel(fn.category) }}
             </el-tag>

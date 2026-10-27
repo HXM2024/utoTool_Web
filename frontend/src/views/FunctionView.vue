@@ -565,6 +565,7 @@ import { generateFunction, expandCases, exportFunctionCases, importFunctionCases
 import { getConfig, getConfigs, saveConfig, openFolder } from '@/api/config'
 import { parseCAN, parseDbcFile, parseA2lFile } from '@/api/can'
 import { useModuleStore } from '@/stores/modules'
+import { defaultAlgoForOem } from '@/utils/securityAlgo'
 
 // 注册 highlight.js 语言
 hljs.registerLanguage('xml', xmlLang)
@@ -1088,8 +1089,12 @@ async function onConfigChange(name: string) {
       if (data.oem) {
         store.setSelectedOem(data.oem)
       }
+      // 安全算法与主机厂相互独立；仅历史配置缺少 securityAlgo 时按 oem 兜底
       if (data.securityAlgo) {
         store.setSelectedAlgo(data.securityAlgo)
+      } else if (data.oem) {
+        const fallback = defaultAlgoForOem(data.oem)
+        if (fallback) store.setSelectedAlgo(fallback)
       }
     }
     // 标记内存数据归属该配置，后续切换时据此安全自动保存
@@ -1120,6 +1125,9 @@ async function onCreate(name: string) {
     mapping: emptyMapping(),
     cards: emptyCardLibrary(),
     value_library: emptyValueLibrary(),
+    // 新配置记录当前全局选择，重新打开时可恢复（生成时仍以侧边栏实时值为准）
+    oem: store.selectedOem,
+    securityAlgo: store.selectedAlgo,
   }
   // 新建配置：把全局库里标记为全局的卡片/映射/值资源带进默认分组，并同步到配置根级兜底字段
   const seeded = defaultData.graph.groups?.[0]
@@ -1253,6 +1261,8 @@ async function doGenerate() {
       relayCfg.relayModule,
       relayCfg.canChannel,
       dbcEnvVarNames.value,
+      store.selectedOem,
+      store.selectedAlgo,
     )
     const data = res?.data
     if (data) {
@@ -2007,7 +2017,13 @@ async function applyImportDependencies(deps: GroupFileDeps): Promise<string[]> {
       store.setCcpVarTypes(c.ccp_var_types as Record<string, any>)
     }
     if (c.oem) store.setSelectedOem(String(c.oem))
-    if (c.securityAlgo) store.setSelectedAlgo(String(c.securityAlgo))
+    // 安全算法与主机厂相互独立；旧分组文件缺少 securityAlgo 时按 oem 兜底
+    if (c.securityAlgo) {
+      store.setSelectedAlgo(String(c.securityAlgo))
+    } else if (c.oem) {
+      const fallback = defaultAlgoForOem(String(c.oem))
+      if (fallback) store.setSelectedAlgo(fallback)
+    }
     applied.push('配置参数')
   }
   return applied

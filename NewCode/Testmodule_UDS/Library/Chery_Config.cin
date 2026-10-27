@@ -1,0 +1,262 @@
+/*@!Encoding:936*/
+
+variables
+{
+  byte Read_Config_Chery[3] = {0x22,0x30,0x11};
+  byte Write_Config_Chery[255];
+}
+
+void Init_Chery_Config()
+{
+  int i;
+  Init_Main_Special("\\奇瑞_配置字\\",exsession);  
+  _get_Arry("Config_ALL");
+  for(i=0;i<3;i++)
+    Write_Config_Chery[i] = Arry_Data[i];
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0;
+  _get_Arry("Read_Config");
+  for(i=0;i<3;i++)
+    Read_Config_Chery[i] = Arry_Data[i];
+}
+
+
+void Config_Default_Chery() /*默认值*//*需求规定无法写入全0xFF情况，此处仅读取判断*/
+{
+  dword DTC_Ex[20];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0xFF;
+  
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _85_Check_DTC(1,Unconfigured);
+  
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _85_Check_DTC(1,Unconfigured);
+  _Open_All_Advanced_function();
+}
+void Config_LKA_Chery() /*LKA_Torque*/
+{
+  dword DTC_Ex[20];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0;
+  Write_Config_Chery[11] = 0x20;
+  
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _Advanced_function_DTC(Write_Config_SGMW,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(1000);
+}
+void Config_APA_Chery() /*APA*/
+{
+  dword DTC_Ex[20];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0;
+  Write_Config_Chery[11] = 0x40;
+  
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _Advanced_function_DTC(Write_Config_SGMW,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(1000);
+}
+void Config_LKA_APA_Chery() /*LKA + APA*/
+{
+  dword DTC_Ex[20];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0;
+  Write_Config_Chery[11] = 0x60;
+  
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _Advanced_function_DTC(Write_Config_SGMW,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(1000);
+}
+void Config_NO_Chery() /*不配置LKA和APA*/
+{
+  dword DTC_Ex[20];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0;
+  Write_Config_Chery[11] = 0x80;
+  
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _Advanced_function_DTC(Write_Config_SGMW,DTC_Ex);
+  _85_Check_DTC(1,0);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(1000);
+}
+void Config_Is_0xC4_Chery() /*配置转角外发*/
+{
+  dword DTC_Ex[20];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _WriteEx_and_Report("","/*----------------开始测试----------------*/");
+  
+  Write_Config_Chery[31] = 0x10;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Check_EPS_TX(0,0x0C4);
+  
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _Advanced_function_DTC(Write_Config_SGMW,DTC_Ex);
+  _85_Check_DTC(1,0);
+  _Open_All_Advanced_function();
+  _Check_EPS_TX(1,0x0C4);
+  testWaitForTimeout(1000);
+}
+void Config_No_0xC4_Chery() /*不配置转角外发*/
+{
+  dword DTC_Ex[20];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Chery[i] = 0;
+  Write_Config_Chery[31] = 0x10;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _WriteEx_and_Report("","/*----------------开始测试----------------*/");
+  
+  Write_Config_Chery[31] = 0x00;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Check_EPS_TX(1,0x0C4);
+  
+  _Set_11_Restoration();
+  testWaitForTimeout(2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_Chery);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Chery);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _Advanced_function_DTC(Write_Config_SGMW,DTC_Ex);
+  _85_Check_DTC(1,0);
+  _Open_All_Advanced_function();
+  _Check_EPS_TX(0,0x0C4);
+  testWaitForTimeout(1000);
+}
+
+testcase Case_Config_Default_Chery()
+{
+  Init_Chery_Config();
+  Config_Default_Chery();
+  _End();
+}
+testcase Case_Config_LKA_Chery()
+{
+  Init_Chery_Config();
+  Config_LKA_Chery();
+  _End();
+}
+testcase Case_Config_APA_Chery()
+{
+  Init_Chery_Config();
+  Config_APA_Chery();
+  _End();
+}
+testcase Case_Config_LKA_APA_Chery()
+{
+  Init_Chery_Config();
+  Config_LKA_APA_Chery();
+  _End();
+}
+testcase Case_Config_NO_Chery()
+{
+  Init_Chery_Config();
+  Config_NO_Chery();
+  _End();
+}
+testcase Case_Config_Is_0xC4_Chery()
+{
+  Init_Chery_Config();
+  Config_Is_0xC4_Chery();
+  _End();
+}
+testcase Case_Config_No_0xC4_Chery()
+{
+  Init_Chery_Config();
+  Config_No_0xC4_Chery();
+  _End();
+}

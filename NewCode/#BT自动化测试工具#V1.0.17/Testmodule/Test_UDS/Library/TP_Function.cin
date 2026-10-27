@@ -1,0 +1,4923 @@
+/*@!Encoding:936*/
+includes
+{
+  
+}
+variables
+{
+  byte getFS=0;
+  byte _TP_CAN_DID[10];
+  byte _TP_CAN_DID_Input;
+  byte _TP_CAN_DID_Len;
+  byte HardwareTest_Data[200];
+  int HardwareTest_Data_Len;
+  int Res_NRC78_Flage;
+  byte Seed_Save[100];
+  int GlbHandlefile;
+}
+void Init_TP()
+{
+  _WriteEx_and_Report("","初始化");
+  Get_value();
+  diagStopTesterPresent(Cdd_Name);/*关闭cdd文件，防止自动发流控帧对测试造成干扰*/
+  creat_log("\\UDS_TP_Logging\\");
+  startLogging();
+}
+void End_TP()
+{
+  stopLogging();
+  testWaitForTimeout(1000);
+}
+_Get_TP_DID(char str[])
+{
+  char Temp_Value1[200];
+  char Temp_Value2[20];
+  int i,m,j,flage;
+  m=0;flage = 0;
+  _TP_CAN_DID_Input = 0;
+  snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+  snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,str,"Null",Temp_Value1,1000, file_name_1);
+  fileClose(GlbHandlefile);
+  for(i=0;i<strlen(Temp_Value1);i++)
+  {
+    if(Temp_Value1[i] == 123)
+    {
+      for(j=i+1;j<strlen(Temp_Value1);j++)
+      {
+        if(Temp_Value1[j] == 44 || Temp_Value1[j] == 125)
+        {
+          _TP_CAN_DID[m] = atol(Temp_Value2);
+          _TP_CAN_DID_Input++;
+          m++;
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if( Temp_Value1[j] == 125)
+            break;
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    else if(Temp_Value1[i] == 91)
+    {
+      for(j=i+1;j<strlen(Temp_Value1);j++)
+      {
+        if(Temp_Value1[j]==93)
+        {
+          _TP_CAN_DID_Len = atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          break;
+        }
+        snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+  }
+}
+
+_TPsendmsg_Phy(byte data[],byte length,byte type)   //物理寻址发送
+{
+  char comment[50];
+  int i;
+  message * msg;
+  msg.id = @DID::phyreq_ID;
+  msg.dlc=length;//将报文长度赋值到message对象
+  msg.DataLength=length;//将报文长度赋值到message对象
+  
+  if(elCount(data)>=length)
+  {
+    for(i=0;i<length;i++)
+      msg.byte(i)=data[i];//将数值赋值到message对象
+  }
+  else
+  {
+    for(i=0;i<elCount(data);i++)
+      msg.byte(i)=data[i];//将数值赋值到message对象
+    for(i=elCount(data);i<length;i++)
+      msg.byte(i)=Send_filler;//默认填充值
+  }
+  if(type==1)
+  {
+    msg.FDF = 1;
+    msg.BRS = 1;
+  }
+  else
+  {
+    msg.FDF = 0;
+    msg.BRS = 0;
+  }
+  output(msg);//发送报文
+  //判断发送报文的帧类型并写入报告
+  if((msg.byte(0)&0xF0)==0x00)
+    snprintf(comment,elCount(comment),"已发送单帧报文");
+  else if((msg.byte(0)&0xF0)==0x10)
+    snprintf(comment,elCount(comment),"已发送首帧报文");
+  else if((msg.byte(0)&0xF0)==0x20)
+    snprintf(comment,elCount(comment),"已发送连续帧报文");
+  else if((msg.byte(0)&0xF0)==0x30)
+    snprintf(comment,elCount(comment),"已发送流控帧报文");
+  else
+    snprintf(comment,elCount(comment),"已发送报文");
+  
+  for(i=0;i<elCount(data);i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,data[i]);
+  }
+  testCaseComment(comment);
+}
+
+_TPsendmsg_Fun(byte data[],byte length,byte type)  //功能寻址发送
+{
+  char comment[50];
+  byte i;
+  message * msg;
+  msg.id=@DID::funreq_ID;
+  msg.dlc=length;//将报文长度赋值到message对象
+  msg.DataLength=length;//将报文长度赋值到message对象
+  for(i=0;i<length;i++)
+    msg.byte(i)=data[i];//将数值赋值到message对象
+  if(type==1)
+  {
+    msg.FDF = 1;
+    msg.BRS = 1;
+  }
+  else
+  {
+    msg.FDF = 0;
+    msg.BRS = 0;
+  }
+  output(msg);//发送报文
+  
+  //判断发送报文的帧类型并写入报告
+  if((msg.byte(0)&0xF0)==0x00)
+    snprintf(comment,elCount(comment),"已发送单帧报文");
+  else if((msg.byte(0)&0xF0)==0x10)
+    snprintf(comment,elCount(comment),"已发送首帧报文");
+  else if((msg.byte(0)&0xF0)==0x20)
+    snprintf(comment,elCount(comment),"已发送连续帧报文");
+  else if((msg.byte(0)&0xF0)==0x30)
+    snprintf(comment,elCount(comment),"已发送流控帧报文");
+  else
+    snprintf(comment,elCount(comment),"已发送报文");
+  
+  for(i=0;i<length;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,data[i]);
+  }
+  testCaseComment(comment);
+}
+
+_TPsendmsg(byte data[],byte length,dword ID,byte type)   //输入ID发送
+{
+  char comment[50];
+  byte i;
+  message * msg;
+  msg.id = ID;
+  msg.dlc=length;//将报文长度赋值到message对象
+  msg.DataLength=length;//将报文长度赋值到message对象
+  for(i=0;i<length;i++)
+    msg.byte(i)=data[i];//将数值赋值到message对象
+  if(type==1)
+  {
+    msg.FDF = 1;
+    msg.BRS = 1;
+  }
+  else
+  {
+    msg.FDF = 0;
+    msg.BRS = 0;
+  }
+  output(msg);//发送报文
+  
+  //判断发送报文的帧类型并写入报告
+  if((msg.byte(0)&0xF0)==0x00)
+    snprintf(comment,elCount(comment),"已发送单帧报文");
+  else if((msg.byte(0)&0xF0)==0x10)
+    snprintf(comment,elCount(comment),"已发送首帧报文");
+  else if((msg.byte(0)&0xF0)==0x20)
+    snprintf(comment,elCount(comment),"已发送连续帧报文");
+  else if((msg.byte(0)&0xF0)==0x30)
+    snprintf(comment,elCount(comment),"已发送流控帧报文");
+  else
+    snprintf(comment,elCount(comment),"已发送报文");
+  
+  for(i=0;i<length;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,data[i]);
+  }
+  testCaseComment(comment);
+}
+
+_TPgetFC(byte passcondition)   //流控帧--------仅当为0时期望不收到流控帧,当为0x30或0x32时判断当前Byte0相匹配
+{
+  message 0x00 msg;
+  char comment[50];
+  byte i;
+  if(testWaitForMessage(@DID::Response_ID,1000))
+  {
+    testGetWaitEventMsgData(msg);
+    
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    testCaseComment(comment);
+    
+    if((msg.byte(0)&0xF0)==0x30)
+    {
+      getFS=msg.byte(0)&0x0F;
+      
+      if(passcondition==0)
+        testStepFail("收到流控帧");
+      else if(passcondition == 0x30)
+      {
+        if((msg.byte(0)==0x30)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
+        {
+          testStepPass("收到流控帧,格式正确");
+        }
+        else
+          testStepFail("收到流控帧，但格式不正确");
+      }
+      else if(passcondition == 0x32)
+      {
+        if((msg.byte(0)==0x32)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
+        {
+          testStepPass("收到流控帧,格式正确");
+        }
+        else
+          testStepFail("收到流控帧，但格式不正确");
+      }
+      else
+      {
+        if((msg.byte(0)==0x30)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
+        {
+          testStepPass("收到流控帧,格式正确");
+        }
+       else if ((msg.byte(0)==0x32)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
+        {
+          testStepPass("收到流控帧,格式正确");
+        }
+        else
+          testStepFail("收到流控帧，但格式不正确");
+      }
+    }
+    else
+      testStepFail("收到非流控帧");
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到流控帧或数据帧");
+    else
+      testStepFail("未收到流控帧或数据帧");
+  }
+}
+_Check_TPgetFC_FS(byte FS)   //流控帧--------仅当为0时期望不收到流控帧
+{
+  message 0x00 msg;
+  char comment[50];
+  byte i;
+  byte byte_0;
+  if(testWaitForMessage(@DID::Response_ID,1000))
+  {
+    testGetWaitEventMsgData(msg);
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    testCaseComment(comment);
+    
+    if((msg.byte(0)&0xF0)==0x30)
+    {
+      byte_0 = (0x30|FS);
+      if((msg.byte(0)==byte_0)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
+      {
+        testStepPass("收到流控帧,格式正确,FS正确");
+      }
+      else
+        testStepFail("收到流控帧，但格式不正确");
+    }
+    else
+      testStepFail("收到流控帧或FS错误");
+  }
+  else
+  {
+    testStepFail("未收到流控帧或数据帧");
+  }
+}
+
+int _TPgetFF(byte passcondition)//首帧--------仅当为0时期望不收到首帧
+{
+  message 0x00 msg;
+  char comment[50];
+  int Len;
+  byte i;
+  Len = 0;
+  if(testWaitForMessage(@DID::Response_ID,1000))
+  {
+    testGetWaitEventMsgData(msg);
+    
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    testCaseComment(comment);
+    
+    if((msg.byte(0)&0xF0)==0x10)
+    {
+      if(passcondition==0)
+        testStepFail("收到首帧");
+      else
+      {
+        testStepPass("收到首帧");
+        Len = (msg.byte(0)&0x0F);
+        Len = (int)(Len*256 + msg.byte(1));
+      }
+    }
+    else
+      testStepFail("收到非首帧");
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到首帧或数据帧");
+    else
+      testStepFail("未收到首帧或数据帧");
+  }
+  return Len;
+}
+
+_TPgetCF_21(byte passcondition)   //连续帧_21--------仅当为0时期望不收到连续帧
+{
+  message 0x00 msg;
+  char comment[50];
+  byte i;
+  if(testWaitForMessage(@DID::Response_ID,1000))
+  {
+    testGetWaitEventMsgData(msg);
+    
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    testCaseComment(comment);
+    
+    if((msg.byte(0))==0x21)
+    {
+      if(passcondition==0)
+        testStepFail("收到连续帧");
+      else
+        testStepPass("收到连续帧");
+    }
+    else
+      testStepFail("收到非连续帧");
+    
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到连续帧或数据帧");
+    else
+      testStepFail("未收到连续帧或数据帧");
+  }
+}
+_TPgetCF_22(byte passcondition)  //连续帧_22--------仅当为0时期望不收到连续帧
+{
+  message 0x00 msg;
+  char comment[50];
+  byte i;
+  if(testWaitForMessage(@DID::Response_ID,1000))
+  {
+    testGetWaitEventMsgData(msg);
+    
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    testCaseComment(comment);
+    
+    if((msg.byte(0))==0x22)
+    {
+      if(passcondition==0)
+        testStepFail("收到连续帧");
+      else
+        testStepPass("收到连续帧");
+    }
+    else
+      testStepFail("收到非连续帧");
+    
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到连续帧或数据帧");
+    else
+      testStepFail("未收到连续帧或数据帧");
+  }
+}
+_TPgetCF(byte passcondition)  //连续帧--------仅当为0时期望不收到连续帧
+{
+  message 0x00 msg;
+  char comment[50];
+  byte i;
+  if(testWaitForMessage(@DID::Response_ID,1000))
+  {
+    testGetWaitEventMsgData(msg);
+    
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    testCaseComment(comment);
+    if((msg.byte(0)&0xf0)==0x20)
+    {
+      if(passcondition==0)
+        testStepFail("收到连续帧");
+      else
+        testStepPass("收到连续帧");
+    }
+    else
+      testStepFail("收到非连续帧");
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到连续帧或数据帧");
+    else
+      testStepFail("未收到连续帧或数据帧");
+  }
+}
+_TPgetNotCF(byte passcondition,byte SN)  //判断后续数据不为输入连续帧
+{
+  message 0x00 msg;
+  char comment[50];
+  byte i;
+  if(testWaitForMessage(@DID::Response_ID,1000))
+  {
+    testGetWaitEventMsgData(msg);
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    testCaseComment(comment);
+    if((msg.byte(0)&0x0f)==SN)
+      testStepPass("未收到对应后续帧");
+    else
+      testStepFail("收到对应后续帧");
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到后续报文");
+    else
+      testStepFail("未收到后续报文");
+  }
+}
+_Check_TPgetCF(byte passcondition,int Len,byte SN)  //检测连续帧结束后的填充值，预期DID反馈总长度
+{
+  message 0x00 msg;
+  char comment[50];
+  byte i;
+  int Start_Len;
+  int Temp;
+  byte Flage ;
+  Flage = 0;
+  if(testWaitForMessage(@DID::Response_ID,300))
+  {
+    testGetWaitEventMsgData(msg);
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    testCaseComment(comment);
+    if((msg.byte(0)&0xf0)==0x20)
+    {
+      if(passcondition==0)
+        testStepFail("收到连续帧");
+      else
+      {
+        testStepPass("收到连续帧");
+        if(SN>0xF)
+          SN = SN - 0xF -1;
+        if((msg.byte(0)&0x0f)==(SN&0x0F))
+          testStepPass("","收到连续帧序列号与预期一致，0x%02X",((SN&0x0F)|0x20));
+        else
+          testStepFail("","收到连续帧序列号与预期不一致,预期为0x%x,实际为0x%x",(SN&0x0F),(msg.byte(0)&0x0f));
+        if(Response_CanFD == 0)
+        {
+          Start_Len = ((msg.byte(0)&0x0F)-1)*7+6;
+          Temp = Len - Start_Len;
+          if(Temp+1<8)
+          {
+            for(i= Temp+1;i<8;i++)
+            {
+              if(msg.byte(i)!= TP_filler)
+                Flage = 1;
+            }
+            if(Flage==1)
+              testStepFail("非数据域填充值出现错误");
+            else
+              testStepPass("非数据域填充值与预期一致");
+          }
+        }
+        else
+        {
+          Start_Len = ((msg.byte(0)&0x0F)-1)*63+64-2;
+          Temp = Len - Start_Len;
+          if(Temp+1<64)
+          {
+            for(i= Temp+1;i<msg.DataLength;i++)
+            {
+              if(msg.byte(i)!= TP_filler)
+                Flage = 1;
+            }
+            if(Flage==1)
+              testStepFail("非数据域填充值出现错误");
+            else
+              testStepPass("非数据域填充值与预期一致");
+          }
+        }
+      }
+    }
+    else
+      testStepFail("收到非连续帧");
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到连续帧或数据帧");
+    else
+      testStepFail("未收到连续帧或数据帧");
+  }
+}
+/*
+    Type==0:判断是否为NRC13或NRC31
+    Type==1:判断是否为具体NRC7F
+    Type==2:判断是否为具体NRC13
+    Type==3:判断为NRC但不判断具体值
+*/
+_Check_NRC(byte Type)
+{
+  message 0x00 msg;
+  char comment[50];
+  int i;
+  int Flage;
+  Flage = 0;
+  if(testWaitForMessage(@DID::Response_ID,2000))//对于接收ID等待1000ms，收到报文返回值为1
+  {
+    testGetWaitEventMsgData(msg);//将收到的报文赋值给msg
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    testCaseComment(comment);
+    if(((msg.byte(0))==0x03) &&((msg.byte(1))==0x7F))
+    {
+      if(Type == 0)
+      {
+        if((msg.byte(3)==0x13) ||(msg.byte(3)==0x31))
+          testStepPass("","收到NRC码0x%2X",msg.byte(3));
+        else
+          testStepFail("","收到非预期NRC码0x%2X",msg.byte(3));
+      }
+      else if(Type == 1)
+      {
+        if((msg.byte(3)==0x7F) )
+          testStepPass("","收到NRC码0x%2X",msg.byte(3));
+        else
+          testStepFail("","收到非预期NRC码0x%2X",msg.byte(3));
+      }
+      else if(Type == 2)
+      {
+        if((msg.byte(3)==0x13) )
+          testStepPass("","收到NRC码0x%2X",msg.byte(3));
+        else
+          testStepFail("","收到非预期NRC码0x%2X",msg.byte(3));
+      }
+      else if(Type == 3)
+      {
+        if((msg.byte(1)==0x7F) )
+          testStepPass("","收到NRC码0x%2X",msg.byte(3));
+      }
+      for(i=4;i<8;i++)
+      {
+        if(((msg.byte(i))!= TP_filler))
+          Flage = 1;
+      }
+      if(Flage == 0)
+        testStepPass("非数据域填充值与预期一致");
+      else
+        testStepFail("非数据域填充值出现错误");
+    }
+    else
+      testStepFail("未收到NRC码");
+  }
+  else
+    testStepFail("未收到响应");
+}
+
+ _Check_NoResponse(dword Time)
+{
+  if(testWaitForMessage(@DID::Response_ID,Time))
+    testStepFail("收到响应数据");
+  else
+    testStepPass("未收到响应数据");
+}
+
+int _Check_NoResponse_(dword Time)
+{
+  int Flage;
+  if(testWaitForMessage(@DID::Response_ID,Time))
+  {
+    testStepFail("收到响应数据");
+    Flage = -1;
+  }
+  else
+  {
+    testStepPass("未收到响应数据");
+    Flage = 1;
+  }
+  return Flage;
+}
+/*
+  Type == 1 : 期望应答
+  Type == 0 : 期望不应答
+*/
+int _Check_ResponseRx_(byte Type, word Time)
+{
+  int Flage;
+  int Re;
+  Re = testWaitForMessage(@DID::Response_ID,Time);
+  if(Type == 1)
+  {
+    if(Re == 0)
+    {
+      testStepFail("未收到响应数据");
+      Flage = -1;
+    }
+    else
+    {
+      testStepPass("收到响应数据");
+      Flage = 1;
+    }
+  }
+  else if(Type == 0)
+  {
+    if(Re == 0)
+    {
+      testStepPass("未收到响应数据");
+      Flage = 1;
+    }
+    else
+    {
+      testStepFail("收到响应数据");
+      Flage = -1;
+    }
+  }
+  return Flage;
+}
+
+_TPgetSF(byte passcondition)  //单帧--------仅当为0时期望不收到单帧
+{
+  message 0x00 msg;
+  char comment[50];
+  byte SF_DL;
+  byte Flage;
+  byte i;
+  Flage =0;
+  if(testWaitForMessage(@DID::Response_ID,1000))//对于接收ID等待1000ms，收到报文返回值为1
+  {
+    testGetWaitEventMsgData(msg);//将收到的报文赋值给msg
+    
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+    {
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    }
+    testCaseComment(comment);
+    
+    if((msg.byte(0)&0xF0)==0x00)//判断是不是单帧
+    {
+      if(passcondition==0)
+        testStepFail("收到单帧响应");
+      else
+      {
+        testStepPass("收到单帧响应");
+        SF_DL = msg.byte(0)&0x0F;
+        if(SF_DL!=7)
+        {
+          /*非数据部分填充值*/
+          for(i=SF_DL+1;i<8;i++)
+          {
+            if(msg.byte(i)!= TP_filler)
+              Flage=1;
+          }
+          if(Flage==1)
+            testStepFail("非数据域填充值存在非预期情况");
+          else
+            testStepPass("非数据域填充值与预期一致");
+        }
+      }
+    }
+    else
+      testStepFail("收到非单帧响应");
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到单帧或数据帧");
+    else
+      testStepFail("未收到单帧或数据帧");
+  }
+}
+_Check_10_01(byte passcondition)
+{
+  message 0x00 msg;
+  char comment[50];
+  byte Flage;
+  byte i;
+  Flage =0;
+  if(testWaitForMessage(@DID::Response_ID,1000))//对于接收ID等待1000ms，收到报文返回值为1
+  {
+    testGetWaitEventMsgData(msg);//将收到的报文赋值给msg
+    snprintf(comment,elCount(comment),"已收到报文");
+    for(i=0;i<8;i++)
+      snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
+    testCaseComment(comment);
+    if(msg.byte(1)==0x50 &&  msg.byte(2)==0x01)
+    {
+      if(passcondition==0)
+        testStepFail("收到10 01正响应");
+      else
+        testStepPass("收到10 01正响应");
+    }
+    else
+      testStepFail("收到非预期响应");
+  }
+  else
+  {
+    if(passcondition==0)
+      testStepPass("未收到应答");
+    else
+      testStepFail("未收到应答");
+  }
+}
+
+_Get_HardwareTest_Data_Value()
+{
+  char Temp_Value1[1000];
+  char Temp_Value2[20];
+  int i,j;
+  
+  HardwareTest_Data_Len = 0;
+  snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+  snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,"HardwareTest_Data","Null",Temp_Value1,1000, file_name_1);
+  fileClose(GlbHandlefile);
+  for(i=0;i<strlen(Temp_Value1);i++)
+  {
+    if(Temp_Value1[i] == 123)
+    {
+      for(j=i+1;j<strlen(Temp_Value1);j++)
+      {
+        if(Temp_Value1[j] == 44 || Temp_Value1[j] == 125)
+        {
+          HardwareTest_Data[HardwareTest_Data_Len] = atol(Temp_Value2);
+          HardwareTest_Data_Len++;
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if( Temp_Value1[j] == 125)
+            break;
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+  }
+}
+/*
+    检测返回报文是否与预期一致
+    当Ex_Len为-1时，期望不响应
+    ID：响应ID
+*/
+_Check_ResTP(dword ID,byte Ex[],int Ex_Len)
+{
+  int Re;
+  int i,Flage;
+  message * Msg;
+  Flage = 0;
+  Re = testWaitForMessage(ID,1000);
+  if(Ex_Len != -1)
+  {
+    if(Re > 0)
+    {
+      testGetWaitEventMsgData(Msg);
+      for(i=0;i<Ex_Len;i++)
+      {
+        if(Msg.byte(i) != Ex[i])
+        {
+          testStepFail("","Byte_%d反馈与预期不一致,反馈值为0x%02X,预期值为0x%02X",i,Msg.byte(i),Ex[i]);
+          Flage = 1;
+        }
+      }
+      if(Flage == 0)
+        testStepPass("","反馈与预期一致");
+    }
+    else
+      testStepFail("","期望收到响应，实际无应答");
+  }
+  else
+  {
+    if(Re != 0)
+      testStepFail("","期望无响应，实际收到应答");
+    else if(Re == 0)
+      testStepPass("","期望无响应，实际未收到应答与预期一致");
+  }
+}
+_CAN_TP_SF_1()  /*单帧请求报文SF_DL错误测试*/
+{
+  byte Data[8] = {0x00,0x22,0xf1,0x80,0x55,0x55,0x55,0x55};
+  byte Len[3] = {0x00,0x08,0x09};
+  int i;
+  for(i=0;i<3;i++)
+  {
+    Data[0] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetSF(0);
+    testWaitForTimeout(2000);
+  }
+}
+_CAN_TP_SF_2()  /*单帧请求CAN帧报文的DLC错误测试*/
+{
+  byte Data[3] = {0x02,0x22,0xf1};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetSF(0);
+}
+_CAN_TP_SF_3()  /*单帧请求CAN帧报文的DLC错误测试*/
+{
+  byte Data[5] = {0x04,0x22,0xf1,0x80,0x55};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetSF(0);
+}
+_CAN_TP_SF_4()  /*单帧请求CAN帧报文的DLC错误测试*/
+{
+  byte Data[7] = {0x06,0x22,0xf1,0x80,0x55,0x55,0x55};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetSF(0);
+}
+_CAN_TP_SF_5()  /*协议控制信息为FF的单帧请求报文测试*/
+{
+  byte Data[8] = {0xff,0x22,0xf1,0x80,0x55,0x55,0x55,0x55};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetSF(0);
+}
+_CAN_TP_SF_6()  /*确认控制器发送的单帧响应报文SF_DL有效*/
+{
+  byte Data[8] = {0x02,0x10,0x01,0x55,0x55,0x55,0x55,0x55};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetSF(1);
+}
+_CAN_TP_SF_7()  /*确认控制器发送的单帧响应报文SF_DL有效*//*变更为多帧响应*/
+{
+  byte Data[8] = {0x03,0x22,0xff,0xff,0x55,0x55,0x55,0x55};
+  _Get_TP_DID("TP_CAN_DID");
+  Data[2] = _TP_CAN_DID[0];
+  Data[3] = _TP_CAN_DID[1];
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+}
+
+_CAN_TP_FF_1()/*首帧请求报文FF_DL错误测试*/
+{
+  byte Data[8] = {0x10,0x00,0x31,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(0);
+}
+_CAN_TP_FF_2()/*首帧请求报文FF_DL错误测试*/
+{
+  byte Data[8] = {0x10,0x07,0x31,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(0);
+}
+_CAN_TP_FF_3()/*首帧请求报文FF_DL错误测试*/
+{
+  byte Data[8] = {0x1F,0xFF,0x31,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  if(FF_DL_Max>=0xFFF)
+    _TPgetFC(0x30);
+  else
+    _TPgetFC(0x32);
+}
+_CAN_TP_FF_4()/*功能寻址请求首帧测试*/
+{
+  byte Data[8] = {0x1F,0xFF,0x31,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Fun(Data,elCount(Data),0);
+  _TPgetFF(0);
+}
+_CAN_TP_FF_5()/*确认控制器发送的首帧响应报文FF_DL*/
+{
+  byte Data[8] = {0x03,0x22,0xF1,0x80,0x00,0x00,0x00,0x00};
+  _Get_TP_DID("TP_CAN_DID");
+  Data[2] = _TP_CAN_DID[0];
+  Data[3] = _TP_CAN_DID[1];
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+}
+_CAN_TP_CF_1()/*停止发送后续部分连续帧*/
+{
+  byte Data[8] = {0x10,0x23,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data1,elCount(Data1),0);
+  _TPgetCF(0);
+  _TPsendmsg_Phy(Data2,elCount(Data2),0);
+  _TPgetCF(0);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_2()/*不发送所有连续帧*/
+{
+  byte Data[8] = {0x10,0x23,0x22,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_3()/*不发送某连续帧*/
+{
+  byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data2[8] = {0x23,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data1,elCount(Data1),0);
+  testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data2,elCount(Data2),0);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_4()/*重复发送第一个连续帧*/
+{
+  byte Data[8] = {0x10,0x14,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data3[8] = {0x23,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data4[8] = {0x24,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data2,elCount(Data2),0);
+    _TPgetCF(0);
+  }
+  testWaitForTimeout(2000);
+  {
+    Data[1]=0x22;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data2,elCount(Data2),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data3,elCount(Data3),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data3,elCount(Data3),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data4,elCount(Data4),0);
+    _TPgetCF(0);
+  }
+  testWaitForTimeout(2000);
+  {
+    Data[1]=0x14;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data2,elCount(Data2),0);
+    _TPgetCF(0);
+  }
+  testWaitForTimeout(1000);
+}
+_CAN_TP_CF_5()/*多帧请求报文连续帧DLC错误*/
+{
+  byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data3[5] = {0x23,0x00,0x00,0x00,0x00};
+  byte Data4[7] = {0x24,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data5[5] = {0x21,0x00,0x00,0x00,0x00};
+  
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data2,elCount(Data2),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data3,elCount(Data3),0);
+    _TPgetCF(0);
+  }
+  testWaitForTimeout(2000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data5,elCount(Data5),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data2,elCount(Data2),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data3,elCount(Data3),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data4,elCount(Data4),0);
+    _TPgetCF(0);
+  }
+}
+_CAN_TP_CF_7()/*错误连续帧报文*/
+{
+  byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x42,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x43,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  
+  byte Data1[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_11[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_22[8] = {0x23,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_33[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    
+  {
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_11,elCount(Data_11),0);
+      testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_22,elCount(Data_22),0);
+      testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_33,elCount(Data_33),0);
+    _TPgetCF(0);
+  }
+  testWaitForTimeout(1000);
+
+  {
+    _TPsendmsg_Phy(Data1,elCount(Data1),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_33,elCount(Data_33),0);
+      testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_11,elCount(Data_11),0);
+      testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_22,elCount(Data_22),0);
+    _TPgetCF(0);
+  }
+  testWaitForTimeout(1000);
+
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+  testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+  _TPgetCF(0);
+  testWaitForTimeout(1000);
+}
+_CAN_TP_CF_8()/*后续帧请求测试*/
+{
+  byte Data[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_9()/*确认控制器发送的流控帧中的BS和STmin*/
+{
+  byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+}
+_CAN_TP_CF_10()/*连续帧SN值测试*/
+{
+  byte Data[8] = {0x10,0x29,0x22,0x35,0x70,0x00,0x00,0x00};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Size[4]= {0x01,0x02,0x80,0xff};
+  int i,j,flage,m;
+  int Temp_SN;
+  byte Start_Byte;
+  
+  {
+    Start_Byte = 0x20;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    for(i = Start_Byte;i<=0x24;i++)
+    {
+      Data_1[0] = i;
+      testWaitForTimeout(STmin+5);
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    }
+    _Check_NoResponse_(500);
+  }
+  testWaitForTimeout(3000);
+  
+  {
+    int Wait_Time;
+    Wait_Time = N_Cr_Time- STmin - 10;
+    if(Wait_Time<=0)
+      Wait_Time = STmin;
+    
+    flage = 0;m=1;
+    Start_Byte = 0x21;
+    Data[1] = 0x7D;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    for(j=0;j<2;j++)
+    {
+      if(flage == 0)
+      {
+        for(i=Start_Byte;i<=0x2F;i++)
+        {
+          if(j==1 && i ==0x23)
+          {
+            flage = 1;
+            break;
+          }
+          Data_1[0] = i;
+          testWaitForTimeout(STmin+5);
+          _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+          m++;
+          if(BS == 0)
+            _Check_NoResponse(Wait_Time);
+          else
+          {
+            if(j==0 && m==BS+1)
+              _TPgetFC(1);
+            else if( m==BS+1)
+              _Check_NoResponse(Wait_Time);
+            if(m==BS+1)
+              m=1;
+          }
+        }
+      }
+    }
+   _Check_NoResponse_(500);
+  }
+  testWaitForTimeout(3000);
+  
+  {
+    int Wait_Time;
+    Wait_Time = N_Cr_Time- STmin - 10;
+    if(Wait_Time<=0)
+      Wait_Time = STmin;
+    
+    flage = 0;m=1;
+    Start_Byte = 0x21;
+    Data[1] = 0x7D;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    for(j=0;j<2;j++)
+    {
+      if(flage == 0)
+      {
+        if(j==1)
+          Start_Byte = 0x20;
+        for(i=Start_Byte;i<=0x2F;i++)
+        {
+          Data_1[0] = i;
+          testWaitForTimeout(STmin+5);
+          _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+          if(j==1 && i ==0x21)
+          {
+            flage = 1;
+            break;
+          }
+          m++;
+          if(BS == 0)
+            _Check_NoResponse(Wait_Time);
+          else
+          {
+            if(m==BS+1)
+              _TPgetFC(1);
+            else if( m==BS+1)
+              _Check_NoResponse(Wait_Time);
+            if(m==BS+1)
+              m=1;
+          }
+        }
+      }
+    }
+   _Check_NRC(0);
+  }
+  testWaitForTimeout(3000);
+  
+}
+_CAN_TP_CF_11()/*确认控制器的流控制帧参数STmin有效*/
+{
+  byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x23,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+  _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+  _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+  _Check_NRC(0);
+}
+_CAN_TP_CF_12()/*不发送流控制帧*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  _Get_TP_DID("TP_CAN_DID");
+  Data[2] = _TP_CAN_DID[0];
+  Data[3] = _TP_CAN_DID[1];
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_13()/*重复发送流控制帧*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x30,0x00,0x28,0x55,0x55,0x55,0x55,0x55};
+  int i,Temp_SN,FF_DL;
+  double start_time,end_time,Min_Time,DiffTime;
+  char Temp_Str[50];
+  _Get_DID_TP(Data,2);
+  Data_1[2] = N_Cs_Time;
+  Data_2[2] = 0x01;
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  Min_Time = 2000;
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  FF_DL = _TPgetFF(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+  _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+  Temp_SN=(FF_DL-6)/7;
+  if((FF_DL-6)%7 != 0)
+    Temp_SN+=1;
+  _Check_TPgetCF(1,FF_DL,1);
+  for(i=2;i<=Temp_SN;i++)
+  {
+    start_time = (double)timeNow()/100;
+    _Check_TPgetCF(1,FF_DL,i);
+    end_time=(double)timeNow()/100;
+    DiffTime = (double)(end_time - start_time);
+    if(DiffTime<=Min_Time)
+      Min_Time  = DiffTime;
+    writeEx(-3,0,"%.2f ms",DiffTime);
+  }
+  _TPgetCF(0);
+  if(Min_Time<=N_Cs_Time - N_Cs_Time_Tolerance)
+  {
+    snprintf(Temp_Str,elCount(Temp_Str),"");
+    for(i=0;i<3;i++)
+      snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_1[i]);
+    testStepFail(Temp_Str,"最小间隔时间小于 %d ms",N_Cs_Time);
+  }
+}
+_CAN_TP_CF_14()/*长度不正确流控制帧*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[7] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55};
+  _Get_TP_DID("TP_CAN_DID");
+  Data[2] = _TP_CAN_DID[0];
+  Data[3] = _TP_CAN_DID[1];
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_15()/*功能寻址流控制帧*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  _Get_TP_DID("TP_CAN_DID");
+  Data[2] = _TP_CAN_DID[0];
+  Data[3] = _TP_CAN_DID[1];
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+  _TPsendmsg_Fun(Data_1,elCount(Data_1),0);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_16()/*无效流控制帧-FS无效值*/
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x3F,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte fs_[3] = {0x33,0x39,0x3F};
+  int i;
+  
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+  for(i=0;i<elcount(fs_);i++)
+  {
+    Data_1[0] = fs_[i];
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _Check_NoResponse_(20);
+  }
+}
+_CAN_TP_CF_17()/*流控帧请求测试*/
+{
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_18()/*流控制状态为OVFLW溢出*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x32,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  _Get_TP_DID("TP_CAN_DID");
+  Data[2] = _TP_CAN_DID[0];
+  Data[3] = _TP_CAN_DID[1];
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+  _TPgetCF(0);
+}
+_CAN_TP_CF_19()/*等待流控制帧*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  int i,Temp_SN;
+  
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  
+      _TPsendmsg_Phy(Data,elCount(Data),0);
+      _TPgetFF(1);
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+      _Check_NoResponse(N_Bs_Time-N_Bs_Time_Tolerance);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      Temp_SN=(_TP_CAN_DID_Len-6)/7;
+      if((_TP_CAN_DID_Len-6)%7 != 0)
+        Temp_SN+=1;
+      for(i=1;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,_TP_CAN_DID_Len,i);
+      _TPgetCF(0);
+  testWaitForTimeout(2000);
+      _TPsendmsg_Phy(Data,elCount(Data),0);
+      _TPgetFF(1);
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+      _Check_NoResponse(N_Bs_Time+N_Bs_Time_Tolerance);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _TPgetCF(0);
+}
+_CAN_TP_CF_20()/*未知请求报文测试*/
+{
+  byte Data[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(0);
+}
+_CAN_TP_Disturb_1() /*控制器多帧发送被非预期单帧请求报文干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x03,0x22,0xF1,0x84,0x55,0x55,0x55,0x55};
+  int i,Temp_SN,len;
+  _Get_DID_TP(Data,2);
+  if(_TP_CAN_DID_Len<=0x0D)
+    writeEx(-3,0,"当前选择DID反馈仅两帧,无法测试多帧干扰");
+  else
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    len = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPgetCF_21(1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    if(MF_Phy_SF_TxDisturb == 0)
+    {
+      Temp_SN=(len-6)/7;
+      if((len-6)%7 != 0)
+        Temp_SN+=1;
+      for(i=2;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,len,i);
+    }
+    else
+      _TPgetNotCF(1,2);
+  }
+}
+_CAN_TP_Disturb_2() /*控制器多帧发送被非预期多帧请求报文第一帧干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x10,0x0D,0x2E,0xF1,0x99,0x32,0x32,0x32};
+  int i,Temp_SN,len;
+  _Get_DID_TP(Data,2);
+  if(_TP_CAN_DID_Len<=0x0D)
+    writeEx(-3,0,"当前选择DID反馈仅两帧,无法测试多帧干扰");
+  else
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    len = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPgetCF_21(1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    if(MF_Phy_MF_TxDisturb == 0)
+    {
+      Temp_SN=(len-6)/7;
+      if((len-6)%7 != 0)
+        Temp_SN+=1;
+      for(i=2;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,len,i);
+    }
+    else
+      _TPgetNotCF(1,2);
+  }
+}
+_CAN_TP_Disturb_3() /*控制器多帧发送被非预期连续帧干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  int i,Temp_SN,len;
+  _Get_DID_TP(Data,2);
+  if(_TP_CAN_DID_Len<=0x0D)
+    writeEx(-3,0,"当前选择DID反馈仅两帧,无法测试多帧干扰");
+  else
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    len = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPgetCF_21(1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    Temp_SN=(len-6)/7;
+    if((len-6)%7 != 0)
+      Temp_SN+=1;
+    for(i=2;i<=Temp_SN;i++)
+      _Check_TPgetCF(1,len,i);
+  }
+}
+_CAN_TP_Disturb_4() /*控制器多帧发送被非预期流控制帧干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x32,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  int i,Temp_SN,len;
+  _Get_DID_TP(Data,2);
+  if(_TP_CAN_DID_Len<=0x0D)
+    writeEx(-3,0,"当前选择DID反馈仅两帧,无法测试多帧干扰");
+  else
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    len = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPgetCF_21(1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    Temp_SN=(len-6)/7;
+    if((len-6)%7 != 0)
+      Temp_SN+=1;
+    for(i=2;i<=Temp_SN;i++)
+      _Check_TPgetCF(1,len,i);
+  }
+}
+_CAN_TP_Disturb_5() /*控制器多帧发送被非预期未知报文干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+  int i,Temp_SN,len;
+  _Get_DID_TP(Data,2);
+  if(_TP_CAN_DID_Len<=0x0D)
+    writeEx(-3,0,"当前选择DID反馈仅两帧,无法测试多帧干扰");
+  else
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    len = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPgetCF_21(1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    Temp_SN=(len-6)/7;
+    if((len-6)%7 != 0)
+      Temp_SN+=1;
+    for(i=2;i<=Temp_SN;i++)
+      _Check_TPgetCF(1,len,i);
+  }
+}
+_CAN_TP_Disturb_6() /*控制器多帧接收被新的单帧请求报文干扰*/
+{
+  byte Data[8] = {0x10,0x11,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  
+  byte Data_3[8] = {0x02,0x10,0x01,0x55,0x55,0x55,0x55,0x55};
+  dword ID;
+  _Get_TP_DID("TP_CAN_DID");
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    if(MF_Phy_SF_RxDisturb==1)
+    {
+      _Check_10_01(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _TPgetFF(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _Check_NRC(0);
+    }
+  } 
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),0);
+    if(MF_Fun_SF_RxDisturb==1)
+    {
+      _Check_10_01(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _TPgetFF(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _Check_NRC(0);
+    }
+  } 
+  testWaitForTimeout(1000);
+  {
+    if(phyreq_ID == 0x783)
+      ID = 0x785;
+    else
+      ID = 0x783;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg(Data_3,elCount(Data_3),ID,0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    _Check_NRC(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    Data_3[0] = 0x03;
+    Data_3[1] = 0x22;
+    Data_3[2] = _TP_CAN_DID[0];
+    Data_3[3] = _TP_CAN_DID[1];
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    if(MF_Phy_SF_RxDisturb == 1)
+    {
+      _TPgetFF(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _TPgetCF(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _Check_NRC(0);
+    }
+  }
+}
+_CAN_TP_Disturb_7() /*控制器多帧接收被新的多帧请求报文第一帧干扰*/
+{
+  byte Data[8] = {0x10,0x13,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x10,0x0B,0x34,0x00,0x44,0x00,0xE0,0x0E};
+  byte Data_2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  dword ID;
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    if(MF_Phy_MF_RxDisturb==1)
+    {
+      _TPgetFC(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _TPgetFC(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _Check_NRC(0);
+    }
+  }  
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),0);
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+      _Check_NRC(0);
+  } 
+  testWaitForTimeout(1000);
+  {
+    if(phyreq_ID == 0x783)
+      ID = 0x785;
+    else
+      ID = 0x783;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg(Data_3,elCount(Data_3),ID,0);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    _Check_NRC(0);
+  }
+}
+_CAN_TP_Disturb_8() /*握手命令干扰多帧请求*/
+{
+  byte Data[8] = {0x10,0x11,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x02,0x3E,0x80,0x55,0x55,0x55,0x55,0x55};
+  byte Data_4[8] = {0x03,0x22,0x80,0x55,0x55,0x55,0x55,0x55};
+  byte Data_5[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_6[8] = {0x03,0x22,0x35,0x70,0x00,0x00,0x00,0x00};
+  int i,Temp_SN,Len;
+  _Get_TP_DID("TP_CAN_DID");
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    if(H_Disturb==0 ||(H_Disturb==1 && MF_Phy_SF_RxDisturb ==1))
+      _TPgetFF(0);
+    else
+      _Check_NRC(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),0);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),0);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    _Check_NRC(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    _Get_DID_TP(Data_4,2);
+    Data_4[0] = 1 + _TP_CAN_DID_Input;
+    _TPsendmsg_Phy(Data_4,elCount(Data_4),0);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),0);
+    _TPgetFF(1);
+    _TPsendmsg_Phy(Data_5,elCount(Data_5),0);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),0);
+    Temp_SN=(_TP_CAN_DID_Len-6)/7;
+    if((_TP_CAN_DID_Len-6)%7 != 0)
+      Temp_SN+=1;
+    for(i=1;i<=Temp_SN;i++)
+      _Check_TPgetCF(1,_TP_CAN_DID_Len,i); 
+  }
+  testWaitForTimeout(2000);
+  {
+    _TPsendmsg_Phy(Data_6,elCount(Data_6),0);
+    Len = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_5,elCount(Data_5),0);
+    _Check_TPgetCF(1,Len,1); 
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    Temp_SN=(Len-6)/7;
+    if((Len-6)%7 != 0)
+      Temp_SN+=1;
+    for(i=2;i<=Temp_SN;i++)
+      _Check_TPgetCF(1,Len,i); 
+  }
+}
+_CAN_TP_Disturb_9() /*控制器多帧接收被流控制报文干扰*/
+{
+  byte Data[8] = {0x10,0x14,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+  _Check_NRC(0);
+}
+_CAN_TP_Disturb_10() /*控制器多帧接收被未知报文干扰*/
+{
+  byte Data[8] = {0x10,0x14,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+  _Check_NRC(0);
+}
+_CAN_TP_Time_1()/* N_Bs时间测试 */
+{
+  byte Data[8] = {0x10,0x0D,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  double start_time;
+  double end_time;
+  int i,Temp_SN;
+  
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  start_time=(double)timeNow()/100;
+  _TPgetFC(1);
+  end_time=(double)timeNow()/100;
+  if(end_time - start_time <= N_Bs_Time)
+    testStepPass("","N_Bs响应时间在规定范围内");
+  else
+    testStepFail("","N_Bs响应时间不在规定范围内%.2f ms",(end_time - start_time));
+  testWaitForTimeout(1000);
+  {
+    _Get_DID_TP(Data,2);
+    Data[0] = 1 + _TP_CAN_DID_Input;
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFF(1);
+    testWaitForTimeout(N_Bs_Time + N_Bs_Time_Tolerance);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    _TPgetFC(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFF(1);
+    testWaitForTimeout(N_Bs_Time - N_Bs_Time_Tolerance);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    Temp_SN=(_TP_CAN_DID_Len-6)/7;
+    if((_TP_CAN_DID_Len-6)%7 != 0)
+      Temp_SN+=1;
+    for(i=1;i<=Temp_SN;i++)
+      _Check_TPgetCF(1,_TP_CAN_DID_Len,i); 
+  }
+}
+_CAN_TP_Time_2()/* N_Cr时间测试 */
+{
+  byte Data[8] = {0x10,0x0D,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x03,0x22,0x00,0x00,0x55,0x55,0x55,0x55};
+  byte Da_T[8] = {0x10,0x14,0x22,0x00,0x00,0x00,0x00,0x00};
+  byte Data_4[8] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  double start_time;
+  double end_time;
+  double DiffTime,Min_Time,Max_Time;
+  int i,Temp_SN,Loop_Count,len,j;
+  Loop_Count = 2;
+  _Get_TP_DID("TP_CAN_DID");
+  
+  Data_3[2] = 0x35;
+  Data_3[3] = 0x70;
+  _Init_Struct();
+  if(_Check_Serve_IDAndSess(0x22,funreq_ID,defsession) != 1)
+  {
+    Loop_Count = 1;
+    _WriteEx_and_Report("","22服务不支持功能寻址读取");
+  }
+  for(j=0;j<Loop_Count;j++)
+  {
+    Min_Time = 1000;
+    Max_Time = 1;
+    if(j==0)
+      _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
+    else
+      _TPsendmsg_Fun(Data_3,elCount(Data_3),0);
+    len = _TPgetFF(1);
+    Temp_SN=(len-6)/7;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    if((len-6)%7 != 0)
+      Temp_SN+=1;
+    _Check_TPgetCF(1,len,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,len,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      if(DiffTime>=Max_Time)
+        Max_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Max_Time<N_Cr_Time)
+      testStepPass("","N_Cr时间符合需求，最大间隔时间为 %d ms",Max_Time);
+    else
+      testStepFail("","最大间隔时间为 %d ms ,大于预期时间 %d ms",Max_Time,N_Cr_Time);
+  
+    testWaitForTimeout(3000);
+  }
+  
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    testWaitForTimeout(N_Cr_Time+N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    _TPgetCF_21(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),0);
+    _TPgetFC(1);
+    testWaitForTimeout(N_Cr_Time-N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    _Check_NRC(0);
+  }
+  
+  {
+    _TPsendmsg_Phy(Da_T,elCount(Da_T),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    testWaitForTimeout(N_Cr_Time+N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_4,elCount(Data_4),0);
+    _Check_NoResponse_(500);
+  }
+  {
+    _TPsendmsg_Phy(Da_T,elCount(Da_T),0);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+    testWaitForTimeout(N_Cr_Time-N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_4,elCount(Data_4),0);
+    _Check_NRC(0);
+  }
+}
+_CAN_TP_Time_3()/* BS值测试 */
+{
+  byte Data[8] = {0x1F,0xFF,0x2E,0x35,0x70,0x00,0x00,0x00};
+  byte Data_03[8] = {0x02,0x10,0x03,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  int i;
+  int Max_Count,CF_Byte,BS_Count;
+  
+  Data[0] = ((FF_DL_Max>>8) | 0x10);
+  Data[1] = (FF_DL_Max & 0xFF);
+  Max_Count = _ceil(((((Data[0]&0xF)<<8) | Data[1])-6)/7.0);
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  BS_Count = 1;
+  CF_Byte = 0x20;
+  for(i=0;i<Max_Count;i++)
+  {
+    if(CF_Byte>=0x30)
+      CF_Byte = 0x20;
+    if(i==0 & CF_Byte==0x20)
+      CF_Byte=0x21;
+    Data_1[0] = CF_Byte;
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    BS_Count++;
+    if(BS!=0 && BS_Count == BS+1)
+    {
+      _TPgetFC(1);
+      BS_Count = 1;
+    }
+    if(BS==0 && BS_Count == BS+1)
+    {
+      _Check_NoResponse(p2cmax);
+      BS_Count = 1;
+    }
+    CF_Byte++;
+  }
+  _Check_NRC(3);
+  
+  testWaitForTimeout(2000);
+  _TPsendmsg_Phy(Data_03,elCount(Data_03),0);
+  _TPgetSF(1);
+  testWaitForTimeout(100);
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFC(1);
+  BS_Count = 1;
+  CF_Byte = 0x20;
+  for(i=0;i<Max_Count;i++)
+  {
+    if(CF_Byte>=0x30)
+      CF_Byte = 0x20;
+    if(i==0 & CF_Byte==0x20)
+      CF_Byte=0x21;
+    Data_1[0] = CF_Byte;
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+    BS_Count++;
+    if(BS!=0 && BS_Count == BS+1)
+    {
+      _TPgetFC(1);
+      BS_Count = 1;
+    }
+    if(BS==0 && BS_Count == BS+1)
+    {
+      _Check_NoResponse(p2cmax);
+      BS_Count = 1;
+    }
+    CF_Byte++;
+  }
+  _Check_NRC(3);
+}
+
+_CAN_TP_Time_4()/* N_Cs时间测试 */
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  double start_time,start_time2,start_time3;
+  int i,Temp_SN;
+  _Get_DID_TP(Data,2);
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  _TPgetFF(1);
+  start_time=(double)timeNow()/100;
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+  _TPgetCF(1);
+  start_time2=(double)timeNow()/100;
+  _TPgetCF(1);
+  start_time3=(double)timeNow()/100;
+  testWaitForTimeout(1000);
+  if(start_time2 - start_time <= N_Cs_Time + N_Cs_Time_Tolerance)
+    testStepPass("","连续帧1：N_Cs响应时间在规定范围内");
+  else
+    testStepFail("","连续帧1：N_Cs响应时间不在规定范围内%.2f ms",(start_time2 - start_time));
+  if(start_time3 - start_time2 <= N_Cs_Time + N_Cs_Time_Tolerance)
+    testStepPass("","连续帧2：N_Cs响应时间在规定范围内");
+  else
+    testStepFail("","连续帧2：N_Cs响应时间不在规定范围内%.2f ms",(start_time3 - start_time2));
+}
+_CAN_TP_Time_5()/* N_Br时间测试 */
+{
+  byte Data[8] = {0x10,0x0D,0x22,0x35,0x70,0x00,0x00,0x00};
+  double start_time,start_time2;
+  int i,Temp_SN;
+  _TPsendmsg_Phy(Data,elCount(Data),0);
+  start_time=(double)timeNow()/100;
+  _TPgetFC(1);
+  start_time2=(double)timeNow()/100;
+  testWaitForTimeout(1000);
+
+  if(start_time2 - start_time <= N_Br_Time + N_Br_Time_Tolerance)
+    testStepPass("","N_Br响应时间在规定范围内");
+  else
+    testStepFail("","N_Br响应时间不在规定范围内%.2f ms",(start_time2 - start_time));
+}
+
+
+
+_CAN_TP_Stmin_1()/* Stmin值测试 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[3] = {0x00,0x08,0x20};
+  int i,j;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,DiffTime;
+  char Temp_Str[50];
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  for(j=0;j<elcount(Stmin);j++)
+  {
+    if(Stmin[j]>N_Cs_Time)
+      Stmin[j] = N_Cs_Time;
+    Min_Time = 2000;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),0);
+    FF_DL = _TPgetFF(1);
+    Temp_SN=(FF_DL-6)/7;
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),0);
+    if((FF_DL-6)%7 != 0)
+      Temp_SN+=1;
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Stmin[j] != N_Cs_Time)
+    {
+      if(Min_Time<Stmin[j])
+        testStepFail(Temp_Str,"最小间隔时间小于 %d ms",Stmin[j]);
+      else
+        testStepPass("","最小间隔时间符合需求不小于 %d ms",Stmin[j]);
+    }
+    else
+    {
+      if(Min_Time<=Stmin[j] - N_Cs_Time_Tolerance)
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间小于 %d ms",Stmin[j]);
+      }
+      else if(Min_Time>=Stmin[j] + N_Cs_Time_Tolerance)
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间大于 %d ms",Stmin[j]);
+      }
+      else
+        testStepPass("","最小间隔时间符合需求不小于 %d ms",Stmin[j]);
+    }
+    testWaitForTimeout(3000);
+  }
+}
+_CAN_TP_Stmin_1_()/* Stmin值测试_边界值 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[5] = {0x01,0x0A,0x1E,0x41,0x7F};
+  int i,j,End_;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,Max_Time,DiffTime;
+  char Temp_Str[50];
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  
+  Stmin[0] = N_Cs_Time-10;
+  Stmin[1] = N_Cs_Time;
+  Stmin[2] = N_Cs_Time+10;
+  if(N_Cs_Time<0x7F)
+  {
+    Stmin[3] = (N_Cs_Time + 127)/2;
+    End_ = 5;
+  }
+  else
+  {
+    End_ = 4;
+    Stmin[3] = 0x7F;
+  }
+    
+  for(j=0;j<End_;j++)
+  {
+    Min_Time = 2000;
+    Max_Time = 0;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),0);
+    FF_DL = _TPgetFF(1);
+    Temp_SN=(FF_DL-6)/7;
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),0);
+    if((FF_DL-6)%7 != 0)
+      Temp_SN+=1;
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      if(DiffTime>=Max_Time)
+        Max_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(j==0)
+    {
+      if(Min_Time<=Stmin[j])
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间小于 %d ms",Stmin[j]);
+      }
+      else
+        testStepPass("","最小间隔时间符合需求不小于 %d ms",Stmin[j]);
+    }
+    else if(j==1)
+    {
+      if(Max_Time<(Stmin[j] - N_Cs_Time_Tolerance) && Max_Time>(Stmin[j] + N_Cs_Time_Tolerance))
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间小于 %d ±%dms",Stmin[j],N_Cs_Time_Tolerance);
+      }
+      else
+        testStepPass("","最小间隔时间符合需求不小于 %d ±%dms",Stmin[j],N_Cs_Time_Tolerance);
+    }
+    else
+    {
+      if(Max_Time>(N_Cs_Time + N_Cs_Time_Tolerance))
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最大间隔时间大于 %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+      }
+      else
+        testStepPass("","最大间隔时间符合需求不大于 %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+    }
+    testWaitForTimeout(3000);
+  }
+}
+_CAN_TP_Stmin_2()/* Stmin无效测试-us级值 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[3] = {0xF1,0xF5,0xF9};
+  int i,j;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,DiffTime,Max_Time;
+  char Temp_Str[50];
+  float _us;
+
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  
+  for(j=0;j<elcount(Stmin);j++)
+  {
+    Min_Time = 2000;
+    Max_Time = 0;
+    _us = (Stmin[j]&0x0F)*0.1;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),0);
+    FF_DL = _TPgetFF(1);
+    Temp_SN=(FF_DL-6)/7;
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),0);
+    if((FF_DL-6)%7 != 0)
+      Temp_SN+=1;
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime <= Min_Time)
+        Min_Time  = DiffTime;
+      if(DiffTime >= Max_Time)
+        Max_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Min_Time<=_us)
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最小间隔时间小于 %.2f ms",_us);
+    }
+    else
+      testStepPass("","最小间隔时间符合需求不小于 %.2f ms",_us);
+    if(Max_Time>=N_Cr_Time)
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最大间隔时间大于 %d ms",N_Cr_Time);
+    }
+    else
+      testStepPass("","最大间隔时间符合需求不大于 %d ms",N_Cr_Time);
+    
+    testWaitForTimeout(3000);
+  }
+}
+_CAN_TP_Stmin_3()/* Stmin无效测试-保留值 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[5] = {0x80,0xB0,0xF0,0xFA,0xFF};
+  int i,j;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,DiffTime;
+  char Temp_Str[50];
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  for(j=0;j<elcount(Stmin);j++)
+  {
+    Min_Time = 2000;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),0);
+    FF_DL = _TPgetFF(1);
+    Temp_SN=(FF_DL-6)/7;
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),0);
+    if((FF_DL-6)%7 != 0)
+      Temp_SN+=1;
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Min_Time>(N_Cs_Time+N_Cs_Time_Tolerance))
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最小间隔时间小于 %d ±%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+    }
+    else
+      testStepPass("","最小间隔时间符合需求不小于 %d ms",N_Cs_Time);
+    
+    testWaitForTimeout(3000);
+  }
+}
+
+_CAN_TP_FC_8() /*控制器收到的BlockSize测试*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte BlockSize[5] = {0x00,0x01,0x02,0x08,0xFF};
+  int i,j,FF_DL,Temp_SN,Fal;
+  if(DID_22_Support>=3)
+  {
+    Data_Send_1[0] = 0x07;
+    Data_Send_1[4] = 0x35;
+    Data_Send_1[5] = 0x70;
+    Data_Send_1[6] = 0x35;
+    Data_Send_1[7] = 0x70;
+  }
+  for(j=0;j<elcount(BlockSize);j++)
+  {
+    Data_Send_2[1] = BlockSize[j];
+    _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),0);
+    FF_DL = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),0);
+    Temp_SN=(FF_DL-6)/7;
+    if((FF_DL-6)%7 != 0)
+      Temp_SN+=1;
+    if(BlockSize[j] != 0)
+    {
+      for(i=1;i<=BlockSize[j];i++)
+      {
+        if(i>Temp_SN)
+          break;
+        _Check_TPgetCF(1,FF_DL,i);
+      }
+      Fal = _Check_NoResponse_(500);
+      if(Fal == -1)
+        testStepFail("","0x%02X BlockSize块收到超过预期的流控帧数量",BlockSize[j]);
+      else
+        testStepPass("","0x%02X BlockSize块收到符合预期的流控帧数量",BlockSize[j]);
+    }
+    else
+    {
+      for(i=1;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,FF_DL,i);
+      Fal = _Check_NoResponse_(500);
+      if(Fal == -1)
+        testStepFail("","0x%02X BlockSize块收到超过预期的流控帧数量",BlockSize[j]);
+      else
+        testStepPass("","0x%02X BlockSize块收到符合预期的流控帧数量",BlockSize[j]);
+    
+    }
+    testWaitForTimeout(3000);
+  }
+}
+
+
+
+
+_Get_DID_TP(byte data[],byte _Start)
+{
+  int i;
+  byte Temp;
+  Temp = _Start;
+  _Get_TP_DID("TP_CAN_DID");
+  data[_Start-1] = 0x22;
+  if(elcount(data)<=8)
+  {
+    if((_TP_CAN_DID_Input + _Start) > 8)
+    {
+      for(i=0;i<8-Temp;i++)
+      {
+        data[_Start] = _TP_CAN_DID[i];
+        _Start++;
+      }
+    }
+    else
+    {
+      for(i=0;i<_TP_CAN_DID_Input;i++)
+      {
+        data[_Start] = _TP_CAN_DID[i];
+        _Start++;
+      }
+    }
+  }
+  else
+  {
+    for(i=0;i<_TP_CAN_DID_Input;i++)
+    {
+      data[_Start] = _TP_CAN_DID[i];
+      _Start++;
+    }
+  }
+}
+int _Get_CF_SN(int Len)
+{
+  int Return_Va;
+  if(Response_CanFD == 0)
+  {
+    Return_Va = (Len-6)/7;
+    if((Len-6)%7 != 0)
+      Return_Va+=1;
+  }
+  else
+  {
+    Return_Va = (Len-(64-2))/63;
+    if((Len-(64-2))%7 != 0)
+      Return_Va+=1;
+  }
+  return Return_Va;
+}
+
+
+_CANFD_TP_SF_1() /*单帧请求报文（CAN_DL≤8）SF_DL测试*/
+{
+  byte Data[8] = {0x00,0x22,0xf1,0x80,0x55,0x55,0x55,0x55};
+  byte Len[4] = {0x00,0x01,0x08,0x09};
+  int i;
+  _Get_DID_TP(Data,2);
+  for(i=0;i<4;i++)
+  {
+    Data[0] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x01)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_2() /*单帧请求报文（CAN_DL=12）SF_DL测试*/
+{
+  byte Data[12] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x00,0x00};
+  byte Len[4] = {0x07,0x08,0x0A,0x0B};
+  byte Len_[4] = {0x01,0x08,0x09,0x0A};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<4;i++)
+  {
+    Data[1] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x08 || Len[i] == 0x0A)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<4;i++)
+  {
+    if(i==0)
+    {
+      _Get_DID_TP(Data,3);
+      Data[0] = Len_[i];
+      Data[1] = 0x0A;
+    }
+    else
+    {
+      Data[0] = Len_[i];
+      _Get_DID_TP(Data,2);
+    }
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_3() /*单帧请求报文（CAN_DL=16）SF_DL测试*/
+{
+  byte Data[16] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Len[4] = {0x0A,0x0B,0x0E,0x0F};
+  byte Len_[5] = {0x05,0x0B,0x0C,0x0D,0x0E};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<4;i++)
+  {
+    Data[1] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x0B || Len[i] == 0x0E)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<5;i++)
+  {
+    if(i==0)
+    {
+      _Get_DID_TP(Data,3);
+      Data[0] = Len_[i];
+      Data[1] = 0x0E;
+    }
+    else
+    {
+      Data[0] = Len_[i];
+      _Get_DID_TP(Data,2);
+    }
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_4() /*单帧请求报文（CAN_DL=20）SF_DL测试*/
+{
+  byte Data[20] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Len[4] = {0x0E,0x0F,0x12,0x13};
+  byte Len_[3] = {0x08,0x0F,0x32};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<4;i++)
+  {
+    Data[1] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x0F || Len[i] == 0x12)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<3;i++)
+  {
+    if(i==0)
+    {
+      _Get_DID_TP(Data,3);
+      Data[0] = Len_[i];
+      Data[1] = 0x12;
+    }
+    else
+    {
+      Data[0] = Len_[i];
+      _Get_DID_TP(Data,2);
+    }
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_5() /*单帧请求报文（CAN_DL=24）SF_DL测试*/
+{
+  byte Data[24] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Len[4] = {0x12,0x13,0x16,0x17};
+  byte Len_[3] = {0x09,0x33,0x36};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<4;i++)
+  {
+    Data[1] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x13 || Len[i] == 0x16)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<3;i++)
+  {
+    if(i==0)
+    {
+      _Get_DID_TP(Data,3);
+      Data[0] = Len_[i];
+      Data[1] = 0x16;
+    }
+    else
+    {
+      Data[0] = Len_[i];
+      _Get_DID_TP(Data,2);
+    }
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_6() /*单帧请求报文（CAN_DL=32）SF_DL测试*/
+{
+  byte Data[32] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Len[4] = {0x16,0x17,0x1E,0x1F};
+  byte Len_[3] = {0x0A,0x37,0x3E};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<4;i++)
+  {
+    Data[1] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x17 || Len[i] == 0x1E)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<3;i++)
+  {
+    if(i==0)
+    {
+      _Get_DID_TP(Data,3);
+      Data[0] = Len_[i];
+      Data[1] = 0x1E;
+    }
+    else
+    {
+      Data[0] = Len_[i];
+      _Get_DID_TP(Data,2);
+    }
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_7() /*单帧请求报文（CAN_DL=48）SF_DL测试*/
+{
+  byte Data[48] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Len[4] = {0x1E,0x1F,0x2E,0x2F};
+  byte Len_[3] = {0x0D,0x3F,0x3E};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<4;i++)
+  {
+    Data[1] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x1F || Len[i] == 0x2E)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<3;i++)
+  {
+    if(i==0)
+    {
+      _Get_DID_TP(Data,3);
+      Data[0] = Len_[i];
+      Data[1] = 0x2E;
+    }
+    else
+    {
+      Data[0] = Len_[i];
+      _Get_DID_TP(Data,2);
+    }
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_8() /*单帧请求报文（CAN_DL=64）SF_DL测试*/
+{
+  byte Data[64] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Len[4] = {0x2E,0x2F,0x3E,0x3F};
+  byte Len_[3] = {0x0F,0x3F,0x3E};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<4;i++)
+  {
+    Data[1] = Len[i];
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    if(Len[i] == 0x2F || Len[i] == 0x3E)
+      _Check_ResponseRx_(1,300);
+    else
+      _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<3;i++)
+  {
+    if(i==0)
+    {
+      _Get_DID_TP(Data,3);
+      Data[0] = Len_[i];
+      Data[1] = 0x3E;
+    }
+    else
+    {
+      Data[0] = Len_[i];
+      _Get_DID_TP(Data,2);
+    }
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetSF(0);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_SF_9() /*协议控制信息为FF的单帧请求报文测试(CAN_DL)*/
+{
+  byte Data[64] = {0xFF,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,2);
+  _TPsendmsg_Phy(Data,8,1);
+  _TPgetSF(0);
+  
+  Data[0] = 0x00;
+  Data[1] = 0xff;
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,64,1);
+  _TPgetSF(0);
+}
+_CANFD_TP_FF_1() /*首帧请求报文FF_DL错误测试*/
+{
+  byte Data[8] = {0x10,0x00,0xf1,0x80,0x00,0x00,0x00,0x00};
+  byte Filler[9] = {0x0A,0x0B,0x0F,0x13,0x17,0x1F,0x2F,0x2F,0x3E};
+  byte Len[9] = {8,12,16,20,24,32,48,64,64};
+  
+  int i;
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,8,1);
+  _TPgetSF(0);
+  testWaitForTimeout(1000);
+  
+  for(i=0;i<elcount(Filler);i++)
+  {
+    Data[1] = Filler[i];
+    _TPsendmsg_Phy(Data,Len[i],1);
+    
+    if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD") && Len[i] == 8 )
+    {
+      _TPgetFC(1);
+    }
+    else
+      _Check_NoResponse_(500);
+    testWaitForTimeout(1000);
+  }
+}
+
+_CANFD_TP_FF_2() /*首帧请求报文FF_DL错误测试*/
+{
+  byte Data[64] = {0x10,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Temp_FF_DL[2][2] = {{0x10,0xFF},{0x1F,0xFF}};
+  int i;
+  _Get_DID_TP(Data,3);
+  for(i=0;i<2;i++)
+  {
+    Data[0] = Temp_FF_DL[i][0];
+    Data[1] = Temp_FF_DL[i][1];
+    _TPsendmsg_Phy(Data,elcount(Data),1);
+    _Check_TPgetFC_FS(0);
+    testWaitForTimeout(1000);
+  }
+  
+  {
+    byte Data_2[64] = {0x10,0x00,0x00,0x00,0x20,0x03,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+     byte Temp_FF_DL_[6][2] = {{0,0},{0x0F,0xFF},{0x10,0x00},{0x20,0x02},{0x20,0x03},{0xFF,0xFF}};
+    _Get_DID_TP(Data_2,7);
+    for(i=0;i<6;i++)
+    {
+      Data_2[4] = Temp_FF_DL_[i][0];
+      Data_2[5] = Temp_FF_DL_[i][1];
+      if(i==5)
+      {
+        Data_2[2] = 0xFF;
+        Data_2[3] = 0xFF;
+      }
+      _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+      if(i<2)
+        _Check_ResTP(@DID::Response_ID,Data_2,-1);
+      else
+        _Check_TPgetFC_FS(0x2);
+      testWaitForTimeout(1000);
+    }
+  }
+  
+  {
+    byte Data_Send_1[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    byte Data_Send_2[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    byte Data_Send_3[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    
+    _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+    _TPgetFC(0x30);
+    _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+    _TPsendmsg_Phy(Data_Send_3,8,1);
+    _TPgetCF(0);
+    testWaitForTimeout(1000);
+    
+    Data_Send_1[1] = 0x84;
+    _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+    _TPgetFC(0x30);
+    _TPsendmsg_Phy(Data_Send_2,8,1);
+    _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_2),1);
+    _TPgetCF(0);
+    testWaitForTimeout(1000);
+    
+  }
+}
+_CANFD_TP_FF_3() /*功能寻址请求首帧测试*/
+{
+  byte Data[64] = {0x1F,0xFF,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Fun(Data,elcount(Data),1);
+  _TPgetFC(0);
+  {
+    byte Data_2[64] = {0x10,0x00,0x00,0x00,0x20,0x02,0x22,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+    _Get_DID_TP(Data_2,7);
+    _TPsendmsg_Fun(Data_2,elcount(Data_2),1);
+    _TPgetFC(0);
+  }
+}
+_CANFD_TP_FF_4() /*FF_DL<4095*/
+{
+  byte Data[8] = {0x03,0x22,0xF1,0x80,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFF(1);
+}
+_CANFD_TP_FF_5() /*FF_DL>4095*/
+{
+  writeEx(-3,0,"目前无长度大于4095的报文,跳过测试");
+//  {
+//    byte Data[8] = {0x03,0x22,0xF1,0x80,0x11,0x11,0x11,0x11};
+//    _Get_DID_TP(Data,3);
+//     _TPsendmsg_Phy(Data,elcount(Data),1);
+//    _TPgetFC(1);
+//  }
+}
+_CANFD_TP_CF_1() /*停止发送后续部分连续帧*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _TPgetCF(0);
+}
+_CANFD_TP_CF_2() /*不发送所有连续帧*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  _TPgetCF(0);
+}
+_CANFD_TP_CF_3() /*不发送某连续帧*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Data_1[64] = {0x22,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _TPgetCF(0);
+}
+_CANFD_TP_CF_4() /*重复发送第一个连续帧*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Data_2[64] = {0x22,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+  _TPgetCF(0);
+  testWaitForTimeout(2000);
+  
+  
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+  _TPgetCF(0);
+  testWaitForTimeout(2000);
+  
+  Data[0] = 0x11;  Data[1] = 0x3A;
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+  Data_2[0] = 0x23;
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+  Data_2[0] = 0x24;
+  _Check_NoResponse_(STmin+5);
+  _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+  _TPgetCF(0);
+  testWaitForTimeout(2000);
+}
+_CANFD_TP_CF_6() /*连续帧SN值测试*/
+{
+  byte Data[64] = {0x12,0xB4,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  int i,j,flage,m,Start_Byte;
+  int Wait_Time;
+  m=1;
+  Start_Byte = 0x20;
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  for(i=Start_Byte;i<=0x29;i++)
+  {
+    Data_1[0] = i;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _Check_NoResponse(STmin+5);
+  }
+  _Check_NoResponse(N_Cr_Time);
+  testWaitForTimeout(2000);
+  
+  Wait_Time = N_Cr_Time - STmin -10;
+  if(Wait_Time<=0)
+    Wait_Time = STmin;
+  Data[0] = 0x14;
+  Data[1] = 0xEB;
+  /*SN>15从1开始*/
+  flage = 0;
+  m=1;
+  Start_Byte = 0x21;
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  for(j=0;j<2;j++)
+  {
+    if(flage == 0)
+    {
+      for(i=Start_Byte;i<=0x2F;i++)
+      {
+        if(j==1 && i ==0x24)
+        {
+          flage = 1;
+          break;
+        }
+        Data_1[0] = i;
+        testWaitForTimeout(STmin+5);
+        _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+        m++;
+        if(BS == 0)
+          _Check_NoResponse(Wait_Time);
+        else
+        {
+          if(j==0 && m==BS+1)
+            _TPgetFC(1);
+          else if( m==BS+1)
+            _Check_NoResponse(Wait_Time);
+          if(m==BS+1)
+            m=1;
+        }
+      }
+    }
+  }
+  _TPgetCF(0);
+  testWaitForTimeout(2000);
+  
+  /*SN>15从0开始*/
+  Data[0] = 0x14;
+  Data[1] = 0xEB;
+  flage = 0;
+  m=1;
+  Start_Byte = 0x21;
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(1);
+  for(j=0;j<2;j++)
+  {
+    if(flage == 0)
+    {
+      for(i=Start_Byte;i<=0x2F;i++)
+      {
+        if(j==0 && i==0x2F)
+          Start_Byte = 0x20;
+        Data_1[0] = i;
+        testWaitForTimeout(STmin+5);
+        _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+        if(j==1 && i ==0x23)
+        {
+          flage = 1;
+          break;
+        }
+        m++;
+        if(BS == 0)
+          _Check_NoResponse(Wait_Time);
+        else
+        {
+          if( m==BS+1)
+          {
+            _TPgetFC(1);
+            m=1;
+          }
+        }
+      }
+    }
+  }
+  _Check_NRC(0);
+  testWaitForTimeout(1000);
+}
+_CANFD_TP_CF_7() /*错误连续帧报文*/
+{
+  byte Data[64] = {0x10,0xFB,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Data_1[64] = {0x31,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,3);
+  {
+    _TPsendmsg_Phy(Data,elcount(Data),1);
+    Data_1[0] = 0x21;
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    Data_1[0] = 0x23;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    Data_1[0] = 0x22;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _Check_ResponseRx_(0,500);
+    testWaitForTimeout(1000);
+  }
+  {
+    _TPsendmsg_Phy(Data,elcount(Data),1);
+    Data_1[0] = 0x22;
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    Data_1[0] = 0x21;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    Data_1[0] = 0x23;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _Check_ResponseRx_(0,500);
+    testWaitForTimeout(1000);
+  }
+  {
+    _TPsendmsg_Phy(Data,elcount(Data),1);
+    Data_1[0] = 0x41;
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    Data_1[0] = 0x42;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    Data_1[0] = 0x43;
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _Check_ResponseRx_(0,500);
+    testWaitForTimeout(1000);
+  }
+}
+_CANFD_TP_CF_8() /*后续帧请求测试*/
+{
+  byte Data[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(0);
+}
+_CANFD_TP_CF_9() /*最后一个连续帧CAN_DL测试*/
+{
+  byte Data_1[64] = {0x10,0x7D,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Change[32] = {0x7D,0X7E,0X84,0X85,0X84,0X85,0X88,0X89,0X88,0X89,0X8C,0X8D,0X8C,0X8D,0X90,0X91,0X90,0X91,0X94,0X95,0X94,0X95,0X9C,0X9D,0X9C,0X9D,0XAC,0XAD,0XAC,0XAD,0XBC,0XBD};
+  byte Len[32] = {8,8,8,8,12,12,12,12,16,16,16,16,20,20,20,20,24,24,24,24,32,32,32,32,48,48,48,48,64,64,64,64};
+  byte Res_NRC13[17] = {1,2,3,6,7,10,11,14,15,18,19,22,23,26,27,30,31};/*回NRC13项次所在位置*/
+  byte Res_NRC13_ForTPLastCFLen[24] = {1,2,3,5,6,7,9,10,11,13,14,15,17,18,19,21,22,23,25,26,27,29,30,31};/*不管控长度返回NRC13所在位置*/
+  byte i;
+  for(i=0;i<32;i++)
+  {
+    Data_1[1] = Change[i];
+    _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_2,elcount(Data_2),1);
+    _TPsendmsg_Phy(Data_3,Len[i],1);
+    if(TP_LastCFLen == 0 && _Check_Dword_in_Num(i+1,Res_NRC13,17) != -1 )
+    {
+      _Check_NRC(0);
+      _Check_NoResponse(p2cmax);
+    }
+    else if(TP_LastCFLen == 1 && _Check_Dword_in_Num(i+1,Res_NRC13_ForTPLastCFLen,24) != -1)
+    {
+      _Check_NRC(0);
+      _Check_NoResponse(p2cmax);
+    }
+    else
+      _TPgetFC(0);
+    testWaitForTimeout(1000);
+  }
+}
+
+_CANFD_TP_Disturb_1() /*控制器多帧发送被非预期单帧请求报文干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x03,0x22,0xF1,0x84,0x55,0x55,0x55,0x55};
+  int i,Temp_SN,Len;
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    Len = _TPgetFF(1);
+    if(DID_22_Support == 1)
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      if(MF_Phy_SF_TxDisturb == 0)
+      {
+        Temp_SN = _Get_CF_SN(Len);
+        for(i=1;i<=Temp_SN;i++)
+          _Check_TPgetCF(1,Len,i);
+      }
+      else
+        _TPgetNotCF(1,2);
+    }
+    else
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPgetCF_21(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      if(MF_Phy_SF_TxDisturb == 0)
+      {
+        Temp_SN = _Get_CF_SN(Len);
+        for(i=2;i<=Temp_SN;i++)
+          _Check_TPgetCF(1,Len,i);
+      }
+      else
+        _TPgetNotCF(1,2);
+    }
+  }
+}
+_CANFD_TP_Disturb_2() /*控制器多帧发送被非预期多帧请求报文第一帧干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[64] = {0x10,0xBC,0x22,0xF1,0x99,0x32,0x32,0x32,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55,0x55};
+  int i,Temp_SN,Len;
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    Len = _TPgetFF(1);
+    if(DID_22_Support == 1)
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      if(MF_Phy_SF_TxDisturb == 0)
+      {
+        Temp_SN = _Get_CF_SN(Len);
+        for(i=1;i<=Temp_SN;i++)
+          _Check_TPgetCF(1,Len,i);
+      }
+      else
+        _TPgetNotCF(1,2);
+    }
+    else
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPgetCF_21(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      if(MF_Phy_SF_TxDisturb == 0)
+      {
+        Temp_SN = _Get_CF_SN(Len);
+        for(i=2;i<=Temp_SN;i++)
+          _Check_TPgetCF(1,Len,i);
+      }
+      else
+        _TPgetNotCF(1,2);
+    }
+  }
+}
+_CANFD_TP_Disturb_3() /*控制器多帧发送被非预期连续帧干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  int i,Temp_SN,Len;
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    Len = _TPgetFF(1);
+    if(DID_22_Support == 1)
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      Temp_SN = _Get_CF_SN(Len);
+      for(i=1;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,Len,i);
+    }
+    else
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPgetCF_21(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      Temp_SN = _Get_CF_SN(Len);
+      for(i=2;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,Len,i);
+    }
+  }
+}
+_CANFD_TP_Disturb_4() /*控制器多帧发送被非预期流控制帧干扰*/
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x32,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  int i,Temp_SN,Len;
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    Len = _TPgetFF(1);
+    if(DID_22_Support == 1)
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      Temp_SN = _Get_CF_SN(Len);
+      for(i=1;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,Len,i);
+    }
+    else
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPgetCF_21(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      Temp_SN = _Get_CF_SN(Len);
+      for(i=2;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,Len,i);
+    }
+  }
+}
+_CANFD_TP_Disturb_5() /*控制器多帧发送被非预期未知报文干扰*/
+{
+   byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_2[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+  int i,Temp_SN,Len;
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    Len = _TPgetFF(1);
+    if(DID_22_Support == 1)
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      Temp_SN = _Get_CF_SN(Len);
+      for(i=1;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,Len,i);
+    }
+    else
+    {
+      _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+      _TPgetCF_21(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      Temp_SN = _Get_CF_SN(Len);
+      for(i=2;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,Len,i);
+    }
+  }
+}
+_CANFD_TP_Disturb_6() /*控制器多帧接收被新的单帧请求报文干扰*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  
+  byte Data_3[8] = {0x02,0x10,0x01,0x55,0x55,0x55,0x55,0x55};
+  dword ID;
+  _Get_DID_TP(Data,3);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    if(MF_Phy_SF_RxDisturb==1)
+    {
+      _Check_10_01(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _TPgetFF(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _Check_NRC(0);
+    }
+  } 
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+    if(MF_Fun_SF_RxDisturb==1)
+    {
+      _Check_10_01(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _TPgetFF(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _Check_NRC(0);
+    }
+  } 
+  testWaitForTimeout(1000);
+  {
+    if(phyreq_ID == 0x783)
+      ID = 0x785;
+    else
+      ID = 0x783;
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg(Data_3,elCount(Data_3),ID,1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _Check_NRC(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    Data_3[0] = 0x03;
+    Data_3[1] = 0x22;
+    Data_3[2] = 0x35;
+    Data_3[3] = 0X70;
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    if(MF_Phy_SF_RxDisturb == 1)
+    {
+      _TPgetFF(1);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _TPgetCF(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _Check_NRC(0);
+    }
+  }
+}
+_CANFD_TP_Disturb_7() /*控制器多帧接收被新的多帧请求报文第一帧干扰*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[64] = {0x1F,0xFF,0x36,0x01,0x44,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  dword ID;
+  _Get_DID_TP(Data,3);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    if(MF_Phy_MF_RxDisturb==1)
+    {
+      _Check_TPgetFC_FS(0);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _TPgetFC(0);
+    }
+    else
+    {
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _Check_NRC(0);
+    }
+  }  
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+      _Check_NoResponse(p2cmax);
+      _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+      _Check_NRC(0);
+  } 
+  testWaitForTimeout(1000);
+  {
+    if(phyreq_ID == 0x783)
+      ID = 0x785;
+    else
+      ID = 0x783;
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg(Data_3,elCount(Data_3),ID,1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _Check_NRC(0);
+  }
+}
+_CANFD_TP_Disturb_8() /*握手命令干扰多帧请求*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x02,0x3E,0x80,0x55,0x55,0x55,0x55,0x55};
+  _Get_DID_TP(Data,3);
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    if(H_Disturb==0 ||(H_Disturb==1 && MF_Phy_SF_RxDisturb ==0))
+      _TPgetFF(0);
+    else
+      _Check_NoResponse(p2cmax);
+  }
+  testWaitForTimeout(1000);
+  
+  {
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    _TPgetFC(1);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _Check_NRC(0);
+  }
+  testWaitForTimeout(1000);
+  
+  {
+    byte Data_Send[8] = {0x07,0x22,0x35,0x70,0x35,0x70,0x35,0x70};
+    byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+    byte Data_Send_2[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    int i;
+    if(DID_22_Support>=3)
+    {
+      _TPsendmsg_Phy(Data_Send,elCount(Data_Send),1);
+      _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+      _TPgetFF(1);
+      _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+      _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+      _TPgetCF(1);
+      
+      testWaitForTimeout(1000);
+    }
+    else
+    {
+      _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),1);
+      _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+      _TPgetFF(1);
+      _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+      _TPsendmsg_Fun(Data_3,elCount(Data_3),1);
+      _TPgetCF(1);
+      
+      testWaitForTimeout(1000);
+    }
+  }
+  testWaitForTimeout(1000);
+  
+  {
+    byte Data_Send[8] = {0x07,0x22,0x35,0x70,0x35,0x70,0x35,0x70};
+    byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+    byte Data_Send_2[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+    int i,Len,Temp_SN;
+    if(DID_22_Support>=3)
+    {
+      _TPsendmsg_Phy(Data_Send,elCount(Data_Send),1);
+      Len = _TPgetFF(1);
+      _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+      _TPgetCF_21(1);
+      _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+      if(MF_Phy_SF_TxDisturb==0)
+      {
+        Temp_SN = _Get_CF_SN(Len);
+        for(i=2;i<=Temp_SN;i++)
+          _Check_TPgetCF(1,Len,i);
+      }
+      else
+        _Check_NoResponse(p2cmax);
+    }
+    else
+    {
+      _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),1);
+      Len = _TPgetFF(1);
+      _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+      _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+      if(MF_Phy_SF_TxDisturb==0)
+      {
+        Temp_SN = _Get_CF_SN(Len);
+        for(i=1;i<=Temp_SN;i++)
+          _Check_TPgetCF(1,Len,i);
+      }
+      else
+        _Check_NoResponse(p2cmax);
+    }
+  }
+}
+_CANFD_TP_Disturb_9() /*控制器多帧接收被流控制报文干扰*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elCount(Data),1);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+  _Check_NoResponse(p2cmax);
+  _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+  _Check_NRC(0);
+}
+_CANFD_TP_Disturb_10() /*控制器多帧接收被未知报文干扰*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elCount(Data),1);
+  _TPgetFC(1);
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    testWaitForTimeout(STmin+5);
+  _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+  _Check_NoResponse(p2cmax);
+  _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+  _Check_NRC(0);
+}
+_CANFD_TP_Time_1()/* N_Bs时间测试 */
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[8] = {0x03,0x22,0x22,0x00,0x00,0x00,0x00,0x00};
+  double start_time;
+  double end_time;
+  int i,Temp_SN,Len;
+  
+  _Get_DID_TP(Data,3);
+  _Get_DID_TP(Data_2,2);
+  _TPsendmsg_Phy(Data,elCount(Data),1);
+  start_time=(double)timeNow()/100;
+  _TPgetFC(1);
+  end_time=(double)timeNow()/100;
+  if(end_time - start_time <= N_Bs_Time)
+    testStepPass("","N_Bs响应时间在规定范围内");
+  else
+    testStepFail("","N_Bs响应时间不在规定范围内%.2f ms",(end_time - start_time));
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _TPgetFF(1);
+    _Check_NoResponse(N_Bs_Time + N_Bs_Time_Tolerance);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _TPgetFC(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    Len = _TPgetFF(1);
+    _Check_NoResponse(N_Bs_Time - N_Bs_Time_Tolerance);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    Temp_SN = _Get_CF_SN(Len);
+    for(i=1;i<=Temp_SN;i++)
+      _Check_TPgetCF(1,Len,i); 
+  }
+}
+//_CANFD_TP_Time_2()/* N_Cr时间测试 */
+//{
+//  byte Data[64] = {0x10,0x7D,0x22,0xF1,0xF0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+//  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+//  byte Data_2[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+//  byte Data_3[8] = {0x03,0x22,0x00,0x00,0x55,0x55,0x55,0x55};
+//  double start_time;
+//  double end_time;
+//  double end_time_1;
+//  int i,Temp_SN;
+//
+//  _Get_DID_TP(Data_3,2);
+//  if(_TP_CAN_DID_Len>0x0D)
+//  {
+//    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+//    _TPgetFF_1(1,_TP_CAN_DID_Len);
+//    start_time=(double)timeNow()/100;
+//    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+//    _TPgetCF_21(1);
+//    end_time=(double)timeNow()/100;
+//    _TPgetCF_22(1);
+//    end_time_1=(double)timeNow()/100;
+//    if(_max((end_time_1 - end_time),(end_time - start_time)) <= N_Cr_Time)
+//      testStepPass("","N_Cr响应时间在规定范围内");
+//    else
+//      testStepFail("","N_Cr响应时间不在规定范围内%.2f ms",_max((end_time_1 - end_time),(end_time - start_time)));
+//  }
+//  else if(_TP_CAN_DID_Len >0x7)
+//  {
+//    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+//    _TPgetFF_1(1,_TP_CAN_DID_Len);
+//    start_time=(double)timeNow()/100;
+//    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+//    _TPgetCF_21(1);
+//    end_time=(double)timeNow()/100; 
+//    if((end_time - start_time)<= N_Cr_Time)
+//      testStepPass("","N_Cr响应时间在规定范围内");
+//    else
+//      testStepFail("","N_Cr响应时间不在规定范围内%.2f ms",(end_time - start_time));
+//  }
+//  else
+//  {
+//    writeEx(-3,0,"输入DID的长度过短,仅单帧");
+//    testStep("","所选DID长度不足,跳过时间测试");
+//  }
+//  testWaitForTimeout(1000);
+//  
+//  
+//  {
+//    _TPsendmsg_Phy(Data,elCount(Data),1);
+//    _TPgetFC(1);
+//    testWaitForTimeout(N_Cr_Time + N_Cr_Time_Tolerance);
+//    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+//    _TPgetCF_21(0);
+//  }
+//  testWaitForTimeout(1000);
+//  {
+//    _TPsendmsg_Phy(Data,elCount(Data),1);
+//    _TPgetFC(1);
+//    testWaitForTimeout(N_Cr_Time - N_Cr_Time_Tolerance);
+//    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+//    _Check_NRC(0);
+//  }
+//}
+_CANFD_TP_Time_2()/* N_Cr时间测试 */
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_2[64] = {0x10,0x7D,0x22,0xF1,0xF0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_3[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_4[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+
+  int i,j;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,Max_Time,DiffTime;
+  
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  _Init_Struct();
+  {
+    Min_Time = 1000;
+    Max_Time = 1;
+    _TPsendmsg_Phy(Data,elCount(Data),1);
+    FF_DL = _TPgetFF(1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      if(DiffTime>=Max_Time)
+        Max_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Max_Time<N_Cr_Time)
+      testStepPass("","N_Cr时间符合需求，最大间隔时间为 %d ms",Max_Time);
+    else
+      testStepFail("","最大间隔时间为 %d ms ,大于预期时间 %d ms",Max_Time,N_Cr_Time);
+  }
+  testWaitForTimeout(3000);
+  
+  if(_Check_Serve_IDAndSess(0x22,@DID::funreq_ID,defsession) == 1)
+  {
+    Min_Time = 1000;
+    Max_Time = 1;
+    _TPsendmsg(Data,elCount(Data),@DID::funreq_ID,1);
+    FF_DL = _TPgetFF(1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      if(DiffTime>=Max_Time)
+        Max_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Max_Time<N_Cr_Time)
+      testStepPass("","N_Cr时间符合需求，最大间隔时间为 %d ms",Max_Time);
+    else
+      testStepFail("","最大间隔时间为 %d ms ,大于预期时间 %d ms",Max_Time,N_Cr_Time);
+  }
+  testWaitForTimeout(3000);
+  
+  {
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _TPgetFC(1);
+    testWaitForTimeout(N_Cr_Time + N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    _TPgetCF_21(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _TPgetFC(1);
+    testWaitForTimeout(N_Cr_Time - N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    _Check_NRC(0);
+  }
+  testWaitForTimeout(3000);
+  
+  Data_2[1] = 0xBC;
+  {
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _TPgetFC(1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    testWaitForTimeout(N_Cr_Time + N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_4,elCount(Data_4),1);
+    _TPgetCF_21(0);
+  }
+  testWaitForTimeout(1000);
+  {
+    _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
+    _TPgetFC(1);
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_3,elCount(Data_3),1);
+    testWaitForTimeout(N_Cr_Time - N_Cr_Time_Tolerance);
+    _TPsendmsg_Phy(Data_4,elCount(Data_4),1);
+    _Check_NRC(0);
+  }
+}
+
+
+_CANFD_TP_Time_4()/* N_Cs时间测试 */
+{
+  byte Data[8] = {0x03,0x22,0x35,0x70,0x00,0x00,0x00,0x00};
+  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  double start_time,start_time2,start_time3;
+  int i,Temp_SN;
+  _Get_DID_TP(Data,2);
+  Data[0] = 1 + _TP_CAN_DID_Input;
+  //待修改判断，当某个项目不支持多个DID读取时测试间隔时间改为发送流控帧时间到接收到第一帧后续帧时间
+  _TPsendmsg_Phy(Data,elCount(Data),1);
+  _TPgetFF(1);
+  start_time=(double)timeNow()/100;
+  _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+  _TPgetCF(1);
+  start_time2=(double)timeNow()/100;
+  _TPgetCF(1);
+  start_time3=(double)timeNow()/100;
+  testWaitForTimeout(1000);
+  if(start_time2 - start_time <= N_Cs_Time + N_Cs_Time_Tolerance)
+    testStepPass("","连续帧1：N_Cs响应时间在规定范围内");
+  else
+    testStepFail("","连续帧1：N_Cs响应时间不在规定范围内%.2f ms",(start_time2 - start_time));
+  if(start_time3 - start_time2 <= N_Cs_Time + N_Cs_Time_Tolerance)
+    testStepPass("","连续帧2：N_Cs响应时间在规定范围内");
+  else
+    testStepFail("","连续帧2：N_Cs响应时间不在规定范围内%.2f ms",(start_time3 - start_time2));
+}
+_CANFD_TP_Time_5()/* N_Br时间测试 */
+{
+  byte Data[64] = {0x10,0x7D,0x22,0x35,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  double start_time,start_time2;
+  int i,Temp_SN;
+  _TPsendmsg_Phy(Data,elCount(Data),1);
+  start_time=(double)timeNow()/100;
+  _TPgetFC(1);
+  start_time2=(double)timeNow()/100;
+  testWaitForTimeout(1000);
+
+  if(start_time2 - start_time <= N_Br_Time + N_Br_Time_Tolerance)
+    testStepPass("","N_Br响应时间在规定范围内");
+  else
+    testStepFail("","N_Br响应时间不在规定范围内%.2f ms",(start_time2 - start_time));
+}
+
+
+_CANFD_TP_FC_1()/* EPS应答流控帧BS值测试 */
+{
+  byte Data[64] = {0x1F,0xFF,0x2e,0x3a,0x19,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte Data_03[8] = {0x02,0x10,0x03,0x00,0x00,0x00,0x00,0x00};
+  
+  int i;
+  int Max_Count,CF_Byte,BS_Count;
+  
+  Data[0] = ((FF_DL_Max>>8) | 0x10);
+  Data[1] = (FF_DL_Max & 0xFF);
+
+  Max_Count = _ceil(((((Data[0]&0xF)<<8) | Data[1])-62)/63.0);
+  _TPsendmsg_Phy(Data,elCount(Data),1);
+  _TPgetFC(1);
+  BS_Count = 1;
+  CF_Byte = 0x20;
+  for(i=0;i<Max_Count;i++)
+  {
+    if(CF_Byte>=0x30)
+      CF_Byte = 0x20;
+    if(i==0 & CF_Byte==0x20)
+      CF_Byte=0x21;
+    Data_1[0] = CF_Byte;
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    BS_Count++;
+    if(BS!=0 && BS_Count == BS+1)
+    {
+      _TPgetFC(1);
+      BS_Count = 1;
+    }
+    else if(BS==0 && BS_Count == BS+1)
+    {
+      _Check_NoResponse(p2cmax);
+      BS_Count = 1;
+    }
+    CF_Byte++;
+  }
+  _Check_NRC(3);
+  
+  
+  testWaitForTimeout(2000);
+  _TPsendmsg_Phy(Data_03,elCount(Data_03),1);
+  _TPgetSF(1);
+  testWaitForTimeout(100);
+  _TPsendmsg_Phy(Data,elCount(Data),1);
+  _TPgetFC(1);
+  BS_Count = 1;
+  CF_Byte = 0x20;
+  for(i=0;i<Max_Count;i++)
+  {
+    if(CF_Byte>=0x30)
+      CF_Byte = 0x20;
+    if(i==0 & CF_Byte==0x20)
+      CF_Byte=0x21;
+    Data_1[0] = CF_Byte;
+    testWaitForTimeout(STmin+5);
+    _TPsendmsg_Phy(Data_1,elCount(Data_1),1);
+    BS_Count++;
+    if(BS!=0 && BS_Count == BS+1)
+    {
+      _TPgetFC(1);
+      BS_Count = 1;
+    }
+    else if(BS==0 && BS_Count == BS+1)
+    {
+      _Check_NoResponse(p2cmax);
+      BS_Count = 1;
+    }
+    CF_Byte++;
+  }
+  _Check_NRC(3);
+  
+}
+
+_CANFD_TP_Stmin_1()/* Stmin值测试 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[3] = {0x01,0x0A,0x1E};
+  int i,j;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,DiffTime;
+  char Temp_Str[50];
+  int Time_Send;
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  for(j=0;j<elcount(Stmin);j++)
+  {
+    Min_Time = 2000;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),1);
+    FF_DL = _TPgetFF(1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    Time_Send = _min(Stmin[j],N_Cs_Time);
+    if(Time_Send != N_Cs_Time)
+    {
+      if(Min_Time<Time_Send)
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间小于 %d ms",Time_Send);
+      }
+      else
+        testStepPass("","最小间隔时间符合需求不小于 %d ms",Stmin[j]);
+    }
+    else
+    {
+      if(Min_Time<=N_Cs_Time - N_Cs_Time_Tolerance)
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间小于 %d ± %dms",N_Cs_Time,N_Cs_Time_Tolerance);
+      }
+      else if(Min_Time>=N_Cs_Time + N_Cs_Time_Tolerance)
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间大于 %d ± %dms",N_Cs_Time,N_Cs_Time_Tolerance);
+      }
+      else
+        testStepPass("","最小间隔时间符合需求不小于 %d ms",Stmin[j]);
+    }
+    testWaitForTimeout(3000);
+  }
+}
+
+_CANFD_TP_Stmin_1_()/* Stmin值测试_边界值 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[5] = {0x01,0x0A,0x1E,0x41,0x7F};
+  int i,j,End_;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,Max_Time,DiffTime;
+  char Temp_Str[50];
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  Stmin[0] = N_Cs_Time-10;
+  Stmin[1] = N_Cs_Time;
+  Stmin[2] = N_Cs_Time+10;
+  if(N_Cs_Time<0x7F)
+  {
+    Stmin[3] = (N_Cs_Time + 127)/2;
+    End_ = 5;
+  }
+  else
+  {
+    End_ = 4;
+    Stmin[3] = 0x7F;
+  }
+    
+  for(j=0;j<End_;j++)
+  {
+    Min_Time = 2000;
+    Max_Time = 0;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),1);
+    FF_DL = _TPgetFF(1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      if(DiffTime>=Max_Time)
+        Max_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(j==0)
+    {
+      if(Min_Time<=Stmin[j])
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最小间隔时间小于 %d ms",Stmin[j]);
+      }
+      else
+        testStepPass("","最小间隔时间符合需求不小于 %d ms",Stmin[j]);
+    }
+    else if(j==1)
+    {
+      if(Min_Time<(Stmin[j] - N_Cs_Time_Tolerance) || Max_Time>(Stmin[j] + N_Cs_Time_Tolerance))
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"间隔时间不符合 %d ±%dms",Stmin[j],N_Cs_Time_Tolerance);
+      }
+      else
+        testStepPass("","间隔时间符合需求 %d ±%dms",Stmin[j],N_Cs_Time_Tolerance);
+    }
+    else
+    {
+      if(Max_Time>(N_Cs_Time + N_Cs_Time_Tolerance))
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"");
+        for(i=0;i<3;i++)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+        testStepFail(Temp_Str,"最大间隔时间大于 %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+      }
+      else
+        testStepPass("","最大间隔时间符合需求不大于 %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+    }
+    testWaitForTimeout(3000);
+  }
+}
+_CANFD_TP_Stmin_2()/* Stmin无效测试-us级值 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[3] = {0xF1,0xF5,0xF9};
+  int i,j;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,DiffTime,Max_Time;
+  char Temp_Str[50];
+  float _us;
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  for(j=0;j<elcount(Stmin);j++)
+  {
+    Min_Time = 2000;
+    Max_Time = 0;
+    _us = (Stmin[j]&0x0F)*0.1;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),1);
+    FF_DL = _TPgetFF(1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime <= Min_Time)
+        Min_Time  = DiffTime;
+      if(DiffTime >= Max_Time)
+        Max_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Min_Time<=_us)
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最小间隔时间小于 %.2f ms",_us);
+    }
+    else
+      testStepPass("","最小间隔时间符合需求不小于 %.2f ms",_us);
+    if(Max_Time>=N_Cr_Time)
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最大间隔时间大于 %d ms",N_Cr_Time);
+    }
+    else
+      testStepPass("","最大间隔时间符合需求不大于 %d ms",N_Cr_Time);
+    
+    testWaitForTimeout(3000);
+  }
+}
+
+_CANFD_TP_Stmin_3()/* Stmin无效测试-保留值 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Stmin[5] = {0x80,0xB0,0xF0,0xFA,0xFF};
+  int i,j;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,DiffTime;
+  char Temp_Str[50];
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  for(j=0;j<elcount(Stmin);j++)
+  {
+    Min_Time = 2000;
+    Data_Send_2[2] = Stmin[j];
+    
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),1);
+    FF_DL = _TPgetFF(1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+    
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Min_Time>(N_Cs_Time + N_Cs_Time_Tolerance) || Min_Time<(N_Cs_Time - N_Cs_Time_Tolerance))
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最小间隔时间小于 %d ±%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+    }
+    else
+      testStepPass("","最小间隔时间符合需求不小于 %d ms",N_Cs_Time);
+    
+    testWaitForTimeout(3000);
+  }
+}
+
+_CANFD_TP_FC_2() /*确认控制器发送的流控帧中的BS和STmin*/
+{
+  byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(0x30);
+}
+_CANFD_TP_FC_2_() /*确认控制器的流控制帧参数STmin有效*/
+{
+  byte Data[64] = {0x10,0xFB,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
+  int i;
+  _Get_DID_TP(Data,3);
+  _TPsendmsg_Phy(Data,elcount(Data),1);
+  _TPgetFC(0x30);
+  for(i=0x21;i<0x24;i++)
+  {
+    Data_1[0] = i;
+    _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
+  }
+  _Check_NRC(0);
+}
+_CANFD_TP_FC_3() /*上位机收到首帧后,不发送流控帧*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(1);
+  _Check_NoResponse(500);
+}
+_CANFD_TP_FC_4()/* 上位机收到首帧后,重复发送流控帧 */
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x28,0x55,0x55,0x55,0x55,0x55};
+  byte Data_Send_3[8] = {0x30,0x00,0x01,0x55,0x55,0x55,0x55,0x55};
+  int i;
+  int FF_DL,Temp_SN;
+  double start_time,end_time,Min_Time,DiffTime;
+  char Temp_Str[50];
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  {
+    Min_Time = 2000;
+    Data_Send_2[2] = N_Cs_Time;
+    _TPsendmsg_Phy(Data_Send_1,elCount(Data_Send_1),1);
+    FF_DL = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_Send_2,elCount(Data_Send_2),1);
+    _TPsendmsg_Phy(Data_Send_3,elCount(Data_Send_3),1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    _Check_TPgetCF(1,FF_DL,1);
+    for(i=2;i<=Temp_SN;i++)
+    {
+      start_time = (double)timeNow()/100;
+      _Check_TPgetCF(1,FF_DL,i);
+      end_time=(double)timeNow()/100; 
+      DiffTime = (double)(end_time - start_time);
+      if(DiffTime<=Min_Time)
+        Min_Time  = DiffTime;
+      writeEx(-3,0,"%.2f ms",DiffTime);
+    }
+    if(Min_Time<=N_Cs_Time - N_Cs_Time_Tolerance)
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最小间隔时间小于 %d ms,不符合第一帧流控帧值",N_Cs_Time);
+    }
+    if(Min_Time>=N_Cs_Time + N_Cs_Time_Tolerance)
+    {
+      snprintf(Temp_Str,elCount(Temp_Str),"");
+      for(i=0;i<3;i++)
+        snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
+      testStepFail(Temp_Str,"最小间隔时间大于 %d ms,不符合第一帧流控帧值",N_Cs_Time);
+    }
+    else
+      testStepPass("","最小间隔时间符合需求在 %d ± %dms内,符合第一帧流控帧值",N_Cs_Time,N_Cs_Time_Tolerance);
+    
+    testWaitForTimeout(1000);
+  }
+}
+
+_CANFD_TP_FC_5() /*长度不正确流控制帧*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(1);
+  _TPsendmsg_Phy(Data_Send_2,6,1);
+  _Check_NoResponse(500);
+}
+_CANFD_TP_FC_6() /*上位机发送功能寻址流控帧*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(1);
+  _TPsendmsg_Fun(Data_Send_2,elcount(Data_Send_2),1);
+  _Check_NoResponse(500);
+}
+_CANFD_TP_FC_7() /*流控制状态为OVFLW溢出*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x32,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(1);
+  _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+  _Check_NoResponse(500);
+}
+
+_CANFD_TP_FC_8() /*控制器收到的BlockSize测试*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte BlockSize[5] = {0x00,0x01,0x02,0x08,0xFF};
+  int i,j,FF_DL,Temp_SN,Fal;
+  
+  if(DID_22_Support>=3)
+  {
+    Data_Send_1[0] = 0x07;
+    Data_Send_1[4] = 0x35;
+    Data_Send_1[5] = 0x70;
+    Data_Send_1[6] = 0x35;
+    Data_Send_1[7] = 0x70;
+  }
+  for(j=0;j<elcount(BlockSize);j++)
+  {
+    Data_Send_2[1] = BlockSize[j];
+    _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+    FF_DL = _TPgetFF(1);
+    _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+    Temp_SN = _Get_CF_SN(FF_DL);
+    if(BlockSize[j] != 0)
+    {
+      for(i=1;i<=BlockSize[j];i++)
+      {
+        if(i>Temp_SN)
+          break;
+        _Check_TPgetCF(1,FF_DL,i);
+      }
+      Fal = _Check_NoResponse_(500);
+      if(Fal == -1)
+        testStepFail("","0x%02X BlockSize块收到超过预期的流控帧数量",BlockSize[j]);
+      else
+        testStepPass("","0x%02X BlockSize块收到符合预期的流控帧数量",BlockSize[j]);
+    }
+    else
+    {
+      for(i=1;i<=Temp_SN;i++)
+        _Check_TPgetCF(1,FF_DL,i);
+      Fal = _Check_NoResponse_(500);
+      if(Fal == -1)
+        testStepFail("","0x%02X BlockSize块收到超过预期的流控帧数量",BlockSize[j]);
+      else
+        testStepPass("","0x%02X BlockSize块收到符合预期的流控帧数量",BlockSize[j]);
+    
+    }
+    testWaitForTimeout(3000);
+  }
+}
+
+_CANFD_TP_FC_10() /*无效流控制帧-FS无效值*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Da[3] = {0x33,0x39,0x3F};
+  int i;
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(1);
+  for(i=0;i<elcount(Da);i++)
+  {
+    _Check_NoResponse(20);
+    Data_Send_2[0] = Da[i];
+    _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+  }
+  _Check_NoResponse(500);
+}
+
+_CANFD_TP_FC_11() /*等待流控制帧*/
+{
+  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+  byte Data_Send_2[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_Send_3[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  int i,FF_DL,Temp_SN;
+  
+  _Get_DID_TP(Data_Send_1,2);
+  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+  
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(1);
+  _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+  _Check_NoResponse(N_Bs_Time+5);
+  _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_3),1);
+  _Check_NoResponse(500);
+  testWaitForTimeout(2000);
+  
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  FF_DL = _TPgetFF(1);
+  Temp_SN = _Get_CF_SN(FF_DL);
+  _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+  _Check_NoResponse(N_Bs_Time-5);
+  _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_3),1);
+  for(i=1;i<=Temp_SN;i++)
+    _Check_TPgetCF(1,FF_DL,i);
+  
+  testWaitForTimeout(2000);
+}
+
+_CANFD_TP_FC_12() /*流控帧请求测试*/
+{
+  byte Data_Send_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(0);
+}
+_CANFD_TP_FC_13() /*发送未知类型的诊断帧*/
+{
+  byte Data_Send_1[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
+  
+  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+  _TPgetFF(0);
+}
+
+
+testcase Can_TP_SF_1()/*单帧请求报文SF_DL错误测试*/
+{
+  Init_TP();
+  _CAN_TP_SF_1();
+  End_TP();
+}
+testcase Can_TP_SF_2()/*单帧请求CAN帧报文的DLC错误测试*/
+{
+  Init_TP();
+  _CAN_TP_SF_2();
+  End_TP();
+}
+testcase Can_TP_SF_3() /*单帧请求CAN帧报文的DLC错误测试*/
+{
+  Init_TP();
+  _CAN_TP_SF_3();
+  End_TP();
+}
+testcase Can_TP_SF_4()/*单帧请求CAN帧报文的DLC错误测试*/
+{
+  Init_TP();
+  _CAN_TP_SF_4();
+  End_TP();
+}
+testcase Can_TP_SF_5() /*协议控制信息为FF的单帧请求报文测试*/
+{
+  Init_TP();
+  _CAN_TP_SF_5();
+  End_TP();
+}
+testcase Can_TP_SF_6()/*确认控制器发送的单帧响应报文SF_DL有效*/
+{
+  Init_TP();
+  _CAN_TP_SF_6();
+  End_TP();
+}
+testcase Can_TP_SF_7()/*确认控制器发送的单帧响应报文SF_DL有效*/
+{
+  Init_TP();
+  _CAN_TP_SF_7();
+  End_TP();
+}
+testcase Can_TP_FF_1()/*首帧请求报文FF_DL错误测试*/
+{
+  Init_TP();
+  _CAN_TP_FF_1();
+  End_TP();
+}
+testcase Can_TP_FF_2()/*首帧请求报文FF_DL错误测试*/
+{
+  Init_TP();
+  _CAN_TP_FF_2();
+  End_TP();
+}
+testcase Can_TP_FF_3()/*首帧请求报文FF_DL错误测试*/
+{
+  Init_TP();
+  _CAN_TP_FF_3();
+  End_TP();
+}
+testcase Can_TP_FF_4()/*功能寻址请求首帧测试*/
+{
+  Init_TP();
+  _CAN_TP_FF_4();
+  End_TP();
+}
+testcase Can_TP_FF_5()/*确认控制器发送的首帧响应报文FF_DL*/
+{
+  Init_TP();
+  _CAN_TP_FF_5();
+  End_TP();
+}
+testcase Can_TP_CF_1()/*停止发送后续部分连续帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_1();
+  End_TP();
+}
+testcase Can_TP_CF_2()/*不发送所有连续帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_2();
+  End_TP();
+}
+testcase Can_TP_CF_3()/*不发送某连续帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_3();
+  End_TP();
+}
+testcase Can_TP_CF_4()/*重复发送第一个连续帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_4();
+  End_TP();
+}
+testcase Can_TP_CF_5()/*多帧请求报文连续帧DLC错误*/
+{
+  Init_TP();
+  _CAN_TP_CF_5();
+  End_TP();
+}
+testcase Can_TP_CF_7()/*错误连续帧报文*/
+{
+  Init_TP();
+  _CAN_TP_CF_7();
+  End_TP();
+}
+testcase Can_TP_CF_8()/*后续帧请求测试*/
+{
+  Init_TP();
+  _CAN_TP_CF_8();
+  End_TP();
+}
+testcase Can_TP_CF_9()/*确认控制器发送的流控帧中的BS和STmin*/
+{
+  Init_TP();
+  _CAN_TP_CF_9();
+  End_TP();
+}
+testcase Can_TP_CF_10()/*连续帧SN值测试*/ 
+{
+  Init_TP();
+  _CAN_TP_CF_10();
+  End_TP();
+}
+testcase Can_TP_CF_11()/*确认控制器的流控制帧参数STmin有效*/
+{
+  Init_TP();
+  _CAN_TP_CF_11();
+  End_TP();
+}
+testcase Can_TP_CF_12()/*不发送流控制帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_12();
+  End_TP();
+}
+testcase Can_TP_CF_13()/*重复发送流控制帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_13();
+  End_TP();
+}
+testcase Can_TP_CF_14()/*长度不正确流控制帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_14();
+  End_TP();
+}
+testcase Can_TP_CF_15()/*功能寻址流控制帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_15();
+  End_TP();
+}
+testcase Can_TP_CF_16()/*无效流控制帧-FS无效值*/
+{
+  Init_TP();
+  _CAN_TP_CF_16();
+  End_TP();
+}
+testcase Can_TP_CF_17()/*流控帧请求测试*/
+{
+  Init_TP();
+  _CAN_TP_CF_17();
+  End_TP();
+}
+testcase Can_TP_CF_18()/*流控制状态为OVFLW溢出*/
+{
+  Init_TP();
+  _CAN_TP_CF_18();
+  End_TP();
+}
+testcase Can_TP_CF_19()/*等待流控制帧*/
+{
+  Init_TP();
+  _CAN_TP_CF_19();
+  End_TP();
+}
+testcase Can_TP_CF_20()/*未知请求报文测试*/
+{
+  Init_TP();
+  _CAN_TP_CF_20();
+  End_TP();
+}
+testcase Can_TP_Disturb_1()/*控制器多帧发送被非预期单帧请求报文干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_1();
+  End_TP();
+}
+testcase Can_TP_Disturb_2()/*控制器多帧发送被非预期多帧请求报文第一帧干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_2();
+  End_TP();
+}
+testcase Can_TP_Disturb_3()/*控制器多帧发送被非预期连续帧干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_3();
+  End_TP();
+}
+testcase Can_TP_Disturb_4()/*控制器多帧发送被非预期流控制帧干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_4();
+  End_TP();
+}
+testcase Can_TP_Disturb_5() /*控制器多帧发送被非预期未知报文干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_5();
+  End_TP();
+}
+testcase Can_TP_Disturb_6() /*控制器多帧接收被新的单帧请求报文干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_6();
+  End_TP();
+}
+testcase Can_TP_Disturb_7() /*控制器多帧接收被新的多帧请求报文第一帧干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_7();
+  End_TP();
+}
+testcase Can_TP_Disturb_8()/*握手命令干扰多帧请求*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_8();
+  End_TP();
+}
+testcase Can_TP_Disturb_9()/*控制器多帧接收被流控制报文干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_9();
+  End_TP();
+}
+testcase Can_TP_Disturb_10()/*控制器多帧接收被未知报文干扰*/
+{
+  Init_TP();
+  _CAN_TP_Disturb_10();
+  End_TP();
+}
+testcase Can_TP_Time_1()/* N_Bs时间测试 */
+{
+  Init_TP();
+  _CAN_TP_Time_1();
+  End_TP();
+}
+testcase Can_TP_Time_2()/* N_Cr时间测试 */
+{
+  Init_TP();
+  _CAN_TP_Time_2();
+  End_TP();
+}
+testcase Can_TP_Time_3()/* BS值测试 */
+{
+  Init_TP();
+  _CAN_TP_Time_3();
+  End_TP();
+}
+testcase Can_TP_Time_4()/* N_Cs时间测试 */
+{
+  Init_TP();
+  _CAN_TP_Time_4();
+  End_TP();
+}
+testcase Can_TP_Time_5()/* N_Br时间测试 */
+{
+  Init_TP();
+  _CAN_TP_Time_5();
+  End_TP();
+}
+
+testcase Can_TP_Stmin_1()/* Stmin值测试 */
+{
+  Init_TP();
+  _CAN_TP_Stmin_1();
+  End_TP();
+}
+testcase Can_TP_Stmin_1_()/* Stmin值测试-边界值 */
+{
+  Init_TP();
+  _CAN_TP_Stmin_1_();
+  End_TP();
+}
+testcase Can_TP_Stmin_2()/* Stmin无效测试-us级值 */
+{
+  Init_TP();
+  _CAN_TP_Stmin_2();
+  End_TP();
+}
+testcase Can_TP_Stmin_3()/* Stmin无效测试-保留值 */
+{
+  Init_TP();
+  _CAN_TP_Stmin_3();
+  End_TP();
+}
+testcase Can_TP_FC_8()/* 控制器收到的BlockSize测试 */
+{
+  Init_TP();
+  _CAN_TP_FC_8();
+  End_TP();
+}
+/************************CANFD********************/
+
+testcase CanFD_TP_SF_1() /*单帧请求报文（CAN_DL≤8）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_1();
+  End_TP();
+}
+testcase CanFD_TP_SF_2() /*单帧请求报文（CAN_DL=12）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_2();
+  End_TP();
+}
+testcase CanFD_TP_SF_3() /*单帧请求报文（CAN_DL=16）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_3();
+  End_TP();
+}
+testcase CanFD_TP_SF_4() /*单帧请求报文（CAN_DL=20）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_4();
+  End_TP();
+}
+testcase CanFD_TP_SF_5() /*单帧请求报文（CAN_DL=24）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_5();
+  End_TP();
+}
+testcase CanFD_TP_SF_6() /*单帧请求报文（CAN_DL=32）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_6();
+  End_TP();
+}
+testcase CanFD_TP_SF_7() /*单帧请求报文（CAN_DL=48）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_7();
+  End_TP();
+}
+testcase CanFD_TP_SF_8() /*单帧请求报文（CAN_DL=64）SF_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_SF_8();
+  End_TP();
+}
+testcase CanFD_TP_SF_9() /*协议控制信息为FF的单帧请求报文测试(CAN_DL)*/
+{
+  Init_TP();
+  _CANFD_TP_SF_9();
+  End_TP();
+}
+testcase CanFD_TP_FF_1() /*首帧请求报文FF_DL错误测试*/
+{
+  Init_TP();
+  _CANFD_TP_FF_1();
+  End_TP();
+}
+testcase CanFD_TP_FF_2() /*首帧请求报文FF_DL错误测试*/
+{
+  Init_TP();
+  _CANFD_TP_FF_2();
+  End_TP();
+}
+testcase CanFD_TP_FF_3() /*功能寻址请求首帧测试*/
+{
+  Init_TP();
+  _CANFD_TP_FF_3();
+  End_TP();
+}
+testcase CanFD_TP_FF_4() /*FF_DL<4095*/
+{
+  Init_TP();
+  _CANFD_TP_FF_4();
+  End_TP();
+}
+testcase CanFD_TP_FF_5() /*FF_DL>4095*/
+{
+  Init_TP();
+  _CANFD_TP_FF_5();
+  End_TP();
+}
+testcase CanFD_TP_CF_1() /*停止发送后续部分连续帧*/
+{
+  Init_TP();
+  _CANFD_TP_CF_1();
+  End_TP();
+}
+testcase CanFD_TP_CF_2() /*不发送所有连续帧*/
+{
+  Init_TP();
+  _CANFD_TP_CF_2();
+  End_TP();
+}
+testcase CanFD_TP_CF_3() /*不发送某连续帧*/
+{
+  Init_TP();
+  _CANFD_TP_CF_3();
+  End_TP();
+}
+testcase CanFD_TP_CF_4() /*重复发送第一个连续帧*/
+{
+  Init_TP();
+  _CANFD_TP_CF_4();
+  End_TP();
+}
+testcase CanFD_TP_CF_6() /*SN>15从1开始*/
+{
+  Init_TP();
+  _CANFD_TP_CF_6();
+  End_TP();
+}
+testcase CanFD_TP_CF_7() /*错误连续帧报文*/
+{
+  Init_TP();
+  _CANFD_TP_CF_7();
+  End_TP();
+}
+testcase CanFD_TP_CF_8() /*后续帧请求测试*/
+{
+  Init_TP();
+  _CANFD_TP_CF_8();
+  End_TP();
+}
+testcase CanFD_TP_CF_9() /*最后一个连续帧CAN_DL测试*/
+{
+  Init_TP();
+  _CANFD_TP_CF_9();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_1()/*控制器多帧发送被非预期单帧请求报文干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_1();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_2()/*控制器多帧发送被非预期多帧请求报文第一帧干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_2();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_3()/*控制器多帧发送被非预期连续帧干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_3();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_4()/*控制器多帧发送被非预期流控制帧干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_4();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_5() /*控制器多帧发送被非预期未知报文干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_5();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_6() /*控制器多帧接收被新的单帧请求报文干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_6();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_7() /*控制器多帧接收被新的多帧请求报文第一帧干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_7();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_8()/*握手命令干扰多帧请求*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_8();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_9()/*控制器多帧接收被流控制报文干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_9();
+  End_TP();
+}
+testcase CanFD_TP_Disturb_10()/*控制器多帧接收被未知报文干扰*/
+{
+  Init_TP();
+  _CANFD_TP_Disturb_10();
+  End_TP();
+}
+testcase CanFD_TP_Time_1()/* N_Bs时间测试 */
+{
+  Init_TP();
+  _CANFD_TP_Time_1();
+  End_TP();
+}
+testcase CanFD_TP_Time_2()/* N_Cr时间测试 */
+{
+  Init_TP();
+  _CANFD_TP_Time_2();
+  End_TP();
+}
+testcase CanFD_TP_Time_3()/* EPS应答流控帧BS值测试 */
+{
+  Init_TP();
+  _CANFD_TP_FC_1();
+  End_TP();
+}
+testcase CanFD_TP_Time_4()/* N_Cs时间测试 */
+{
+  Init_TP();
+  _CANFD_TP_Time_4();
+  End_TP();
+}
+testcase CanFD_TP_Time_5()/* N_Br时间测试 */
+{
+  Init_TP();
+  _CANFD_TP_Time_5();
+  End_TP();
+}
+
+testcase CANFD_TP_Stmin_1()/* Stmin值测试 */
+{
+  Init_TP();
+  _CANFD_TP_Stmin_1();
+  End_TP();
+}
+testcase CANFD_TP_Stmin_1_()/* Stmin值测试-边界值 */
+{
+  Init_TP();
+  _CANFD_TP_Stmin_1_();
+  End_TP();
+}
+testcase CANFD_TP_Stmin_2()/* Stmin无效测试-us级值 */
+{
+  Init_TP();
+  _CANFD_TP_Stmin_2();
+  End_TP();
+}
+testcase CANFD_TP_Stmin_3()/* Stmin无效测试-保留值 */
+{
+  Init_TP();
+  _CANFD_TP_Stmin_3();
+  End_TP();
+}
+testcase CANFD_TP_FC_2()/* 确认控制器发送的流控帧中的BS和STmin */
+{
+  Init_TP();
+  _CANFD_TP_FC_2();
+  End_TP();
+}
+testcase CANFD_TP_FC_2_()/* 确认控制器的流控制帧参数STmin有效 */
+{
+  Init_TP();
+  _CANFD_TP_FC_2_();
+  End_TP();
+}
+testcase CANFD_TP_FC_3()/* 上位机收到首帧后,不发送流控帧 */
+{
+  Init_TP();
+  _CANFD_TP_FC_3();
+  End_TP();
+}
+testcase CANFD_TP_FC_4()/* 上位机收到首帧后,重复发送流控帧 */
+{
+  Init_TP();
+  _CANFD_TP_FC_4();
+  End_TP();
+}
+testcase CANFD_TP_FC_5()/* 长度不正确流控制帧 */
+{
+  Init_TP();
+  _CANFD_TP_FC_5();
+  End_TP();
+}
+testcase CANFD_TP_FC_6()/* 上位机发送功能寻址流控帧 */
+{
+  Init_TP();
+  _CANFD_TP_FC_6();
+  End_TP();
+}
+testcase CANFD_TP_FC_7()/* 流控制状态为OVFLW溢出 */
+{
+  Init_TP();
+  _CANFD_TP_FC_7();
+  End_TP();
+}
+testcase CANFD_TP_FC_8()/* 控制器收到的BlockSize测试 */
+{
+  Init_TP();
+  _CANFD_TP_FC_8();
+  End_TP();
+}
+testcase CANFD_TP_FC_10()/* 无效流控制帧-FS无效值 */
+{
+  Init_TP();
+  _CANFD_TP_FC_10();
+  End_TP();
+}
+testcase CANFD_TP_FC_11()/* 等待流控制帧 */
+{
+  Init_TP();
+  _CANFD_TP_FC_11();
+  End_TP();
+}
+testcase CANFD_TP_FC_12()/* 流控帧请求测试 */
+{
+  Init_TP();
+  _CANFD_TP_FC_12();
+  End_TP();
+}
+testcase CANFD_TP_FC_13()/* 发送未知类型的诊断帧 */
+{
+  Init_TP();
+  _CANFD_TP_FC_13();
+  End_TP();
+}

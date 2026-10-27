@@ -1,0 +1,1484 @@
+/*@!Encoding:936*/
+includes
+{
+  #include "CCP_Config.cin"
+  #include "Geely_CCP_VauleTestCase.cin"
+}
+
+variables
+{
+  Byte Get_CCP[3];
+  dword CCP_Time = 32000; //CCP故障被诊断时间
+  dword CCP_Lost_Invalid[2][20];
+}
+
+_Init_CCP_()
+{
+  Init();
+  Get_CCP[0] = 0x22;
+  Get_CCP[1] = 0xE1;
+  Get_CCP[2] = 0x03;
+  init_CCP_ALL();
+  Send_Invaild_CCP_Plural_Count = 0;
+  Send_Invaild_CCP_Count = 0;
+  Send_Vaild_CCP_Plural_Count = 0;
+  _Set_Ready(0);
+  testWaitForTimeout(200);
+  ccpNumscount = elcount(ccpNums);
+}
+
+void CCP_1()  /*没有接收到VCP信号-默认状态*/
+{
+  _Clear_CCP();
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+}
+
+void CCP_2()  /*没有接收到完整的VCP信号*/
+{
+  _Clear_CCP();
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  Sendccp(1);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+}
+
+void CCP_3()  /*无效的VCP信号接收*/
+{
+  dword DTC_CCP[2];
+  _Clear_CCP();
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(24000);
+  Sendccp(2);
+  testWaitForTimeout(CCP_Time-24000);
+  _Check_DTC_Res_NowOrHis(9,1,0,DTC_CCP);
+  _Check_E103_Invalid(1);
+}
+
+void CCP_4()  /*无效的某个CCP信号接收*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP();
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(24000);
+  Sendccp(3);
+  testWaitForTimeout(CCP_Time-24000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_Res_NowOrHis(9,1,0,DTC_CCP);
+}
+
+void CCP_5()  /*接收有效的VCP信号过程中断电*/
+{
+  dword DTC_CCP[2];
+  _Clear_CCP();
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(4);
+  testWaitForTimeout(6000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Sendccp(0);
+  testWaitForTimeout(2000);
+  
+  _K30_OFF();
+  testWaitForTimeout(3000);
+  _K30_ON();
+  testWaitForTimeout(6000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_6(byte Type)  /*丢失与无效同时存在*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  CCP_Lost_Invalid[0][0] = ccpNums[4];
+  CCP_Lost_Invalid[0][1] = ccpNums[5];
+  CCP_Lost_Invalid[1][0] = ccpNums[1];
+  CCP_Lost_Invalid[1][1] = ccpNums[2];
+  if(Type == 0)
+  {
+    _Clear_CCP();
+    _Set_Ready(0);
+    testWaitForTimeout(500);
+  }
+  else
+    _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(CCP_Lost_Invalid,2,2,0,DTC_CCP);
+  testWaitForTimeout(1000);
+  _Set_Ready(1);
+  testWaitForTimeout(1000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(10000);
+  _Set_Ready(1);
+  testWaitForTimeout(1000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_7(byte Type)  /*报故障码的前提条件-Car Mode=0：normal*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  if(Type == 0)
+  {
+    _Clear_CCP();
+    _Set_Ready(0);
+    testWaitForTimeout(500);
+  }
+  else
+    _Clear_CCP_Config();
+
+  _Set_Sig(CarMode_Sig,1);
+  testWaitForTimeout(2000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Sig(CarMode_Sig,2);
+  testWaitForTimeout(6000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Sig(CarMode_Sig,3);
+  testWaitForTimeout(6000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Sig(CarMode_Sig,5);
+  testWaitForTimeout(6000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Sig(CarMode_Sig,0);
+  testWaitForTimeout(6000);
+  if(Type == 0)
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+  else
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_8(byte Type)  /*报故障码的前提条件-电压9_18V*/
+{
+  dword DTC_CCP[2];
+  byte Send_Data[3];
+  int Fun_DIDPos;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(0xD111);
+  if(Fun_DIDPos!= -1)
+  {
+    Send_Data[0] = 0x22;
+    Send_Data[1] = DID_Function[Fun_DIDPos].DID_Byte[0];
+    Send_Data[2] = DID_Function[Fun_DIDPos].DID_Byte[1];
+  }
+
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  if(Type == 0)
+  {
+    _Clear_CCP();
+    _Set_Ready(0);
+    testWaitForTimeout(500);
+  }
+  else
+    _Clear_CCP_Config();
+
+  _Set_Battery(8.9);
+  if(Fun_DIDPos!= -1)
+    Check_ReadFunDID(Send_Data,Fun_DIDPos,phyreq_ID,1,8.8,0,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+   _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Battery(18.3);
+  if(Fun_DIDPos!= -1)
+    Check_ReadFunDID(Send_Data,Fun_DIDPos,phyreq_ID,1,18.3,0,0);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Battery(12);
+  if(Fun_DIDPos!= -1)
+    Check_ReadFunDID(Send_Data,Fun_DIDPos,phyreq_ID,1,12,0,0);
+  testWaitForTimeout(2000);
+  if(Type == 0)
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+  else
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_9(byte Type)  /*报故障码的前提条件-ElPowerLevel !=1 or 2*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  if(Type == 0)
+  {
+    _Clear_CCP();
+    _Set_Ready(0);
+    testWaitForTimeout(500);
+  }
+  else
+    _Clear_CCP_Config();
+
+  _Set_Sig(PwrLvlElecSubtyp_Sig,0);
+  _Set_Sig(PwrLvlElecMai_Sig,1);
+  testWaitForTimeout(2000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time+1000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Sig(PwrLvlElecMai_Sig,2);
+  testWaitForTimeout(2000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Sig(PwrLvlElecMai_Sig,3);
+  testWaitForTimeout(2000);
+  if(Type == 0)
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+  else
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_10()  /*14清除未配置故障码*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP();
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+
+  _Clear_DTC(phyreq_ID);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_11()  /*有效的VCP信号接收*/
+{
+  dword DTC_CCP[2];
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Sendccp(0);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_InHis_NotNowOrHis(9,0xE30055,0xE30056);
+
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_InNow_InHis(9,0xE30056,0xE30055);
+}
+
+void CCP_12()  /*没有接收到完整的VCP信号——先正常后缺失部分CCP*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  Sendccp(1);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_13()  /*随机的VCP信号接收*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  SendccpRandom(0);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_14()  /*先有效后无效*/
+{
+  _Clear_CCP_Config();
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(24000);
+  Sendccp(2);
+  testWaitForTimeout(CCP_Time-23000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_15()  /*改变Useage mode(0x2E0)*/
+{
+  int j,i;
+  int Ready_InActiveValue[3] = {0,1,2};
+  int Ready_ActiveValue[2] = {11,13};
+  _Clear_CCP_Config();
+
+  for(j=0;j<elcount(Ready_ActiveValue);j++)
+  {
+    for(i=0;i<elcount(Ready_InActiveValue);i++)
+    {
+      _Set_Ready(Ready_ActiveValue[j]);
+      testWaitForTimeout(24000);
+      Sendccp(2);
+      testWaitForTimeout(CCP_Time-24000);
+      _Check_E103_Invalid(1);
+      _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+      _Set_Ready(Ready_InActiveValue[i]);
+      testWaitForTimeout(1000);
+      _Set_Ready(Ready_ActiveValue[j]);
+      testWaitForTimeout(5000);
+      Sendccp(0);
+      testWaitForTimeout(CCP_Time-5000);
+      _Check_E103_ALL_0();
+      _Check_DTC_Res_InHis_NotNowOrHis(9,0xE30056,0xE30055);
+      _Set_Ready(0);
+      testWaitForTimeout(1000);
+    }
+  }
+}
+
+void CCP_16()  /*有效-无效-无效CCP*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  Sendccp(0);
+  testWaitForTimeout(9000);
+  Sendccp(0x08);
+  testWaitForTimeout(10000);
+  Sendccp(0x09);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_18()  /*无效-有效-无效CCP*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  Sendccp(0x08);
+  testWaitForTimeout(10000);
+  Sendccp(0);
+  testWaitForTimeout(12000);
+  Sendccp(0x09);
+  testWaitForTimeout(CCP_Time-23000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_19()  /*无效-无效-有效CCP*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  Sendccp(0x08);
+  testWaitForTimeout(10000);
+  Sendccp(0x09);
+  testWaitForTimeout(12000);
+  Sendccp(0);
+  testWaitForTimeout(CCP_Time-23000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+// void CCP_17()  /*无效-无效-无效CCP*/
+// {
+//   dword DTC_CCP[2];
+//   DTC_CCP[0] = 0xE30055;
+//   DTC_CCP[1] = 0xE30056;
+//   _Clear_CCP_Config();
+//   testWaitForTimeout(3000);
+//   Sendccp(0);
+//   testWaitForTimeout(CCP_Time-3000);
+//   _Check_E103_ALL_0();
+//   _Check_DTC_Res(9,1,DTC_CCP);
+//   _Clear_DTC(phyreq_ID);
+//   _Check_E103_ALL_0();
+//   _Check_DTC_Res(9,1,DTC_CCP);
+//   _Set_Ready(0);
+//   testWaitForTimeout(1000);
+//   _K15_OFF();
+//   testWaitForTimeout(K15_OFF_Time);
+//   _K15_ON();
+//   testWaitForTimeout(2000);
+//   _Set_Ready(Struct_Ready.Ready_Active);
+//   testWaitForTimeout(1000);
+//   Sendccp(0x08);
+//   testWaitForTimeout(10000);
+//   Sendccp(0x0A);
+//   testWaitForTimeout(10000);
+//   Sendccp(0x09);
+//   testWaitForTimeout(CCP_Time-21000);
+//   _Check_E103_Invalid(1);
+//   _Check_DTC_Res(9,0xE30056,0xE30055);
+// }
+
+void CCP_20()  /*无效值覆盖_CCP[1]=00_所有CCP=FF(GEEA3.5)*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  sendccp(ccpNums[0],0);
+  testWaitForTimeout(CCP_Time-3000);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+  
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _K15_OFF();
+  testWaitForTimeout(K15_OFF_Time);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  _Check_E103_ALL_0();
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(10000);
+  Sendccp(0x09);
+  testWaitForTimeout(4000);
+  _Check_E103_ALL_0();
+  testWaitForTimeout(CCP_Time-14000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  
+  _Set_Ready(1);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_20_1()  /*无效值覆盖_CCP[1]=00_所有CCP=FF(GEEA3.0)*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(23000);
+  sendccp(ccpNums[0],0);
+  testWaitForTimeout(CCP_Time-23000);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+  
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(23000);
+  Sendccp(0x09);
+  testWaitForTimeout(CCP_Time-23000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_21()  /*无效值覆盖_CCP[1]=00_所有CCP未发送(GEEA3.5)*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(23000);
+  sendccp(ccpNums[0],0);
+  testWaitForTimeout(CCP_Time-23000);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_21_1()  /*无效值覆盖_CCP[1]=00_所有CCP未发送(GEEA3.0)*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(23000);
+  sendccp(ccpNums[0],0);
+  testWaitForTimeout(CCP_Time-23000);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_22()  /*无效值覆盖_CCP[1]=00_CCP[3]=00(GEEA3.5)*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(24000);
+  sendccp(ccpNums[0],0);
+  testWaitForTimeout(CCP_Time-24000);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(24000);
+  sendccp(ccpNums[1],0);
+  testWaitForTimeout(CCP_Time-24000);
+  E103(ccpNums[1],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_22_1()  /*无效值覆盖_CCP[1]=00_CCP[3]=00(GEEA3.0)*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(24000);
+  sendccp(ccpNums[0],0);
+  testWaitForTimeout(CCP_Time-24000);
+  E103(ccpNums[0],1,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(24000);
+  sendccp(ccpNums[1],0);
+  testWaitForTimeout(CCP_Time-24000);
+  Send_Invaild_CCP_Count = 2;
+  Send_Invaild_CCP[0][0] = ccpNums[0];
+  Send_Invaild_CCP[0][1] = 0;
+  Send_Invaild_CCP[1][0] = ccpNums[1];
+  Send_Invaild_CCP[1][1] = 0;
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_23()  /*无效值覆盖_所有CCP=00_所有CCP=FF(GEEA3.5)*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  Sendccp(0x08);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  Sendccp(0x09);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_23_1()  /*无效值覆盖_所有CCP=00_所有CCP=FF(GEEA3.0)*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  Sendccp(0x88);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  Sendccp(0x89);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+void CCP_24()  /*无效值覆盖_所有CCP=FF_所有CCP=FF*/
+{
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  Sendccp(0x09);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  Sendccp(0x09);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+/*
+  Type用于区分3.0/3.5策略
+  Type = 0: 3.0策略，按照接收CCP顺序记录无效值
+  Type = 1: 3.5策略，从小到大重新排列CCP记录无效值
+*/
+void CCP_25(byte Type)  /*无效值覆盖（随机无效值被有效值覆盖）*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  SendccpRandom(1);
+  testWaitForTimeout(CCP_Time-22000);
+  if(Type == 1)
+    _Sort_InPut_Arry(Send_Invaild_CCP,Send_Invaild_CCP_Count,elcount(Send_Invaild_CCP));
+  _Check_E103_Invalid(1);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(22000);
+  Sendccp(0);
+  testWaitForTimeout(CCP_Time-22000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_InHis_NotNowOrHis(9,0xE30056,0xE30055);
+}
+
+void CCP_26(byte Type)  /*无效CCP参数记录_仅记录前10个*/
+{
+  _Clear_CCP_Config();
+  {
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(24000);
+    SendccpRandom(2);
+    if(Type == 1)
+      _Sort_InPut_Arry(Send_Invaild_CCP,Send_Invaild_CCP_Count,elcount(Send_Invaild_CCP));
+    testWaitForTimeout(CCP_Time-24000);
+    _Check_E103_Invalid(1);
+  }
+}
+
+void CCP_27(byte Type)  /*无效CCP参数记录_仅记录前10个无效CCP*/
+{
+  _Clear_CCP_Config();
+  {
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(24000);
+    SendccpRandom(3);
+    testWaitForTimeout(CCP_Time-24000);
+    if(Type == 1)
+      _Sort_InPut_Arry(Send_Invaild_CCP,Send_Invaild_CCP_Count,elcount(Send_Invaild_CCP));
+    _Check_E103_Invalid(1);
+  }
+}
+
+void CCP_28(byte Type)  /*无效CCP参数记录_多次发送不同无效值（GEEA3.5)*/
+{
+  _Clear_CCP_Config();
+  {
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x08);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(9000);
+    Sendccp(0x0A);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(8000);
+    Sendccp(0x09);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(CCP_Time-21000);
+    _Check_E103_Invalid(1);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤1-4完成");
+  }
+  {
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    if(Type == 1)
+    {
+      _K15_OFF();
+      testWaitForTimeout(K15_OFF_Time);
+      _K15_ON();
+      testWaitForTimeout(2000);
+      _Check_E103_ALL_0();
+    }
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x09);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(9000);
+    Sendccp(0x08);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(8000);
+    Sendccp(0x0A);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(CCP_Time-21000);
+    _Check_E103_Invalid(1);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤5-8完成");
+  }
+  {
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    if(Type == 1)
+    {
+      _K15_OFF();
+      testWaitForTimeout(K15_OFF_Time);
+      _K15_ON();
+      testWaitForTimeout(2000);
+      _Check_E103_ALL_0();
+    }
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x0A);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(9000);
+    Sendccp(0x09);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(8000);
+    Sendccp(0x08);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(CCP_Time-20000);
+    _Check_E103_Invalid(1);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤9-12完成");
+  }
+  {
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    if(Type == 1)
+    {
+      _K15_OFF();
+      testWaitForTimeout(K15_OFF_Time);
+      _K15_ON();
+      testWaitForTimeout(2000);
+      _Check_E103_ALL_0();
+    }
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x08);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(9000);
+    Sendccp(0x09);
+    _Check_E103_ALL_0();
+    testWaitForTimeout(8000);
+    testWaitForTimeout(CCP_Time-20000);
+    _Check_E103_Invalid(1);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤13-16完成");
+  }
+}
+
+void CCP_29(byte Type)  /*无效CCP参数记录_多次发送不同无效值（GEEA3.0)*/
+{
+  int i,n;
+  int Temp,Flage;
+  
+  _Clear_CCP_Config();
+  {
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x08);
+    testWaitForTimeout(9000);
+    Sendccp(0x0A);
+    testWaitForTimeout(8000);
+    Sendccp(0x09);
+    
+    for(i=0;i<Send_Invaild_CCP_Count;i++)
+    {
+      Send_Invaild_CCP_Plural[i][0] = Send_Invaild_CCP[i][0];
+      Send_Invaild_CCP_Plural[i][1] = Send_Invaild_CCP[i][1];
+    }
+    Temp = Send_Invaild_CCP_Count;
+    testWaitForTimeout(CCP_Time-21000);
+    _Check_E103_Invalid(1);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤1-4完成");
+  }
+  {
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    if(Type == 1)
+    {
+      _K15_OFF();
+      testWaitForTimeout(K15_OFF_Time);
+      _K15_ON();
+      testWaitForTimeout(2000);
+      _Check_E103_Invalid(1);
+    }
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x09);
+    testWaitForTimeout(9000);
+    Sendccp(0x08);
+    testWaitForTimeout(8000);
+    Sendccp(0x0A);
+    testWaitForTimeout(CCP_Time-21000);
+    Send_Invaild_CCP_Plural_Count = Temp + Send_Invaild_CCP_Count;
+    for(i=0;i<Send_Invaild_CCP_Count;i++)
+    {
+      Flage = _Check_Dword_in_Num(Send_Invaild_CCP[i][0],Send_Invaild_CCP_Plural,Send_Invaild_CCP_Plural_Count);
+      if(Flage != -1)
+      {
+        Send_Invaild_CCP_Plural[Flage][0] = Send_Invaild_CCP[i][0];
+        Send_Invaild_CCP_Plural[Flage][1] = Send_Invaild_CCP[i][1];
+      }
+    }
+//    for(i=0;i<Send_Invaild_CCP_Plural_Count;i++)
+//      writeEx(-3,0,"CCP[%d] = 0x%02X",Send_Invaild_CCP_Plural[i][0],Send_Invaild_CCP_Plural[i][1]);
+    Temp = Send_Invaild_CCP_Plural_Count;
+    _Check_E103_Invalid(2);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤5-8完成");
+  }
+  {
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    if(Type == 1)
+    {
+      _K15_OFF();
+      testWaitForTimeout(K15_OFF_Time);
+      _K15_ON();
+      testWaitForTimeout(2000);
+      _Check_E103_Invalid(2);
+    }
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x0A);
+    testWaitForTimeout(9000);
+    Sendccp(0x09);
+    testWaitForTimeout(8000);
+    Sendccp(0x08);
+    testWaitForTimeout(CCP_Time-20000);
+    Send_Invaild_CCP_Plural_Count = Temp + Send_Invaild_CCP_Count;
+    for(i=0;i<Send_Invaild_CCP_Count;i++)
+    {
+      Flage = _Check_Dword_in_Num(Send_Invaild_CCP[i][0],Send_Invaild_CCP_Plural,Send_Invaild_CCP_Plural_Count);
+      if(Flage != -1)
+      {
+        Send_Invaild_CCP_Plural[Flage][0] = Send_Invaild_CCP[i][0];
+        Send_Invaild_CCP_Plural[Flage][1] = Send_Invaild_CCP[i][1];
+      }
+    }
+    _Check_E103_Invalid(2);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤9-12完成");
+  }
+  {
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    if(Type == 1)
+    {
+      _K15_OFF();
+      testWaitForTimeout(K15_OFF_Time);
+      _K15_ON();
+      testWaitForTimeout(2000);
+      _Check_E103_Invalid(2);
+    }
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(4000);
+    Sendccp(0x08);
+    testWaitForTimeout(9000);
+    Sendccp(0x09);
+    testWaitForTimeout(8000);
+    testWaitForTimeout(CCP_Time-20000);
+    _Check_E103_Invalid(2);
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+    _WriteEx_and_Report("","步骤13-16完成");
+  }
+}
+
+void CCP_30()  /*无效CCP参数记录-无效个数最大记录值0xFF（GEEA3.0）*/
+{
+  int i;
+
+  _Clear_CCP_Config();
+
+  for(i=0;i<260;i+=ccpNumscount)
+  {
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(24000);
+    Sendccp(0x82);
+    testWaitForTimeout(1000);
+    testWaitForTimeout(CCP_Time-24000);
+    if(i==0)
+      _Check_E103_Invalid(1);
+  }
+  _Check_E103_Invalid(1);
+}
+
+void CCP_31()  /*接收有效的VCP信号过程中断电*/
+{
+  dword DTC_CCP[2];
+  byte DiagSend[3] = {0x19,0x02,0x09};
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(12000);
+  Sendccp(4);
+  testWaitForTimeout(CCP_Time-10000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_32()  /*接收无效的VCP信号过程中断电*/
+{
+  dword DTC_CCP[2];
+  byte DiagSend[3] = {0x19,0x02,0x09};
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(12000);
+  Sendccp(0x14);
+  testWaitForTimeout(CCP_Time-10000);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_33()  /*报故障码的前提条件-电压9_18V*/
+{
+  dword DTC_CCP[2];
+  byte Send_Data[3];
+  int Fun_DIDPos;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(0xD111);
+  
+  if(Fun_DIDPos!= -1)
+  {
+    Send_Data[0] = 0x22;
+    Send_Data[1] = DID_Function[Fun_DIDPos].DID_Byte[0];
+    Send_Data[2] = DID_Function[Fun_DIDPos].DID_Byte[1];
+  }
+
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+
+  _Set_Battery(8.9);
+  if(Fun_DIDPos!= -1)
+    Check_ReadFunDID(Send_Data,Fun_DIDPos,phyreq_ID,1,8.8,0,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+   _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+  _Set_Battery(9.3);
+  if(Fun_DIDPos!= -1)
+    Check_ReadFunDID(Send_Data,Fun_DIDPos,phyreq_ID,1,9.3,0,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  _Clear_DTC(phyreq_ID);
+
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Battery(18.3);
+  if(Fun_DIDPos!= -1)
+    Check_ReadFunDID(Send_Data,Fun_DIDPos,phyreq_ID,1,18.3,0,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+
+
+  _Set_Battery(17.9);
+  if(Fun_DIDPos!= -1)
+    Check_ReadFunDID(Send_Data,Fun_DIDPos,phyreq_ID,1,17.9,0,0);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  _Clear_DTC(phyreq_ID);
+
+  _Set_Battery(12);
+}
+
+void CCP_100()  /*接收有效的VCP信号过程中高电压后恢复电压*/
+{
+  dword DTC_CCP[2];
+  _Clear_CCP();
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(5);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+void CCP_101()  /*接收有效的VCP信号过程中低电压后恢复电压*/
+{
+  dword DTC_CCP[2];
+  _Clear_CCP();
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(6);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+
+void CCP_102()  /*接收有效的VCP信号过程中高电压后恢复电压*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(5);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+void CCP_103()  /*接收有效的VCP信号过程中低电压后恢复电压*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(6);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_Res_NowOrHis(9,9,1,DTC_CCP);
+}
+
+void CCP_104()  /*接收无效的VCP信号过程中高电压后恢复电压*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(0x15);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+void CCP_105()  /*接收无效的VCP信号过程中低电压后恢复电压*/
+{
+  dword DTC_CCP[2];
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  Sendccp(0x16);
+  testWaitForTimeout(CCP_Time);
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+}
+
+
+
+testcase Test_CCP()  
+{ 
+  dword DTC_CCP[2];
+  int i;
+  _Init_CCP();   
+  
+  _Clear_DTC(phyreq_ID);
+  _Set_Ready(0);
+  testWaitForTimeout(3000);
+  _Set_Ready(13);
+  Sendccp(59,0xFF);
+  testWaitForTimeout(30000);
+}
+
+testcase Send_CCP_Normal()  
+{ 
+  _Init_CCP();   
+  _Clear_DTC(phyreq_ID);
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Sendccp(0);
+  _End_CCP();
+}
+testcase Case_CCP_1()
+{
+  _Init_CCP();
+  CCP_1();
+  _End_CCP();
+}
+testcase Case_CCP_2()
+{
+  _Init_CCP();
+  CCP_2();
+  _End_CCP();
+}
+testcase Case_CCP_3()
+{
+  _Init_CCP();
+  CCP_3();
+  _End_CCP();
+}
+testcase Case_CCP_4()
+{
+  _Init_CCP();
+  CCP_4();
+  _End_CCP();
+}
+testcase Case_CCP_5()
+{
+  _Init_CCP();
+  CCP_5();
+  _End_CCP();
+}
+testcase Case_CCP_6()
+{
+  _Init_CCP();
+  CCP_6(0);
+  _End_CCP();
+}
+testcase Case_CCP_7()
+{
+  _Init_CCP();
+  CCP_7(0);
+  _End_CCP();
+}
+testcase Case_CCP_8()
+{
+  _Init_CCP();
+  CCP_8(0);
+  _End_CCP();
+}
+testcase Case_CCP_9()
+{
+  _Init_CCP();
+  CCP_9(0);
+  _End_CCP();
+}
+testcase Case_CCP_10()
+{
+  _Init_CCP();
+  CCP_10();
+  _End_CCP();
+}
+testcase Case_CCP_11()
+{
+  _Init_CCP();
+  CCP_11();
+  _End_CCP();
+}
+testcase Case_CCP_12()
+{
+  _Init_CCP();
+  CCP_12();
+  _End_CCP();
+}
+testcase Case_CCP_13()
+{
+  _Init_CCP();
+  CCP_13();
+  _End_CCP();
+}
+testcase Case_CCP_14()
+{
+  _Init_CCP();
+  CCP_14();
+  _End_CCP();
+}
+testcase Case_CCP_15()
+{
+  _Init_CCP();
+  CCP_15();
+  _End_CCP();
+}
+testcase Case_CCP_16()
+{
+  _Init_CCP();
+  CCP_16();
+  _End_CCP();
+}
+// testcase Case_CCP_17()
+// {
+//   _Init_CCP();
+//   CCP_17();
+//   _End_CCP();
+// }
+testcase Case_CCP_18()
+{
+  _Init_CCP();
+  CCP_18();
+  _End_CCP();
+}
+testcase Case_CCP_19()
+{
+  _Init_CCP();
+  CCP_19();
+  _End_CCP();
+}
+testcase Case_CCP_20()/*无效值覆盖_CCP[1]=00_所有CCP=FF(GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_20();
+  _End_CCP();
+}
+testcase Case_CCP_20_1()/*无效值覆盖_CCP[1]=00_所有CCP=FF(GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_20_1();
+  _End_CCP();
+}
+testcase Case_CCP_21()/*无效值覆盖_CCP[1]=00_所有CCP未发送(GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_21();
+  _End_CCP();
+}
+testcase Case_CCP_21_1()/*无效值覆盖_CCP[1]=00_所有CCP未发送(GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_21_1();
+  _End_CCP();
+}
+testcase Case_CCP_22()/*无效值覆盖_CCP[1]=00_CCP[3]=00(GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_22();
+  _End_CCP();
+}
+testcase Case_CCP_22_1()/*无效值覆盖_CCP[1]=00_CCP[3]=00(GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_22_1();
+  _End_CCP();
+}
+testcase Case_CCP_23()/*无效值覆盖_所有CCP=00_所有CCP=FF(GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_23();
+  _End_CCP();
+}
+testcase Case_CCP_23_1()/*无效值覆盖_所有CCP=00_所有CCP=FF(GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_23_1();
+  _End_CCP();
+}
+testcase Case_CCP_24()/*无效值覆盖_所有CCP=FF_所有CCP=FF*/
+{
+  _Init_CCP();
+  CCP_24();
+  _End_CCP();
+}
+testcase Case_CCP_25()/*无无效值覆盖（随机无效值被有效值覆盖）(GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_25(1);
+  _End_CCP();
+}
+testcase Case_CCP_25_1()/*无无效值覆盖（随机无效值被有效值覆盖）(GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_25(0);
+  _End_CCP();
+}
+testcase Case_CCP_26()/*无效CCP参数记录_仅10个无效CCP(GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_26(1);
+  _End_CCP();
+}
+testcase Case_CCP_26_1()/*无效CCP参数记录_仅10个无效CCP(GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_26(0);
+  _End_CCP();
+}
+testcase Case_CCP_27()/*无效CCP参数记录_仅记录前10个无效CCP(GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_27(1);
+  _End_CCP();
+}
+testcase Case_CCP_27_1()/*无效CCP参数记录_仅记录前10个无效CCP(GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_27(0);
+  _End_CCP();
+}
+testcase Case_CCP_28()/*无效CCP参数记录_多次发送不同无效值（GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_28(0);
+  _End_CCP();
+}
+testcase Case_CCP_28_1()/*无效CCP参数记录_多次发送不同无效值后上下电（GEEA3.5)*/
+{
+  _Init_CCP();
+  CCP_28(1);
+  _End_CCP();
+}
+testcase Case_CCP_29()/*无效CCP参数记录_多次发送不同无效值（GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_29(0);
+  _End_CCP();
+}
+testcase Case_CCP_29_1()/*无效CCP参数记录_多次发送不同无效值后上下电（GEEA3.0)*/
+{
+  _Init_CCP();
+  CCP_29(1);
+  _End_CCP();
+}
+testcase Case_CCP_30()/*无效CCP参数记录-无效个数最大记录值0xFF（GEEA3.0）*/
+{
+  _Init_CCP();
+  CCP_30();
+  _End_CCP();
+}
+testcase Case_CCP_31()/*接收有效的VCP信号过程中断电*/
+{
+  _Init_CCP();
+  CCP_31();
+  _End_CCP();
+}
+testcase Case_CCP_32()/*接收无效的VCP信号过程中断电*/
+{
+  _Init_CCP();
+  CCP_32();
+  _End_CCP();
+}
+testcase Case_CCP_33()/*已配置状态_报故障码的前提条件-Car Mode=0：normal*/
+{
+  _Init_CCP();
+  CCP_7(1);
+  _End_CCP();
+}
+testcase Case_CCP_34()/*已配置状态_报故障码的前提条件-电压9_18V*/
+{
+  _Init_CCP();
+  CCP_33();
+  _End_CCP();
+}
+testcase Case_CCP_35()/*已配置状态_报故障码的前提条件-ElPowerLevel !=1 or 2*/
+{
+  _Init_CCP();
+  CCP_9(1);
+  _End_CCP();
+}
+testcase Case_CCP_36()/*已配置状态_报故障码的前提条件-未满足Usgmode激活后30s*/
+{
+  _Init_CCP();
+  CCP_6(1);
+  _End_CCP();
+}
+
+
+
+
+testcase Case_CCP_100()
+{
+  _Init_CCP();
+  CCP_100();
+  _End_CCP();
+}
+testcase Case_CCP_101()
+{
+  _Init_CCP();
+  CCP_101();
+  _End_CCP();
+}
+testcase Case_CCP_102()
+{
+  _Init_CCP();
+  CCP_102();
+  _End_CCP();
+}
+testcase Case_CCP_103()
+{
+  _Init_CCP();
+  CCP_103();
+  _End_CCP();
+}
+testcase Case_CCP_104()
+{
+  _Init_CCP();
+  CCP_104();
+  _End_CCP();
+}
+testcase Case_CCP_105()
+{
+  _Init_CCP();
+  CCP_105();
+  _End_CCP();
+}

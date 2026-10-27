@@ -1,8 +1,8 @@
 <template>
   <aside class="global-sidebar" :style="{ width: width + 'px' }">
-    <!-- 主机厂选择 -->
+    <!-- 主机厂 + 安全算法（两个独立滚轮，属于当前主机厂的算法填充背景色，可跨厂选择） -->
     <div class="sidebar-section">
-      <div class="section-title">主机厂选择</div>
+      <div class="section-title">主机厂 / 安全算法</div>
       <OemSelector
         v-model="store.selectedAlgo"
         :oem="store.selectedOem"

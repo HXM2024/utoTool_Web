@@ -1,0 +1,1125 @@
+/*@!Encoding:936*/
+includes
+{
+  
+}
+variables
+{
+  char log_name[200] = " Logging";
+  int i = 0,x = 0;
+  char testCaseTitle[200];
+  char order[200];
+  long Time[9];
+  char timeBuffer[200];
+  dword glbHandle;
+  char  file_path[200]= ".\\Testmodule_UDS\\information\\UDSinfo.ini";
+  char  file_name[200]= "UDSinfo.ini";
+  char file_path_2[400] = ".\\Testmodule_UDS\\";
+  char file_name_2[400] = ".\\Testmodule_UDS\\UDS_Main_info.ini";
+  char ECU_pro[400];
+  int Check_Flage = 0;//是否检测标志位，用于后续测试时跳过部分检测（为1则不检测，后续有长度检测，当未输入不检测）
+
+  char Platform[100];
+  char Hardware_version_ASCII[200];  
+  char Hardware_number_ASCII[200];  
+  char Calibrate_version_ASCII[200];  
+  char SVN_Revision_ASCII[200];  
+  char Software_version_ASCII[200];  
+  char FBT_ASCII[200];  
+  char SBT_ASCII[200];  
+  char Hardware_Test_ASCII[200];  
+  char ECU_Number_ASCII[200];  
+  char SW_ASCII[200];  
+  char HW_ASCII[200];
+/**************比亚迪DID***********/
+  char DID_F084_ASCII[400];
+  char DID_F180_ASCII[400];
+  char DID_F184_ASCII[400];
+  char DID_F185_ASCII[400];
+  char DID_F187_ASCII[400];
+  char DID_F193_ASCII[400];
+  char DID_F194_ASCII[400];
+  char DID_F195_Ver_ASCII[400];
+  char DID_F195_Time_ASCII[400];
+/***********************************/
+/***************长安DID************/
+  char DID_F189_ASCII[400];
+  char DID_F089_ASCII[400];
+  char DID_F18A_ASCII[400];
+  char DID_F170_ASCII[400];
+  char DID_F171_ASCII[400];
+  char DID_F123_ASCII[400];
+  char DID_F188_ASCII[400];
+  char DID_F120_ASCII[400];
+  char DID_F121_ASCII[400];
+  char DID_F122_ASCII[400];
+  char DID_F1F6_ASCII[400];
+/***********************************/
+/***************瑞驰DID************/
+  char DID_F197_ASCII[400];
+  char DID_0216_ASCII[400];
+  char DID_F195_ASCII[400];
+/***********************************/
+/***************五菱DID************/
+  char DID_F186_ASCII[400];
+  char DID_F17A_ASCII[400];
+  char DID_F18B_ASCII[400];
+  char DID_F190_ASCII[400];
+  char DID_F192_ASCII[400];
+  char DID_F1B2_ASCII[400];
+  char DID_F1CB_ASCII[400];
+  char DID_F1C1_ASCII[400];
+/***********************************/
+/***************奇瑞DID************/
+  char DID_F191_ASCII[400];
+  char DID_3011_ASCII[400];
+  char DID_F201_ASCII[400];
+}
+on preStart
+{
+  int temp;
+  glbHandle = OpenFileRead (file_name_2,0);
+  getProfileString("Project_Information", "ECU_project","Null",ECU_pro, 1000, file_name_2);  
+  @sysvar::DID::WaitForRes = getProfileInt(ECU_pro,"p2cmax",@sysvar::DID::WaitForRes,file_name_2);
+  @sysvar::DID::filler_0 = getProfileInt(ECU_pro,"filler",temp,file_name_2);
+  @sysvar::DID::funreq_ID=getProfileInt (ECU_pro, "funreq_ID",0,file_name_2);
+  @sysvar::DID::phyreq_ID=getProfileInt (ECU_pro, "phyreq_ID",0,file_name_2);
+  @sysvar::DID::Response_ID=getProfileInt (ECU_pro, "Response_ID",0,file_name_2);
+  fileClose (glbHandle);
+}
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,dword msgID)
+{
+  char comment[70];
+  byte primitiveRaw[300];
+  long size;
+  byte i;
+  
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  if(msgID==@sysvar::DID::phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  for(i=0;i<size;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  }
+  if(msgID==@sysvar::DID::phyreq_ID)
+  {
+    diagSendRequest(obj);
+  }
+  else if(msgID==@sysvar::DID::funreq_ID)
+  {
+    diagSendFunctional(obj);
+  }
+  testWaitForDiagRequestSent(obj,500);
+  testCaseComment(comment);
+  writeEx(-3,0,comment);
+  testReportWriteDiagObject(obj);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(obj,@sysvar::DID::WaitForRes);
+  if(diagGetLastResponseCode(obj)==0x78)
+    testWaitForDiagResponse(obj,@sysvar::DID::WaitForRes*100);
+  testReportWriteDiagResponse(obj);
+}
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,dword msgID,dword time)
+{
+  char comment[70];
+  byte primitiveRaw[300];
+  long size;
+  byte i;
+  
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  if(msgID==@sysvar::DID::phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  for(i=0;i<size;i++)
+  {
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  }
+  if(msgID==@sysvar::DID::phyreq_ID)
+  {
+    diagSendRequest(obj);
+  }
+  else if(msgID==@sysvar::DID::funreq_ID)
+  {
+    diagSendFunctional(obj);
+  }
+  testWaitForDiagRequestSent(obj,500);
+  testCaseComment(comment);
+  writeEx(-3,0,comment);
+  testReportWriteDiagObject(obj);
+  testWaitForDiagResponse(obj,time);
+  testReportWriteDiagResponse(obj);
+}
+
+void creat_log(char function[])
+{
+  snprintf(timeBuffer,elCount(timeBuffer),"%s","");
+  getLocalTime(Time);
+  snprintf(timeBuffer,200,"%s%s",timeBuffer,"__");
+  snprintf(timeBuffer,200,"%s%d",timeBuffer,Time[5]+1900);
+  snprintf(timeBuffer,200,"%s%s",timeBuffer,"-");
+  snprintf(timeBuffer,200,"%s%d",timeBuffer,Time[4]+1);
+  snprintf(timeBuffer,200,"%s%s",timeBuffer,"-");
+  snprintf(timeBuffer,200,"%s%d",timeBuffer,Time[3]);
+  snprintf(timeBuffer,200,"%s%s",timeBuffer,"_");
+  if(Time[2]<10)
+    snprintf(timeBuffer,200,"%s%02X",timeBuffer,Time[2]);
+  if(Time[2]>=10)
+    snprintf(timeBuffer,200,"%s%d",timeBuffer,Time[2]);
+  snprintf(timeBuffer,200,"%s%s",timeBuffer,"-");
+  if(Time[1]<10)
+    snprintf(timeBuffer,200,"%s%02X",timeBuffer,Time[1]);
+  if(Time[1]>=10)
+    snprintf(timeBuffer,200,"%s%d",timeBuffer,Time[1]);
+  snprintf(timeBuffer,200,"%s%s",timeBuffer,"-");
+  if(Time[0]<10)
+    snprintf(timeBuffer,200,"%s%02X",timeBuffer,Time[0]);
+  if(Time[0]>=10)
+    snprintf(timeBuffer,200,"%s%d",timeBuffer,Time[0]);
+  x++;
+  if(x < 10){
+    order[0] = x+48;
+    order[1] = '.';
+  }
+  else if(x < 100){
+    order[0] = (x/10)+48;
+    order[1] = (x%10)+48;
+    order[2] = '.';
+  }
+  else if(x < 1000){
+    order[0] = (x/100)+48;
+    order[1] = (x/10%10)+48;
+    order[2] = (x%10)+48;
+    order[3] = '.';
+  }
+  testGetCurrentTestCaseTitle(testCaseTitle,200);
+  log_name[0] = 92;
+//  log_name[8] = 92;
+  strncat(log_name,function,199-strlen(log_name));
+  strncat(log_name,order,199-strlen(log_name));
+  strncat(log_name,testCaseTitle,199-strlen(log_name));
+  strncat(log_name,timeBuffer,199-strlen(log_name));
+  strncat(log_name,".asc",199-strlen(log_name));
+  setLogFileName(log_name);
+  for(i = 9; log_name[i] !='\0'; i++ )
+    log_name[i] = '\0';
+}
+void _Start()
+{
+  creat_log("\\UDS_Logging\\");
+  startLogging();
+}
+
+void _End()
+{
+  stopLogging();
+  testWaitForTimeout(500);
+}
+
+void Not_Check_3570(char data[])
+{
+   if(strlen(data)==0)
+    Check_Flage = 1;
+  else
+    Check_Flage = 0;
+}
+
+char HexToAsc(char data)
+{
+  int i;
+  char ASCII_0[26]={'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
+  char ASCII_1[26]={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+  char ASCII_2[10]={'0','1','2','3','4','5','6','7','8','9'};
+  char ASCII_3[6]={':',';','<','=','>','?'};
+  char ASCII_4[15]={'!','"','#','$','%','&','`','(',')','*','+',',','-','.','/'};
+  char ASCII_5[3]={']','^','_'};
+  
+  
+  if(data>=0x21 && data<=0x2f)
+  {
+    for(i=0;i<15;i++)
+    {
+      if(data == i+33) { data = ASCII_4[i];}
+    }
+  }  
+  else if(data>=0x30 && data<=0x39)
+  {
+    for(i=0;i<10;i++)
+    {
+      if(data == i+48) {data = ASCII_2[i];}
+    }
+  }
+  else if(data>=0x3a && data<=0x3f)
+  {
+    for(i=0;i<6;i++)
+    {
+      if(data == i+58){data = ASCII_3[i];}
+    }
+  }
+  else if(data>=0x41 && data<=0x5A)
+  {
+    for(i=0;i<26;i++)
+     {
+       if(data == i+65) {data = ASCII_0[i];}
+     }
+  }
+  else if(data>=0x5D && data<=0x5f)
+  {
+    for(i=0;i<3;i++)
+    {
+      if(data == i+93) { data = ASCII_5[i];}
+    }
+  }
+  else if(data>=0x61 && data<=0x7A)
+  {
+    for(i=0;i<26;i++)
+    {
+      if(data == i+97) {data = ASCII_1[i];}
+    }
+  }
+  else if(data == 0x20)
+    data = 0x20;
+  else if(data == 0x00)
+    data = 0x00;
+  else if(data == 0x5B)
+    data = '[';
+  else if(data == 0x7B)
+    data = '{';
+  else if(data == 0x7D)
+    data = '}';
+  return data;
+}
+void Check_J3_F()
+{
+  char Hardware_version_Read[100],Software_version_Read[100],Calibrate_version_Read[100],SVN_Revision_Read[100];
+  char FBT_Read[100],SBT_Read[100],Hardware_Test_Read[100],ECU_Number_Read[100],SW_Read[100],HW_Read[100],Hardware_number_Read[100];
+  char Hardware_Ver[100],Hardware_number_Ver[100],Calibrate_Ver[100],SVN_Revision_Ver[100],Software_version_Ver[100];
+  char FBT_Ver[100],SBT_Ver[100],Hardware_Test_Ver[100],ECU_Number_Ver[100],SW_Ver[100],HW_Ver[100];    
+  char Receive[500],Receive_Read[500];                            //接收返回值数组
+  int i = 0 ,Len = 0;                                            //接收返回值长度
+  diagRequest *req3570;
+  diagSetTarget ("ABS_EPS");
+  diagResize(req3570,3);
+  DiagSetPrimitiveByte(req3570,0,0X22);
+  DiagSetPrimitiveByte(req3570,1,0X35);
+  DiagSetPrimitiveByte(req3570,2,0X70);
+  _SendAndWriteReport(req3570,@sysvar::DID::phyreq_ID,2000);                       //35 70 为多帧响应,时间设定为2s响应并接收完成
+  Len = diagGetRespPrimitiveSize(req3570);
+  if(diagGetLastResponseCode(req3570) == 0)
+    {
+      testStepFail("未收到响应");
+      writeEx(-3,0,"未收到响应");
+    }
+  else 
+    {
+      for(i = 3 ; i < 61 ; i++ )  //正常长度为Len-1,但60往后长度均填充为0，无意义故不采集
+      {
+    /*---------------------------------ASCII码------------------------------*/  
+        /*---------------------------标定数据版本------------------------*/
+        if( i >= 3 && i<=12)
+        {
+          if(DiagGetRespPrimitiveByte(req3570,i)<0x40)
+             ltoa(DiagGetRespPrimitiveByte(req3570,i)&0xF,Calibrate_version_Read,10);
+          else 
+             Calibrate_version_Read[0]=HexToAsc(DiagGetRespPrimitiveByte(req3570,i));
+          snprintf(Calibrate_Ver,100,"%s%s",Calibrate_Ver,Calibrate_version_Read);
+        }
+        /*---------------------------ECU标识码------------------------*/   
+        else if( i >= 13 && i<=22)
+          {
+            if(DiagGetRespPrimitiveByte(req3570,i)<0x40)
+               ltoa(DiagGetRespPrimitiveByte(req3570,i)&0xF,ECU_Number_Read,10);
+            else 
+               ECU_Number_Read[0]=HexToAsc(DiagGetRespPrimitiveByte(req3570,i));
+             snprintf(ECU_Number_Ver,100,"%s%s",ECU_Number_Ver,ECU_Number_Read);
+          }           
+        /*---------------------------SBT版本------------------------*/
+        else if( i >= 23 && i<=26)
+          {
+            if(DiagGetRespPrimitiveByte(req3570,i)<0x40)
+               ltoa(DiagGetRespPrimitiveByte(req3570,i)&0xF,SBT_Read,10);
+            else 
+               SBT_Read[0]=HexToAsc(DiagGetRespPrimitiveByte(req3570,i));
+            snprintf(SBT_Ver,100,"%s%s",SBT_Ver,SBT_Read);
+          }    
+        /*---------------------------FBT版本------------------------*/
+        else if( i >= 27 && i<=30)
+         {
+             if(DiagGetRespPrimitiveByte(req3570,i)<0x40)
+                ltoa(DiagGetRespPrimitiveByte(req3570,i)&0xF,FBT_Read,10);
+             else 
+                FBT_Read[0]=HexToAsc(DiagGetRespPrimitiveByte(req3570,i));
+             snprintf(FBT_Ver,100,"%s%s",FBT_Ver,FBT_Read);
+          }    
+        /*------------------------hardwareTest版本号---------------------*/
+        else if( i >= 31 && i<=34)
+          {
+             if(DiagGetRespPrimitiveByte(req3570,i)<0x40)
+                ltoa(DiagGetRespPrimitiveByte(req3570,i)&0xF,Hardware_Test_Read,10);
+             else 
+                Hardware_Test_Read[0]=HexToAsc(DiagGetRespPrimitiveByte(req3570,i));
+             snprintf(Hardware_Test_Ver,100,"%s%s",Hardware_Test_Ver,Hardware_Test_Read);
+          }    
+        /*----------------------------硬件号-------------------------*/
+        else if( i >= 35 && i<=44)
+          {
+             if(DiagGetRespPrimitiveByte(req3570,i)<0x40)
+                ltoa(DiagGetRespPrimitiveByte(req3570,i)&0xF,Hardware_number_Read,10);
+             else 
+                Hardware_number_Read[0]=HexToAsc(DiagGetRespPrimitiveByte(req3570,i));
+             snprintf(Hardware_number_Ver,100,"%s%s",Hardware_number_Ver,Hardware_number_Read);
+          }   
+        /*----------------------------SVN号-------------------------*/
+        else if( i >= 47 && i<=50)
+          {
+             if(DiagGetRespPrimitiveByte(req3570,i)<0x40)
+                ltoa(DiagGetRespPrimitiveByte(req3570,i)&0xF,SVN_Revision_Read,10);
+             else 
+                SVN_Revision_Read[0]=HexToAsc(DiagGetRespPrimitiveByte(req3570,i));
+             snprintf(SVN_Revision_Ver,100,"%s%s",SVN_Revision_Ver,SVN_Revision_Read);
+          }
+    /*------------------特殊位置，存储方式为BCD，非ASCII码---------------*/
+         else
+        {
+            if(i == 45 ||i == 46)  //硬件版本存放位置
+            {   
+              if(DiagGetRespPrimitiveByte(req3570,i)<0x10)
+                snprintf(Software_version_Ver,100,"%s%s",Hardware_version_Read,"0");
+              ltoa(DiagGetRespPrimitiveByte(req3570,i),Hardware_version_Read,16);
+              snprintf(Hardware_Ver,100,"%s%s",Hardware_Ver,Hardware_version_Read); 
+            } 
+            else if(i == 57 ||i == 58)  //软件版本存放位置
+            { 
+              if(DiagGetRespPrimitiveByte(req3570,i)<0x10)
+                snprintf(Software_version_Ver,100,"%s%s",Software_version_Read,"0");
+              ltoa(DiagGetRespPrimitiveByte(req3570,i),Software_version_Read,16);
+              snprintf(Software_version_Ver,100,"%s%s",Software_version_Ver,Software_version_Read);
+            } 
+        }
+    /*----------------------------------------------------------------------*/
+      }
+      
+      Check_information(Hardware_Ver,Hardware_version_ASCII,"ECU硬件版本");
+      Check_information(Hardware_number_Ver,Hardware_number_ASCII,"硬件号");
+      Check_information(Calibrate_Ver,Calibrate_version_ASCII,"ECU标定数据版本");
+      Check_information(SVN_Revision_Ver,SVN_Revision_ASCII,"SVN_Revision");
+      Check_information(Software_version_Ver,Software_version_ASCII,"主软件版本");
+      Check_information(FBT_Ver,FBT_ASCII,"FBT版本");
+      Check_information(SBT_Ver,SBT_ASCII,"SBT版本");
+      Check_information(Hardware_Test_Ver,Hardware_Test_ASCII,"hardwareTest版本号");
+      Check_information(ECU_Number_Ver,ECU_Number_ASCII,"ECU标识代码");
+    }
+}
+
+void Check_information(char Rev[],char Ex[],char str[])  //预期结果，实测结果，输出信息
+{
+  char comment[100];
+  Not_Check_3570(Ex);
+  if( Check_Flage == 1)
+  {
+     snprintf(comment,elCount(comment),"跳过检测%s",str);
+     testStepWarning("","%s",comment);
+     writeEx(-3,0,"未输入预期值，跳过检测");
+  }
+  else
+  {
+    if(strncmp(Ex,Rev,strlen(Rev)) == 0)
+    {
+        writeEx(-3,0,"%s",str);
+        writeEx(-3,0,"/---------------Pass------------------/");
+        writeEx(-3,0,"        预期版本 = %s",Ex);
+        writeEx(-3,0,"        实测版本 = %s",Rev);
+        writeEx(-3,0,"/------------------------------------/");
+        testStepPass(str,"预期结果=%s \n 实际结果=%s",Ex,Rev);
+    }
+    else
+    {
+        writeEx(-3,0,"%s",str);
+        writeEx(-3,0,"/--------------Error-----------------/");
+        writeEx(-3,0,"        预期版本 = %s",Ex);
+        writeEx(-3,0,"        实测版本 = %s",Rev);
+        writeEx(-3,0,"/------------------------------------/");
+        testStepFail(str,"预期结果=%s \n 实际结果=%s",Ex,Rev);
+    }
+  }
+}
+void Check_information_(char Rev[],char Ex[],char str[])  //实测结果，预期结果，输出信息
+{
+  if(strncmp(Ex,Rev,strlen(Rev)) == 0 && strlen(Ex) == strlen(Rev))
+  {
+    writeEx(-3,0,"%s",str);
+    writeEx(-3,0,"/---------------Pass------------------/");
+    writeEx(-3,0,"        预期版本 = %s",Ex);
+    writeEx(-3,0,"        实测版本 = %s",Rev);
+    writeEx(-3,0,"/------------------------------------/");
+    testStepPass(str,"预期结果=%s \n 实际结果=%s",Ex,Rev);
+    write("%s",Rev);
+  }
+  else
+  {
+    writeEx(-3,0,"%s",str);
+    writeEx(-3,0,"/--------------Error-----------------/");
+    writeEx(-3,0,"        预期版本 = %s",Ex);
+    writeEx(-3,0,"        实测版本 = %s",Rev);
+    writeEx(-3,0,"/------------------------------------/");
+    testStepFail(str,"预期结果=%s \n 实际结果=%s",Ex,Rev);
+    write("%s",Rev);
+  } 
+}
+void _Check_DID_ASCII(char DID_ASCII[],int byte_1,int byte_2,long Len,char str[])  //16进制->ASCII码
+{
+  diagRequest * req1;
+  int i = 0, LenRx = 0,LenEx = 0;
+  int flage = 0;
+  char Buffer[200],Buffer_Check[200];
+  
+  diagSetTarget ("ABS_EPS");
+  diagResize(req1,3);
+  snprintf(Buffer,elCount(Buffer),"%s","");
+  snprintf(Buffer_Check,elCount(Buffer_Check),"%s","");
+  
+  sysGetVariableDescriptionForValue(sysvar::DID::ECU_platform,@sysvar::DID::ECU_platform,Platform,elcount(Platform));
+  glbHandle = OpenFileRead (file_path,0);
+  setFilePath(file_path,0); 
+  getProfileString(Platform,str,"",DID_ASCII,elCount(DID_ASCII),file_name);
+  DiagSetPrimitiveByte(req1,0,0x22);
+  DiagSetPrimitiveByte(req1,1,byte_1);
+  DiagSetPrimitiveByte(req1,2,byte_2);
+  _SendAndWriteReport(req1,@sysvar::DID::phyreq_ID);
+  LenRx = diagGetRespPrimitiveSize(req1);
+  LenEx = strlen(DID_ASCII);
+
+  Not_Check_3570(DID_ASCII);
+  if(Check_Flage == 0)
+  {
+      if(diagGetLastResponseCode(req1) == 0)
+        {
+            testStepFail("未收到响应");
+            writeEx(-3,0,"未收到响应");
+        }
+      else if (diagGetLastResponseCode(req1) > 0)
+        {
+            testStepFail("收到消极应答");
+            writeEx(-3,0,"收到消极应答");
+        }
+      else if(diagGetLastResponseCode(req1) == -1)
+      {
+        if(DiagGetRespPrimitiveByte(req1,0) == 0x62 && DiagGetRespPrimitiveByte(req1,1)==byte_1 && DiagGetRespPrimitiveByte(req1,2) == byte_2)
+          { testStepPass(str,"前3 Byte符合预期");}
+        else
+          {testStepFail(str,"第0字节为为：0x%2X ,第1字节为为：0x%2X ,第2字节为为：0x%2X",DiagGetRespPrimitiveByte(req1,0),DiagGetRespPrimitiveByte(req1,1),DiagGetRespPrimitiveByte(req1,2));}
+        for( i= 3; i<3+LenEx; i++)
+          {
+         // Buffer[i-3]=HexToAsc(DiagGetRespPrimitiveByte(req1,i));    
+            snprintf(Buffer,elCount(Buffer),"%s%c",Buffer,HexToAsc(DiagGetRespPrimitiveByte(req1,i))); //ASCII码查表切换
+          }
+        Check_information(Buffer,DID_ASCII,str);
+        for(i = 3+LenEx; i<LenRx; i++)
+          {
+            if(DiagGetRespPrimitiveByte(req1,i) != @sysvar::DID::filler_0)     //未使用填充位  filler = 0x30  ; 0x20 ; 0x00 ;
+               {
+                 flage = 1;
+                 testStepFail(str,"未使用位填充值存在非预期情况，默认填充值为；0x%2X,第%d 位实际反馈值为:0x%2X",@sysvar::DID::filler_0,i+1,DiagGetRespPrimitiveByte(req1,i));
+                 break;
+               }
+          }
+        if(flage == 0)
+          {testStepPass(str,"除输入值外，未使用位填充值均为预期，默认填充值为；0x%2X",@sysvar::DID::filler_0);} 
+        if(LenRx != Len)
+          {testStepFail("长度异常","返回长度为：%d,预期长度为：%d",LenRx,Len);}
+        else if(LenRx == Len)
+          {testStepPass("长度符合预期");}
+      }
+  }
+  else 
+  {
+    testStepWarning(str,"未输入预期值，跳过检测");
+    writeEx(-3,0,"%s,未输入预期值，跳过检测",str);
+  }
+}
+void _Check_DID_HexToDec(char DID_ASCII[],int byte_1,int byte_2,long Len,char str[])  //16进制->10进制
+{
+  diagRequest * req1; 
+  int i = 0, LenRx = 0,LenEx = 0;
+  int flage = 0;
+  char Buffer[200],Buffer_Check[200];
+  diagSetTarget ("ABS_EPS");
+  diagResize(req1,3);
+  snprintf(Buffer,elCount(Buffer),"%s","");
+  snprintf(Buffer_Check,elCount(Buffer_Check),"%s","");
+  sysGetVariableDescriptionForValue(sysvar::DID::ECU_platform,@sysvar::DID::ECU_platform,Platform,elcount(Platform));
+  glbHandle = OpenFileRead (file_path,0);
+  setFilePath(file_path,0); 
+  getProfileString(Platform,str,"",DID_ASCII,elCount(DID_ASCII),file_name);
+  DiagSetPrimitiveByte(req1,0,0x22);
+  DiagSetPrimitiveByte(req1,1,byte_1);
+  DiagSetPrimitiveByte(req1,2,byte_2);
+  _SendAndWriteReport(req1,@sysvar::DID::phyreq_ID);
+  LenRx = diagGetRespPrimitiveSize(req1);
+  LenEx = strlen(DID_ASCII);
+
+  Not_Check_3570(DID_ASCII);
+  if(Check_Flage == 0)
+  {
+      if(diagGetLastResponseCode(req1) == 0)
+        {
+            testStepFail("未收到响应");
+            writeEx(-3,0,"未收到响应");
+        }
+      else if (diagGetLastResponseCode(req1) > 0)
+        {
+            testStepFail("收到消极应答");
+            writeEx(-3,0,"收到消极应答");
+        }
+      else if(diagGetLastResponseCode(req1) == -1)
+      {
+        if(DiagGetRespPrimitiveByte(req1,0) == 0x62 && DiagGetRespPrimitiveByte(req1,1)==byte_1 && DiagGetRespPrimitiveByte(req1,2) == byte_2)
+          { testStepPass(str,"前3 Byte符合预期");}
+        else
+          {testStepFail(str,"第0字节为为：0x%2X ,第1字节为为：0x%2X ,第2字节为为：0x%2X",DiagGetRespPrimitiveByte(req1,0),DiagGetRespPrimitiveByte(req1,1),DiagGetRespPrimitiveByte(req1,2));}
+        for(i=3;i<LenRx;i++)
+        {
+          ltoa(DiagGetRespPrimitiveByte(req1,i),Buffer,10);
+          if(strlen(Buffer) == 1)
+          {
+            snprintf(Buffer_Check,200,"%s%s",Buffer_Check,"0");
+          }
+          snprintf(Buffer_Check,200,"%s%s",Buffer_Check,Buffer);
+        }
+        Check_information(Buffer_Check,DID_ASCII,str);
+        if(strlen(Buffer_Check) != strlen(DID_ASCII))
+          {testStepFail("转换后长度异常","输入内容长度与转换后长度不等");}  
+        if(LenRx != Len)
+          {testStepFail("长度异常","返回长度为：%d,预期长度为：%d",LenRx,Len);}
+        else if(LenRx == Len)
+          {testStepPass("长度符合预期");}
+      }
+  }
+  else 
+  {
+    testStepWarning(str,"未输入预期值，跳过检测");
+    writeEx(-3,0,"%s,未输入预期值，跳过检测",str);
+  }
+}
+void _Check_DID_HexToBCD(char DID_ASCII[],int byte_1,int byte_2,long Len,char str[])  //16进制->原码拼接
+{
+  diagRequest * req1;
+  int i = 0, LenRx = 0,LenEx = 0;
+  int flage = 0;
+  char Buffer[200],Buffer_Check[200];  
+  diagSetTarget ("ABS_EPS");
+  diagResize(req1,3);
+  snprintf(Buffer,elCount(Buffer),"%s","");
+  snprintf(Buffer_Check,elCount(Buffer_Check),"%s","");
+  sysGetVariableDescriptionForValue(sysvar::DID::ECU_platform,@sysvar::DID::ECU_platform,Platform,elcount(Platform));
+  glbHandle = OpenFileRead (file_path,0);
+  setFilePath(file_path,0); 
+  getProfileString(Platform,str,"",DID_ASCII,elCount(DID_ASCII),file_name);
+  DiagSetPrimitiveByte(req1,0,0x22);
+  DiagSetPrimitiveByte(req1,1,byte_1);
+  DiagSetPrimitiveByte(req1,2,byte_2);
+  _SendAndWriteReport(req1,@sysvar::DID::phyreq_ID);
+  LenRx = diagGetRespPrimitiveSize(req1);
+  LenEx = strlen(DID_ASCII);
+
+  Not_Check_3570(DID_ASCII);
+  if(Check_Flage == 0)
+  {
+      if(diagGetLastResponseCode(req1) == 0)
+        {
+            testStepFail("未收到响应");
+            writeEx(-3,0,"未收到响应");
+        }
+      else if (diagGetLastResponseCode(req1) > 0)
+        {
+            testStepFail("收到消极应答");
+            writeEx(-3,0,"收到消极应答");
+        }
+      else if(diagGetLastResponseCode(req1) == -1)
+      {
+        if(DiagGetRespPrimitiveByte(req1,0) == 0x62 && DiagGetRespPrimitiveByte(req1,1)==byte_1 && DiagGetRespPrimitiveByte(req1,2) == byte_2)
+          { testStepPass(str,"前3 Byte符合预期");}
+        else
+          {testStepFail(str,"第0字节为为：0x%2X ,第1字节为为：0x%2X ,第2字节为为：0x%2X",DiagGetRespPrimitiveByte(req1,0),DiagGetRespPrimitiveByte(req1,1),DiagGetRespPrimitiveByte(req1,2));}
+        for(i=3;i<LenRx;i++)
+        {
+          ltoa(DiagGetRespPrimitiveByte(req1,i),Buffer,16);
+          if(strlen(Buffer) == 1)
+          {
+            snprintf(Buffer_Check,200,"%s%s",Buffer_Check,"0");
+          }
+          snprintf(Buffer_Check,200,"%s%s",Buffer_Check,Buffer);
+        }
+        toUpper(Buffer_Check, Buffer_Check, elcount(Buffer_Check));
+        Check_information(Buffer_Check,DID_ASCII,str);
+        if(strlen(Buffer_Check) != strlen(DID_ASCII))
+          {testStepFail("转换后长度异常","输入内容长度与转换后长度不等");}  
+        if(LenRx != Len)
+          {testStepFail("长度异常","返回长度为：%d,预期长度为：%d",LenRx,Len);}
+        else if(LenRx == Len)
+          {testStepPass("长度符合预期");}
+      }
+  }
+  else 
+  {
+    testStepWarning(str,"未输入预期值，跳过检测");
+    writeEx(-3,0,"%s,未输入预期值，跳过检测",str);
+  }
+}
+
+void _Check_DID_ALLHexToDec(char DID_ASCII[],int byte_1,int byte_2,long Len,char str[])  //16进制->16进制整体转为10进制
+{
+  diagRequest * req1;
+  int i = 0, LenRx = 0,LenEx = 0;
+  int flage = 0;
+  qword Data_Temp = 0;
+  char Buffer[200],Buffer_Check[200];  
+  diagSetTarget ("ABS_EPS");
+  diagResize(req1,3);
+  snprintf(Buffer,elCount(Buffer),"%s","");
+  snprintf(Buffer_Check,elCount(Buffer_Check),"%s","");
+  Data_Temp = 0;
+  sysGetVariableDescriptionForValue(sysvar::DID::ECU_platform,@sysvar::DID::ECU_platform,Platform,elcount(Platform));
+  glbHandle = OpenFileRead (file_path,0);
+  setFilePath(file_path,0); 
+  getProfileString(Platform,str,"",DID_ASCII,elCount(DID_ASCII),file_name);
+  DiagSetPrimitiveByte(req1,0,0x22);
+  DiagSetPrimitiveByte(req1,1,byte_1);
+  DiagSetPrimitiveByte(req1,2,byte_2);
+  _SendAndWriteReport(req1,@sysvar::DID::phyreq_ID);
+  LenRx = diagGetRespPrimitiveSize(req1);
+
+  Not_Check_3570(DID_ASCII);
+  if(Check_Flage == 0)
+  {
+      if(diagGetLastResponseCode(req1) == 0)
+        {
+            testStepFail("未收到响应");
+            writeEx(-3,0,"未收到响应");
+        }
+      else if (diagGetLastResponseCode(req1) > 0)
+        {
+            testStepFail("收到消极应答");
+            writeEx(-3,0,"收到消极应答");
+        }
+      else if(diagGetLastResponseCode(req1) == -1)
+      {
+        if(DiagGetRespPrimitiveByte(req1,0) == 0x62 && DiagGetRespPrimitiveByte(req1,1)==byte_1 && DiagGetRespPrimitiveByte(req1,2) == byte_2)
+          { testStepPass(str,"前3 Byte符合预期");}
+        else
+          {testStepFail(str,"第0字节为为：0x%2X ,第1字节为为：0x%2X ,第2字节为为：0x%2X",DiagGetRespPrimitiveByte(req1,0),DiagGetRespPrimitiveByte(req1,1),DiagGetRespPrimitiveByte(req1,2));}
+        snprintf(Buffer,elCount(Buffer),"%s%s",Buffer,"0x");
+        for(i=3;i<LenRx;i++)
+          {
+            if(DiagGetRespPrimitiveByte(req1,i)>0x0F)
+              {
+                snprintf(Buffer,elCount(Buffer),"%s%2X",Buffer,DiagGetRespPrimitiveByte(req1,i));
+              }
+            else
+              {
+                snprintf(Buffer,elCount(Buffer),"%s%s",Buffer,"0");
+                snprintf(Buffer,elCount(Buffer),"%s%X",Buffer,DiagGetRespPrimitiveByte(req1,i));
+              }
+          }
+          strtoull(Buffer,Data_Temp);
+          snprintf(Buffer_Check,elCount(Buffer_Check),"%s%I64u",Buffer_Check,Data_Temp);
+          Check_information(Buffer_Check,DID_ASCII,str);
+      }
+      if(Len != LenRx)
+      {
+        testStepFail("长度异常","返回长度为：%d,预期长度为：%d",LenRx,Len);
+      }
+  }
+  else 
+  {
+    testStepWarning(str,"未输入预期值，跳过检测");
+    writeEx(-3,0,"%s,未输入预期值，跳过检测",str);
+  }
+}
+
+void _Check_DID_Mix(char DID_ASCII_1[],char DID_ASCII_2[],int byte_1,int byte_2,long Len_1,long Len_2,char str_1[],char str_2[])  //混合解析方式
+{
+  diagRequest * req1;
+  int i = 0, LenRx = 0;
+  qword Data_Temp = 0;
+  int flage = 0;
+  char Buffer[200],Buffer_Check[200];
+  diagSetTarget ("ABS_EPS");
+  diagResize(req1,3);
+  snprintf(Buffer,elCount(Buffer),"%s","");                        //初始化字符串
+  snprintf(Buffer_Check,elCount(Buffer_Check),"%s","");            //初始化字符串
+  Data_Temp = 0;
+  sysGetVariableDescriptionForValue(sysvar::DID::ECU_platform,@sysvar::DID::ECU_platform,Platform,elcount(Platform));
+  glbHandle = OpenFileRead (file_path,0);
+  setFilePath(file_path,0); 
+  
+  getProfileString(Platform,str_1,"",DID_ASCII_1,elCount(DID_ASCII_1),file_name);
+  getProfileString(Platform,str_2,"",DID_ASCII_2,elCount(DID_ASCII_2),file_name);
+  
+  DiagSetPrimitiveByte(req1,0,0x22);
+  DiagSetPrimitiveByte(req1,1,byte_1);
+  DiagSetPrimitiveByte(req1,2,byte_2);
+  _SendAndWriteReport(req1,@sysvar::DID::phyreq_ID);
+  LenRx = diagGetRespPrimitiveSize(req1);
+
+  Not_Check_3570(DID_ASCII_1);
+  if(Check_Flage == 0)
+  {
+      if(diagGetLastResponseCode(req1) == 0)
+        {
+            testStepFail("未收到响应");
+            writeEx(-3,0,"未收到响应");
+        }
+      else if (diagGetLastResponseCode(req1) > 0)
+        {
+            testStepFail("收到消极应答");
+            writeEx(-3,0,"收到消极应答");
+        }
+      else if(diagGetLastResponseCode(req1) == -1)
+      {
+        if(DiagGetRespPrimitiveByte(req1,0) == 0x62 && DiagGetRespPrimitiveByte(req1,1)==byte_1 && DiagGetRespPrimitiveByte(req1,2) == byte_2)
+          { testStepPass(str_1,"前3 Byte符合预期");}
+        else
+          {testStepFail(str_1,"第0字节为为：0x%2X ,第1字节为为：0x%2X ,第2字节为为：0x%2X",DiagGetRespPrimitiveByte(req1,0),DiagGetRespPrimitiveByte(req1,1),DiagGetRespPrimitiveByte(req1,2));}
+        for(i=3;i<3+Len_1;i++)
+        {
+          Data_Temp += (DiagGetRespPrimitiveByte(req1,i)<<(4*Len_1-8*(i-3)));
+        } 
+        ltoa(Data_Temp,Buffer_Check,10);
+        Check_information(Buffer_Check,DID_ASCII_1,str_1);
+      }
+  }
+  else 
+  {
+    testStepWarning(str_1,"未输入预期值，跳过检测");
+    writeEx(-3,0,"%s,未输入预期值，跳过检测",str_1);
+  }
+  
+  snprintf(Buffer,elCount(Buffer),"%s","");                        //初始化字符串
+  snprintf(Buffer_Check,elCount(Buffer_Check),"%s","");            //初始化字符串
+  Not_Check_3570(DID_ASCII_2);
+  if(Check_Flage == 0)
+  {
+      if(diagGetLastResponseCode(req1) == 0)
+        {
+            testStepFail("未收到响应");
+        }
+      else if (diagGetLastResponseCode(req1) > 0)
+        {
+            testStepFail("收到消极应答");
+        }
+      else if(diagGetLastResponseCode(req1) == -1)
+      {
+        for(i=3+Len_1;i<LenRx;i++)
+        {
+          ltoa(DiagGetRespPrimitiveByte(req1,i),Buffer,10);
+          if(strlen(Buffer) == 1)
+          {
+            snprintf(Buffer_Check,200,"%s%s",Buffer_Check,"0");
+          }
+          snprintf(Buffer_Check,200,"%s%s",Buffer_Check,Buffer);
+        }
+        Check_information(Buffer_Check,DID_ASCII_2,str_2);
+       
+      }
+    if(LenRx != (3+Len_1+Len_2))
+    {testStepFail("长度异常","返回长度为：%d,预期长度为：%d",LenRx,(3+Len_1+Len_2));}
+  }
+  else 
+  {
+    testStepWarning(str_2,"未输入预期值，跳过检测");
+    writeEx(-3,0,"%s,未输入预期值，跳过检测",str_2);
+  }
+}
+
+testcase _Check_3570()
+{ 
+  char Check_Platform[6] = {J3_A,J3_B,J3_C,J3_E,J3_F,J3_G};    //不同平台可能会取不同的字节地址，故做判断区分
+  _Start();
+  sysGetVariableDescriptionForValue(sysvar::DID::ECU_platform,@sysvar::DID::ECU_platform,Platform,elcount(Platform));
+  glbHandle = OpenFileRead (file_path,0);
+  setFilePath(file_path,0);
+  
+  getProfileString(Platform,"Hardware_version","",Hardware_version_ASCII,elCount(Hardware_version_ASCII),file_name);
+  getProfileString(Platform,"Hardware_number","",Hardware_number_ASCII,elCount(Hardware_number_ASCII),file_name);
+  getProfileString(Platform,"Calibrate_version","",Calibrate_version_ASCII,elCount(Calibrate_version_ASCII),file_name);
+  getProfileString(Platform,"SVN_Revision","",SVN_Revision_ASCII,elCount(SVN_Revision_ASCII),file_name);
+  getProfileString(Platform,"Software_version","",Software_version_ASCII,elCount(Software_version_ASCII),file_name);
+  getProfileString(Platform,"FBT","",FBT_ASCII,elCount(FBT_ASCII),file_name);
+  getProfileString(Platform,"SBT","",SBT_ASCII,elCount(SBT_ASCII),file_name);
+  getProfileString(Platform,"Hardware_Test","",Hardware_Test_ASCII,elCount(Hardware_Test_ASCII),file_name);
+  getProfileString(Platform,"ECU_Number","",ECU_Number_ASCII,elCount(ECU_Number_ASCII),file_name);
+  getProfileString(Platform,"SW","",SW_ASCII,elCount(SW_ASCII),file_name);
+  getProfileString(Platform,"HW","",HW_ASCII,elCount(HW_ASCII),file_name);
+//  sysGetVariableString(sysvar::DID::phyreq_ID,phyreq_ID,10);
+//  sysGetVariableString(sysvar::DID::Response_ID,Response_ID,10);
+//  sysGetVariableString(sysvar::DID::funreq_id,funreq_id,10);
+
+  if (@sysvar::DID::ECU_platform == Check_Platform[0])
+  {
+     Check_J3_F();
+  }
+  if (@sysvar::DID::ECU_platform == Check_Platform[1])
+  {
+     Check_J3_F();
+  }
+  if (@sysvar::DID::ECU_platform == Check_Platform[2])
+  {
+     Check_J3_F();
+  }
+  if (@sysvar::DID::ECU_platform == Check_Platform[3])
+  {
+     Check_J3_F();
+  }
+  if (@sysvar::DID::ECU_platform == Check_Platform[4])
+  {
+     Check_J3_F();
+  }
+  if (@sysvar::DID::ECU_platform == Check_Platform[5])
+  {
+     Check_J3_F();
+  }
+  _End();
+}
+
+
+testcase _Check_F084()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F084_ASCII,0xF0,0x84,@sysvar::DID::DID_F084_Len,"DID_F084");
+  _End();
+}
+testcase _Check_F180()
+{  
+  _Start();
+  _Check_DID_HexToDec(DID_F180_ASCII,0xF1,0x80,@sysvar::DID::DID_F180_Len,"DID_F180");
+  _End();
+}
+testcase _Check_F184()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F184_ASCII,0xF1,0x84,@sysvar::DID::DID_F184_Len,"DID_F184");
+  _End();
+}
+testcase _Check_F185()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F185_ASCII,0xF1,0x85,@sysvar::DID::DID_F185_Len,"DID_F185");
+  _End();
+}
+testcase _Check_F187()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F187_ASCII,0xF1,0x87,@sysvar::DID::DID_F187_Len,"DID_F187");
+  _End();
+}
+testcase _Check_F193()
+{
+  _Start();
+  _Check_DID_HexToDec(DID_F193_ASCII,0xF1,0x93,@sysvar::DID::DID_F193_Len,"DID_F193");
+  _End();
+}
+testcase _Check_F194()
+{
+  _Start();
+  _Check_DID_HexToBCD(DID_F194_ASCII,0xF1,0x94,@sysvar::DID::DID_F194_Len,"DID_F194");
+  _End();
+}
+testcase _Check_F195()
+{
+  _Start();
+  _Check_DID_Mix(DID_F195_Ver_ASCII,DID_F195_Time_ASCII,0xF1,0x95,@sysvar::DID::DID_F195_Ver_Len,@sysvar::DID::DID_F195_Time_Len,"DID_F195_Ver","DID_F195_Time");
+  _End();
+}
+
+/***********************************************    长安部分DID    ********************************************/
+testcase _Check_F189()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F189_ASCII,0xF1,0x89,@sysvar::DID::DID_F189_Len,"DID_F189");
+  _End();
+}
+testcase _Check_F089()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F089_ASCII,0xF0,0x89,@sysvar::DID::DID_F089_Len,"DID_F089");
+  _End();
+}
+testcase _Check_F18A()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F18A_ASCII,0xF1,0x8A,@sysvar::DID::DID_F18A_Len,"DID_F18A");
+  _End();
+}
+testcase _Check_F170()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F170_ASCII,0xF1,0x70,@sysvar::DID::DID_F170_Len,"DID_F170");
+  _End();
+}
+testcase _Check_F171()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F171_ASCII,0xF1,0x71,@sysvar::DID::DID_F171_Len,"DID_F171");
+  _End();
+}
+testcase _Check_F123()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F123_ASCII,0xF1,0x23,@sysvar::DID::DID_F123_Len,"DID_F123");
+  _End();
+}
+testcase _Check_F188()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F188_ASCII,0xF1,0x88,@sysvar::DID::DID_F188_Len,"DID_F188");
+  _End();
+}
+testcase _Check_F120()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F120_ASCII,0xF1,0x20,@sysvar::DID::DID_F120_Len,"DID_F120");
+  _End();
+}
+testcase _Check_F121()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F121_ASCII,0xF1,0x21,@sysvar::DID::DID_F121_Len,"DID_F121");
+  _End();
+}
+testcase _Check_F122()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F122_ASCII,0xF1,0x22,@sysvar::DID::DID_F122_Len,"DID_F122");
+  _End();
+}
+testcase _Check_F1F6()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F1F6_ASCII,0xF1,0xF6,@sysvar::DID::DID_F1F6_Len,"DID_F1F6");
+  _End();
+}
+/******************************************************************************************************************/
+/************************************************    瑞驰部分DID    ***********************************************/
+testcase _Check_F197()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F197_ASCII,0xF1,0x97,@sysvar::DID::DID_F197_Len,"DID_F197");
+  _End();
+}
+testcase _Check_0216()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_0216_ASCII,0x02,0x16,@sysvar::DID::DID_0216_Len,"DID_0216");
+  _End();
+}
+testcase _Check_F195_ruichi()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F195_ASCII,0xF1,0x95,@sysvar::DID::DID_F195_Len,"DID_F195");
+  _End();
+}
+/************************************************    五菱部分DID    ***********************************************/
+testcase _Check_F180_SGMW()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F180_ASCII,0xF1,0x80,@sysvar::DID::DID_F180_Len,"DID_F180");
+  _End();
+}
+testcase _Check_F186()
+{  
+  _Start();
+  _Check_DID_HexToBCD(DID_F186_ASCII,0xF1,0x86,@sysvar::DID::DID_F186_Len,"DID_F186");
+  _End();
+}
+testcase _Check_F17A()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F17A_ASCII,0xF1,0x7A,@sysvar::DID::DID_F17A_Len,"DID_F17A");
+  _End();
+}
+testcase _Check_F18B()
+{  
+  _Start();
+  _Check_DID_HexToBCD(DID_F18B_ASCII,0xF1,0x8B,@sysvar::DID::DID_F18B_Len,"DID_F18B");
+  _End();
+}
+testcase _Check_F190()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F190_ASCII,0xF1,0x90,@sysvar::DID::DID_F190_Len,"DID_F190");
+  _End();
+}
+testcase _Check_F192()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F192_ASCII,0xF1,0x92,@sysvar::DID::DID_F192_Len,"DID_F192");
+  _End();
+}
+testcase _Check_F194_SGMW()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F194_ASCII,0xF1,0x94,@sysvar::DID::DID_F194_Len,"DID_F194");
+  _End();
+}
+testcase _Check_F1B2()
+{  
+  _Start();
+  _Check_DID_HexToBCD(DID_F1B2_ASCII,0xF1,0xB2,@sysvar::DID::DID_F1B2_Len,"DID_F1B2");
+  _End();
+}
+testcase _Check_F1CB()
+{  
+  _Start();
+  _Check_DID_ALLHexToDec(DID_F1CB_ASCII,0xF1,0xCB,@sysvar::DID::DID_F1CB_Len,"DID_F1CB");
+  _End();
+}
+testcase _Check_F1C1()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F1C1_ASCII,0xF1,0xC1,@sysvar::DID::DID_F1C1_Len,"DID_F1C1");
+  _End();
+}
+/************************************************    东风部分DID    ***********************************************/
+testcase _Check_F193_DFAC()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F193_ASCII,0xF1,0x93,@sysvar::DID::DID_F193_Len,"DID_F193");
+  _End();
+}
+testcase _Check_F195_DFAC()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F195_ASCII,0xF1,0x95,@sysvar::DID::DID_F195_Len,"DID_F195");
+  _End();
+}
+/************************************************    奇瑞部分DID    ***********************************************/
+
+testcase _Check_F194_CHERY()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F194_ASCII,0xF1,0x94,@sysvar::DID::DID_F194_Len,"DID_F194");
+  _End();
+}
+testcase _Check_F191()
+{  
+  _Start();
+  _Check_DID_ASCII(DID_F191_ASCII,0xF1,0x91,@sysvar::DID::DID_F191_Len,"DID_F191");
+  _End();
+}
+testcase _Check_DID_3011()
+{  
+  _Start();
+  _Check_DID_HexToBCD(DID_3011_ASCII,0x30,0x11,@sysvar::DID::DID_3011_Len,"DID_3011");
+  _End();
+}
+testcase _Check_DID_F201()
+{  
+  _Start();
+  _Check_DID_HexToBCD(DID_F201_ASCII,0xF2,0x01,@sysvar::DID::DID_F201_Len,"DID_F201");
+  _End();
+}

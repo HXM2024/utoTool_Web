@@ -1,0 +1,2782 @@
+/*@!Encoding:936*/
+includes
+{
+  #include "UDS_Main.can"
+}
+
+variables
+{
+  
+}
+
+testcase test() /*验证*/
+{
+
+  Init_Main_Def();
+  SGMW_F190_Loop();
+}
+
+testcase K15_ON()
+{
+  Get_value_For_Power();
+  _K15_ON();
+}
+testcase K15_OFF()
+{
+  Get_value_For_Power();
+  _K15_OFF();
+}
+testcase K30_ON()
+{
+  Get_value_For_Power();
+  _K30_ON();
+}
+testcase K30_OFF()
+{
+  Get_value_For_Power();
+  _K30_OFF();
+}
+testcase _unlockECU_Pass()
+{
+  Get_value();
+  diagSetTarget(Cdd_Name);
+  _unlockECU();
+  testWaitForTimeout(500);
+}
+testcase _Ang_Calibration()
+{
+  _Ang_Calibration_();
+}
+testcase _Clear_Angle_Calibration()
+{
+  _ClearAngle(0);
+}
+testcase _Fac()
+{
+  Get_value();
+  diagSetTarget(Cdd_Name);
+  _unlockFactory();
+  testWaitForTimeout(500);
+}
+
+testcase Case_ID_Traversal()
+{
+  Init_Main_Special("\\特殊工况\\",defsession);
+  _ID_Traversal();
+  End_Main();
+}
+testcase Case_ID_ExTraversal()
+{
+  Init_Main_Special("\\特殊工况\\",defsession);
+  _ID_ExTraversal();
+  End_Main();
+}
+testcase Case_ID_Mix_Traversal()
+{
+  Init_Main_Special("\\特殊工况\\",defsession);
+  _ID_Mix_Traversal();
+  End_Main();
+}
+testcase Case_ID_Mix_ExTraversal()
+{
+  Init_Main_Special("\\特殊工况\\",defsession);
+  _ID_Mix_ExTraversal();
+  End_Main();
+}
+testcase Case_APP_Valid_1002()
+{
+  Init_Main_Special("\\APP有效性测试\\",exsession);
+  _APP_Valid_1002();
+  End_Main();
+}
+testcase Case_APP_Valid_Serve_11()
+{
+  Init_Main_Special("\\APP有效性测试\\",exsession);
+  _APP_Valid_Serve_11();
+  End_Main();
+}
+testcase Case_APP_Valid_Serve_2E()
+{
+  Init_Main_Special("\\APP有效性测试\\",exsession);
+  _APP_Valid_Serve_2E();
+  End_Main();
+}
+testcase Case_APP_Valid_Serve_31()
+{
+  Init_Main_Special("\\APP有效性测试\\",exsession);
+  _APP_Valid_Serve_31();
+  End_Main();
+}
+testcase Case_APP_Valid_Serve_27()
+{
+  Init_Main_Special("\\APP有效性测试\\",exsession);
+  _APP_Valid_Serve_27();
+  End_Main();
+}
+testcase Case_APP_Valid_Serve_Other()
+{
+  Init_Main_Special("\\APP有效性测试\\",exsession);
+  _APP_Valid_Serve_Other();
+  End_Main();
+}
+testcase Case_Geely1_0_NRC22_Test()
+{
+  Init_Main_Special("\\特殊工况\\",defsession);
+  _Geely1_0_NRC22_Test();
+  End_Main();
+}
+testcase Case_Interrupt_10H()
+{
+  Init_Main_Special("\\3E 80不打断当前服务验证\\",defsession);
+  _Interrupt_10H();
+  End_Main();
+}
+testcase Case_Interrupt_11H()
+{
+  Init_Main_Special("\\3E 80不打断当前服务验证\\",defsession);
+  _Interrupt_11H();
+  End_Main();
+}
+testcase Case_Interrupt_14H()
+{
+  Init_Main_Special("\\3E 80不打断当前服务验证\\",defsession);
+  _Interrupt_14H();
+  End_Main();
+}
+testcase Case_Interrupt_27H()
+{
+  Init_Main_Special("\\3E 80不打断当前服务验证\\",defsession);
+  _Interrupt_27H();
+  End_Main();
+}
+testcase Case_Interrupt_2EH()
+{
+  Init_Main_Special("\\3E 80不打断当前服务验证\\",defsession);
+  _Interrupt_2EH();
+  End_Main();
+}
+testcase Case_Interrupt_31H()
+{
+  Init_Main_Special("\\3E 80不打断当前服务验证\\",defsession);
+  _Interrupt_31H();
+  End_Main();
+}
+
+
+
+testcase Case_10_Phy_Def_01() /*10 01*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_01(ID_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_02()/*10 02*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_03()/*10 03*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_03(ID_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_04()/*肯定响应抑制位*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_08()/*NRC13*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_09()/*NRC12*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_09(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_10_CarSpd()/*NRC22车速*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_10_CarSpd(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_10_Battery()/*NRC22电压*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_10_Battery(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_10_Torque()/*NRC22_力矩*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_10_Torque(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_10_Ready()/*NRC22_发动机*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_10_Ready(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_10_Geely3_0()/*Geely3.0  NRC22*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Def_10_Geely3_0(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_11() /* S3server */
+{
+  Init_Main_Def();
+  _10_Phy_Def_11(phyreq_ID);
+  End_Main();
+}
+testcase Case_10_Phy_Def_NRC() /*NRC优先级*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_10_Phy_Def_LoopNRC22_Au() /*NRC22遍历*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_02(ID_From_Title,Session_From_Title,Serve_Form_Title,0);
+  End_Main();
+}
+testcase Case_10_Phy_Def_LoopNRC22_() /*NRC22遍历_手动部分*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_02(ID_From_Title,Session_From_Title,Serve_Form_Title,1);
+  End_Main();
+}
+testcase Case_10_Phy_Def_24()/*S3server*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Ex_24(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_10_Phy_EX_13_Ruls() /*10 02条件*/
+{
+  Init_Main_Ex();
+  _10_Phy_Ex_13(phyreq_ID);
+  End_Main();
+}
+testcase Case_10_Phy_EX_19()/*NRC33*/
+{
+  Init_Main_Ex();
+  _10_Phy_Ex_19(phyreq_ID,exsession);
+  End_Main();
+}
+testcase Case_10_Phy_EX_20()/*NRC22预编程*/
+{
+  Init_Main_Ex();
+  _10_Phy_Ex_20(phyreq_ID);
+  End_Main();
+}
+testcase Case_10_Phy_EX_21()/*NRC22车速*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _10_Phy_Ex_21(ID_From_Title);
+  End_Main();
+}
+
+testcase Case_10_Fun_Ex_42()
+{
+  Init_Main_Ex();
+  _10_Fun_Ex_42(funreq_ID);
+  End_Main();
+}
+testcase Case_10_Fun_Ex_43()/*预编程*/
+{
+  Init_Main_Ex();
+  _10_Fun_Ex_43(funreq_ID);
+  End_Main();
+}
+testcase Case_10_Phy_Def_47()
+{
+  Init_Main_Ex();
+  _Serve10_03(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_10_Phy_Def_48()
+{
+  Init_Main_Ex();
+  _Serve10_04(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_10_Phy_Def_49()
+{
+  Init_Main_Ex();
+  _Serve10_05(phyreq_ID,defsession);
+  End_Main();
+}
+
+testcase Case_10_CCAG_Fac_Torque() 
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_CCAG_Torque(ID_From_Title,Session_From_Title,1);
+  End_Main();
+}
+testcase Case_10_CCAG_Fac_Battery_In() 
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_CCAG_Battery(ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_10_CCAG_Fac_Battery_Out() 
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_CCAG_Battery(ID_From_Title,Session_From_Title,1);
+  End_Main();
+}
+
+testcase Case_ServeNRC7F()  // NRC7F>NRC13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _ServeNRC7F(ID_From_Title,Session_From_Title,Serve_Form_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_01()  // 遍历支持的子功能
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_02()  // 肯定响应抑制位测试
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_02(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_03()  //NRC12
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_04()  //NRC13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_05()  //NRC22_车速
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_06()  //NRC22_档位
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_06(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_06_Fac_Torque()  //NRC22_工厂模式_力矩
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_06_Fac_Torque(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_06_Fac_Battery()  //NRC22_工厂模式_电压
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_06_Fac_Battery(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_06_Torque()  //NRC22_力矩
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_06_Torque(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_06_Battery()  //NRC22_电压
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_06_Battery(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_06_Ready()  //NRC22_发动机
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_06_Ready(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_07()  //NRC优先级
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_07(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_11_Phy_Def_08()  // NRC22-吉利3.0
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve11_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_14_Phy_Def_01() //14 FF FF FF
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve14_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_14_Phy_Def_02() //NRC13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve14_02(ID_From_Title);
+  End_Main();
+}
+testcase Case_14_Phy_Def_03() //清除指定DTC
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve14_03(ID_From_Title);
+  End_Main();
+}
+testcase Case_14_Phy_Def_04()  //NRC优先级
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve14_06(ID_From_Title,Session_From_Title);
+  End_Main();
+  
+}
+testcase Case_14_Phy_Def_05() //NRC31
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve14_05(ID_From_Title,Session_From_Title);
+  End_Main();
+  
+}
+
+testcase Case_14_Phy_Def_07()/*20/27状态位测试*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve14_07(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_22_Phy_Def_01()/*NRC13>31*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_03(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_02()/*NRC13*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_04(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_03()/*NRC31*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_05(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_04()/*一次性读多个DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_06(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_05()/*一次性读三个相同的DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_07(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_06()/*一次性读多个DID（其中一个或多个不支持）*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Def_07()/*其他*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_09(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_22_Phy_Def_40() //DID遍历
+{
+  GetInformationFromTitle();
+  Init_Main_Traversal_DID(Session_From_Title);
+  _Serve22_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_22_Phy_Ex_41()//DID遍历_异常写入
+{
+  Init_Main_Traversal_DID(exsession);
+  _Serve22_02(phyreq_ID,exsession);
+  End_Main();
+}
+
+
+testcase Case_23_Phy_Def_01()  //7F>13
+{
+  Init_Main_Def();
+  _Serve23_01(phyreq_ID,defsession);  
+  End_Main();
+}
+testcase Case_23_Fun_Def_01()  //7F>13
+{
+  Init_Main_Def();
+  _Serve23_01(funreq_ID,defsession);
+  End_Main();
+}
+testcase Case_23_Fun_Ex_01()  //7F>13
+{
+  Init_Main_Ex();
+  _Serve23_01(funreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_02()  //肯定响应
+{
+  Init_Main_Ex();
+  _Serve23_02(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_03()  //NRC优先级
+{
+  Init_Main_Ex();
+  _Serve23_03(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_04()  //NRC13
+{
+  Init_Main_Ex();
+  _Serve23_04(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_05()  //NRC31 地址和长度格式标识符
+{
+  Init_Main_Ex();
+  _Serve23_05(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_06()  //请求报文中地址内存无效
+{
+  Init_Main_Ex();
+  _Serve23_06(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_07()  //请求报文中地址内存被限制
+{
+  Init_Main_Ex();
+  _Serve23_07(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_08()  //请求报文中不支持的内存大小
+{
+  Init_Main_Ex();
+  _Serve23_08(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_23_Phy_Ex_09()  //请求报文中内存大小参数值为0
+{
+  Init_Main_Ex();
+  _Serve23_09(phyreq_ID,exsession);  
+  End_Main();
+}
+
+// testcase Case_27_Phy_Def_01()  //7F>13
+// {
+//   Init_Main_Def();
+//   _27_Serve_01(phyreq_ID,defsession);  
+//   End_Main();
+// }
+testcase Case_27_Phy_Ex_01()  //支持的子功能
+{
+  Init_Main_Ex();
+  _27_Serve_02(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_02()  //解锁后计数器清零
+{
+  Init_Main_Ex();
+  _27_Serve_12(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_05()  //已解锁状态-会话切换
+{
+  Init_Main_Ex();
+  _27_Serve_30_(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_06()  //不正确的报文对错误计数影响测试
+{
+  Init_Main_Ex();
+  _27_Serve_06(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_07()  //连续请求种子
+{
+  Init_Main_Ex();
+  _27_Serve_07(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_08()  //延时时间
+{
+  Init_Main_Ex();
+  _27_Serve_08(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_09()  //延时时间执行规则
+{
+  Init_Main_Ex();
+  _27_Serve_09(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_10()  //延时时间届满-错误计数器处理
+{
+  Init_Main_Ex();
+  _27_Serve_10(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_11()  //未解锁状态-会话切换
+{
+  Init_Main_Ex();
+  _27_Serve_11(phyreq_ID,exsession);  
+  End_Main();
+}
+
+testcase Case_27_Phy_Ex_12()  //未解锁状态-上下电
+{
+  Init_Main_Ex();
+  _27_Serve_13(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_13()  //下电对错误计数影响测试_错误计数器满
+{
+    Init_Main_Ex();
+    _27_Serve_14(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Phy_Ex_13_1()  //下电对错误计数影响测试_错误计数器未满
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen("YunDu")) == 0 )
+  {
+    Init_Main_Ex();
+    _27_Serve_14_1(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report("","当前项目非云度");
+}
+testcase Case_27_Phy_Ex_13_2()  //下电对错误计数影响测试_错误计数器为1
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen("YunDu")) == 0 )
+  {
+    Init_Main_Ex();
+    _27_Serve_14_2(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report("","当前项目非云度");
+}
+testcase Case_27_Phy_Ex_14()  //下电对错误计数影响测试_过安全访问
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen("YunDu")) == 0 )
+  {
+    Init_Main_Ex();
+    _27_Serve_15(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report("","当前项目非云度");
+}
+testcase Case_27_Phy_Ex_15()  /*重启对错误计数影响测试_安全计数器满*/
+{
+    Init_Main_Ex();
+    _27_Serve_16(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Phy_Ex_15_1()  /*重启对错误计数影响测试_安全计数器未满*/
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen("YunDu")) == 0 )
+  {
+    Init_Main_Ex();
+    _27_Serve_16_1(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report("","当前项目非云度");
+}
+testcase Case_27_Phy_Ex_15_2()  /*重启对错误计数影响测试_安全计数器为1*/
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen("YunDu")) == 0 )
+  {
+    Init_Main_Ex();
+    _27_Serve_16_2(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report("","当前项目非云度");
+}
+testcase Case_27_Phy_Ex_16()  /*重启对错误计数影响测试_过安全访问*/
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen("YunDu")) == 0 )
+  {
+    Init_Main_Ex();
+    _27_Serve_17(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report("","当前项目非云度");
+  testWaitForTimeout(1000);
+}
+testcase Case_27_Phy_Ex_17()  //未解锁状态-11重启
+{
+  Init_Main_Ex();
+  _27_Serve_18(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_18()  //不连续请求种子验证重复率(种子随机)
+{
+  Init_Main_Ex();
+  _27_Serve_19(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_18_1()  //连续请求种子验证重复率(种子随机)
+{
+  Init_Main_Ex();
+  _27_Serve_19_1(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_18_2()  //多次过安全访问验证种子重复性
+{
+  Init_Main_Ex();
+  _27_Serve_19_2(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_19()  //NRC优先级
+{
+  Init_Main_Ex();
+  _27_Serve_20(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_21()  //NRC13
+{
+  Init_Main_Ex();
+  _27_Serve_22(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_22()  //NRC12
+{
+  Init_Main_Ex();
+  _27_Serve_23(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_23()  //NRC24
+{
+  Init_Main_Ex();
+  _27_Serve_24(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_24()  //NRC22
+{
+    Init_Main_Ex();
+    _27_Serve_25(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Phy_Ex_25()  //请求顺序切换
+{
+    Init_Main_Ex();
+    _27_Serve_27(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Phy_Ex_28()  //已解锁状态-11重启&KL15
+{
+    Init_Main_Ex();
+    _27_Serve_30(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Phy_Ex_29()  //长度不对的正确秘钥
+{
+    Init_Main_Ex();
+    _27_Serve_31(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Phy_Ex_30()  //子功能错误但秘钥正确
+{
+    Init_Main_Ex();
+    _27_Serve_32(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Serve_07_()  //多次连续/不连续请求种子（响应相同种子）
+{
+    Init_Main_Ex();
+    _27_Serve_07_(phyreq_ID,exsession);  
+    End_Main();
+}
+testcase Case_27_Fun_Def_01()  //无响应
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _27_Serve_26(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_27_Phy_Ex_33()  //肯定响应抑制位
+{
+  Init_Main_Ex();
+  _Serve27_33(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_34()  //肯定响应抑制位混合测试
+{
+  Init_Main_Ex();
+  _Serve27_34(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_27_Phy_Ex_35()  //未解锁状态-上下电/11复位
+{
+  Init_Main_Ex();
+  _Serve27_35(phyreq_ID,exsession);  
+  End_Main();
+}
+
+testcase Case_28_Phy_Ex_1()  //禁收禁发
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_2(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_28_Phy_Ex_2()  //能收禁发
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_3(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_3()  //禁收能发
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_4(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_4()  //S3Timeout
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_5(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_5()  //会话切换
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_6(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_6()  //rest
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_7(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_7()  //KL15 OFF->ON 
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_8(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_8()  //优先级
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_9(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_9()  //NRC13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_10(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_10()  //NRC12
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_11(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_11()  //NRC31
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_12(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_12()  //长安工厂模式-力矩-NRC22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_13(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_13()  //长安工厂模式-电压-NRC22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_14(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_14()  //长安-力矩-NRC22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_15(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_15()  //长安-电压-NRC22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_16(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_16()  //车速-NRC22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_17(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_17()  //档位-NRC22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_18(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_18()  //发动机-NRC22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_19(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_19()  //禁止通讯立即停发
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_20(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_28_Phy_Ex_20()  //异常断电后功能实现正常
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_21(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_28_Phy_Ex_21()  //NRC22-吉利3.0
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve28_21(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_28_Phy_Ex_22()  //静默时长
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _28_Serve_22(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+
+testcase Case_2E_Phy_Def_1()  //7F>13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _2E_Serve_1(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_2E_Phy_Ex_1()  //遍历
+{
+  Init_Main_Ex();
+  _2E_Serve_2(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_2E_Phy_Ex_2()  //写入零件号
+{
+  Init_Main_Ex();
+  _2E_Serve_3(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_2E_Phy_Ex_3()  //优先级
+{
+  Init_Main_Ex();
+  _2E_Serve_4(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_2E_Phy_Ex_4()  //NRC33
+{
+  Init_Main_Ex();
+  _2E_Serve_5(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_2E_Phy_Ex_5()  //NRC13
+{
+  Init_Main_Ex();
+  _2E_Serve_6(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_2E_Phy_Ex_6()  //NRC31
+{
+  Init_Main_Ex();
+  _2E_Serve_7(phyreq_ID,exsession);  
+  End_Main();
+}
+
+testcase Case_31_Phy_Def_01()  //7F>13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Ex_01()  //预编程
+{
+  Init_Main_Ex();
+  _31_Serve_02(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_31_Phy_Ex_02_CCAG()  //长安清除角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_03_CCAG(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_03_CCAG()  //长安角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_04_CCAG(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_04_BYD()  //清除角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    Init_Main_Ex();
+    _31_Serve_05_BYD(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非BYD,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_05_BYD()  //角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    Init_Main_Ex();
+    _31_Serve_06_BYD(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非BYD,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_06_BYD()  //清除软止点
+{
+  Get_value();
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    Init_Main_Ex();
+    _31_Serve_07_BYD(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非BYD,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_07_BYD()  //清除偏移角度学习数据
+{
+  Get_value();
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    Init_Main_Ex();
+    _31_Serve_08_BYD(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非BYD,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_08_BYD()  //清除PDC
+{
+  Get_value();
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    Init_Main_Ex();
+    _31_Serve_09_BYD(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非BYD,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_09_BYD()  //MSP/Shimmy/PDC功能开关
+{
+  Get_value();
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    Init_Main_Ex();
+    _31_Serve_10_BYD(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非BYD,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_10_YunDu()  //角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("YunDu"))
+  {
+    Init_Main_Ex();
+    _31_Serve_11_YunDu(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非YunDu,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_11_YunDu()  //清除角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("YunDu"))
+  {
+    Init_Main_Ex();
+    _31_Serve_12_YunDu(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非YunDu,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_12_YunDu()  //检查标定状态
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDu",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("YunDu"))
+  {
+    Init_Main_Ex();
+    _31_Serve_13_YunDu(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非YunDu,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_13_DongFeng()  //检查标定状态
+{
+  Get_value();
+  if(strncmp(ECU_project,"DongFeng",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("DongFeng"))
+  {
+    Init_Main_Ex();
+    _31_Serve_14_DongFeng(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非DongFeng,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_14_JAC()  //角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"JAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("JAC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_15_JAC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非江淮,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_15_JAC()  //清除角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"JAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("JAC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_16_JAC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非江淮,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_16_JAC()  //检查标定状态-角度无效
+{
+  Get_value();
+  if(strncmp(ECU_project,"JAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("JAC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_17_JAC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非江淮,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_17_JAC()  //检查标定状态-电压限制
+{
+  Get_value();
+  if(strncmp(ECU_project,"JAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("JAC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_18_JAC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非江淮,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_18_JAC()  //检查标定状态-车速限制
+{
+  Get_value();
+  if(strncmp(ECU_project,"JAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("JAC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_19_JAC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非江淮,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_19_JAC()  //检查标定状态-扭矩限制
+{
+  Get_value();
+  if(strncmp(ECU_project,"JAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("JAC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_20_JAC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非江淮,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_20_JAC()  //检查标定状态-转速限制
+{
+  Get_value();
+  if(strncmp(ECU_project,"JAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("JAC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_21_JAC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非江淮,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_21_Chery()  //角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"Chery",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Chery"))
+  {
+    Init_Main_Ex();
+    _31_Serve_22_Chery(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非奇瑞,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_22_Chery()  //A+B!=0
+{
+  Get_value();
+  if(strncmp(ECU_project,"Chery",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Chery"))
+  {
+    Init_Main_Ex();
+    _31_Serve_23_Chery(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非奇瑞,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_23_Chery()  //X3=1
+{
+  Get_value();
+  if(strncmp(ECU_project,"Chery",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Chery"))
+  {
+    Init_Main_Ex();
+    _31_Serve_24_Chery(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非奇瑞,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_24_Chery()  //A+B!=0 && X3=1
+{
+  Get_value();
+  if(strncmp(ECU_project,"Chery",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Chery"))
+  {
+    Init_Main_Ex();
+    _31_Serve_25_Chery(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非奇瑞,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_25_RC()  //角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"RC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("RC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_26_RC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非瑞驰,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_26_RC()  //清除角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"RC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("RC"))
+  {
+    Init_Main_Ex();
+    _31_Serve_27_RC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非瑞驰,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_27_SGMW()  //角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"SGMW",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("SGMW"))
+  {
+    Init_Main_Ex();
+    _31_Serve_28_SGMW(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非五菱,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_28_SRM()  //角度对中
+{
+  Get_value();
+  if(strncmp(ECU_project,"SRM",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("SRM"))
+  {
+    Init_Main_Ex();
+    _31_Serve_29_SRM(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非鑫源,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_32_SGMW()  //NRC22
+{
+  Get_value();
+  if(strncmp(ECU_project,"SGMW",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("SGMW"))
+  {
+    Init_Main_Ex();
+    _31_Serve_33(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非五菱,跳过该条用例");
+}
+testcase Case_31_Phy_Def_33()  //NRC33
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_34(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Ex_33_1()  //NRC33_清除对中
+{
+  Init_Main_Ex();
+  _31_Serve_34_1(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_31_Phy_Ex_33_2()  //NRC33_对中
+{
+  Init_Main_Ex();
+  _31_Serve_34_2(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_31_Phy_Ex_34_CCAG()  //工厂模式下力矩导致回NRC22
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_35(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_35_CCAG()  //工厂模式下电压导致回NRC22
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_36(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_36_CCAG()  //非工厂模式下力矩导致回NRC22
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_37(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_37_CCAG()  //非工厂模式下电压导致回NRC2
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_38(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_38_CCAG()  //车速过大导致回NRC2
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_39(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_39_CCAG()  //车速无效
+{
+  Get_value();
+  if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    Init_Main_Ex();
+    _31_Serve_40(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非长安,跳过该条用例");
+}
+
+testcase Case_31_Phy_Ex_40_BYD()  //13>31>33>12>22>24
+{
+  Get_value();
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    Init_Main_Ex();
+//    _31_Serve_41_BYD(phyreq_ID,exsession);  
+    _31_Serve_41_NRC(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非比亚迪,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_40_Chery()  //13(min)>31(rid)>33>12>13(total)>22
+{
+  Get_value();
+  if(strncmp(ECU_project,"Chery",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Chery"))
+  {
+    Init_Main_Ex();
+    _31_Serve_41_Chery(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非奇瑞,跳过该条用例");
+}
+
+testcase Case_31_Phy_Ex_40_YunDU()  //13>12>33>92>93>88
+{
+  Get_value();
+  if(strncmp(ECU_project,"YunDU",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("YunDU"))
+  {
+    Init_Main_Ex();
+    _31_Serve_41_YunDU(phyreq_ID,exsession);  
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report(ECU_project,"当前项目非云度,跳过该条用例");
+}
+testcase Case_31_Phy_Ex_41_Ready()  //NRC优先级-发动机
+{
+  Init_Main_Ex();
+  _31_Serve_33_Ready(phyreq_ID,exsession);  
+  End_Main();
+}
+testcase Case_31_Phy_Ex_NRC_Special() /*特殊优先级测试*/
+{
+  Init_Main_Ex();
+  _31_Serve_43(phyreq_ID,exsession,0x31);
+  End_Main();
+}
+testcase Case_31_Serve_44_VX11() /*特殊优先级测试-VX11*/
+{
+  Init_Main_Ex();
+  _31_Serve_44_VX11(phyreq_ID,exsession);
+  End_Main();
+}
+
+testcase Case_31_Phy_Def_00()  //遍历所有支持RID
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve31_01(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_29()  //NRC12
+{
+    GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  
+  _31_Serve_30(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_30()  //NRC13
+{  
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  
+  _31_Serve_31(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_31()  //NRC31-RID无效
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_32(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_31_()  //NRC31-例程控制选项无效
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_32_(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_41_NRC()  //NRC优先级
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_41_NRC(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_LoopNRC22_Au() /*NRC22遍历_自动化部分*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_02(ID_From_Title,Session_From_Title,0x31,0);
+  End_Main();
+}
+testcase Case_31_Phy_Def_LoopNRC22_() /*NRC22遍历_手动部分*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve10_02(ID_From_Title,Session_From_Title,0x31,1);
+  End_Main();
+}
+testcase Case_31_Phy_Def_45() /*02 06更新条件检查*/
+{  
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_45(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_46() /*30 7B对中*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_46(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_46_1() /*S信号异常对中*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_46_1(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_46_2() /*角度超范围对中*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_46_2(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_46_3() /*扭矩超范围*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_46_3(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_46_4() /*NVM等待中*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_46_4(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_47() /*清除角度中位标定*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_47(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+// testcase Case_31_Phy_Def_48() /*对中与清除对中*/
+// {
+//   Init_Main_Def();
+//   _31_Serve_48(phyreq_ID,defsession);
+//   End_Main();
+// }
+testcase Case_31_Phy_Def_49() /*角度中位自学习开关*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_49(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+// testcase Case_31_Phy_Def_49_2() /*30 82*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   _31_Serve_49_2(ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+testcase Case_31_Phy_Def_50() /*30 83清除PDC*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_50(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_51() /*30 8B重置PSCM转向角度学习*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_51(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_52() /*30 88重置末端学习*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_52(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Def_53() /*肯定响应抑制位*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_53(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_31_Phy_Ex_47() /*清除角度中位标定*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _31_Serve_47(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+
+testcase Case_3E_Phy_Def_1()  //3E 00
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _3E_Serve_1(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_3E_Phy_Def_2()  //3E 80
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _3E_Serve_2(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_3E_Phy_Def_3()  //NRC优先级
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _3E_Serve_3(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_3E_Phy_Def_4()  //NRC13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _3E_Serve_4(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_3E_Phy_Def_5()  //NRC12
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _3E_Serve_5(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_3E_Phy_Ex_1()  //3E 00
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _3E_Serve_6(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_3E_Phy_Ex_2()  //3E 80
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _3E_Serve_7(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_1()  // 85 02/01
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_2(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_2()  // 85 82/81
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_3(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_3()  // S3Timeout
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_4(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_4()  // 会话切换
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_5(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_5()  // 11重置
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_6(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_6()  // KL15 OFF->ON
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_7(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_7()  // 13>12>22
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_8(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_8_CarSpd()  // NRC22车速
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_9_CarSpd(ID_From_Title,Session_From_Title); 
+}
+
+testcase Case_85_Phy_Ex_8_Ready()  // NRC22发动机
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_9_Ready(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_9()  // Geely3.0   NRC22
+{
+  Get_value();
+  if(strncmp(ECU_project,"Geely3.0",strlen("Geely3.0")) == 0 )
+  {
+    GetInformationFromTitle();
+    if(Session_From_Title == defsession)
+      Init_Main_Def();
+    else
+      Init_Main_Ex();
+    _85_Serve_10(ID_From_Title,Session_From_Title); 
+    End_Main();
+  }
+  else
+    _WriteEx_and_Report("","当前项目非吉利3.0平台");
+}
+
+testcase Case_85_Phy_Ex_10()  // NRC13
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_11(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_11()  // NRC12
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_12(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_13()  // 85服务禁止前的当前故障在85禁止后14清除读取不到
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_13(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_85_Phy_Ex_14()  // 异常断电后功能实现正常
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_14(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+testcase Case_85_Phy_Ex_15()  // 85服务禁止和启用时故障码的检测
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _85_Serve_15(ID_From_Title,Session_From_Title);  
+  End_Main();
+}
+
+testcase Case_Abnormal_NRC_1()  /*10h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_1();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_2()  /*11h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_2();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_3()  /*14h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_3();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_4()  /*19h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_4();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_5()  /*22h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_5();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_6()  /*2Eh-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_6();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_7()  /*27h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_7();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_8()  /*28h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_8();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_9()  /*31h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_9();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_10()  /*3Eh-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_10();  
+  End_Main();
+}
+testcase Case_Abnormal_NRC_11()  /*85h-NRC13*/
+{
+  Init_Main_Def();
+  _Abnormal_NRC_11();  
+  End_Main();
+}
+testcase Case_Not_Support_Fun_Phy()  /*不支持的服务*/
+{
+  byte SE;   
+  GetInformationFromTitle();
+  Init_Main_Def();
+  for(i=0;i<2;i++)
+  {
+    if(i==1)
+      SE = exsession;
+    else
+      SE = defsession;
+    _Not_Support_Fun(ID_From_Title,SE);
+  }
+   End_Main();
+  testWaitForTimeout(1000);
+}
+
+testcase _High_BUS_loader_H_1()/*对中*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_1(0,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_2()/*写DID*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_2(0,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_3()/*对中*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_1(1,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_4()/*写DID*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_2(1,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_5()/*写DID/对中*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_3(0,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_6()/*写DID/对中*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_3(1,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_7()/*写DID/对中  变动负载率*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_4(0,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_8()/*写DID/对中  变动负载率**//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_4(1,p2cmax);
+  End_Main();
+}
+testcase _High_BUS_loader_H_9()/*写DID/对中  负载率由人为控制*//*适用与程序制造负载率不可控*/
+{
+  Init_Main_Def();
+  _High_BUS_loader_H_5(p2cmax);
+  End_Main();
+}
+testcase Case_19_Phy_Def_01()  //19 01
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_01(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_19_Phy_Def_02()  //19 02
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_02(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_19_Phy_Def_02_1()  //19 02 上下电
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_22(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_19_Phy_Def_02_2()  //19 02 异常复位
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_22_1(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_19_Phy_Def_02_3()  //19 02 08/09/FF
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_22_2(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+// testcase Case_19_Phy_Def_03()  //长安平台化使用此用例19 04
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   _19_Serve_03(ID_From_Title,Session_From_Title); 
+//   End_Main();
+// }
+testcase Case_19_Phy_Def_04()  //19 04
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_04(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_19_Phy_Def_05()  //19 04单个快照信息
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_05(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_19_Phy_Def_06()  // 19 06
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_06(ID_From_Title,Session_From_Title); 
+  End_Main();
+}
+testcase Case_19_Phy_Def_07()   /*故障发生计数器更新机制*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_07(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_08()   /*故障发生计数器被14服务清零*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_08(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_09()   /*老化计数器更新机制*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_09(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_10()   /*老化计数器被14服务清零*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_10(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_11()   /*已老化计数器更新机制(时间较长)*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_11(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_12()   /*已老化计数器被14服务清零*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_12(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_13()   /*故障发生时间*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_13(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_14()   /*19 0A*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_14(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_15()   /*SuppressBit*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_15(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_16()   /*NRC12*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_16(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_17()   /*NRC13*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_17(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_18()   /*NRC31*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_18(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_19()   /*19 01/02*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_19(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_20()   /*NRC优先级*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_20(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_19_Phy_Def_21_()   /*故障老化验证*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_21(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+
+testcase Case_General_31_AngCal() /*角度对中*/
+{
+  Init_Main_Ex();
+  General_31_AngCal();
+  End_Main();
+}
+testcase Case_General_31_AngCal_Clear() /*清除角度对中*/
+{
+  Init_Main_Ex();
+  General_31_AngCal_Clear();
+  End_Main();
+}
+
+testcase Case_Geely_31_0206() /*02 06*/
+{
+  Init_Main_Def();
+  Geely_31_0206();
+  End_Main();
+}
+testcase Case_Geely_31_3080() /*清除角度中位标定(30 80)*/
+{
+  Init_Main_Def();
+  Geely_31_3080();
+  End_Main();
+}
+testcase Case_Geely_31_3080_307B() /*角度中位标定测试*/
+{
+  Init_Main_Def();
+  Geely_31_3080_307B();
+  End_Main();
+}
+testcase Case_Geely_31_3082() /*角度中位自学习开关(30 82)*/
+{
+  Init_Main_Def();
+  Geely_31_3082();
+  End_Main();
+}
+testcase Case_Geely_31_3083() /*清除PDC(30 83)*/
+{
+  Init_Main_Def();
+  Geely_31_3083();
+  End_Main();
+}
+testcase Case_Geely_31_308B() /*重置PSCM转向角度学习(30 8B)*/
+{
+  Init_Main_Def();
+  Geely_31_308B();
+  End_Main();
+}
+testcase Case_Geely_31_3088() /*重置末端学习(30 88)*/
+{
+  Init_Main_Def();
+  Geely_31_3088();
+  End_Main();
+}
+testcase Case_Geely_31_SentError() /*传感器异常*/
+{
+  Init_Main_Def();
+  Geely_31_SentError();
+  End_Main();
+}
+
+testcase Case_BYD_31_0203() /*02 03*/
+{
+  Init_Main_Ex();
+  BYD_31_0203();
+  End_Main();
+}
+testcase Case_BYD_31_AC00() /*AC 00*/
+{
+  Init_Main_Ex();
+  BYD_31_AC00();
+  End_Main();
+}
+testcase Case_BYD_31_F004() /*F0 04*/
+{
+  Init_Main_Ex();
+  BYD_31_F004();
+  End_Main();
+}
+testcase Case_BYD_31_3001() /*30 01*/
+{
+  Init_Main_Ex();
+  BYD_31_3001();
+  End_Main();
+}
+testcase Case_BYD_31_3002() /*30 02*/
+{
+  Init_Main_Ex();
+  BYD_31_3002();
+  End_Main();
+}
+testcase Case_BYD_31_A001() /*A0 01*/
+{
+  Init_Main_Ex();
+  BYD_31_A001();
+  End_Main();
+}
+testcase Case_BYD_31_3003_02() /*30 03 02*/
+{
+  Init_Main_Ex();
+  BYD_31_3003_02();
+  End_Main();
+}
+testcase Case_BYD_31_3003_04() /*30 03 04*/
+{
+  Init_Main_Ex();
+  BYD_31_3003_04();
+  End_Main();
+}
+testcase Case_BYD_31_3003_08() /*30 03 08*/
+{
+  Init_Main_Ex();
+  BYD_31_3003_08();
+  End_Main();
+}
+testcase Case_BYD_31_3003_0E() /*30 03 0E*/
+{
+  Init_Main_Ex();
+  BYD_31_3003_0E();
+  End_Main();
+}
+

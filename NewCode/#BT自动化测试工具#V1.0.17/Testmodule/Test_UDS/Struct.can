@@ -1,0 +1,622 @@
+/*@!Encoding:936*/
+
+includes
+{
+  
+}
+
+variables
+{
+  /*服务(新 ,参照配置表) * 结构体*/
+  struct Serve_Support
+  {
+    byte Serve;                            /*服务*/
+    dword Serve_Fun[50];                  /*服务支持的子功能*/ 
+    byte Serve_Fun_Count;                  /*服务支持的子功能个数*/
+    byte Serve_Fun_Len[50];               /*服务支持的子功能对应的正确长度*/ 
+    
+    byte Serve_Para[50][10];             /*每个子功能对应的参数*/ 
+    byte Serve_Para_Count[50];            /*每个子功能对应的参数个数*/ 
+    byte Serve_Para_Len[50][10];         /*子功能对应的每个参数的长度*/
+    
+    byte Serve_NRC[50][10];              /*NRC优先级(由高到低)*//*与子功能位置顺序对应*/
+    byte Serve_NRC_Count[50];             /*NRC个数*/
+    byte Serve_NRC22[50];                 /*NRC22条件*/
+    byte RSP[50];                         /*肯定响应抑制位 1:支持  0:不支持*//*与子功能位置顺序对应*/
+    byte Security_Access[50];             /*是否需要安全访问*//*与子功能位置顺序对应*/
+    byte Serve_Addres[50];                /*寻址方式*//*与子功能位置顺序对应*/
+    byte Serve_Session[50];               /*会话*//*与子功能位置顺序对应*/
+  };
+  struct Serve_Support Serve_Data[15];
+  dword Serve_Data_Count;
+  
+  
+  /*31服务(新 ,参照配置表) * 结构体*/
+  /*1字节服务 + 1字节例程控制类型 + 2字节例程DID + 例程控制选项   例如 ：长安角度置零请求31 01 FE E0 01*/
+  
+  struct Serve_31_Support
+  {   
+    byte Routine[2];                      /*例程DID/进程号(一个例程2个byte)*/
+    dword Routine_Len;                     /*例程对应的发送长度*/
+    char Interpretation[50];              /*例程释义*/
+    
+    byte Control_Type_Count;              /*对应例程下有几个控制类型(和例程位置对应)*/
+    byte Control_Type[10];                /*例程控制类型*//*和例程位置对应(一个例程多种控制类型(控制类型1byte))*/
+    dword Control_Type_TxLen[10];            /*根据控制类型,例程对应的发送长度*/
+    byte Control_Type_RxLen[10];          /*控制类型的响应长度*//*跟随控制类型*/
+    int Control_Type_Success[10];         /*跟随控制类型,成功对应的数据*/
+    int Control_Type_Failed[10];          /*跟随控制类型,失败对应的数据*/    
+    int Control_Type_Others[10];          /*跟随控制类型,其他对应的数据*/
+
+    
+    byte Control_Option_Count[10];        /*对应例程下有几个控制选项(和控制类型对应)*/
+    byte Control_Option[10][10];          /*例程控制选项*//*和控制类型对应(多种控制选项或没有控制选项 控制选项1byte)*/
+    
+    byte Security_Access[10];             /*是否需要安全访问(和控制类型对应)*/
+    byte Serve_Addres[10];                /*支持的寻址方式(和控制类型对应)*/
+    byte Serve_Session[10];               /*支持的会话(和控制类型对应)*/
+    byte Serve_NRC22[10];                 /*NRC22条件(和控制类型对应)*/
+    byte Serve_NRC[10];                   /*31服务下的NRC(和控制类型对应)*/
+    byte Serve_NRC_Count[10];             /*31服务下的NRC个数(和控制类型对应)*/
+    
+  };
+  struct Serve_31_Support Serve_31_Hex[10];
+  dword Serve_31_Hex_Count;
+  
+}
+
+void _Init_Struct()
+{
+  int i,n;
+  dword Poss,Serve_Para,Serve_Fun;
+  dword Rountine_Poss,Con_Poss;
+  writeEx(-3,1,"------------初始化结构体---------------");
+  
+
+  Serve_Data_Count = 11;
+  Serve_31_Hex_Count = 4;
+
+  /********************10结构体*****************/        
+  Serve_Data[0].Serve                = 0x10;
+  Serve_Data[0].Serve_Fun_Count      = 3;
+
+                
+  Serve_Data[0].Serve_Fun[0]         = 0x01;            //默认模式
+  Serve_Data[0].RSP[0]               = 1;
+  Serve_Data[0].Serve_Fun_Len[0]     = 2;
+  Serve_Data[0].Serve_Addres[0]      = 3;
+  Serve_Data[0].Serve_Session[0]     = 7;
+  Serve_Data[0].Serve_Para_Count[0]  = 0;
+  Serve_Data[0].Serve_NRC_Count[0]   = 3; 
+  Serve_Data[0].Security_Access[0]   = 0;
+  Serve_Data[0].Serve_NRC22[0]       = 0;
+  Serve_Data[0].Serve_NRC[0][0]      = 0x13;
+  Serve_Data[0].Serve_NRC[0][1]      = 0x12;
+  Serve_Data[0].Serve_NRC[0][2]      = 0x13;
+                
+  Serve_Data[0].Serve_Fun[1]         = 0x02;            //编程模式
+  Serve_Data[0].RSP[1]               = 1;
+  Serve_Data[0].Serve_Fun_Len[1]     = 2;
+  Serve_Data[0].Serve_Addres[1]      = 1;
+  Serve_Data[0].Serve_Session[1]     = 6;
+  Serve_Data[0].Serve_Para_Count[1]  = 0;
+  Serve_Data[0].Serve_NRC_Count[1]   = 3; 
+  Serve_Data[0].Security_Access[1]   = 0;
+  Serve_Data[0].Serve_NRC22[1]       = 0;
+  Serve_Data[0].Serve_NRC[1][0]      = 0x13;
+  Serve_Data[0].Serve_NRC[1][1]      = 0x12;
+  Serve_Data[0].Serve_NRC[1][2]      = 0x13;
+                
+  Serve_Data[0].Serve_Fun[2]         = 0x03;            //扩展诊断模式
+  Serve_Data[0].RSP[2]               = 1;
+  Serve_Data[0].Serve_Fun_Len[2]     = 2;
+  Serve_Data[0].Serve_Addres[2]      = 3;
+  Serve_Data[0].Serve_Session[2]     = 5;
+  Serve_Data[0].Serve_Para_Count[2]  = 0;
+  Serve_Data[0].Serve_NRC_Count[2]   = 3; 
+  Serve_Data[0].Security_Access[2]   = 0;
+  Serve_Data[0].Serve_NRC22[2]       = 0;
+  Serve_Data[0].Serve_NRC[2][0]      = 0x13;
+  Serve_Data[0].Serve_NRC[2][1]      = 0x12;
+  Serve_Data[0].Serve_NRC[2][2]      = 0x13;
+
+  /********************11结构体*****************/        
+  Serve_Data[1].Serve                = 0x11;
+  Serve_Data[1].Serve_Fun_Count      = 2;
+
+                
+  Serve_Data[1].Serve_Fun[0]         = 0x01;            //硬件复位
+  Serve_Data[1].RSP[0]               = 1;
+  Serve_Data[1].Serve_Fun_Len[0]     = 2;
+  Serve_Data[1].Serve_Addres[0]      = 3;
+  Serve_Data[1].Serve_Session[0]     = 7;
+  Serve_Data[1].Serve_Para_Count[0]  = 0;
+  Serve_Data[1].Serve_NRC_Count[0]   = 3; 
+  Serve_Data[1].Security_Access[0]   = 0;
+  Serve_Data[1].Serve_NRC22[0]       = 0;
+  Serve_Data[1].Serve_NRC[0][0]      = 0x13;
+  Serve_Data[1].Serve_NRC[0][1]      = 0x12;
+  Serve_Data[1].Serve_NRC[0][2]      = 0x13;
+                
+  Serve_Data[1].Serve_Fun[1]         = 0x03;            //软件复位
+  Serve_Data[1].RSP[1]               = 1;
+  Serve_Data[1].Serve_Fun_Len[1]     = 2;
+  Serve_Data[1].Serve_Addres[1]      = 3;
+  Serve_Data[1].Serve_Session[1]     = 7;
+  Serve_Data[1].Serve_Para_Count[1]  = 0;
+  Serve_Data[1].Serve_NRC_Count[1]   = 3; 
+  Serve_Data[1].Security_Access[1]   = 0;
+  Serve_Data[1].Serve_NRC22[1]       = 0;
+  Serve_Data[1].Serve_NRC[1][0]      = 0x13;
+  Serve_Data[1].Serve_NRC[1][1]      = 0x12;
+  Serve_Data[1].Serve_NRC[1][2]      = 0x13;
+
+  /********************27结构体*****************/        
+  Serve_Data[2].Serve                = 0x27;
+  Serve_Data[2].Serve_Fun_Count      = 2;
+
+                
+  Serve_Data[2].Serve_Fun[0]         = 0x11;            //请求种子
+  Serve_Data[2].RSP[0]               = 0;
+  Serve_Data[2].Serve_Fun_Len[0]     = 2;
+  Serve_Data[2].Serve_Addres[0]      = 1;
+  Serve_Data[2].Serve_Session[0]     = 2;
+  Serve_Data[2].Serve_Para_Count[0]  = 0;
+  Serve_Data[2].Serve_NRC_Count[0]   = 2; 
+  Serve_Data[2].Security_Access[0]   = 0;
+  Serve_Data[2].Serve_NRC22[0]       = 0;
+  Serve_Data[2].Serve_NRC[0][0]      = 0x13;
+  Serve_Data[2].Serve_NRC[0][1]      = 0x12;
+                
+  Serve_Data[2].Serve_Fun[1]         = 0x12;            //发送密钥
+  Serve_Data[2].RSP[1]               = 0;
+  Serve_Data[2].Serve_Fun_Len[1]     = 6;
+  Serve_Data[2].Serve_Addres[1]      = 1;
+  Serve_Data[2].Serve_Session[1]     = 2;
+  Serve_Data[2].Serve_Para_Count[1]  = 0;
+  Serve_Data[2].Serve_NRC_Count[1]   = 2; 
+  Serve_Data[2].Security_Access[1]   = 0;
+  Serve_Data[2].Serve_NRC22[1]       = 0;
+  Serve_Data[2].Serve_NRC[1][0]      = 0x13;
+  Serve_Data[2].Serve_NRC[1][1]      = 0x12;
+
+  /********************28结构体*****************/        
+  Serve_Data[3].Serve                = 0x28;
+  Serve_Data[3].Serve_Fun_Count      = 2;
+
+                
+  Serve_Data[3].Serve_Fun[0]         = 0x00;            //使能接收和发送
+  Serve_Data[3].RSP[0]               = 1;
+  Serve_Data[3].Serve_Fun_Len[0]     = 3;
+  Serve_Data[3].Serve_Addres[0]      = 3;
+  Serve_Data[3].Serve_Session[0]     = 4;
+  Serve_Data[3].Serve_Para_Count[0]  = 1;
+  Serve_Data[3].Serve_NRC_Count[0]   = 4; 
+  Serve_Data[3].Security_Access[0]   = 0;
+  Serve_Data[3].Serve_NRC22[0]       = 0;
+  Serve_Data[3].Serve_Para[0][0]     = 0x1;
+  Serve_Data[3].Serve_Para_Len[0][0] = 1;
+  Serve_Data[3].Serve_NRC[0][0]      = 0x13;
+  Serve_Data[3].Serve_NRC[0][1]      = 0x12;
+  Serve_Data[3].Serve_NRC[0][2]      = 0x13;
+  Serve_Data[3].Serve_NRC[0][3]      = 0x31;
+                
+  Serve_Data[3].Serve_Fun[1]         = 0x03 ;            //禁止接收和发送
+  Serve_Data[3].RSP[1]               = 1;
+  Serve_Data[3].Serve_Fun_Len[1]     = 3;
+  Serve_Data[3].Serve_Addres[1]      = 3;
+  Serve_Data[3].Serve_Session[1]     = 4;
+  Serve_Data[3].Serve_Para_Count[1]  = 1;
+  Serve_Data[3].Serve_NRC_Count[1]   = 4; 
+  Serve_Data[3].Security_Access[1]   = 0;
+  Serve_Data[3].Serve_NRC22[1]       = 0;
+  Serve_Data[3].Serve_Para[1][0]     = 0x1;
+  Serve_Data[3].Serve_Para_Len[1][0] = 1;
+  Serve_Data[3].Serve_NRC[1][0]      = 0x13;
+  Serve_Data[3].Serve_NRC[1][1]      = 0x12;
+  Serve_Data[3].Serve_NRC[1][2]      = 0x13;
+  Serve_Data[3].Serve_NRC[1][3]      = 0x31;
+   /********************22结构体*****************/
+  Serve_Data[4].Serve                = 0x22;
+  Serve_Data[4].Serve_Fun_Count      = 13;                
+  
+            
+  Serve_Data[4].Serve_Fun[0]         = 0x0200;
+  Serve_Data[4].RSP[0]               = 0;
+  Serve_Data[4].Serve_Fun_Len[0]     = 3;
+  Serve_Data[4].Serve_Addres[0]      = 3;
+  Serve_Data[4].Serve_Session[0]     = 7;
+  Serve_Data[4].Serve_NRC_Count[0]   = 3;
+  Serve_Data[4].Security_Access[0]   = 0;
+  Serve_Data[4].Serve_NRC22[0]       = 0;
+  Serve_Data[4].Serve_NRC[0][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[0][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[0][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[1]         = 0x0201;
+  Serve_Data[4].RSP[1]               = 0;
+  Serve_Data[4].Serve_Fun_Len[1]     = 3;
+  Serve_Data[4].Serve_Addres[1]      = 3;
+  Serve_Data[4].Serve_Session[1]     = 7;
+  Serve_Data[4].Serve_NRC_Count[1]   = 3;
+  Serve_Data[4].Security_Access[1]   = 0;
+  Serve_Data[4].Serve_NRC22[1]       = 0;
+  Serve_Data[4].Serve_NRC[1][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[1][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[1][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[2]         = 0xF101;
+  Serve_Data[4].RSP[2]               = 0;
+  Serve_Data[4].Serve_Fun_Len[2]     = 3;
+  Serve_Data[4].Serve_Addres[2]      = 3;
+  Serve_Data[4].Serve_Session[2]     = 7;
+  Serve_Data[4].Serve_NRC_Count[2]   = 3;
+  Serve_Data[4].Security_Access[2]   = 0;
+  Serve_Data[4].Serve_NRC22[2]       = 0;
+  Serve_Data[4].Serve_NRC[2][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[2][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[2][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[3]         = 0xF17F;
+  Serve_Data[4].RSP[3]               = 0;
+  Serve_Data[4].Serve_Fun_Len[3]     = 3;
+  Serve_Data[4].Serve_Addres[3]      = 3;
+  Serve_Data[4].Serve_Session[3]     = 7;
+  Serve_Data[4].Serve_NRC_Count[3]   = 3;
+  Serve_Data[4].Security_Access[3]   = 0;
+  Serve_Data[4].Serve_NRC22[3]       = 0;
+  Serve_Data[4].Serve_NRC[3][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[3][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[3][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[4]         = 0xF180;
+  Serve_Data[4].RSP[4]               = 0;
+  Serve_Data[4].Serve_Fun_Len[4]     = 3;
+  Serve_Data[4].Serve_Addres[4]      = 3;
+  Serve_Data[4].Serve_Session[4]     = 7;
+  Serve_Data[4].Serve_NRC_Count[4]   = 3;
+  Serve_Data[4].Security_Access[4]   = 0;
+  Serve_Data[4].Serve_NRC22[4]       = 0;
+  Serve_Data[4].Serve_NRC[4][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[4][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[4][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[5]         = 0xF184;
+  Serve_Data[4].RSP[5]               = 0;
+  Serve_Data[4].Serve_Fun_Len[5]     = 3;
+  Serve_Data[4].Serve_Addres[5]      = 3;
+  Serve_Data[4].Serve_Session[5]     = 7;
+  Serve_Data[4].Serve_NRC_Count[5]   = 3;
+  Serve_Data[4].Security_Access[5]   = 0;
+  Serve_Data[4].Serve_NRC22[5]       = 0;
+  Serve_Data[4].Serve_NRC[5][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[5][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[5][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[6]         = 0xF187;
+  Serve_Data[4].RSP[6]               = 0;
+  Serve_Data[4].Serve_Fun_Len[6]     = 3;
+  Serve_Data[4].Serve_Addres[6]      = 3;
+  Serve_Data[4].Serve_Session[6]     = 7;
+  Serve_Data[4].Serve_NRC_Count[6]   = 3;
+  Serve_Data[4].Security_Access[6]   = 0;
+  Serve_Data[4].Serve_NRC22[6]       = 0;
+  Serve_Data[4].Serve_NRC[6][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[6][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[6][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[7]         = 0xF189;
+  Serve_Data[4].RSP[7]               = 0;
+  Serve_Data[4].Serve_Fun_Len[7]     = 3;
+  Serve_Data[4].Serve_Addres[7]      = 3;
+  Serve_Data[4].Serve_Session[7]     = 7;
+  Serve_Data[4].Serve_NRC_Count[7]   = 3;
+  Serve_Data[4].Security_Access[7]   = 0;
+  Serve_Data[4].Serve_NRC22[7]       = 0;
+  Serve_Data[4].Serve_NRC[7][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[7][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[7][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[8]         = 0xF197;
+  Serve_Data[4].RSP[8]               = 0;
+  Serve_Data[4].Serve_Fun_Len[8]     = 3;
+  Serve_Data[4].Serve_Addres[8]      = 3;
+  Serve_Data[4].Serve_Session[8]     = 7;
+  Serve_Data[4].Serve_NRC_Count[8]   = 3;
+  Serve_Data[4].Security_Access[8]   = 0;
+  Serve_Data[4].Serve_NRC22[8]       = 0;
+  Serve_Data[4].Serve_NRC[8][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[8][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[8][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[9]         = 0xF199;
+  Serve_Data[4].RSP[9]               = 0;
+  Serve_Data[4].Serve_Fun_Len[9]     = 3;
+  Serve_Data[4].Serve_Addres[9]      = 3;
+  Serve_Data[4].Serve_Session[9]     = 7;
+  Serve_Data[4].Serve_NRC_Count[9]   = 3;
+  Serve_Data[4].Security_Access[9]   = 0;
+  Serve_Data[4].Serve_NRC22[9]       = 0;
+  Serve_Data[4].Serve_NRC[9][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[9][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[9][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[10]         = 0xF18E;
+  Serve_Data[4].RSP[10]               = 0;
+  Serve_Data[4].Serve_Fun_Len[10]     = 3;
+  Serve_Data[4].Serve_Addres[10]      = 3;
+  Serve_Data[4].Serve_Session[10]     = 7;
+  Serve_Data[4].Serve_NRC_Count[10]   = 3;
+  Serve_Data[4].Security_Access[10]   = 0;
+  Serve_Data[4].Serve_NRC22[10]       = 0;
+  Serve_Data[4].Serve_NRC[10][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[10][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[10][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[11]         = 0xEF01;
+  Serve_Data[4].RSP[11]               = 0;
+  Serve_Data[4].Serve_Fun_Len[11]     = 3;
+  Serve_Data[4].Serve_Addres[11]      = 3;
+  Serve_Data[4].Serve_Session[11]     = 7;
+  Serve_Data[4].Serve_NRC_Count[11]   = 3;
+  Serve_Data[4].Security_Access[11]   = 0;
+  Serve_Data[4].Serve_NRC22[11]       = 0;
+  Serve_Data[4].Serve_NRC[11][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[11][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[11][2]      = 0x13;
+            
+  Serve_Data[4].Serve_Fun[12]         = 0xEF02;
+  Serve_Data[4].RSP[12]               = 0;
+  Serve_Data[4].Serve_Fun_Len[12]     = 3;
+  Serve_Data[4].Serve_Addres[12]      = 3;
+  Serve_Data[4].Serve_Session[12]     = 7;
+  Serve_Data[4].Serve_NRC_Count[12]   = 3;
+  Serve_Data[4].Security_Access[12]   = 0;
+  Serve_Data[4].Serve_NRC22[12]       = 0;
+  Serve_Data[4].Serve_NRC[12][0]      = 0x13;
+  Serve_Data[4].Serve_NRC[12][1]      = 0x31;
+  Serve_Data[4].Serve_NRC[12][2]      = 0x13;
+  
+
+  /********************2E结构体*****************/        
+  Serve_Data[5].Serve                = 0x2E;
+  Serve_Data[5].Serve_Fun_Count      = 3;
+                
+  Serve_Data[5].Serve_Fun[0]         = 0xF184;
+  Serve_Data[5].Serve_Fun_Len[0]     = 10;
+  Serve_Data[5].Serve_Addres[0]      = 1;
+  Serve_Data[5].Serve_Session[0]     = 2;
+  Serve_Data[5].Serve_NRC_Count[0]   = 4;
+  Serve_Data[5].Security_Access[0]   = 1;
+  Serve_Data[5].Serve_NRC22[0]       = 0;
+  Serve_Data[5].Serve_NRC[0][0]      = 0x33;
+  Serve_Data[5].Serve_NRC[0][1]      = 0x13;
+  Serve_Data[5].Serve_NRC[0][2]      = 0x31;
+  Serve_Data[5].Serve_NRC[0][3]      = 0x13;
+                
+  Serve_Data[5].Serve_Fun[1]         = 0xF199;
+  Serve_Data[5].Serve_Fun_Len[1]     = 4;
+  Serve_Data[5].Serve_Addres[1]      = 1;
+  Serve_Data[5].Serve_Session[1]     = 2;
+  Serve_Data[5].Serve_NRC_Count[1]   = 4;
+  Serve_Data[5].Security_Access[1]   = 1;
+  Serve_Data[5].Serve_NRC22[1]       = 0;
+  Serve_Data[5].Serve_NRC[1][0]      = 0x33;
+  Serve_Data[5].Serve_NRC[1][1]      = 0x13;
+  Serve_Data[5].Serve_NRC[1][2]      = 0x31;
+  Serve_Data[5].Serve_NRC[1][3]      = 0x13;
+                
+  Serve_Data[5].Serve_Fun[2]         = 0xEF01;
+  Serve_Data[5].Serve_Fun_Len[2]     = 16;
+  Serve_Data[5].Serve_Addres[2]      = 1;
+  Serve_Data[5].Serve_Session[2]     = 2;
+  Serve_Data[5].Serve_NRC_Count[2]   = 4;
+  Serve_Data[5].Security_Access[2]   = 1;
+  Serve_Data[5].Serve_NRC22[2]       = 0;
+  Serve_Data[5].Serve_NRC[2][0]      = 0x33;
+  Serve_Data[5].Serve_NRC[2][1]      = 0x13;
+  Serve_Data[5].Serve_NRC[2][2]      = 0x31;
+  Serve_Data[5].Serve_NRC[2][3]      = 0x13;
+  
+               
+   /********************0x31 结构体*****************/     
+   Serve_31_Hex[0].Routine[0]               = 0x02;            
+   Serve_31_Hex[0].Routine[1]               = 0x03;                 
+   Serve_31_Hex[0].Control_Type_Count       = 1;
+   
+   Serve_31_Hex[0].Serve_NRC[0]             = 0x13;
+   Serve_31_Hex[0].Serve_NRC[1]             = 0x31;
+   Serve_31_Hex[0].Serve_NRC[2]             = 0x12;
+   Serve_31_Hex[0].Serve_NRC[3]             = 0x13;
+   
+   Serve_31_Hex[0].Control_Type[0]          = 0x01;
+   Serve_31_Hex[0].Control_Type_TxLen[0]    = 4;
+   Serve_31_Hex[0].Serve_Addres[0]          = 1;
+   Serve_31_Hex[0].Serve_Session[0]         = 4;
+   Serve_31_Hex[0].Security_Access[0]       = 0;
+   Serve_31_Hex[0].Control_Option_Count[0]  = 0; 
+   Serve_31_Hex[0].Serve_NRC_Count[0]       = 4; 
+   Serve_31_Hex[0].Serve_NRC22[0]           = 0;
+    
+               
+   /********************0x31 结构体*****************/     
+   Serve_31_Hex[1].Routine[0]               = 0xFF;            
+   Serve_31_Hex[1].Routine[1]               = 0x00;                 
+   Serve_31_Hex[1].Control_Type_Count       = 1;
+   
+   Serve_31_Hex[1].Serve_NRC[0]             = 0x33;
+   Serve_31_Hex[1].Serve_NRC[1]             = 0x13;
+   Serve_31_Hex[1].Serve_NRC[2]             = 0x31;
+   Serve_31_Hex[1].Serve_NRC[3]             = 0x12;
+   Serve_31_Hex[1].Serve_NRC[4]             = 0x13;
+   Serve_31_Hex[1].Serve_NRC[5]             = 0x31;
+   Serve_31_Hex[1].Serve_NRC[6]             = 0x22;
+   
+   Serve_31_Hex[1].Control_Type[0]          = 0x01;
+   Serve_31_Hex[1].Control_Type_TxLen[0]    = 13;
+   Serve_31_Hex[1].Serve_Addres[0]          = 1;
+   Serve_31_Hex[1].Serve_Session[0]         = 2;
+   Serve_31_Hex[1].Security_Access[0]       = 1;
+   Serve_31_Hex[1].Control_Option_Count[0]  = 1; 
+   Serve_31_Hex[1].Serve_NRC_Count[0]       = 7; 
+   Serve_31_Hex[1].Serve_NRC22[0]           = 0;
+    
+   Serve_31_Hex[1].Control_Option[0][0]     = 0x44;
+               
+   /********************0x31 结构体*****************/     
+   Serve_31_Hex[2].Routine[0]               = 0x02;            
+   Serve_31_Hex[2].Routine[1]               = 0x02;                 
+   Serve_31_Hex[2].Control_Type_Count       = 1;
+   
+   Serve_31_Hex[2].Serve_NRC[0]             = 0x33;
+   Serve_31_Hex[2].Serve_NRC[1]             = 0x31;
+   Serve_31_Hex[2].Serve_NRC[2]             = 0x31;
+   Serve_31_Hex[2].Serve_NRC[3]             = 0x12;
+   Serve_31_Hex[2].Serve_NRC[4]             = 0x13;
+   Serve_31_Hex[2].Serve_NRC[5]             = 0x31;
+   Serve_31_Hex[2].Serve_NRC[6]             = 0x22;
+   
+   Serve_31_Hex[2].Control_Type[0]          = 0x01;
+   Serve_31_Hex[2].Control_Type_TxLen[0]    = 8;
+   Serve_31_Hex[2].Serve_Addres[0]          = 1;
+   Serve_31_Hex[2].Serve_Session[0]         = 2;
+   Serve_31_Hex[2].Security_Access[0]       = 1;
+   Serve_31_Hex[2].Control_Option_Count[0]  = 0; 
+   Serve_31_Hex[2].Serve_NRC_Count[0]       = 7; 
+   Serve_31_Hex[2].Serve_NRC22[0]           = 0;
+    
+               
+   /********************0x31 结构体*****************/     
+   Serve_31_Hex[3].Routine[0]               = 0xFF;            
+   Serve_31_Hex[3].Routine[1]               = 0x01;                 
+   Serve_31_Hex[3].Control_Type_Count       = 1;
+   
+   Serve_31_Hex[3].Serve_NRC[0]             = 0x33;
+   Serve_31_Hex[3].Serve_NRC[1]             = 0x31;
+   Serve_31_Hex[3].Serve_NRC[2]             = 0x31;
+   Serve_31_Hex[3].Serve_NRC[3]             = 0x12;
+   Serve_31_Hex[3].Serve_NRC[4]             = 0x13;
+   Serve_31_Hex[3].Serve_NRC[5]             = 0x31;
+   Serve_31_Hex[3].Serve_NRC[6]             = 0x22;
+   
+   Serve_31_Hex[3].Control_Type[0]          = 0x01;
+   Serve_31_Hex[3].Control_Type_TxLen[0]    = 4;
+   Serve_31_Hex[3].Serve_Addres[0]          = 1;
+   Serve_31_Hex[3].Serve_Session[0]         = 2;
+   Serve_31_Hex[3].Security_Access[0]       = 1;
+   Serve_31_Hex[3].Control_Option_Count[0]  = 0; 
+   Serve_31_Hex[3].Serve_NRC_Count[0]       = 7; 
+   Serve_31_Hex[3].Serve_NRC22[0]           = 0;
+    
+  
+
+  /********************34结构体*****************/        
+  Serve_Data[6].Serve                = 0x34;
+  Serve_Data[6].Serve_Fun_Count      = 1;
+
+                
+  Serve_Data[6].Serve_Fun[0]         = 0;            
+  Serve_Data[6].RSP[0]               = 0;
+  Serve_Data[6].Serve_Fun_Len[0]     = 1;
+  Serve_Data[6].Serve_Addres[0]      = 1;
+  Serve_Data[6].Serve_Session[0]     = 2;
+  Serve_Data[6].Serve_Para_Count[0]  = 2;
+  Serve_Data[6].Serve_NRC_Count[0]   = 6; 
+  Serve_Data[6].Security_Access[0]   = 1;
+  Serve_Data[6].Serve_NRC22[0]       = 0;
+  Serve_Data[6].Serve_Para[0][0]     = 0x0;
+  Serve_Data[6].Serve_Para_Len[0][0] = 1;
+  Serve_Data[6].Serve_Para[0][1]     = 0x44;
+  Serve_Data[6].Serve_Para_Len[0][1] = 1;
+  Serve_Data[6].Serve_NRC[0][0]      = 0x33;
+  Serve_Data[6].Serve_NRC[0][1]      = 0x13;
+  Serve_Data[6].Serve_NRC[0][2]      = 0x31;
+  Serve_Data[6].Serve_NRC[0][3]      = 0x13;
+  Serve_Data[6].Serve_NRC[0][4]      = 0x31;
+  Serve_Data[6].Serve_NRC[0][5]      = 0x22;
+
+  /********************36结构体*****************/        
+  Serve_Data[7].Serve                = 0x36;
+  Serve_Data[7].Serve_Fun_Count      = 1;
+
+                
+  Serve_Data[7].Serve_Fun[0]         = 0x01;            
+  Serve_Data[7].RSP[0]               = 0;
+  Serve_Data[7].Serve_Fun_Len[0]     = 2;
+  Serve_Data[7].Serve_Addres[0]      = 1;
+  Serve_Data[7].Serve_Session[0]     = 2;
+  Serve_Data[7].Serve_Para_Count[0]  = 0;
+  Serve_Data[7].Serve_NRC_Count[0]   = 3; 
+  Serve_Data[7].Security_Access[0]   = 1;
+  Serve_Data[7].Serve_NRC22[0]       = 0;
+  Serve_Data[7].Serve_NRC[0][0]      = 0x33;
+  Serve_Data[7].Serve_NRC[0][1]      = 0x13;
+  Serve_Data[7].Serve_NRC[0][2]      = 0x24;
+
+  /********************37结构体*****************/        
+  Serve_Data[8].Serve                = 0x37;
+  Serve_Data[8].Serve_Fun_Count      = 1;
+
+                
+  Serve_Data[8].Serve_Fun[0]         = 0;            
+  Serve_Data[8].RSP[0]               = 0;
+  Serve_Data[8].Serve_Fun_Len[0]     = 1;
+  Serve_Data[8].Serve_Addres[0]      = 1;
+  Serve_Data[8].Serve_Session[0]     = 2;
+  Serve_Data[8].Serve_Para_Count[0]  = 0;
+  Serve_Data[8].Serve_NRC_Count[0]   = 3; 
+  Serve_Data[8].Security_Access[0]   = 0;
+  Serve_Data[8].Serve_NRC22[0]       = 0;
+  Serve_Data[8].Serve_NRC[0][0]      = 0x33;
+  Serve_Data[8].Serve_NRC[0][1]      = 0x13;
+  Serve_Data[8].Serve_NRC[0][2]      = 0x24;
+
+  /********************3E结构体*****************/        
+  Serve_Data[9].Serve                = 0x3E;
+  Serve_Data[9].Serve_Fun_Count      = 1;
+
+                
+  Serve_Data[9].Serve_Fun[0]         = 0x00;            //Zero子功能
+  Serve_Data[9].RSP[0]               = 1;
+  Serve_Data[9].Serve_Fun_Len[0]     = 2;
+  Serve_Data[9].Serve_Addres[0]      = 3;
+  Serve_Data[9].Serve_Session[0]     = 7;
+  Serve_Data[9].Serve_Para_Count[0]  = 0;
+  Serve_Data[9].Serve_NRC_Count[0]   = 3; 
+  Serve_Data[9].Security_Access[0]   = 0;
+  Serve_Data[9].Serve_NRC22[0]       = 0;
+  Serve_Data[9].Serve_NRC[0][0]      = 0x13;
+  Serve_Data[9].Serve_NRC[0][1]      = 0x12;
+  Serve_Data[9].Serve_NRC[0][2]      = 0x13;
+
+  /********************85结构体*****************/        
+  Serve_Data[10].Serve                = 0x85;
+  Serve_Data[10].Serve_Fun_Count      = 2;
+
+                
+  Serve_Data[10].Serve_Fun[0]         = 0x01;            //打开DTC设置
+  Serve_Data[10].RSP[0]               = 1;
+  Serve_Data[10].Serve_Fun_Len[0]     = 2;
+  Serve_Data[10].Serve_Addres[0]      = 3;
+  Serve_Data[10].Serve_Session[0]     = 4;
+  Serve_Data[10].Serve_Para_Count[0]  = 0;
+  Serve_Data[10].Serve_NRC_Count[0]   = 3; 
+  Serve_Data[10].Security_Access[0]   = 0;
+  Serve_Data[10].Serve_NRC22[0]       = 0;
+  Serve_Data[10].Serve_NRC[0][0]      = 0x13;
+  Serve_Data[10].Serve_NRC[0][1]      = 0x12;
+  Serve_Data[10].Serve_NRC[0][2]      = 0x13;
+                
+  Serve_Data[10].Serve_Fun[1]         = 0x02;            //关闭DTC设置
+  Serve_Data[10].RSP[1]               = 1;
+  Serve_Data[10].Serve_Fun_Len[1]     = 2;
+  Serve_Data[10].Serve_Addres[1]      = 3;
+  Serve_Data[10].Serve_Session[1]     = 4;
+  Serve_Data[10].Serve_Para_Count[1]  = 0;
+  Serve_Data[10].Serve_NRC_Count[1]   = 3; 
+  Serve_Data[10].Security_Access[1]   = 0;
+  Serve_Data[10].Serve_NRC22[1]       = 0;
+  Serve_Data[10].Serve_NRC[1][0]      = 0x13;
+  Serve_Data[10].Serve_NRC[1][1]      = 0x12;
+  Serve_Data[10].Serve_NRC[1][2]      = 0x13;
+}

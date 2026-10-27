@@ -1,0 +1,73 @@
+﻿<testmodule title="UDSforLRA54(HC2)" version="1.0">
+  <description>测试模块介绍</description>
+  <testgroup title="版本信息">
+      <capltestcase name="_Check_3570" title="22 35 70" />
+      <capltestcase name="test" title="ts" />
+
+      <testgroup title="比亚迪部分版本信息">
+      <capltestcase name="_Check_F084" title="22 F0 84" />
+      <capltestcase name="_Check_F180" title="22 F1 80" />
+      <capltestcase name="_Check_F184" title="22 F1 84" />
+      <capltestcase name="_Check_F185" title="22 F1 85" />
+      <capltestcase name="_Check_F187" title="22 F1 87" />
+      <capltestcase name="_Check_F193" title="22 F1 93" />
+      <capltestcase name="_Check_F194" title="22 F1 94" />
+      <capltestcase name="_Check_F195" title="22 F1 95" />
+      </testgroup>
+      <testgroup title="长安部分版本信息">
+      <capltestcase name="_Check_F189" title="22 F1 89" />
+      <capltestcase name="_Check_F089" title="22 F0 89" />
+      <capltestcase name="_Check_F187" title="22 F1 87" />
+      <capltestcase name="_Check_F18A" title="22 F1 8A" />
+      <capltestcase name="_Check_F170" title="22 F1 70" />
+      <capltestcase name="_Check_F171" title="22 F1 71" />
+      <capltestcase name="_Check_F123" title="22 F1 23" />
+      <capltestcase name="_Check_F188" title="22 F1 88" />
+      <capltestcase name="_Check_F1F6" title="22 F1 F6" />
+      <capltestcase name="_Check_F120" title="22 F1 20" />
+      <capltestcase name="_Check_F121" title="22 F1 21" />
+      <capltestcase name="_Check_F122" title="22 F1 22" />
+      </testgroup>
+      <testgroup title="瑞驰部分版本信息">
+      <capltestcase name="_Check_F180" title="22 F1 80" />
+      <capltestcase name="_Check_F187" title="22 F1 87" />
+      <capltestcase name="_Check_F18A" title="22 F1 8A" />
+      <capltestcase name="_Check_F197" title="22 F1 97" />
+      <capltestcase name="_Check_F189" title="22 F1 89" />
+      <capltestcase name="_Check_F089" title="22 F0 89" />
+      <capltestcase name="_Check_0216" title="22 02 16" />
+      <capltestcase name="_Check_F193" title="22 F1 93" />
+      <capltestcase name="_Check_F195" title="22 F1 95" />
+      </testgroup>
+      <testgroup title="五菱部分版本信息">
+      <capltestcase name="_Check_F180_SGMW" title="22 F1 80" />
+      <capltestcase name="_Check_F186" title="22 F1 86" />
+      <capltestcase name="_Check_F18A" title="22 F1 8A" />
+      <capltestcase name="_Check_F17A" title="22 F1 7A" />
+      <capltestcase name="_Check_F18B" title="22 F1 8B" />
+      <capltestcase name="_Check_F190" title="22 F1 90" />
+      <capltestcase name="_Check_F192" title="22 F1 92" />
+      <capltestcase name="_Check_F194" title="22 F1 94" />
+      <capltestcase name="_Check_F1B2" title="22 F1 B2" />
+      <capltestcase name="_Check_F1CB" title="22 F1 CB" />
+      <capltestcase name="_Check_F1C1" title="22 F1 C1" />
+      </testgroup>
+      <testgroup title="东风部分版本信息">
+      <capltestcase name="_Check_F18A" title="22 F1 8A" />
+      <capltestcase name="_Check_F197" title="22 F1 97" />
+      <capltestcase name="_Check_F187" title="22 F1 87" />
+      <capltestcase name="_Check_F193_DFAC" title="22 F1 93" />
+      <capltestcase name="_Check_F195_DFAC" title="22 F1 95" />
+      <capltestcase name="_Check_F190" title="22 F1 90" />
+      </testgroup>
+      <testgroup title="奇瑞部分版本信息">
+      <capltestcase name="_Check_F187" title="22 F1 87" />
+      <capltestcase name="_Check_F18A" title="22 F1 8A" />
+      <capltestcase name="_Check_F189" title="22 F1 89" />
+      <capltestcase name="_Check_F191" title="22 F1 91" />
+      <capltestcase name="_Check_F194_CHERY" title="22 F1 94" />
+      <capltestcase name="_Check_3011" title="22 30 11" />
+      <capltestcase name="_Check_F201" title="22 F2 01" />
+      </testgroup>
+    </testgroup>
+</testmodule>

@@ -1,0 +1,398 @@
+/*@!Encoding:936*/
+
+variables
+{
+  byte Read_Config_Geely1_0[3] = {0x22,0xF1,0x01};
+  byte Write_Config_Geely1_0[255];
+}
+
+void Init_Geely1_0_Config()
+{
+  int i;
+  Init_Main_Special("\\Geely1.0_配置字\\",exsession);
+  _get_Arry("Config_ALL");
+  for(i=0;i<3;i++)
+    Write_Config_Geely1_0[i] = Arry_Data[i];
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Geely1_0[i] = 0;
+  _get_Arry("Read_Config");
+  for(i=0;i<3;i++)
+    Read_Config_Geely1_0[i] = Arry_Data[i];
+}
+
+void Config_MPV()
+{
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,Unconfigured);
+}
+void Config_SUV()
+{
+  Write_Config_Geely1_0[4] = 0x40;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,0);
+}
+void Config_Sedan()
+{
+  Write_Config_Geely1_0[4] = 0x80;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,0);
+}
+void Config_Cross()
+{
+  Write_Config_Geely1_0[4] = 0xC0;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,0);
+}
+void Config_Tradition()
+{
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,Unconfigured);
+}
+void Config_Hybrid()
+{
+  Write_Config_Geely1_0[4] = 0x10;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,0);
+}
+void Config_EV()
+{
+  Write_Config_Geely1_0[4] = 0x20;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,0);
+}
+void Config_Reserved()
+{
+  Write_Config_Geely1_0[4] = 0x30;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,0);
+}
+
+void Config_DrvMode()
+{
+  dword DTC_Ex[10];
+  int i;
+  Write_Config_Geely1_0[4] = 0x08;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Advanced_function_DTC(Write_Config_Geely1_0,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_LKA_LDW()
+{
+  dword DTC_Ex[10];
+  Write_Config_Geely1_0[4] = 0x04;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Advanced_function_DTC(Write_Config_Geely1_0,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_PAS()
+{
+  dword DTC_Ex[10];
+  Write_Config_Geely1_0[4] = 0x02;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Advanced_function_DTC(Write_Config_Geely1_0,DTC_Ex);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Advanced_function_DTC(Write_Config_Geely1_0,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_STT()
+{
+  dword DTC_Ex[10];
+  Write_Config_Geely1_0[4] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Advanced_function_DTC(Write_Config_Geely1_0,DTC_Ex);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Advanced_function_DTC(Write_Config_Geely1_0,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_Default_Geely1_0()
+{
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Geely1_0[i] = 0xFF;
+  
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _85_Check_DTC(1,Unconfigured);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _unlockECU();
+  for(i=3;i<Config_Len;i++)
+    Write_Config_Geely1_0[i] = 0;
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _85_Check_DTC(1,Unconfigured);
+}
+void Config_No_Geely1_0()
+{
+  dword DTC_Ex[100];
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Set_11_Restoration();
+  _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_Geely1_0);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _85_Check_DTC(1,Unconfigured);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_ALL_Geely1_0()
+{
+  int i,j;
+  dword DTC_Ex[100];
+  _get_Arry("Config_ALL");
+  for(j=0;j<2;j++)
+  {
+    if(j==0)
+    {
+      for(i=3;i<Arry_Len;i++)
+        Write_Config_Geely1_0[i] = 0 ;
+      Write_Config_Geely1_0[4] = 0x0F;
+    }
+    else if(j==1)
+    {
+      for(i=3;i<Arry_Len;i++)
+        Write_Config_Geely1_0[i] = 0xFF ;
+    }
+    _unlockECU();
+    _Send_Diag(Config_Len,phyreq_ID,Write_Config_Geely1_0);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Check_Response_Config(SendData,Write_Config_Geely1_0);
+    _Set_11_Restoration();
+    _Send_Diag(3,phyreq_ID,Read_Config_Geely1_0);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Check_Response_Config(SendData,Write_Config_Geely1_0);
+    _Advanced_function_DTC(Write_Config_Geely1_0,DTC_Ex);
+    _Close_All_Advanced_function();
+    testWaitForTimeout(CAN_Init_Time+2000);
+    _Check_DTC(1,DTC_Ex);
+    _Open_All_Advanced_function();
+    testWaitForTimeout(2000); 
+  }
+}
+
+testcase Case_Config_MPV()
+{
+  Init_Geely1_0_Config();
+  Config_MPV();
+  _End();
+}
+testcase Case_Config_SUV()
+{
+  Init_Geely1_0_Config();
+  Config_SUV();
+  _End();
+}
+testcase Case_Config_Sedan()
+{
+  Init_Geely1_0_Config();
+  Config_Sedan();
+  _End();
+}
+testcase Case_Config_Cross()
+{
+  Init_Geely1_0_Config();
+  Config_Cross();
+  _End();
+}
+testcase Case_Config_Tradition()
+{
+  Init_Geely1_0_Config();
+  Config_Tradition();
+  _End();
+}
+testcase Case_Config_Hybrid()
+{
+  Init_Geely1_0_Config();
+  Config_Hybrid();
+  _End();
+}
+testcase Case_Config_EV()
+{
+  Init_Geely1_0_Config();
+  Config_EV();
+  _End();
+}
+testcase Case_Config_Reserved()
+{
+  Init_Geely1_0_Config();
+  Config_Reserved();
+  _End();
+}
+testcase Case_Config_Default_Geely1_0()
+{
+  Init_Geely1_0_Config();
+  Config_Default_Geely1_0();
+  _End();
+}
+testcase Case_Config_DrvMode_Geely1_0()
+{
+  Init_Geely1_0_Config();
+  Config_DrvMode();
+  _End();
+}
+testcase Case_Config_LKA_LDW_Geely1_0()
+{
+  Init_Geely1_0_Config();
+  Config_LKA_LDW();
+  _End();
+}
+testcase Case_Config_PAS_Geely1_0()
+{
+  Init_Geely1_0_Config();
+  Config_PAS();
+  _End();
+}
+testcase Case_Config_STT_Geely1_0()
+{
+  Init_Geely1_0_Config();
+  Config_STT();
+  _End();
+}
+testcase Case_Config_No_Geely1_0()
+{
+  Init_Geely1_0_Config();
+  Config_No_Geely1_0();
+  _End();
+}
+testcase Case_Config_ALL_Geely1_0()
+{
+  Init_Geely1_0_Config();
+  Config_ALL_Geely1_0();
+  _End();
+}

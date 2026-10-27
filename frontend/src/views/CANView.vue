@@ -241,6 +241,17 @@
                       <el-input v-model="selectedTestParam.params.dtc" placeholder="请输入DTC" size="large" />
                     </div>
                   </template>
+                  <template v-else-if="selectedTestParam && DATEID_CRC_ALGOS.includes(selectedTestParam.value)">
+                    <div class="param-card">
+                      <el-input
+                        :model-value="selectedTestParam.params.dataId"
+                        placeholder="请输入DateID（如 0x1122）"
+                        size="large"
+                        @update:model-value="onPanelDateIdInput"
+                        @change="onPanelDateIdCommit"
+                      />
+                    </div>
+                  </template>
                   <template v-else-if="selectedTestParam && (selectedTestParam.value === 'CRCTest' || selectedTestParam.value === 'CounterTest')">
                     <div class="param-card">
                       <el-input v-model="selectedTestParam.params.dtc" placeholder="DTC" size="large" />
@@ -844,7 +855,7 @@
               <div
                 v-for="d in compoundSliderDefs"
                 :key="d.key"
-                class="other-card other-card--span-2x2"
+                class="other-card other-card--span-3x2"
                 :data-card-key="d.key"
                 data-card-scope="grid"
                 :style="{ order: orderIdx(d.key) }"
@@ -882,6 +893,24 @@
                       @update:model-value="(v: boolean) => otherData[s.key] = v ? 'TRUE' : 'FALSE'"
                       active-text="TRUE"
                       inactive-text="FALSE"
+                      inline-prompt
+                      size="small"
+                      @click.stop
+                    />
+                  </div>
+                  <!-- 选择型行（如 Counter 首帧判定）：滑块两态对应 0 / last -->
+                  <div
+                    v-for="sel in d.selects || []"
+                    :key="sel.key"
+                    class="other-slider-row other-slider-row--pick"
+                    :class="{ 'other-slider-row--on': otherData[sel.key] === sel.onValue }"
+                  >
+                    <span class="other-slider-label">{{ sel.label }}</span>
+                    <el-switch
+                      :model-value="otherData[sel.key] === sel.onValue"
+                      @update:model-value="(v: boolean) => otherData[sel.key] = v ? sel.onValue : sel.offValue"
+                      :active-text="sel.onText"
+                      :inactive-text="sel.offText"
                       inline-prompt
                       size="small"
                       @click.stop
@@ -1205,19 +1234,24 @@
           <div class="sub-page voltage-page">
             <el-tabs v-model="activeVoltageTab" class="voltage-sub-tabs">
               <!-- 通信电压 -->
-              <el-tab-pane label="通信电压" name="communication">
+              <el-tab-pane name="communication">
+                <template #label>
+                  <span class="tab-label" :class="{ 'is-off': !commParams.commEnableCheckBox }">
+                    <span
+                      class="tab-enable"
+                      title="启用 / 禁用通信电压用例"
+                      @click.stop
+                    >
+                      <el-switch v-model="commParams.commEnableCheckBox" size="small" />
+                    </span>
+                    通信电压
+                  </span>
+                </template>
                 <div class="voltage-chart-page">
                   <div class="params-panel">
                     <div class="params-header">
                       <div class="params-header-left">
                         <span class="params-title">参数设置 — 通信电压</span>
-                        <el-switch
-                          v-model="commParams.commEnableCheckBox"
-                          active-text="启用"
-                          inactive-text="禁用"
-                          inline-prompt
-                          class="enable-switch"
-                        />
                       </div>
                       <el-button
                         type="primary"
@@ -1228,20 +1262,40 @@
                         应用并刷新
                       </el-button>
                     </div>
-                    <el-form :model="commParams" label-width="170px" class="params-form" size="small">
-                      <el-row :gutter="12">
-                        <el-col v-for="field in commParamFields" :key="field.key" :span="8">
-                          <el-form-item :label="field.label">
-                            <el-input-number
-                              v-if="field.type === 'number'"
-                              v-model="commParams[field.key]"
-                              :controls="false"
-                              class="param-input"
-                            />
-                            <el-switch v-else v-model="commParams[field.key]" />
-                          </el-form-item>
-                        </el-col>
-                      </el-row>
+                    <el-form :model="commParams" label-width="76px" class="params-form volt-form" size="small">
+                      <div v-for="(row, ri) in commParamRows" :key="ri" class="volt-block-row">
+                        <div v-for="(blk, bi) in row.blocks" :key="bi" class="volt-block">
+                          <div v-if="blk.title" class="volt-block-title">{{ blk.title }}</div>
+                          <div class="volt-block-body">
+                            <el-form-item
+                              v-for="item in blk.items"
+                              v-show="isKeyVisible(commParamFields, commParams, item.key)"
+                              :key="item.key"
+                              :label="item.label || fieldOf(commParamFields, item.key)?.label || item.key"
+                              class="volt-item"
+                            >
+                              <el-select
+                                v-if="fieldOf(commParamFields, item.key)?.type === 'select'"
+                                v-model="commParams[item.key]"
+                                class="volt-select"
+                              >
+                                <el-option
+                                  v-for="opt in fieldOf(commParamFields, item.key)?.options || []"
+                                  :key="opt.value"
+                                  :label="opt.label"
+                                  :value="opt.value"
+                                />
+                              </el-select>
+                              <el-input-number
+                                v-else
+                                v-model="commParams[item.key]"
+                                :controls="false"
+                                class="param-input"
+                              />
+                            </el-form-item>
+                          </div>
+                        </div>
+                      </div>
                     </el-form>
                   </div>
                   <div class="chart-area">
@@ -1255,19 +1309,24 @@
               </el-tab-pane>
 
               <!-- 诊断电压 -->
-              <el-tab-pane label="诊断电压" name="diagnostic">
+              <el-tab-pane name="diagnostic">
+                <template #label>
+                  <span class="tab-label" :class="{ 'is-off': !diagParams.diagEnableCheckBox }">
+                    <span
+                      class="tab-enable"
+                      title="启用 / 禁用诊断电压用例"
+                      @click.stop
+                    >
+                      <el-switch v-model="diagParams.diagEnableCheckBox" size="small" />
+                    </span>
+                    诊断电压
+                  </span>
+                </template>
                 <div class="voltage-chart-page">
                   <div class="params-panel">
                     <div class="params-header">
                       <div class="params-header-left">
                         <span class="params-title">参数设置 — 诊断电压</span>
-                        <el-switch
-                          v-model="diagParams.diagEnableCheckBox"
-                          active-text="启用"
-                          inactive-text="禁用"
-                          inline-prompt
-                          class="enable-switch"
-                        />
                       </div>
                       <el-button
                         type="primary"
@@ -1278,20 +1337,33 @@
                         应用并刷新
                       </el-button>
                     </div>
-                    <el-form :model="diagParams" label-width="170px" class="params-form" size="small">
-                      <el-row :gutter="12">
-                        <el-col v-for="field in diagParamFields" :key="field.key" :span="8">
-                          <el-form-item :label="field.label">
-                            <el-input-number
-                              v-if="field.type === 'number'"
-                              v-model="diagParams[field.key]"
-                              :controls="false"
-                              class="param-input"
-                            />
-                            <el-switch v-else v-model="diagParams[field.key]" />
-                          </el-form-item>
-                        </el-col>
-                      </el-row>
+                    <el-form :model="diagParams" label-width="76px" class="params-form volt-form" size="small">
+                      <div v-for="(row, ri) in diagParamRows" :key="ri" class="volt-block-row">
+                        <div v-for="(blk, bi) in row.blocks" :key="bi" class="volt-block">
+                          <div v-if="blk.title" class="volt-block-title">{{ blk.title }}</div>
+                          <div class="volt-block-body">
+                            <el-form-item
+                              v-for="item in blk.items"
+                              v-show="isKeyVisible(diagParamFields, diagParams, item.key)"
+                              :key="item.key"
+                              :label="item.label || fieldOf(diagParamFields, item.key)?.label || item.key"
+                              class="volt-item"
+                            >
+                              <el-switch
+                                v-if="fieldOf(diagParamFields, item.key)?.type === 'switch'"
+                                v-model="diagParams[item.key]"
+                                size="small"
+                              />
+                              <el-input-number
+                                v-else
+                                v-model="diagParams[item.key]"
+                                :controls="false"
+                                class="param-input"
+                              />
+                            </el-form-item>
+                          </div>
+                        </div>
+                      </div>
                     </el-form>
                   </div>
                   <div class="chart-area">
@@ -1305,19 +1377,24 @@
               </el-tab-pane>
 
               <!-- 助力电压 -->
-              <el-tab-pane label="助力电压" name="power_assist">
+              <el-tab-pane name="power_assist">
+                <template #label>
+                  <span class="tab-label" :class="{ 'is-off': !paParams.assistEnableCheckBox }">
+                    <span
+                      class="tab-enable"
+                      title="启用 / 禁用助力电压用例"
+                      @click.stop
+                    >
+                      <el-switch v-model="paParams.assistEnableCheckBox" size="small" />
+                    </span>
+                    助力电压
+                  </span>
+                </template>
                 <div class="voltage-chart-page">
                   <div class="params-panel">
                     <div class="params-header">
                       <div class="params-header-left">
                         <span class="params-title">参数设置 — 助力电压</span>
-                        <el-switch
-                          v-model="paParams.assistEnableCheckBox"
-                          active-text="启用"
-                          inactive-text="禁用"
-                          inline-prompt
-                          class="enable-switch"
-                        />
                       </div>
                       <el-button
                         type="primary"
@@ -1328,51 +1405,46 @@
                         应用并刷新
                       </el-button>
                     </div>
-                    <el-form :model="paParams" label-width="120px" class="params-form pa-form" size="small">
-                      <!-- 低压（常显，5个一排） -->
-                      <div class="pa-group">
-                        <div class="pa-group-header"><span>低压参数</span></div>
-                        <div class="pa-row">
-                          <el-form-item v-for="field in paParamFields.filter(f => !f.group && !f.type?.includes('switch') && ['lowVolt','low_hysteresis','diag_time_low','Torque_low','DTC_low'].includes(f.key))" :key="field.key" :label="field.label" class="pa-item">
-                            <el-input-number v-if="field.type === 'number'" v-model="paParams[field.key]" :controls="false" class="param-input" />
-                            <el-input v-else v-model="paParams[field.key]" maxlength="8" @input="onDtcInput(field.key)" @dragover.prevent @drop="onDropReplace($event, (v) => paParams[field.key] = v)" />
-                          </el-form-item>
-                        </div>
-                      </div>
-                      <!-- 欠压（开关控制，参数始终显示但禁用） -->
-                      <div class="pa-group">
-                        <div class="pa-group-header">
-                          <span>欠压参数</span>
-                          <el-switch v-model="paParams.use_under_volt" size="small" />
-                        </div>
-                        <div class="pa-row" :class="{ 'is-disabled': !paParams.use_under_volt }">
-                          <el-form-item v-for="field in paParamFields.filter(f => f.group === 'under')" :key="field.key" :label="field.label" class="pa-item">
-                            <el-input-number v-if="field.type === 'number'" v-model="paParams[field.key]" :controls="false" class="param-input" :disabled="!paParams.use_under_volt" />
-                            <el-input v-else v-model="paParams[field.key]" maxlength="8" :disabled="!paParams.use_under_volt" @input="onDtcInput(field.key)" @dragover.prevent @drop="onDropReplace($event, (v) => paParams[field.key] = v)" />
-                          </el-form-item>
-                        </div>
-                      </div>
-                      <!-- 高压（常显，5个一排） -->
-                      <div class="pa-group">
-                        <div class="pa-group-header"><span>高压参数</span></div>
-                        <div class="pa-row">
-                          <el-form-item v-for="field in paParamFields.filter(f => !f.group && !f.type?.includes('switch') && ['highVolt','high_hysteresis','diag_time_high','Torque_high','DTC_high'].includes(f.key))" :key="field.key" :label="field.label" class="pa-item">
-                            <el-input-number v-if="field.type === 'number'" v-model="paParams[field.key]" :controls="false" class="param-input" />
-                            <el-input v-else v-model="paParams[field.key]" maxlength="8" @input="onDtcInput(field.key)" @dragover.prevent @drop="onDropReplace($event, (v) => paParams[field.key] = v)" />
-                          </el-form-item>
-                        </div>
-                      </div>
-                      <!-- 过压（开关控制，参数始终显示但禁用） -->
-                      <div class="pa-group">
-                        <div class="pa-group-header">
-                          <span>过压参数</span>
-                          <el-switch v-model="paParams.use_over_volt" size="small" />
-                        </div>
-                        <div class="pa-row" :class="{ 'is-disabled': !paParams.use_over_volt }">
-                          <el-form-item v-for="field in paParamFields.filter(f => f.group === 'over')" :key="field.key" :label="field.label" class="pa-item">
-                            <el-input-number v-if="field.type === 'number'" v-model="paParams[field.key]" :controls="false" class="param-input" :disabled="!paParams.use_over_volt" />
-                            <el-input v-else v-model="paParams[field.key]" maxlength="8" :disabled="!paParams.use_over_volt" @input="onDtcInput(field.key)" @dragover.prevent @drop="onDropReplace($event, (v) => paParams[field.key] = v)" />
-                          </el-form-item>
+                    <el-form :model="paParams" label-width="76px" class="params-form volt-form" size="small">
+                      <div v-for="(row, ri) in paParamRows" :key="ri" class="volt-block-row">
+                        <div
+                          v-for="(blk, bi) in row.blocks"
+                          :key="bi"
+                          class="volt-block"
+                          :class="{ 'is-off': isBlockOff(blk, paParams) }"
+                        >
+                          <div v-if="blk.title" class="volt-block-title">{{ blk.title }}</div>
+                          <div class="volt-block-body">
+                            <el-form-item
+                              v-for="item in blk.items"
+                              v-show="isKeyVisible(paParamFields, paParams, item.key)"
+                              :key="item.key"
+                              :label="item.label || fieldOf(paParamFields, item.key)?.label || item.key"
+                              :class="['volt-item', { 'volt-item--switch': fieldOf(paParamFields, item.key)?.type === 'switch', 'volt-item--dtc': fieldOf(paParamFields, item.key)?.type === 'text' }]"
+                            >
+                              <el-switch
+                                v-if="fieldOf(paParamFields, item.key)?.type === 'switch'"
+                                v-model="paParams[item.key]"
+                                size="small"
+                              />
+                              <el-input-number
+                                v-else-if="fieldOf(paParamFields, item.key)?.type === 'number'"
+                                v-model="paParams[item.key]"
+                                :controls="false"
+                                :disabled="isBlockOff(blk, paParams)"
+                                class="param-input"
+                              />
+                              <el-input
+                                v-else
+                                v-model="paParams[item.key]"
+                                maxlength="8"
+                                :disabled="isBlockOff(blk, paParams)"
+                                @input="onDtcInput(item.key)"
+                                @dragover.prevent
+                                @drop="onDropReplace($event, (v) => paParams[item.key] = v)"
+                              />
+                            </el-form-item>
+                          </div>
                         </div>
                       </div>
                     </el-form>
@@ -1587,6 +1659,17 @@
           <el-input v-model="cardConfigForm.dtc" placeholder="请输入DTC" size="large" />
         </div>
       </template>
+      <template v-else-if="DATEID_CRC_ALGOS.includes(editingCardValue)">
+        <div class="param-card">
+          <el-input
+            :model-value="cardConfigForm.dataId"
+            placeholder="请输入DateID（如 0x1122）"
+            size="large"
+            @update:model-value="onCardDateIdInput"
+            @change="onCardDateIdCommit"
+          />
+        </div>
+      </template>
       <template v-else-if="editingCardValue === 'CRCTest' || editingCardValue === 'CounterTest'">
         <div class="param-card">
           <el-input v-model="cardConfigForm.dtc" placeholder="DTC" size="large" />
@@ -1660,6 +1743,7 @@ import { getConfig, saveConfig, openFolder } from '@/api/config'
 import type { Column, VoltageChartData } from '@/types'
 import type { DbcTableColumn, DbcTableRow } from '@/types/dbcTable'
 import { useModuleStore, DEFAULT_CCP_PRECISION, DEFAULT_CCP_OFFSET, type A2lVars, type CcpVarType } from '@/stores/modules'
+import { defaultAlgoForOem } from '@/utils/securityAlgo'
 import { useResizableSize } from '@/composables/useResizableSize'
 import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
 
@@ -1763,6 +1847,24 @@ const sigTestParamList = [
 /** 信号级「无效值」类测试参数（自动匹配 / 补全时按“是否已有其中之一”判断） */
 const SIG_INVALID_PARAM_VALUES = ['CRCTest', 'CounterTest', 'SigInvalidTest']
 
+// 需要 DataID 的 E2E CRC 算法：配置时显示 DateID 输入框，随信号保存为 did
+const DATEID_CRC_ALGOS = ['E2E_1D_ID_CRC8', 'E2E_1021_CRC16_ID']
+
+/** DateID 边输入边过滤：只保留十六进制字符（最多 4 位），已带 0x 前缀时保留 */
+function sanitizeDateIdTyping(raw: any): string {
+  const s = String(raw ?? '')
+  const hasPrefix = /^\s*0[xX]/.test(s)
+  const body = hasPrefix ? s.replace(/^\s*0[xX]/, '') : s
+  const digits = body.replace(/[^0-9a-fA-F]/g, '').slice(0, 4).toUpperCase()
+  return hasPrefix ? `0x${digits}` : digits
+}
+
+/** DateID 提交格式化：统一补 0x 前缀并大写（空值保持空） */
+function normalizeDateId(raw: any): string {
+  const digits = sanitizeDateIdTyping(raw).replace(/^0[xX]/, '')
+  return digits ? `0x${digits}` : ''
+}
+
 // EPS 测试参数卡片 = Counter + CRC 算法（与 Create CANoe 的 GenSigFuncType 一致）
 const crcAlgorithms = ref<Array<{ name: string; code: string }>>([])
 
@@ -1812,12 +1914,14 @@ const testParamCards = computed<TestParamCard[]>(() => {
     configured: false,
   })
   for (const algo of crcAlgorithms.value) {
+    const isDateIdAlgo = DATEID_CRC_ALGOS.includes(algo.name)
     cards.push({
       value: algo.name,
       label: algo.name,
       target: 'eps',
       category: 'eps',
-      configured: false,
+      params: isDateIdAlgo ? (testParamCardConfig.value[algo.name] || getDefaultParams(algo.name)) : undefined,
+      configured: isDateIdAlgo ? !!testParamCardConfig.value[algo.name] : false,
     })
   }
   return cards
@@ -1831,6 +1935,8 @@ function getDefaultParams(paramValue: string, msg: any = null, fields: any = nul
     CounterTest: { dtcValue: '1', noDtcValue: '0', dtc: '' },
     SigInvalidTest: { dtcValue: '', noDtcValue: '', dtc: '', invalidType: 'SigInvalid' },
     FactorTest: { variable: '', testValues: '', autoRange: false },
+    E2E_1D_ID_CRC8: { dataId: '' },
+    E2E_1021_CRC16_ID: { dataId: '' },
   }
   const params = { ...baseDefaults[paramValue] || {} }
 
@@ -2707,6 +2813,9 @@ const DEFAULT_COMM_PARAMS: Record<string, any> = {
   tcaninit_max: 1000,
   tcanstop_min: 0,
   tcanstop_max: 100,
+  // 时间判定方式：lt=小于 / gt=大于 / between=介于（输入框随选项自适应）
+  init_cmp: 'between',
+  stop_cmp: 'between',
   init_is_range: true,
   stop_is_range: true,
   // 兼容后端 excel_processor 旧 key
@@ -2779,21 +2888,167 @@ const otherCheckboxStates = ref<Record<string, boolean>>({})
 
 // ==================== 字段定义 ====================
 
-const commParamFields = [
-  { key: 'normVolt', label: '正常电压 (V)', type: 'number' },
+/** 电压参数字段：带下拉选项与「按前置选项自适应显示」 */
+interface VoltParamField {
+  key: string
+  label: string
+  type?: 'number' | 'switch' | 'select' | 'text'
+  /** type='select' 时的选项 */
+  options?: Array<{ label: string; value: string }>
+  /** 仅当 showWhen.key 的当前值命中 values 时才显示（用于 min/max 输入框自适应） */
+  showWhen?: { key: string; values: string[] }
+  /** 旧字段分组标记（助力电压低压/欠压/高压/过压），仅用于数据兼容 */
+  group?: string
+}
+
+/** 时间判定方式（通信电压的初始化 / 停止时间） */
+const CMP_OPTIONS = [
+  { label: '小于', value: 'lt' },
+  { label: '大于', value: 'gt' },
+  { label: '介于', value: 'between' },
+]
+
+/** 电压布局：一行为一组，行内再分「可视块」（块宽度由网格决定，不按内容收缩） */
+interface VoltBlockItem {
+  key: string
+  /** 覆盖字段定义里的 label（同一字段在不同块里叫法不同） */
+  label?: string
+}
+
+interface VoltBlock {
+  /** 块标题（低压 / 高压 / 开始通信时间 …） */
+  title?: string
+  /** 块的启用开关字段 key：关闭时块内控件禁用并淡化（助力电压的欠压 / 过压） */
+  enableKey?: string
+  items: VoltBlockItem[]
+}
+
+interface VoltRow {
+  blocks: VoltBlock[]
+}
+
+const commParamRows: VoltRow[] = [
+  {
+    blocks: [
+      { title: '欠压', items: [
+        { key: 'underVolt', label: '电压 (V)' },
+        { key: 'Lhysteresis_v', label: '迟滞 (V)' },
+      ] },
+      { title: '过压', items: [
+        { key: 'overVolt', label: '电压 (V)' },
+        { key: 'Hhysteresis_v', label: '迟滞 (V)' },
+      ] },
+    ],
+  },
+  {
+    blocks: [
+      { title: '开始通信时间', items: [
+        { key: 'init_cmp', label: '判定' },
+        { key: 'tcaninit_min' },
+        { key: 'tcaninit_max' },
+      ] },
+      { title: '停止通信时间', items: [
+        { key: 'stop_cmp', label: '判定' },
+        { key: 'tcanstop_min' },
+        { key: 'tcanstop_max' },
+      ] },
+    ],
+  },
+]
+
+/** 诊断电压：与通信电压同款块式布局 —— 两行两列，上下左右块位固定 */
+const diagParamRows: VoltRow[] = [
+  {
+    blocks: [
+      { title: '正常电压', items: [
+        { key: 'normVolt', label: '电压 (V)' },
+      ] },
+      { title: '电压范围', items: [
+        { key: 'minVolt', label: '最小 (V)' },
+        { key: 'hysteresis', label: '迟滞 (V)' },
+        { key: 'maxVolt', label: '最大 (V)' },
+      ] },
+    ],
+  },
+  {
+    blocks: [
+      { title: '诊断开始时间', items: [
+        { key: 'start_is_range', label: '范围' },
+        { key: 'diag_start_min', label: '最小 (ms)' },
+        { key: 'diag_start_max', label: '最大 (ms)' },
+      ] },
+      { title: '诊断恢复时间', items: [
+        { key: 'recovery_is_range', label: '范围' },
+        { key: 'diag_recovery_min', label: '最小 (ms)' },
+        { key: 'diag_recovery_max', label: '最大 (ms)' },
+      ] },
+    ],
+  },
+]
+
+/** 助力电压：四个语义块（低压 / 欠压、高压 / 过压），两行两列；欠压、过压块首为启用开关 */
+const paParamRows: VoltRow[] = [
+  {
+    blocks: [
+      { title: '低压参数', items: [
+        { key: 'lowVolt', label: '阈值 (V)' },
+        { key: 'low_hysteresis', label: '迟滞 (V)' },
+        { key: 'diag_time_low', label: '时间 (ms)' },
+        { key: 'Torque_low', label: '助力' },
+        { key: 'DTC_low', label: 'DTC' },
+      ] },
+      { title: '欠压参数', enableKey: 'use_under_volt', items: [
+        { key: 'use_under_volt', label: '启用' },
+        { key: 'underVolt', label: '阈值 (V)' },
+        { key: 'under_hysteresis', label: '迟滞 (V)' },
+        { key: 'diag_time_under', label: '时间 (ms)' },
+        { key: 'Torque_under', label: '助力' },
+        { key: 'DTC_under', label: 'DTC' },
+      ] },
+    ],
+  },
+  {
+    blocks: [
+      { title: '高压参数', items: [
+        { key: 'highVolt', label: '阈值 (V)' },
+        { key: 'high_hysteresis', label: '迟滞 (V)' },
+        { key: 'diag_time_high', label: '时间 (ms)' },
+        { key: 'Torque_high', label: '助力' },
+        { key: 'DTC_high', label: 'DTC' },
+      ] },
+      { title: '过压参数', enableKey: 'use_over_volt', items: [
+        { key: 'use_over_volt', label: '启用' },
+        { key: 'overVolt', label: '阈值 (V)' },
+        { key: 'over_hysteresis', label: '迟滞 (V)' },
+        { key: 'diag_time_over', label: '时间 (ms)' },
+        { key: 'Torque_over', label: '助力' },
+        { key: 'DTC_over', label: 'DTC' },
+      ] },
+    ],
+  },
+]
+
+const commParamFields: VoltParamField[] = [
+  // 正常电压固定 12V（后端写死），前端不提供输入
   { key: 'underVolt', label: '欠压 (V)', type: 'number' },
   { key: 'overVolt', label: '过压 (V)', type: 'number' },
   { key: 'Hhysteresis_v', label: '高迟滞 (V)', type: 'number' },
   { key: 'Lhysteresis_v', label: '低迟滞 (V)', type: 'number' },
-  { key: 'tcaninit_min', label: 'CAN初始化最小 (ms)', type: 'number' },
-  { key: 'tcaninit_max', label: 'CAN初始化最大 (ms)', type: 'number' },
-  { key: 'tcanstop_min', label: 'CAN停止最小 (ms)', type: 'number' },
-  { key: 'tcanstop_max', label: 'CAN停止最大 (ms)', type: 'number' },
-  { key: 'init_is_range', label: '初始化范围', type: 'switch' },
-  { key: 'stop_is_range', label: '停止范围', type: 'switch' },
+  // 初始化时间：小于→只填上限；大于→只填下限；介于→上下限都填
+  { key: 'init_cmp', label: '判定', type: 'select', options: CMP_OPTIONS },
+  { key: 'tcaninit_min', label: '下限 (ms)', type: 'number',
+    showWhen: { key: 'init_cmp', values: ['gt', 'between'] } },
+  { key: 'tcaninit_max', label: '上限 (ms)', type: 'number',
+    showWhen: { key: 'init_cmp', values: ['lt', 'between'] } },
+  // 停止时间：同上
+  { key: 'stop_cmp', label: '判定', type: 'select', options: CMP_OPTIONS },
+  { key: 'tcanstop_min', label: '下限 (ms)', type: 'number',
+    showWhen: { key: 'stop_cmp', values: ['gt', 'between'] } },
+  { key: 'tcanstop_max', label: '上限 (ms)', type: 'number',
+    showWhen: { key: 'stop_cmp', values: ['lt', 'between'] } },
 ]
 
-const diagParamFields = [
+const diagParamFields: VoltParamField[] = [
   { key: 'normVolt', label: '正常电压 (V)', type: 'number' },
   { key: 'minVolt', label: '最小电压 (V)', type: 'number' },
   { key: 'maxVolt', label: '最大电压 (V)', type: 'number' },
@@ -2806,7 +3061,7 @@ const diagParamFields = [
   { key: 'recovery_is_range', label: '恢复范围', type: 'switch' },
 ]
 
-const paParamFields = [
+const paParamFields: VoltParamField[] = [
   // 低压（常显）
   { key: 'lowVolt', label: '低压阈值 (V)', type: 'number' },
   { key: 'low_hysteresis', label: '低压迟滞 (V)', type: 'number' },
@@ -2814,6 +3069,7 @@ const paParamFields = [
   { key: 'Torque_low', label: '低压助力', type: 'number' },
   { key: 'DTC_low', label: '低压DTC', type: 'text' },
   // 欠压（开关控制）
+  { key: 'use_under_volt', label: '启用欠压', type: 'switch', group: 'under' },
   { key: 'underVolt', label: '欠压阈值 (V)', type: 'number', group: 'under' },
   { key: 'under_hysteresis', label: '欠压迟滞 (V)', type: 'number', group: 'under' },
   { key: 'diag_time_under', label: '欠压诊断时间 (ms)', type: 'number', group: 'under' },
@@ -2826,12 +3082,64 @@ const paParamFields = [
   { key: 'Torque_high', label: '高压助力', type: 'number' },
   { key: 'DTC_high', label: '高压DTC', type: 'text' },
   // 过压（开关控制）
+  { key: 'use_over_volt', label: '启用过压', type: 'switch', group: 'over' },
   { key: 'overVolt', label: '过压阈值 (V)', type: 'number', group: 'over' },
   { key: 'over_hysteresis', label: '过压迟滞 (V)', type: 'number', group: 'over' },
   { key: 'diag_time_over', label: '过压诊断时间 (ms)', type: 'number', group: 'over' },
   { key: 'Torque_over', label: '过压助力', type: 'number', group: 'over' },
   { key: 'DTC_over', label: '过压DTC', type: 'text', group: 'over' },
 ]
+
+/** 块是否处于关闭状态（助力电压欠压 / 过压未启用）：块内控件禁用并淡化 */
+function isBlockOff(blk: VoltBlock, model: Record<string, any>): boolean {
+  return !!blk.enableKey && !model[blk.enableKey]
+}
+
+/** 字段是否显示：showWhen 未配置则常显；配置了则要求依赖项当前值命中 values */
+function isFieldVisible(field: VoltParamField, model: Record<string, any>): boolean {
+  if (!field.showWhen) return true
+  return field.showWhen.values.includes(String(model[field.showWhen.key] ?? ''))
+}
+
+/** 按 key 取字段定义（通信电压的块式布局用） */
+function fieldOf(defs: VoltParamField[], key: string): VoltParamField | undefined {
+  return defs.find(d => d.key === key)
+}
+
+/** 按 key 判断是否显示（块式布局用） */
+function isKeyVisible(defs: VoltParamField[], model: Record<string, any>, key: string): boolean {
+  const def = fieldOf(defs, key)
+  return def ? isFieldVisible(def, model) : true
+}
+
+/** 规范化通信电压时间参数：补 init_cmp/stop_cmp，兼容旧配置的 init_is_range 布尔值 */
+function normalizeCommParams(raw: Record<string, any>) {
+  const next = { ...DEFAULT_COMM_PARAMS, ...raw }
+  if (next.init_cmp === undefined || next.init_cmp === null || next.init_cmp === '') {
+    // 旧配置（只有 init_is_range）：range=true → 介于，false → 小于（旧逻辑用的是 <= 单值上限）
+    next.init_cmp = next.init_is_range === false ? 'lt' : 'between'
+    if (next.init_cmp === 'lt' && !raw.tcaninit_max) next.tcaninit_max = next.tcaninit_min
+  }
+  if (next.stop_cmp === undefined || next.stop_cmp === null || next.stop_cmp === '') {
+    next.stop_cmp = next.stop_is_range === false ? 'lt' : 'between'
+    if (next.stop_cmp === 'lt' && !raw.tcanstop_max) next.tcanstop_max = next.tcanstop_min
+  }
+  // 反向同步：图表 / 后端旧逻辑仍读 init_is_range / stop_is_range
+  next.init_is_range = next.init_cmp === 'between'
+  next.stop_is_range = next.stop_cmp === 'between'
+  // 正常电压固定 12V（前端不再提供输入，旧配置里的值也不再生效）
+  next.normVolt = 12
+  return next
+}
+
+/** 判定方式变化时回写 is_range（图表按 is_range 决定单值/区间展示） */
+watch(
+  () => [commParams.value.init_cmp, commParams.value.stop_cmp],
+  ([initCmp, stopCmp]) => {
+    commParams.value.init_is_range = initCmp === 'between'
+    commParams.value.stop_is_range = stopCmp === 'between'
+  }
+)
 
 interface ConfigFieldDef {
   key: string
@@ -2919,11 +3227,23 @@ interface ParamCardDef {
   validate?: 'int' | 'hex'
 }
 
-/** Compound 滑块卡片：集中放多个 TRUE/FALSE 开关 */
+/** Compound 滑块卡片：集中放多个 TRUE/FALSE 开关，以及 0/last 二选一的滑块行 */
 interface CompoundSliderDef {
   key: string
   label: string
   sliders: Array<{ key: string; label: string }>
+  /** 选择型滑块行：滑块两态对应字符串枚举（如 0 / lastValue），与布尔滑块分开渲染 */
+  selects?: Array<{
+    key: string
+    label: string
+    /** 滑块打开（active）时的值 */
+    onValue: string
+    /** 滑块关闭（inactive）时的值 */
+    offValue: string
+    /** 滑块两侧的显示文案 */
+    onText: string
+    offText: string
+  }>
 }
 
 /** 其他配置各测试项卡片的「使用说明」文案（key = 卡片 key），卡片右上角「?」点击展示。
@@ -2947,7 +3267,7 @@ const OTHER_CARD_DOCS: Record<string, string> = {
   busOff: 'tBusOff\n开启后按三组参数生成 BusOff 相关用例：\n\n① 快恢复（tbusoffquickNum / tquickmin / tquickmax）\n生成 BusOff_quick_recovery 用例：连续制造 BusOff 并恢复，检查报文快恢复时间是否落在 [tquickmin, tquickmax] 区间内。\n\n② 慢恢复（tbusoffslowNum / tslowmin / tslowmax）\n生成 BusOff_slow_recovery 用例：连续制造 BusOff 并恢复，检查报文慢恢复时间是否落在 [tslowmin, tslowmax] 区间内。\n\n③ DTC（DTCbusoffNum / DTCbusoffrecovery / DTCbusoffrecoveryType / DTC）\n生成 BusOff DTC 检测用例。\nDTCbusoffrecovery 为恢复量，用右侧开关声明它的含义：开=时间（ms），关=报文帧数。\n\n三组参数互相独立，各自填了才会生成对应用例；Num 为busoff次数，min/max 单位为 ms。',
   disableXcp: 'DisableXCP\n开启后生成 DisableXCP 用例：先发送「关闭XCP」的 UDS 指令，随后连接 XCP 并检查指定 ID 的报文已停止发送；再发送「打开XCP」指令并重新 Init，检查该 ID 报文恢复正常发送。\n\n参数：XCP ID（16 进制，如 0x123）、关闭XCP的UDS指令、打开XCP的UDS指令。',
   configDiag: 'Config_Diag\n开启后生成 AllConfig_Diag（配置所有功能）、EraseConfig_Diag（擦除所有配置）及若干 PartialConfig_Diag_N（部分配置）：\n\n① AllConfig_Diag：Req14 → 发送「配置所有功能」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，并断言其为历史故障）→ 注入全部网络故障 → 读取全部故障（白名单=全部网络故障 DTC + 未配置DTC）→ 恢复全部网络故障 → 再次读取（网络故障 DTC 应转历史）。\n\n② EraseConfig_Diag：Req14 → 发送「擦除所有配置」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，断言其为当前故障）→ 注入全部网络故障 → 读取全部故障（白名单=未被排除的 DTC + 未配置DTC）→ 恢复全部网络故障 → 读取（未配置DTC 应为当前故障）。\n\n③ PartialConfig_Diag_N（部分配置，数量不定，点「+ 添加」逐条录入）：Req14 → 发送该条的 UDS 指令 → 正常上下电（当前应无故障）→ 按分类静默注入故障 → 读取全部故障（白名单=该分类 DTC 去掉该条「关联ID」命中的，不含未配置DTC）→ 恢复后当前应无故障。与 EraseConfig 的区别：不期望「未配置DTC」，且只排除该条填写的「关联ID」。\n\n参数：全配=配置所有功能的UDS指令；全不配=擦除所有配置的UDS指令 + 未配置DTC（如 456F00）+ 擦除后不再报出的报文ID（可多个，英文逗号分隔，如 0x123,0x456）；部分配置=每条「UDS指令 + 关联ID（可多个，英文逗号分隔）」。',
-  sliderGroup: '开关配置（五项开关，互相独立）\n· ExtendFrame：对每个 Rx 报文 ID 发送扩展帧，检查总线未出现错误帧。\n· RemotrFrame：对每个 Rx 报文 ID 发送远程帧，检查总线未出现错误帧。\n· UnexpectDlc:less：检查各 Tx 报文是否出现 DLC 小于预期的非预期长度。\n· UnexpectDlc:Greater：检查各 Tx 报文是否出现 DLC 大于预期的非预期长度。\n· VoltDTC_Diag：开启后在「助力电压」板块生成 AssistVoltage_VoltDtcDiag_LowVolt / _HighVolt 组合用例：电压故障在诊断范围内优先诊断，网络故障不报（两者不能同时报出）；恢复电压故障后，已成熟的网络故障应立即能诊断到。需先配置助力电压参数。\n\n前四项均依赖 DBC 中已配置的 Tx/Rx 报文列表，需先导入并配置 DBC 再勾选。',
+  sliderGroup: '开关配置（五项开关 + 两项 Counter 首帧判定，互相独立）\n· ExtendFrame：对每个 Rx 报文 ID 发送扩展帧，检查总线未出现错误帧。\n· RemotrFrame：对每个 Rx 报文 ID 发送远程帧，检查总线未出现错误帧。\n· UnexpectDlc:less：检查各 Tx 报文是否出现 DLC 小于预期的非预期长度。\n· UnexpectDlc:Greater：检查各 Tx 报文是否出现 DLC 大于预期的非预期长度。\n· VoltDTC_Diag：开启后在「助力电压」板块生成 AssistVoltage_VoltDtcDiag_LowVolt / _HighVolt 组合用例：电压故障在诊断范围内优先诊断，网络故障不报（两者不能同时报出）；恢复电压故障后，已成熟的网络故障应立即能诊断到。需先配置助力电压参数。\n\n· 11Reset-counter / Busoff-counter：分别控制 11 重启、BusOff 两类工况下计数器连续性的「首帧判定」——\n    滑块置「0」= 恢复后首帧计数必须为 0（默认）；置「last」= 不校验首帧初始值，只校验从第 2 帧起 +1 递增。\n    上电检测Counter（xxx_Counter）固定从 0 开始；高负载检测Counter（xxx_HighBusLoadCounter）固定不校验首帧，均不受此项影响。\n\n前四项均依赖 DBC 中已配置的 Tx/Rx 报文列表，需先导入并配置 DBC 再勾选。',
   readyOffDiagStop: 'Ready_OffDiagStop\n开启后生成 Ready_Off_Diag 用例：Ready Off 状态下，所填报文 ID 对应的故障应被禁止诊断（不置位），其它故障仍正常触发；用于验证 Ready Off 时车速类 DTC 不置位。\n\n参数：车速报文ID（如 0x123）。',
   waittime: '11ResetTime\n每个 Tx 报文都会生成 11 重启用例（xxx_11Reset_Attribute）：发送 11 01（ECU 复位）后等待该报文重新发出。\n\n参数：等待时间（ms），未填时按 3000 处理。',
   igonDag: 'IGON_OFF\n无需勾选，保存配置即生成 IGON_OFF 用例：执行 Init → Ready_Off → IG OFF（等待）→ IG ON（等待），中间先断言应无故障；随后 Ready_On → K30 OFF（等待）→ K30 ON（等待），最后读取 DTC 并断言结果。\n\n参数：IG ON 后读取的 DTC（16 进制，如 0xC12345）。留空时不读取 DTC，改用 _testnullDTC(0,1,0) 断言应无故障。',
@@ -3096,8 +3416,22 @@ const compoundSliderDefs: CompoundSliderDef[] = [
       { key: 'unexpectDlcGreater', label: 'UnexpectDlc:Greater' },
       { key: 'voltDtcDiag', label: 'VoltDTC_Diag' },
     ],
+    // Counter 首帧判定：0 = 首帧从 0 开始；last = 不校验首帧（只校验后续递增）
+    // （上电检测 Counter 固定为 0；高负载检测 Counter 固定不校验首帧，均不在此处配置）
+    selects: [
+      { key: 'counter11ResetStart', label: '11Reset-counter',
+        onValue: '0', offValue: 'lastValue', onText: '0', offText: 'last' },
+      { key: 'counterBusOffStart', label: 'Busoff-counter',
+        onValue: '0', offValue: 'lastValue', onText: '0', offText: 'last' },
+    ],
   },
 ]
+
+/** Counter 首帧选择项的默认值（未配置时按从 0 开始） */
+const COUNTER_START_DEFAULTS: Record<string, string> = {
+  counterBusOffStart: '0',
+  counter11ResetStart: '0',
+}
 
 /** DiagStop 分组：放在一起展示 */
 const diagStopGroupKeys = ['otaDiagStop', 'sigDiagStop', 'pwrStsFbDiagStop', 'readyOffDiagStop']
@@ -4521,6 +4855,7 @@ function autoMatchMissingParams(nodes: any[], parentEps = false) {
           const cfg = jsonDbcRaw.value
           const sender = node.msg?.senders || node.name
           const savedEt = cfg?.[sender]?.[node.msg?.msgName]?.signals?.[node.name]?.et
+          const savedDid = cfg?.[sender]?.[node.msg?.msgName]?.signals?.[node.name]?.did
           let cand = buildAutoSigTestParams(node.fields || {}, node.name, true)
           if (!cand.length && savedEt) {
             cand = [{ value: savedEt, label: savedEt, target: 'eps', params: {}, enabled: true }]
@@ -4529,6 +4864,10 @@ function autoMatchMissingParams(nodes: any[], parentEps = false) {
           }
           const epsCand = cand.find((p: any) => p.target === 'eps')
           if (epsCand) {
+            // DateID：新增 E2E 算法按信号保存在配置里，加载时回显
+            if (DATEID_CRC_ALGOS.includes(String(epsCand.value)) && savedDid) {
+              epsCand.params = { ...(epsCand.params || {}), dataId: normalizeDateId(savedDid) }
+            }
             if (!node.testParams?.some((p: any) => p.target === 'eps')) {
               node.testParams = [...(node.testParams || []), epsCand]
             }
@@ -4934,7 +5273,7 @@ function buildTreeFromDict(raw: Record<string, any>): any[] {
               value: sigData.et,
               label: sigData.et,
               target: 'eps',
-              params: {},
+              params: sigData.did ? { dataId: normalizeDateId(sigData.did) } : {},
             }]
           }
 
@@ -5821,8 +6160,9 @@ function saveParamToMap(node: any, param: any) {
 }
 
 function selectTestParam(node: any, param: any) {
-  // EPS 类型（Counter / 具体 CRC 算法）为单选类型，无参数可编辑，点击仅提示
-  if (param.target === 'eps') {
+  // EPS 类型（Counter / 普通 CRC 算法）为单选类型，无参数可编辑，点击仅提示；
+  // 新增 E2E 算法需要 DateID，允许打开配置面板
+  if (param.target === 'eps' && !DATEID_CRC_ALGOS.includes(param.value)) {
     ElMessage.info('EPS 类型通过拖拽 Counter / CRC 卡片覆盖，删除请点标签上的 ×')
     return
   }
@@ -5960,8 +6300,9 @@ const editingCardValue = ref('')
 const cardConfigForm = reactive<Record<string, any>>({})
 
 function onTestParamCardConfigure(card: TestParamCard) {
-  // EPS 卡片（Counter / CRC 算法）为类型选择，无需配置参数，直接拖拽
-  if (card.target === 'eps') {
+  // EPS 卡片（Counter / 普通 CRC 算法）为类型选择，无需配置参数，直接拖拽；
+  // 新增 E2E 算法需要 DateID，允许打开配置弹窗
+  if (card.target === 'eps' && !DATEID_CRC_ALGOS.includes(card.value)) {
     ElMessage.info(`「${card.label}」为 EPS 类型选择，直接拖拽到 EPS 信号节点即可`)
     return
   }
@@ -6014,13 +6355,89 @@ function pasteTestParamToSelectedNode() {
   addTestParamToNode(node, testParamClipboard.value)
 }
 
+/** 信号配置面板的 DateID 输入：边输入过滤非法字符，失焦统一补 0x */
+function onPanelDateIdInput(value: string) {
+  const param = selectedTestParam.value
+  if (!param) return
+  if (!param.params) param.params = {}
+  param.params.dataId = sanitizeDateIdTyping(value)
+}
+
+function onPanelDateIdCommit(value: string) {
+  const param = selectedTestParam.value
+  if (!param) return
+  if (!param.params) param.params = {}
+  param.params.dataId = normalizeDateId(value)
+}
+
+/** 卡片配置弹窗的 DateID 输入 */
+function onCardDateIdInput(value: string) {
+  cardConfigForm.dataId = sanitizeDateIdTyping(value)
+}
+
+function onCardDateIdCommit(value: string) {
+  cardConfigForm.dataId = normalizeDateId(value)
+}
+
+/** 把卡片上配置的 DateID 同步给「使用该算法且尚未填写 DateID」的 EPS 信号 */
+function applyCardDateIdToNodes(algoName: string, dataId: string): number {
+  if (!DATEID_CRC_ALGOS.includes(algoName) || !dataId) return 0
+  let filled = 0
+  const touched: Array<[string, any[]]> = []
+  const walk = (nodes: any[]) => {
+    for (const node of nodes) {
+      if (node.type === 'signal') {
+        const eps = node.testParams?.find(
+          (p: any) => p.target === 'eps' && p.value === algoName)
+        if (eps) {
+          if (!eps.params) eps.params = {}
+          if (!String(eps.params.dataId ?? '').trim()) {
+            eps.params.dataId = dataId
+            filled++
+          }
+          const key = getTestParamsKey(node.msg?.msgName || node.msg?.name, node.name)
+          const list = [...(testParamMap.value.get(key) || [])]
+          const item = list.find(
+            (p: any) => p.target === 'eps' && p.value === algoName)
+          if (!item) {
+            list.push({
+              value: algoName, label: algoName, target: 'eps',
+              params: { dataId }, enabled: true,
+            })
+          } else if (!String(item.params?.dataId ?? '').trim()) {
+            item.params = { ...(item.params || {}), dataId }
+          }
+          touched.push([key, list])
+        }
+      }
+      if (node.children?.length) walk(node.children)
+    }
+  }
+  walk(treeData.value)
+  if (touched.length) {
+    const next = new Map(testParamMap.value)
+    for (const [key, list] of touched) next.set(key, list)
+    testParamMap.value = next
+  }
+  return filled
+}
+
 function saveCardConfig() {
+  const value = editingCardValue.value
+  const form = { ...cardConfigForm }
+  if (DATEID_CRC_ALGOS.includes(value)) form.dataId = normalizeDateId(form.dataId)
   testParamCardConfig.value = {
     ...testParamCardConfig.value,
-    [editingCardValue.value]: { ...cardConfigForm },
+    [value]: form,
   }
+  // 新增 E2E 算法：把卡片上的 DateID 补到尚未填写的信号，避免「卡片里填了、生成仍是 0x0000」
+  const filled = DATEID_CRC_ALGOS.includes(value)
+    ? applyCardDateIdToNodes(value, String(form.dataId || ''))
+    : 0
   cardConfigDialogVisible.value = false
-  ElMessage.success('测试参数已配置，可拖拽到树形图')
+  ElMessage.success(filled
+    ? `测试参数已配置，已同步 ${filled} 个未填写 DateID 的信号`
+    : '测试参数已配置，可拖拽到树形图')
 }
 
 function _startAttrEdit(data: any) {
@@ -6513,11 +6930,15 @@ function addTestParamToNode(node: any, param: any): boolean {
     const current = testParamMap.value.get(key) || []
     // EPS 类型单选：移除旧的 eps 项后加入新项
     const filtered = current.filter((p: any) => p.target !== 'eps')
+    const epsParams = { ...(param.params || {}) }
+    if (DATEID_CRC_ALGOS.includes(param.value) && 'dataId' in epsParams) {
+      epsParams.dataId = normalizeDateId(epsParams.dataId)
+    }
     const newParams = [...filtered, {
       value: param.value,
       label: param.label,
       target: 'eps',
-      params: {},
+      params: epsParams,
     }]
     testParamMap.value = new Map(testParamMap.value)
     testParamMap.value.set(key, newParams)
@@ -6759,7 +7180,15 @@ function buildDbcRawFromSignalRows(): any {
             if (sigNode.fields?.valueDesc) sigData.vd = sigNode.fields.valueDesc
             // EPS 类型（target === 'eps'）写回 et，其余测试参数写回 tp
             const epsParam = sigNode.testParams?.find((p: any) => p.target === 'eps')
-            if (epsParam) sigData.et = epsParam.value
+            if (epsParam) {
+              sigData.et = epsParam.value
+              // DateID：新增 E2E 算法按信号独立保存；信号未填时回退到卡片上的配置
+              let didVal = normalizeDateId(epsParam.params?.dataId)
+              if (!didVal) {
+                didVal = normalizeDateId(testParamCardConfig.value[epsParam.value]?.dataId)
+              }
+              if (didVal) sigData.did = didVal
+            }
             if (sigNode.testParams?.length) {
               const tpObj: Record<string, any> = {}
               for (const p of sigNode.testParams) {
@@ -6933,7 +7362,7 @@ async function loadChartData(type: string) {
     const data = res?.data || {}
     setChartData(type, data)
     if (data.params) {
-      if (type === 'communication') commParams.value = { ...data.params }
+      if (type === 'communication') commParams.value = normalizeCommParams(data.params)
       else if (type === 'diagnostic') diagParams.value = { ...data.params }
       else paParams.value = { ...data.params }
     }
@@ -6969,7 +7398,7 @@ async function applyParams(type: string) {
     const res: any = await updateParams(type, params)
     const data = res?.data || {}
     if (data.params) {
-      if (type === 'communication') commParams.value = { ...data.params }
+      if (type === 'communication') commParams.value = normalizeCommParams(data.params)
       else if (type === 'diagnostic') diagParams.value = { ...data.params }
       else paParams.value = { ...data.params }
     }
@@ -7034,6 +7463,9 @@ async function loadConfig(name: string, token: number = configChangeToken) {
     // 加载配置时清空已上传的 DBC，避免残留的上传 DBC 优先级高于配置中的 DBC，
     // 导致配置里保存的测试参数（tp/et）无法显示。
     dbcRaw.value = null
+    // 同理清空「已上传 A2L / mapxml」（两种模式一起清）：上传路优先级高于「配置自带」，
+    // 残留的符号表会让本次加载配置的 CCP 符号显示不出来。
+    store.clearUploadA2lVars()
     uploadedFiles.value = []
     applyConfigData(data)
     // 树形图在当前 tick 的 watcher 中构建，等待后兜底补全默认测试参数卡片
@@ -7053,8 +7485,8 @@ async function loadConfig(name: string, token: number = configChangeToken) {
 function applyConfigurationData(raw: any, merge = false) {
   const rawCfg = { ...(raw || {}) }
 
-  // 电机类型：必须先于 ccp_var_scales 回填 —— setCanMotorMode 切到无刷时会清空
-  // ccpVarTypes / ccpVarScales，顺序反了会把刚恢复的换算系数冲掉
+  // 电机类型：先切模式再回填 CCP 精度/偏移（切模式不再清空这些表，
+  // 保持顺序仍是为了让后续回填落在最终模式下）
   if (rawCfg.motorMode === 'brushed' || rawCfg.motorMode === 'brushless') {
     store.setCanMotorMode(rawCfg.motorMode)
   }
@@ -7092,6 +7524,21 @@ function applyConfigurationData(raw: any, merge = false) {
     store.setCcpVarTypes(types)
   }
   delete rawCfg.ccp_var_symbols
+  // 地址/长度覆盖 + 自定义变量（手工新增 / 结构体拆分）回填，与上面同一时机。
+  // 顺序在 setA2lVars 之后：objA2lVars 是 computed，会把覆盖叠加到符号上。
+  store.setCcpVarOverrides(rawCfg.ccp_var_overrides)
+  store.setCcpCustomVars(
+    Array.isArray(rawCfg.ccp_custom_vars)
+      ? rawCfg.ccp_custom_vars.map((c: any) => ({
+          name: c?.name,
+          type: c?.addr,
+          size: c?.size,
+          kind: c?.kind,
+        }))
+      : []
+  )
+  delete rawCfg.ccp_var_overrides
+  delete rawCfg.ccp_custom_vars
 
   let readyOnParsed = { signal: '', value: '' }
   let readyOffParsed = { signal: '', value: '' }
@@ -7116,9 +7563,12 @@ function applyConfigurationData(raw: any, merge = false) {
     store.setSelectedOem(rawCfg.serviceObject)
   }
 
-  // 回填安全算法（保存时存于 securityAlgo）
+  // 回填安全算法（保存时存于 securityAlgo）；历史配置只有 serviceObject 时按该厂默认算法兜底
   if (rawCfg.securityAlgo) {
     store.setSelectedAlgo(rawCfg.securityAlgo)
+  } else if (rawCfg.serviceObject) {
+    const fallback = defaultAlgoForOem(rawCfg.serviceObject)
+    if (fallback) store.setSelectedAlgo(fallback)
   }
 
   const page = configPageData.value
@@ -7142,6 +7592,10 @@ function applyConfigData(data: any, syncChart: boolean = true) {
   buildDllTreeFromRaw(dllRaw.value)
 
   otherData.value = { ...(data['Other'] || data['other_page'] || {}) }
+  // Counter 首帧选择项：配置里没有时补默认值（从 0 开始），否则下拉框显示空白
+  for (const [k, dv] of Object.entries(COUNTER_START_DEFAULTS)) {
+    if (!otherData.value[k]) otherData.value[k] = dv
+  }
 
   // 从 Other 数据中提取 Group 卡片数据（数组形式）
   const otherRaw = data['Other'] || data['other_page'] || {}
@@ -7168,7 +7622,7 @@ function applyConfigData(data: any, syncChart: boolean = true) {
   const commRaw = volt.communication || volt.communication_params || {}
   const diagRaw = volt.diagnostic || volt.diagnostic_params || {}
   const paRaw = volt.power_assist || volt.power_assist_params || {}
-  commParams.value = Object.keys(commRaw).length ? { ...commRaw } : { ...DEFAULT_COMM_PARAMS }
+  commParams.value = Object.keys(commRaw).length ? normalizeCommParams(commRaw) : { ...DEFAULT_COMM_PARAMS }
   diagParams.value = Object.keys(diagRaw).length ? { ...diagRaw } : { ...DEFAULT_DIAG_PARAMS }
   paParams.value = Object.keys(paRaw).length ? { ...paRaw } : { ...DEFAULT_PA_PARAMS }
 
@@ -7248,6 +7702,19 @@ function collectConfigData(): any {
       symbols[name] = entry
     }
     cfg.ccp_var_symbols = symbols
+    // 地址/长度覆盖 + 自定义变量（手工新增 / 结构体拆分）也随配置保存，
+    // 否则重载后手工修正丢失、拆出的成员消失（表现为「配置里的变量不全」）。
+    if (Object.keys(store.ccpVarOverrides).length) {
+      cfg.ccp_var_overrides = { ...store.ccpVarOverrides }
+    }
+    if (store.ccpCustomVars.length) {
+      cfg.ccp_custom_vars = store.ccpCustomVars.map((c) => ({
+        name: c.name,
+        addr: c.type,
+        size: c.size,
+        kind: c.kind || 'measurement',
+      }))
+    }
   }
 
   // 兜底：确保 cfgDir 来自最新的 store.cfgData（避免老配置未保存 cfgDir 时丢失）
@@ -7422,12 +7889,24 @@ async function onExportExcel() {
 /** 有刷模式：收集生成脚本用到的符号 → { addr, size, type?, precision?, offset? }，供后端生成 CCP 采集模块 */
 function collectCcpSymbols(): Record<string, { addr: string; size: number; type?: string; precision?: number; offset?: number }> {
   const table = new Map<string, { addr: string; size: number; precision?: number; offset?: number }>()
+  // store.objA2lVars 已叠加「地址/长度覆盖」与自定义变量（见 modules.ts），
+  // 直接遍历即可拿到用户手工修正后的值与新增的符号。
   for (const v of store.objA2lVars.measurements) {
     const name = String(v?.name || '').trim()
     const addr = String(v?.type || '').trim()
     const size = Number(v?.size || 0)
     if (name && addr && size > 0) {
       table.set(name, { addr, size, precision: v?.precision, offset: v?.offset })
+    }
+  }
+  // 自定义变量（.mapxml 里没有、由用户新增/拆分出来的）：无论是否被引用都收集，
+  // 否则用户手工拆出的结构体成员永远不会进 vsysvar。
+  for (const c of store.ccpCustomVars || []) {
+    const name = String(c?.name || '').trim()
+    const addr = String(c?.type || '').trim()
+    const size = Number(c?.size || 0)
+    if (name && addr && size > 0 && !table.has(name)) {
+      table.set(name, { addr, size, precision: c?.precision, offset: c?.offset })
     }
   }
   if (!table.size) return {}
@@ -7471,16 +7950,28 @@ function collectCcpSymbols(): Record<string, { addr: string; size: number; type?
     }
   }
   walkXcpVar(treeData.value as any[])
-  // 信号节点上的「测试参数」(tp) 也会引用 CCP 变量 —— 例如 FactorTest 的变量存在
-  // signals.<信号>.tp.FactorTest.variable 里，值形如 sysvar::NsCcp::<name>。
-  // 这一块既不在 xcpVar、也不在 DBC 的 XCP_CCP_varname 列、也不在 DTC 列里，
-  // 必须单独递归收集，否则「配了 FactorTest 变量却不进符号表 / 不生成 vsysvar」。
+  // 信号 / 报文节点上的「测试参数」也会引用 CCP 变量 —— 例如 FactorTest 的变量。
+  // 数据有两种形态，都要认：
+  //   ① 运行时树（treeData）：节点上是 testParams 数组，元素形如
+  //      { value:'FactorTest', target:'signal', params:{ variable:'sysvar::NsCcp::x' } }
+  //   ② 配置 JSON（jsonDbcRaw/保存前的原始结构）：嵌套对象 signals.<信号>.tp.<参数>.variable
+  // 关键：保存与生成时 DBC 走的是 buildDbcRawFromSignalRows()（由 treeData 构建），
+  // 而 jsonDbcRaw/dbcRaw 在「上传 DBC 后拖拽」或「加载配置」场景下并不与 treeData 同步，
+  // 只遍历 raw 会漏掉这些变量（表现为 FactorTest 引用了变量却不进配置 / 不生成 vsysvar）。
   const walkTp = (o: any) => {
     if (!o || typeof o !== 'object') return
     if (Array.isArray(o)) {
       for (const it of o) walkTp(it)
       return
     }
+    // ① 运行时树：testParams 数组 → 元素 .params.variable
+    const tps = (o as any).testParams
+    if (Array.isArray(tps)) {
+      for (const p of tps) {
+        if (p && typeof p === 'object') addName((p as any)?.params?.variable)
+      }
+    }
+    // ② 配置 JSON：tp 对象 → 各参数 .variable
     const tp = (o as any).tp
     if (tp && typeof tp === 'object') {
       for (const p of Object.values(tp)) {
@@ -7489,6 +7980,8 @@ function collectCcpSymbols(): Record<string, { addr: string; size: number; type?
     }
     for (const v of Object.values(o as Record<string, any>)) walkTp(v)
   }
+  // treeData 是保存 / 生成时的真实来源，优先遍历；两个 raw 作为加载配置场景的补充
+  walkTp(treeData.value)
   walkTp(jsonDbcRaw.value)
   walkTp(dbcRaw.value)
   // DTC 检测对象：表头前 4 列是固定列，其后每一列是一个检测对象（格式「对象名 / 时间」）。
@@ -7502,8 +7995,15 @@ function collectCcpSymbols(): Record<string, { addr: string; size: number; type?
 
   // CCP 系统变量类型 / 精度 / 偏移（对象浏览器双击符号设置）：
   // 精度/偏移优先级：对象浏览器设置 > mapxml 对象自带值 > 默认 1 / 0；等于默认值时不发该字段
+  // 除「被引用的符号」外，自定义变量（手工新增 / 结构体拆分）一律收集：
+  // 用户既然手工建了这个变量，就是要它在 vsysvar 里可用，不该要求必须先被引用。
+  const collectNames = new Set<string>(used)
+  for (const c of store.ccpCustomVars || []) {
+    const n = String(c?.name || '').trim()
+    if (n && table.has(n)) collectNames.add(n)
+  }
   const out: Record<string, { addr: string; size: number; type?: string; precision?: number; offset?: number }> = {}
-  for (const name of used) {
+  for (const name of collectNames) {
     const info = table.get(name)!
     const entry: { addr: string; size: number; type?: string; precision?: number; offset?: number } = {
       addr: info.addr,
@@ -7547,6 +8047,18 @@ async function showInvalidValueDialog(
   ).catch(() => {})
 }
 
+/** CCP 告警中属于「环境状态」的提示（生成本身已成功）：自动关闭，避免一直挂在页面上。
+ *  写入失败 / 导入失败等需要用户处理的告警不在此列，仍保持常驻。 */
+const TRANSIENT_CCP_WARNING_PATTERNS = [
+  'CANoe 实例不可用',
+  '有刷模式未收集到 CCP 符号',
+  '未在输出目录找到 CCP.vsysvar',
+]
+
+function isTransientWarning(message: string): boolean {
+  return TRANSIENT_CCP_WARNING_PATTERNS.some((p) => String(message || '').includes(p))
+}
+
 async function onGenerate() {
   if (!currentConfig.value) {
     ElMessage.warning('请先选择配置')
@@ -7578,7 +8090,7 @@ async function onGenerate() {
     if (store.canMotorMode === 'brushed' && Object.keys(ccpSymbols).length === 0) {
       ElMessage({
         type: 'warning',
-        duration: 0,
+        duration: 8000,
         showClose: true,
         message: '有刷模式未收集到 CCP 符号：本次不会生成 CCP_Read.cin / CCP.vsysvar，'
           + 'CANoe 中不会出现 NsCcp 系统变量。请确认已上传 .mapxml，'
@@ -7602,16 +8114,22 @@ async function onGenerate() {
       await showInvalidValueDialog(payload.invalid_values || [])
       return
     }
-    // 后端 CCP 告警（符号为空 / .vsysvar 写入失败 / 自动导入失败）：逐条常驻提示
+    // 后端 CCP 告警：环境状态类（CANoe 未运行 / 没符号 / 没找到 vsysvar）自动关闭；
+    // 需要用户处理的失败类（写入失败 / 导入失败 / 导入异常）保持常驻，避免被忽略
     for (const warn of (payload?.ccp_warnings || []) as string[]) {
-      ElMessage({ type: 'warning', duration: 0, showClose: true, message: warn })
+      ElMessage({
+        type: 'warning',
+        duration: isTransientWarning(warn) ? 6000 : 0,
+        showClose: true,
+        message: warn,
+      })
     }
     // 有刷模式 CCP.vsysvar 自动导入结果：成功时也提示，避免「成功静默」被误判成「没导入工程」
     const vsysvarRes = payload?.ccp_vsysvar_result
     if (vsysvarRes?.success) {
       ElMessage({
         type: 'success',
-        duration: 0,
+        duration: 5000,
         showClose: true,
         message: `CCP.vsysvar 已自动导入到 CANoe 工程：${vsysvarRes.path || ''}`,
       })
@@ -7675,6 +8193,10 @@ function resetData(loadChart: boolean = true) {
   dllRaw.value = null
   dtcRaw.value = null
   otherData.value = {}
+  // Counter 首帧选择项回到默认（从 0 开始）
+  for (const [k, dv] of Object.entries(COUNTER_START_DEFAULTS)) {
+    otherData.value[k] = dv
+  }
   otherCheckboxStates.value = {}
   groupCardDefs.value.forEach(c => { c.groups = [] })
   hexIdCardDefs.value.forEach(c => { otherData.value[c.key] = '' })
@@ -7682,7 +8204,9 @@ function resetData(loadChart: boolean = true) {
   lastA2lQualifier = ''
   lastCddQualifier = ''
   uploadedFiles.value = []
-  a2lVars.value = { measurements: [], characteristics: [] }
+  // 清空两模式的上传槽位 + 配置自带符号表，避免新配置继承上一份工程的 A2L / mapxml 符号
+  store.clearUploadA2lVars()
+  store.setA2lVars(null, 'config')
   commParams.value = { ...DEFAULT_COMM_PARAMS }
   diagParams.value = { ...DEFAULT_DIAG_PARAMS }
   paParams.value = { ...DEFAULT_PA_PARAMS }
@@ -8205,6 +8729,10 @@ useShortcut({
 onMounted(() => {
   loadAllChartData()
   loadCrcAlgorithms()
+  // Counter 首帧选择项默认值（从 0 开始），保证首次进入页面下拉框就有值
+  for (const [k, dv] of Object.entries(COUNTER_START_DEFAULTS)) {
+    if (!otherData.value[k]) otherData.value[k] = dv
+  }
   // 全局事件委托：鼠标点击输入框时全选内容
   document.addEventListener('focusin', handleGlobalFocusIn)
 })
@@ -8291,6 +8819,18 @@ onActivated(() => {
   align-items: center;
   gap: 6px;
   font-size: 13px;
+
+  // 电压子页签：启用开关放在标签前；禁用时整条标签淡化
+  &.is-off {
+    opacity: 0.55;
+  }
+}
+
+// 页签内的启用开关：只切换启用状态，不切换页签
+.tab-enable {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
 }
 
 .sub-page {
@@ -9172,7 +9712,8 @@ onActivated(() => {
 // Compound 滑块卡片：小卡片两两一行（2 列网格）
 .other-card-body--sliders {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  // 三列布局：5 项布尔开关 + 3 项 Counter 首帧判定，排成 3 列多行
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px;
   padding-top: 4px;
   align-content: start;
@@ -9220,6 +9761,16 @@ onActivated(() => {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+// 3 列网格下每格变窄：标签与滑块同行，标签可省略号收缩，滑块始终可见
+.other-card-body--sliders .other-slider-row {
+  gap: 4px;
+
+  .other-slider-label {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
 }
 
 // Group 卡片 body
@@ -9492,69 +10043,87 @@ onActivated(() => {
   }
 }
 
-// 助力电压参数表单：5个一排
-.pa-form {
-  .pa-group {
-    margin-top: 12px;
+// 电压参数表单（通信 / 诊断 / 助力共用）：两行两列块式布局
+.volt-form {
+  // 通信 / 诊断 / 助力共用同一套两列网格 —— 列位固定、宽度自适应，
+  // 上下两行的块左右对齐；块内容变化（判定切换显隐输入框）不会改变块的尺寸与位置
+  .volt-block-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(460px, 1fr));
+    gap: 10px 24px;
+    margin-top: 10px;
 
     &:first-child {
       margin-top: 0;
     }
   }
 
-  .pa-group-header {
+  .volt-block {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-    padding: 2px 8px;
-    background: var(--el-fill-color-light);
+    gap: 10px;
+    width: 100%;
+    min-width: 0;
+    padding: 4px 12px;
+    background: var(--el-fill-color-lighter);
+    border-left: 3px solid var(--el-color-primary-light-5);
     border-radius: 4px;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--el-text-color-secondary);
-  }
 
-  .pa-row {
-    display: flex;
-    flex-wrap: nowrap;
-    gap: 12px;
-    transition: opacity 0.2s ease;
+    // 未启用（助力电压欠压 / 过压）：标题与输入项淡化，启用开关保持可点
+    &.is-off {
+      .volt-block-title {
+        opacity: 0.55;
+      }
 
-    &.is-disabled {
-      opacity: 0.5;
+      .volt-item:not(.volt-item--switch) {
+        opacity: 0.55;
+      }
     }
   }
 
-  .pa-item {
-    flex: 1 1 20%;
+  // 块标题左下对齐；统一最小宽度，让同一行/上下行的块内容左边界对齐
+  .volt-block-title {
+    flex: 0 0 auto;
+    min-width: 80px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--el-text-color-regular);
+    white-space: nowrap;
+  }
+
+  .volt-block-body {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    flex: 1 1 auto;
     min-width: 0;
+    gap: 6px 10px;
+  }
+
+  .volt-item {
+    flex: 0 0 auto;
     margin-bottom: 0;
 
     :deep(.el-form-item__label) {
       font-size: 12px;
-      line-height: 36px;
-      height: 36px;
+      line-height: 32px;
+      height: 32px;
       padding-bottom: 0;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     :deep(.el-form-item__content) {
-      width: 100%;
-      line-height: 36px;
+      line-height: 32px;
     }
 
-    // 增大输入框高度，方便输入和拖拽
     :deep(.el-input__wrapper) {
-      padding: 4px 11px;
-      min-height: 36px;
+      padding: 1px 11px;
+      min-height: 32px;
     }
 
     :deep(.el-input__inner) {
-      height: 28px;
-      line-height: 28px;
+      height: 30px;
+      line-height: 30px;
       font-size: 13px;
     }
 
@@ -9562,6 +10131,29 @@ onActivated(() => {
       .el-input__inner {
         text-align: left;
       }
+    }
+
+    // 输入框统一宽度；DTC 文本项略窄（8 位字符足够）
+    :deep(.el-input-number),
+    :deep(.el-input) {
+      width: 132px;
+    }
+
+    // 时间判定下拉框：略宽，放得下「介于」等选项
+    :deep(.el-select) {
+      width: 104px;
+    }
+  }
+
+  // DTC 文本项：宽度略窄，便于与数值项区分
+  .volt-item--dtc :deep(.el-input) {
+    width: 104px;
+  }
+
+  // 启用开关项（助力电压欠压 / 过压）：标签照常显示，开关与输入框等高对齐
+  .volt-item--switch {
+    :deep(.el-form-item__content) {
+      min-height: 32px;
     }
   }
 }

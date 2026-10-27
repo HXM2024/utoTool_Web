@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<Panel Type="Vector.CANalyzer.Panels.PanelSerializer, Vector.CANalyzer.Panels.Serializer, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null">
+  <Object Type="Vector.CANalyzer.Panels.Runtime.Panel, Vector.CANalyzer.Panels.Common, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="Panel" Children="Controls" ControlName="Panel1">
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl4" Children="Controls" ControlName="Static Text 2">
+      <Property Name="Name">StaticTextControl4</Property>
+      <Property Name="Size">53, 13</Property>
+      <Property Name="Location">129, 265</Property>
+      <Property Name="Text">压力测试</Property>
+      <Property Name="ForeColor">Black</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.SwitchControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="SwitchControl1" ControlName="Switch/Indicator">
+      <Property Name="Name">SwitchControl1</Property>
+      <Property Name="Size">21, 30</Property>
+      <Property Name="Location">144, 284</Property>
+      <Property Name="StateCnt">2</Property>
+      <Property Name="SwitchValues">1;2;0;1</Property>
+      <Property Name="SwitchValuesRx">1;2;0;1</Property>
+      <Property Name="SwitchValuesVT">1;2;0/Lower/0;1/Lower/1</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;Pressure_switch;1;;;-1;;;</Property>
+      <Property Name="TabIndex">5</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl3" Children="Controls" ControlName="Static Text 2">
+      <Property Name="Name">StaticTextControl3</Property>
+      <Property Name="Size">65, 13</Property>
+      <Property Name="Location">122, 95</Property>
+      <Property Name="Text">无通讯次数</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl2" Children="Controls" ControlName="Static Text 2">
+      <Property Name="Name">StaticTextControl2</Property>
+      <Property Name="Size">65, 13</Property>
+      <Property Name="Location">122, 209</Property>
+      <Property Name="Text">有通讯次数</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.LCDControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="LCDControl2" ControlName="LCD Control">
+      <Property Name="Name">LCDControl2</Property>
+      <Property Name="Size">301, 50</Property>
+      <Property Name="Location">13, 153</Property>
+      <Property Name="NumberIntDigits">12</Property>
+      <Property Name="DecimalPlaces">0</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;countAll;1;;;-1;;;</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl1" Children="Controls" ControlName="Static Text">
+      <Property Name="Name">StaticTextControl1</Property>
+      <Property Name="Size">0, 13</Property>
+      <Property Name="Location">13, 20</Property>
+      <Property Name="Text">
+      </Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.LCDControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="LCDControl1" ControlName="LCD Control">
+      <Property Name="Name">LCDControl1</Property>
+      <Property Name="Size">301, 50</Property>
+      <Property Name="Location">13, 39</Property>
+      <Property Name="NumberIntDigits">12</Property>
+      <Property Name="DecimalPlaces">0</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;count;1;;;-1;;;</Property>
+    </Object>
+    <Property Name="Name">Panel</Property>
+    <Property Name="Size">322, 340</Property>
+    <Property Name="BackColor">White</Property>
+  </Object>
+</Panel>

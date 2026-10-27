@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="utf-8"?>
+<systemvariables version="4">
+  <namespace name="" comment="" interface="">
+    <namespace name="DID" comment="" interface="">
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="Calibrate_version" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="ClearPath" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" startValue="0" minValue="0" minValuePhys="0" maxValue="1" maxValuePhys="1" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_0216" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_0216_Len" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_3011" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_3011_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F084" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F084_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F089" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F089_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F120" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F120_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F121" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F121_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F122" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F122_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F123" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F123_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F170" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F170_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F171" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F171_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F17A" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F17A_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F180" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F180_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F184" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F184_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F185" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F185_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F186" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F186_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F187" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F187_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F188" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F188_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F189" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F189_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F18A" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F18A_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F18B" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F18B_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F18C" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F18C_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F190" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F190_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F191" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F191_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F192" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F192_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F193" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F193_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F194" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F194_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F195" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F195_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F195_Time" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F195_Time_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F195_Ver" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F195_Ver_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F197" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F197_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1B2" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1B2_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1C1" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1C1_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1CB" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1CB_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1F6" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F1F6_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F201" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="DID_F201_Len" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="ECU_Number" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="ECU_platform" comment="" bitcount="32" isSigned="true" encoding="65001" type="int">
+        <valuetable name="Custom" definesMinMax="false">
+          <valuetableentry value="0" lowerBound="0" upperBound="0" description="J3_A" displayString="J3_A" />
+          <valuetableentry value="1" lowerBound="1" upperBound="1" description="J3_B" displayString="J3_B" />
+          <valuetableentry value="2" lowerBound="2" upperBound="2" description="J3_C" displayString="J3_C" />
+          <valuetableentry value="3" lowerBound="3" upperBound="3" description="J3_E" displayString="J3_E" />
+          <valuetableentry value="4" lowerBound="4" upperBound="4" description="J3_F" displayString="J3_F" />
+          <valuetableentry value="5" lowerBound="5" upperBound="5" description="J3_G" displayString="J3_G" />
+        </valuetable>
+      </variable>
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="FBT" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="filler_0" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="funreq_ID" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="Hardware_number" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="Hardware_Test" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="Hardware_version" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="HW" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="LHB_State" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" startValue="0" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="phyreq_ID" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="Response_ID" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SBT" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="Software_version" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SVN_Revision" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SW" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SWP1_Path" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SWP2_Path" comment="" bitcount="0" isSigned="true" encoding="65001" type="string" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="WaitForRes" comment="" bitcount="32" isSigned="false" encoding="65001" type="int" />
+    </namespace>
+  </namespace>
+</systemvariables>

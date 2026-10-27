@@ -1,0 +1,2815 @@
+/*@!Encoding:936*/
+
+includes
+{
+  
+}
+
+variables
+{
+  byte Data_Programmed[10];
+  int  Data_Programmed_Count;
+  int GetInformationFlage;
+}
+
+
+void _Serve22_10()/*22 D0 1C用于Geely3.0以上平台测试*/
+{
+  byte DID_Read[3] = {0x22,0xD0,0x1C};
+  byte DID_2ED01C[292] = {0xB7,0xE9,0x74,0x4B,0x45,0xFA,0xA6,0x20,0xD3,0x1C,0x30,0xE9,0x63,0x86,0xE9,0xCD,0x5F,0xB9,0x93,0xDE,0xCA
+                        ,0x45,0xC9,0xD6,0x08,0x94,0xF7,0x7D,0xB9,0xEE,0xA9,0xD0,0x78,0x45,0x76,0x94,0x80,0x9D,0xF7,0x05,0x24,0xD7,0x30,0xE2
+                        ,0xC0,0x0F,0x04,0x6E,0x60,0x53,0x23,0xBD,0x50,0x03,0xBF,0x2C,0xA9,0xBB,0xB4,0x5C,0xC5,0x11,0x5A,0x1D,0xCE,0x25,0x7D
+                        ,0x42,0x03,0x4F,0x7E,0x1C,0x7A,0x3E,0x1A,0x68,0xE8,0x9A,0x00,0x10,0x8D,0x18,0x28,0xAC,0x26,0xBD,0x71,0xAE,0x4A,0xC9
+                        ,0xB9,0x23,0x0B,0x9B,0xC1,0x01,0x67,0x46,0xA9,0x01,0x5E,0x70,0xF1,0xD9,0xBD,0x7F,0x56,0x4B,0x97,0x61,0x64,0xFF,0xC1
+                        ,0xD9,0x6E,0x93,0xAB,0x40,0x66,0xD5,0xCB,0xF4,0x02,0xF5,0xFC,0x53,0x11,0x51,0xA9,0x80,0x5C,0x07,0x16,0xAB,0xCB,0x98
+                        ,0x25,0xFE,0x02,0xF3,0x89,0x7E,0x57,0x91,0x7A,0x64,0xCC,0x2C,0x7A,0x71,0xE8,0x83,0x33,0x59,0x0A,0xA9,0x59,0x23,0xCF
+                        ,0x4A,0x6B,0xE4,0x24,0x1A,0xF7,0x8C,0xA9,0x04,0x5D,0x65,0xB6,0x74,0x87,0x19,0x42,0x49,0xE3,0x69,0x03,0xDD,0xA4,0xC9
+                        ,0x75,0xFE,0xA7,0x3C,0x07,0xC1,0x91,0x67,0x54,0x45,0xFE,0x5F,0xCF,0x45,0x72,0xF8,0xBD,0x47,0x95,0xBA,0x81,0xA7,0x54
+                        ,0x50,0x55,0x29,0x92,0x2F,0x81,0x82,0x71,0x9B,0x43,0x1C,0xEB,0x27,0x16,0xCA,0x87,0xE2,0xBA,0x83,0xA0,0x1E,0x85,0xEF
+                        ,0x75,0xE4,0x63,0x88,0x2D,0x0B,0x53,0x76,0xB6,0xB3,0xD6,0x68,0x19,0xE2,0x6C,0x2B,0x67,0x4F,0x0A,0x9D,0xDE,0xFE,0x93
+                        ,0x42,0x43,0xCE,0x87,0xAD,0x00,0x01,0x00,0x01
+                        ,0x31,0xDD,0xD9,0xEC,0x24,0x20,0x1A,0x6A,0x82,0x5D,0x84,0x02,0x18,0x60,0x9A,0xAB,0x65,0xB0,0x4E,0xFA,0x44,0xA0,0x4A
+                        ,0x99,0x12,0xF4,0xBA,0xE8,0xE6,0x91,0xBB,0x9C};//正确9C
+  byte SendData2E[295];
+  byte CleraSendData2E[295];
+  byte ResData22[0x23];
+  byte Data1002[2] = {0x10,0x02};
+  byte Data2705[4] = {0x27,0x05,0xB1,0x8E};
+  int i;
+  dword Sess,Funreq;
+  SendData2E[0] = 0x2E;
+  CleraSendData2E[0] = 0x2E;
+  ResData22[0] = 0x62;
+  for(i=1;i<3;i++)
+  {
+    SendData2E[i] = DID_Read[i];
+    ResData22[i] = DID_Read[i];
+    CleraSendData2E[i] = DID_Read[i];
+  }
+  for(i=3;i<295;i++)
+    SendData2E[i] = DID_2ED01C[i-3];
+  for(i=260;i<292;i++)
+    ResData22[i-260+3] = DID_2ED01C[i];
+  testWaitForTesterConfirmation("此用例会优先进行擦除，当弹出第二个弹框后，使用DSA工具进行刷写，刷写完毕后点击YES进行后续操作",10000);
+  _Send_Diag(2,phyreq_ID,Data1002);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(2000);
+  _Send_Diag(4,phyreq_ID,Data2705);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(500);
+  _Send_Diag(295,phyreq_ID,CleraSendData2E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  
+  testWaitForTesterConfirmation("用DSA只烧录SBL(勾选不复位停留在SBL),不关闭DSA(会持续发送3E维持)，刷写完毕后点击Yes(此处等待10min)",600000);
+  
+  _WriteEx_and_Report("","进行写值");
+  _Send_Diag(295,phyreq_ID,SendData2E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(1000);
+  _Set_11_Restoration(0);
+  testWaitForTimeout(2000);
+  for(i=0;i<4;i++)
+  {
+    if(i<2)
+      Funreq = phyreq_ID;
+    else
+      Funreq = funreq_ID;
+    if(i==0 || i == 2)
+      Sess = defsession;
+    else
+      Sess = exsession;
+    
+    _SetSession(Sess);
+    testWaitForTimeout(500);
+    _Send_Diag(3,Funreq,DID_Read);
+    _Check_Response(SendData,0x23,ResData22);
+  }
+  
+  _Send_Diag(2,phyreq_ID,Data1002);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(2000);
+  _Send_Diag(4,phyreq_ID,Data2705);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(295,phyreq_ID,CleraSendData2E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(500);
+  _SetSession(defsession);
+  testWaitForTimeout(2000);
+  _Send_Diag(3,Funreq,DID_Read);
+  _TestResult(SendData,phyreq_ID,"",NRC22);
+}
+void _Serve22_11()/*22 D1 31用于Geely3.5以上平台测试*/
+{
+  byte Data1002[2] = {0x10,0x02};
+  byte Data2705[4] = {0x27,0x05,0xB1,0x8E};
+  byte CleraSendData2E[0x13];
+  byte DID_Read[3] = {0x22,0xD1,0x31};
+  byte Data1[16] = {0x68,0x81,0xf5,0xaf,0xf8,0xd4,0x6b,0xdd,0x71,0xad,0xe8,0x41,0xe8,0x2d,0xb3,0x24};
+  byte DataWrite[19] = {0x2E,0xF1,0x09,0x68,0x81,0xf5,0xaf,0xf8,0xd4,0x6b,0xdd,0x71,0xad,0xe8,0x41,0xe8,0x2d,0xb3,0x24};
+  byte DataRead[35] = {0x62,0xD1,0x31,0xa0,0x12,0x46,0xef,0x70,0xb3,0xb0,0xf0,0x77,0x4a,0x3a,0x9e,0x30,0xb6,0x0e,0xf4,0x86,0xe9,0x6e,0xc4,0x54,0x93,0x8f,0x19,0x8a,0xde,0x95,0x69,0x9a,0x7d,0x46,0xb9};
+  int i;
+  dword Sess,Funreq;
+  
+  CleraSendData2E[0] = 0x2E;CleraSendData2E[1] = 0xF1;CleraSendData2E[2] = 0x09;
+  _Send_Diag(2,phyreq_ID,Data1002);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(2000);
+  _Send_Diag(4,phyreq_ID,Data2705);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(500);
+  _Send_Diag(0x13,phyreq_ID,CleraSendData2E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  
+  testWaitForTesterConfirmation("用DSA只烧录SBL(勾选不复位停留在SBL),不关闭DSA(会持续发送3E维持)，刷写完毕后点击Yes(此处等待10min)",600000);
+  
+  _WriteEx_and_Report("","进行写值");
+  _Send_Diag(0x13,phyreq_ID,DataWrite);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(1000);
+  _Set_11_Restoration(0);
+  testWaitForTimeout(2000);
+  for(i=0;i<4;i++)
+  {
+    if(i<2)
+      Funreq = phyreq_ID;
+    else
+      Funreq = funreq_ID;
+    if(i==0 || i == 2)
+      Sess = defsession;
+    else
+      Sess = exsession;
+    
+    _SetSession(Sess);
+    testWaitForTimeout(500);
+    _Send_Diag(3,Funreq,DID_Read);
+    _Check_Response(SendData,35,DataRead);
+  }
+  _Send_Diag(2,phyreq_ID,Data1002);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(2000);
+  _Send_Diag(4,phyreq_ID,Data2705);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  for(i=3;i<0x13;i++)
+    CleraSendData2E[i] = 0xFF;
+  _Send_Diag(0x13,phyreq_ID,CleraSendData2E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(500);
+  _SetSession(defsession);
+  testWaitForTimeout(2000);
+}
+
+void _Serve22_3017(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x30,0x17};
+  byte Res_Data_22[4] = {0x62,0x30,0x17,0};
+  int i,result ;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  Res_Data_22[1] = (FunDID>>8)&0xFF;
+  Res_Data_22[2] = (FunDID)&0xFF;
+  for(i=0;i<Struct_Ready.Ready_ValueRange_Count;i++)
+  {
+    _Set_Ready(Struct_Ready.Ready_ValueRange[i]);
+    testWaitForTimeout(500);
+    if(Struct_Ready.Ready_ValueRange[i] == 0x0B || Struct_Ready.Ready_ValueRange[i] == 0x0D)
+      Res_Data_22[3] = 2;
+    else 
+      Res_Data_22[3] = 1;
+    
+    _Send_Diag(3,ID,Send_Data_22);
+    _Check_Response(SendData,elcount(Res_Data_22),Res_Data_22);
+  }
+  result = testWaitForTesterConfirmation("拔掉传感器线束，然后点击YES",60000);
+  if(result == 1)
+  {
+    Res_Data_22[3] = 5;
+    _Send_Diag(3,ID,Send_Data_22);
+    _Check_Response(SendData,elcount(Res_Data_22),Res_Data_22);
+
+    testWaitForTesterConfirmation("恢复传感器线束",60000);
+    _Power_Down();
+    testWaitForTimeout(2000);
+    _Power_Up();
+  }
+}
+void _Serve22_3302(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  byte Res_Data_22[5] = {0x62,0x33,0x02,0xFF,0xFF};
+  int Fun_DIDPos,result,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF; Send_Data_22[2] = (FunDID)&0xFF;
+  Res_Data_22[1] = (FunDID>>8)&0xFF; Res_Data_22[2] = (FunDID)&0xFF;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  _Set_Ready(Struct_Ready.Ready_Active);
+  result = testWaitForTesterConfirmation("拔掉传感器线束，然后点击YES",60000);
+  if(result == 1)
+  {
+    _Send_Diag(3,ID,Send_Data_22);
+    _Check_Response(SendData,elcount(Res_Data_22),Res_Data_22);
+    testWaitForTesterConfirmation("恢复传感器线束",60000);
+    _Power_Down();
+    testWaitForTimeout(2000);
+    _Power_Up();
+  }
+  for(i=0;i<DID_Function[Fun_DIDPos].Value_Set_Count;i++)
+  {
+    _testWaitForTesterConfirmation("此处需人为判断，转动方向盘到角度 %.2f，然后点击YES",DID_Function[Fun_DIDPos].Value_Set[i]);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,0,0,0,2);
+  }
+}
+
+// void _Serve22_330C(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+// {
+//   byte Send_Data_22[3] = {0x22,0x33,0x0C};
+//   byte Res_Data_22[4] = {0x62,0x33,0x02,0xFF};
+//   byte Data_Send[6] = {0x19,0x04,0,0,0,0x20};
+//   byte mask;
+//   int Fun_DIDPos,result ;
+  
+//   Init_For_Snapshot();
+//   DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+//   DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+//   DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+//   Data_Send[2] = DTC_H;
+//   Data_Send[3] = DTC_M;
+//   Data_Send[4] = DTC_L;
+  
+//   Send_Data_22[1] = (FunDID>>8)&0xFF;
+//   Send_Data_22[2] = (FunDID)&0xFF;
+//   Res_Data_22[1] = (FunDID>>8)&0xFF;
+//   Res_Data_22[2] = (FunDID)&0xFF;
+//   _Get_FunDID_Data();
+//   Fun_DIDPos = _Check_DID_Pos(FunDID);
+  
+//   StepByGeely3_0(0x19,1);
+//   _Close_One_Node(DTC_19[Node_1904_Pos]);
+//   mask = DTC_19[Node_1904_Pos][2];
+//   testWaitForTesterConfirmation("此处需人为判断，使方向盘存在力矩，然后点击YES",60000);
+//   Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,0,0,0,1);
+  
+//   _Send_Diag(6,phyreq_ID,Data_Send);
+//   _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,2);
+//   testWaitForTimeout(1000);
+//   _Open_One_Node(DTC_19[Node_1904_Pos]);
+//   _Clear_DTC(phyreq_ID);
+//   testWaitForTimeout(1000);
+  
+//   result = testWaitForTesterConfirmation("拔掉传感器线束，然后点击YES",60000);
+//   if(result == 1)
+//   {
+//     _Close_One_Node(DTC_19[Node_1904_Pos]);
+//     _Send_Diag(3,ID,Send_Data_22);
+//     _Check_Response(SendData,elcount(Res_Data_22),Res_Data_22);
+//     _Send_Diag(6,phyreq_ID,Data_Send);
+//     _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,1);
+//     testWaitForTimeout(1000);
+//     _Open_One_Node(DTC_19[Node_1904_Pos]);
+//     _Clear_DTC(phyreq_ID);
+//     testWaitForTimeout(1000);
+//     testWaitForTesterConfirmation("恢复传感器线束",6000);
+//     _Power_Down();
+//     testWaitForTimeout(2000);
+//     _Power_Up();
+//   }
+// }
+
+void _Serve22_D134(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  byte Res_Data_22[4] = {0x62,0x33,0x02,0xFF};
+  int Fun_DIDPos,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  Res_Data_22[1] = (FunDID>>8)&0xFF;
+  Res_Data_22[2] = (FunDID)&0xFF;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  _Set_Ready(0);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  for(i=0;i<6;i++)
+  {
+    if(i == 4)
+      continue;
+    _Set_Sig(CarMode_Sig,i);
+    testWaitForTimeout(200);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,i,0,0);
+  }
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(200);
+  for(i=0;i<6;i++)
+  {
+    if(i == 4)
+      continue;
+    _Set_Sig(CarMode_Sig,i);
+    testWaitForTimeout(200);
+    if(i<3)
+      Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,0);
+    else 
+      Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,0);
+  }
+  _Set_Ready(0x0B);
+  testWaitForTimeout(200);
+  _Set_Sig(CarMode_Sig,5);
+  testWaitForTimeout(200);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,5,0,0);
+  _Set_Sig(CarMode_Sig,3);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,0);
+  _Set_Sig(CarMode_Sig,0);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,0);
+  _Set_Sig(CarMode_Sig,5);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,0);
+}
+
+void _Serve22_D900(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  byte Res_Data_22[4] = {0x62,0x33,0x02,0xFF};
+  int Fun_DIDPos,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  Res_Data_22[1] = (FunDID>>8)&0xFF;
+  Res_Data_22[2] = (FunDID)&0xFF;
+  diagStartTesterPresent(Cdd_Name);
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  _Init_CCP_();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Sendccp(16,2);
+  testWaitForTimeout(5000);
+  _Set_Sig(SteerSetgSteerMod,2);
+  for(i=1;i<4;i++)
+  {
+    _Set_Sig(SteerAsscLvl,i);
+    testWaitForTimeout(200);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,i,0,0);
+  }
+  _Set_Sig(SteerAsscLvl,0);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,0);
+  _Set_Sig(SteerAsscLvl,7);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,0);
+  _Set_Sig(SteerSetg_UB,0);
+  testWaitForTimeout(500);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,0);
+  for(i=6;i<9;i++)
+  {
+    _Set_Sig(LatCtrlReqSafeLatCtrlModReq,i);
+    testWaitForTimeout(200);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,5,0,0);
+  }
+  for(i=1;i<2;i++) //2不测，未查到需求，E2E:0x11未做
+  {
+    _Set_Sig(LatCtrlReqSafeLatCtrlModReq,i);
+    testWaitForTimeout(200);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,4,0,0);
+  }
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,0);
+  diagStopTesterPresent(Cdd_Name);
+}
+
+void _Serve22_D901(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  int Fun_DIDPos,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  _Init_CCP_();
+  // testWaitForTesterConfirmation("此处不验证值仅打印输出",60000);
+  GetFunDID_Data(FunDID);
+
+  for(i=0;i<FunDID_Read_CCPGroupCount;i++)
+  {
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(2000);
+    Sendccp(FunDID_Read_CCP[i],FunDID_Read_Vaule[i],FunDID_Read_CCPCount[i]);
+    testWaitForTimeout(30000);
+    _Power_Down();
+    testWaitForTimeout(2000);
+    _Power_Up();
+    testWaitForTimeout(2000);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,FunDID_Read_TuningSet[i],0,0);
+    _Set_Ready(0);
+  }
+}
+
+void _Serve22_D902(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  int Fun_DIDPos,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  _Init_CCP_();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Sendccp(142,0x80);
+  testWaitForTimeout(5000);
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,2,0,0);
+  testWaitForTesterConfirmation("转动方向盘到一个角度，然后点击YES",60000);
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,13);
+  testWaitForTimeout(1000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,0);
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,0);
+  _Ang_Calibration_();
+  testWaitForTimeout(1000);
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,13);
+  testWaitForTimeout(1000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,1,0,0);
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,0);
+}
+
+void _Serve22_D904(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  int Fun_DIDPos,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  
+  _Init_CCP_();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Sendccp(316,0x81);
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,1,0,0);
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,2);
+  testWaitForTimeout(1000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,2,0,0);
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,0);
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,1);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,4,0,0);
+  testWaitForTesterConfirmation("断开传感器, 然后点击YES",60000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,0);
+  testWaitForTesterConfirmation("连接传感器, 然后点击YES",60000);
+  _Power_Down();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _Set_Sig(LatCtrlReqSafeLatCtrlModReq,0);
+}
+
+void _Serve22_21AB(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  int Fun_DIDPos,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  _Init_CCP_();
+  GetFunDID_Data(FunDID);
+  DataCheckGreater = 1;
+  for(i=0;i<FunDID_Read_CCPGroupCount;i++)
+  {
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(2000);
+    Sendccp(FunDID_Read_CCP[i],FunDID_Read_Vaule[i],FunDID_Read_CCPCount[i]);
+    testWaitForTimeout(30000);
+    _Power_Down();
+    testWaitForTimeout(2000);
+    _Power_Up();
+    testWaitForTimeout(2000);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,FunDID_Read_TuningSet[i],0,0);
+    _Set_Ready(0);
+  }
+  DataCheckGreater = 0;
+}
+
+void _Serve22_21AC(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  int Fun_DIDPos,i;
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  _Init_CCP_();
+  GetFunDID_Data(FunDID);
+  for(i=0;i<FunDID_Read_CCPGroupCount;i++)
+  {
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(2000);
+    Sendccp(FunDID_Read_CCP[i],FunDID_Read_Vaule[i],FunDID_Read_CCPCount[i]);
+    testWaitForTimeout(30000);
+    _Power_Down();
+    testWaitForTimeout(2000);
+    _Power_Up();
+    testWaitForTimeout(2000);
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,FunDID_Read_TuningSet[i],0,0);
+    _Set_Ready(0);
+  }
+}
+
+void _Serve22_DD07(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  
+  byte Send_Data_19[6] = {0x19,0x04,0,0,0,0x20};
+  byte Send_Data_22[3] = {0x22,0x33,0x02};
+  int Pos,Pos_,Fun_DIDPos;
+  char Da_Temp[2][50];
+  char Str[50];
+  char Te[100];
+  
+  snprintf(Str,elCount(Str),"%s","LocalTime");
+  Flage_Invalid_Geely = 1;
+  Pos = Get_Node_Pos(Node_1904,1);
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  Send_Data_19[2] = (DTC_19[Pos][1]>>16);Send_Data_19[3] = (DTC_19[Pos][1]>>8);Send_Data_19[4] = (DTC_19[Pos][1]&0xFF);
+  Send_Data_22[1] = (FunDID>>8)&0xFF;
+  Send_Data_22[2] = (FunDID)&0xFF;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  if(Fun_DIDPos == -1)
+  {
+    _WriteEx_and_Report("","未查询到当前DID：%04X配置信息",FunDID);
+    return;
+  }
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  TimeInvalid_FirstTime = 1;
+  _Set_Ready(0);
+  _Power_Down();
+  _TestDisableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(200);
+  _Power_Up();
+  StepByGeely3_0(0x19,1);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"FFFFFFFFFFFF");
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,1,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"FFFFFFFFFFFF"); //Geely3.0节点偏移2000
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(6,phyreq_ID,Send_Data_19);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,1);
+  _Open_One_Node(DTC_19[Pos]);
+
+  snprintf(Te,elCount(Te),"%s","100/0/0_24:60:60");
+  _WriteEx_and_Report("   设置LocalTime",Te);
+  _Set_Time(Te,1);
+  testWaitForTimeout(500);
+  _TestEnableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(2000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,1,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,1);
+  _Open_One_Node(DTC_19[Pos]);
+  TimeInvalid_FirstTime = 0;
+
+  
+  snprintf(Te,elCount(Te),"%s","99/12/31_23:59:59");
+  _WriteEx_and_Report("   设置LocalTime",Te);
+  _Set_Time(Te,1);
+  testWaitForTimeout(2000);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20991231235959");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20991231235959"); //Geely3.0节点偏移2000
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Pos]);
+  
+  _Set_Sig(DID_Function[Fun_DIDPos].SigInvalid,DID_Function[Fun_DIDPos].SigInvalidValue);
+  testWaitForTimeout(2000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Pos]);
+  _Set_Sig(DID_Function[Fun_DIDPos].SigInvalid,DID_Function[Fun_DIDPos].SigNormalValue);
+
+  snprintf(Te,elCount(Te),"%s","24/03/22_05:22:22"); 
+  _WriteEx_and_Report("   设置LocalTime",Te);
+  _Set_Time(Te,1);
+  testWaitForTimeout(10000);
+  _TestDisableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20240322052222");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20240322052222"); //Geely3.0节点偏移2000
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Pos]);
+  _TestEnableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  
+  snprintf(Te,elCount(Te),"%s","24/03/15_02:58:39"); 
+  _WriteEx_and_Report("   设置LocalTime",Te);
+  _Set_Time(Te,1);
+  testWaitForTimeout(10000);
+  snprintf(Te,elCount(Te),"%s","100/00/00_24:60:60"); 
+  _WriteEx_and_Report("   设置LocalTime",Te);
+  _Set_Time(Te,1);
+  testWaitForTimeout(2000);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20240315025839");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20240315025839"); //Geely3.0节点偏移2000
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Pos]);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Step_1904(Str,0);
+}
+
+
+// void _Serve22_D905(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+// {
+//   byte Send_Data_22[3] = {0x22,0x33,0x0C};
+//   byte Res_Data_22[4] = {0x62,0x33,0x02,0xFF};
+//   byte Data_Send[6] = {0x19,0x04,0,0,0,0x20};
+//   byte mask;
+//   int Fun_DIDPos,result ;
+  
+//   Init_For_Snapshot();
+//   DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+//   DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+//   DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+//   Data_Send[2] = DTC_H;
+//   Data_Send[3] = DTC_M;
+//   Data_Send[4] = DTC_L;
+  
+//   Send_Data_22[1] = (FunDID>>8)&0xFF;
+//   Send_Data_22[2] = (FunDID)&0xFF;
+//   Res_Data_22[1] = (FunDID>>8)&0xFF;
+//   Res_Data_22[2] = (FunDID)&0xFF;
+//   _Get_FunDID_Data();
+//   Fun_DIDPos = _Check_DID_Pos(FunDID);
+  
+//   StepByGeely3_0(0x19,1);
+//   _Close_One_Node(DTC_19[Node_1904_Pos]);
+//   mask = DTC_19[Node_1904_Pos][2];
+//   Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,0,0);
+  
+//   _Send_Diag(6,phyreq_ID,Data_Send);
+//   _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,0);
+//   testWaitForTimeout(1000);
+//   _Open_One_Node(DTC_19[Node_1904_Pos]);
+//   _Clear_DTC(phyreq_ID);
+//   testWaitForTimeout(1000);
+  
+//   result = testWaitForTesterConfirmation("断开传感器,使控制器无助力,然后点击YES",60000);
+//   if(result == 1)
+//   {
+//     _Close_One_Node(DTC_19[Node_1904_Pos]);
+//     DID_Function[Fun_DIDPos].Factor = 1;
+//     Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0x8000,0,0);
+//     _Send_Diag(6,phyreq_ID,Data_Send);
+//     _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,1);
+//     testWaitForTimeout(1000);
+//     _Open_One_Node(DTC_19[Node_1904_Pos]);
+//     _Clear_DTC(phyreq_ID);
+//     testWaitForTimeout(1000);
+//     testWaitForTesterConfirmation("恢复传感器线束",60000);
+//     _Power_Down();
+//     testWaitForTimeout(2000);
+//     _Power_Up();
+//   }
+// }
+// void _Serve22_D906(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+// {
+//   byte Send_Data_22[3] = {0x22,0x33,0x0C};
+//   byte Res_Data_22[4] = {0x62,0x33,0x02,0xFF};
+//   byte Data_Send[6] = {0x19,0x04,0,0,0,0x20};
+//   byte mask;
+//   int Fun_DIDPos,result ;
+  
+//   Init_For_Snapshot();
+//   DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+//   DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+//   DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+//   Data_Send[2] = DTC_H;
+//   Data_Send[3] = DTC_M;
+//   Data_Send[4] = DTC_L;
+  
+//   Send_Data_22[1] = (FunDID>>8)&0xFF;
+//   Send_Data_22[2] = (FunDID)&0xFF;
+//   Res_Data_22[1] = (FunDID>>8)&0xFF;
+//   Res_Data_22[2] = (FunDID)&0xFF;
+//   _Get_FunDID_Data();
+//   Fun_DIDPos = _Check_DID_Pos(FunDID);
+  
+//   StepByGeely3_0(0x19,1);
+//   _Close_One_Node(DTC_19[Node_1904_Pos]);
+//   mask = DTC_19[Node_1904_Pos][2];
+//   testWaitForTesterConfirmation("此处需人为判断",60000);
+//   Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,0,0,0,0);
+//   _Send_Diag(6,phyreq_ID,Data_Send);
+//   _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,2);
+//   testWaitForTimeout(1000);
+//   _Open_One_Node(DTC_19[Node_1904_Pos]);
+//   _Clear_DTC(phyreq_ID);
+//   testWaitForTimeout(1000);
+  
+//   result = testWaitForTesterConfirmation("断开角度信号,然后点击YES",60000);
+//   if(result == 1)
+//   {
+//     _Close_One_Node(DTC_19[Node_1904_Pos]);
+//     DID_Function[Fun_DIDPos].Factor = 1;
+//     DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+//     Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0xFFFF,1,0);
+//     _Send_Diag(6,phyreq_ID,Data_Send);
+//     _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,1);
+//     testWaitForTimeout(1000);
+//     _Open_One_Node(DTC_19[Node_1904_Pos]);
+//     _Clear_DTC(phyreq_ID);
+//     testWaitForTimeout(1000);
+//     testWaitForTesterConfirmation("恢复传感器线束",60000);
+//     _Power_Down();
+//     testWaitForTimeout(2000);
+//     _Power_Up();
+//   }
+// }
+
+void _Serve22_SigSet(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x0C};
+  byte Res_Data_22[4] = {0x62,0x33,0x02,0xFF};
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x20};
+  byte mask;
+  int Fun_DIDPos,result,DTC_Temp,SigFlage,SigFlageInvalid;
+  
+  Init_For_Snapshot();
+  mask = 0;
+  DTC_Temp = (FunDID == 0xDD0A)?1:0;
+  SigFlageInvalid = 0;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16); DTC_M = (DTC_19[Node_1904_Pos][1]>>8); DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  if(DTC_Temp == 1)
+  {
+    DTC_H = (Snapshot_Geely_DTC>>16); DTC_M = (Snapshot_Geely_DTC>>8); DTC_L = (Snapshot_Geely_DTC&0xFF);
+  }
+  Data_Send[2] = DTC_H; Data_Send[3] = DTC_M; Data_Send[4] = DTC_L;
+  Send_Data_22[1] = (FunDID>>8)&0xFF; Send_Data_22[2] = (FunDID)&0xFF;
+  Res_Data_22[1] = (FunDID>>8)&0xFF; Res_Data_22[2] = (FunDID)&0xFF;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  if(Fun_DIDPos == -1)
+  {
+    _WriteEx_and_Report("","未查询到当前DID：%04X配置信息",FunDID);
+    return;
+  }
+  _Set_Ready(0);
+  _Power_Down();
+  _TestDisableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(200);
+  _Power_Up();
+  StepByGeely3_0(0x19,1);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  if(DTC_Temp == 0)
+  {
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    mask = DTC_19[Node_1904_Pos][2];
+  }
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,1,1);
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,1);
+  testWaitForTimeout(1000);
+  if(DTC_Temp == 0)
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+    
+  /*超过最大值测试*/
+  _Set_Sig(DID_Function[Fun_DIDPos].Sig_Name,DID_Function[Fun_DIDPos].Value_Set[0]);
+  testWaitForTimeout(200);
+  _TestEnableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(500);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0,1,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  if(DTC_Temp == 0)
+  {
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    mask = DTC_19[Node_1904_Pos][2];
+  }
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,0,1);
+  testWaitForTimeout(1000);
+  if(DTC_Temp == 0)
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  
+  /*正常值测试*/
+  _Set_Sig(DID_Function[Fun_DIDPos].Sig_Name,DID_Function[Fun_DIDPos].Value_Set[1]);
+  testWaitForTimeout(500);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,1,0,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  if(DTC_Temp == 0)
+  {
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    mask = DTC_19[Node_1904_Pos][2];
+  }
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,DID_Function[Fun_DIDPos].Value_Set[1],0);
+  testWaitForTimeout(1000);
+  if(DTC_Temp == 0)
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  
+  /*信号无效后测试*/
+  
+  if(strlen(DID_Function[Fun_DIDPos].SigInvalid) > 3)
+  {
+    SigFlageInvalid = 1;
+    _Set_Sig(DID_Function[Fun_DIDPos].SigInvalid,DID_Function[Fun_DIDPos].SigInvalidValue);
+  }
+  else
+  {
+    SigFlageInvalid = -1;
+    SigFlage = _Invalid_Node(atol(DID_Function[Fun_DIDPos].Sig_From));
+  }
+  testWaitForTimeout(500);
+  if(SigFlage == -1 && SigFlageInvalid == -1)
+    _WriteEx_and_Report("","未查询到无效相关操作,跳过测试");
+  else
+  {
+    Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,1,0,1);
+    _Clear_DTC(phyreq_ID);
+    testWaitForTimeout(500);
+    if(DTC_Temp == 0)
+    {
+      _Close_One_Node(DTC_19[Node_1904_Pos]);
+      mask = DTC_19[Node_1904_Pos][2];
+    }
+    _Send_Diag(6,phyreq_ID,Data_Send);
+    _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,DID_Function[Fun_DIDPos].Value_Set[1],0);
+    testWaitForTimeout(1000);
+    if(DTC_Temp == 0)
+      _Open_One_Node(DTC_19[Node_1904_Pos]);
+    if(SigFlageInvalid == 1)
+      _Set_Sig(DID_Function[Fun_DIDPos].SigInvalid,DID_Function[Fun_DIDPos].SigNormalValue);
+    else
+      _Recover_Invalid_Node(atol(DID_Function[Fun_DIDPos].Sig_From));
+    testWaitForTimeout(500);
+  }
+
+  
+  /*有效值- 丢失*/
+  _Set_Sig(DID_Function[Fun_DIDPos].Sig_Name,DID_Function[Fun_DIDPos].Value_Set[2]);
+  testWaitForTimeout(10000);
+  _TestDisableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(1000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,2,0,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  if(DTC_Temp == 0)
+  {
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    mask = DTC_19[Node_1904_Pos][2];
+  }
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,DID_Function[Fun_DIDPos].Value_Set[2],0);
+  testWaitForTimeout(1000);
+  if(DTC_Temp == 0)
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _TestEnableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(1000);
+  
+  
+  /*有效值- 最大值*/
+  _Set_Sig(DID_Function[Fun_DIDPos].Sig_Name,DID_Function[Fun_DIDPos].Value_Set[3]);
+  testWaitForTimeout(10000);
+  _Set_Sig(DID_Function[Fun_DIDPos].Sig_Name,DID_Function[Fun_DIDPos].Value_Set[0]);
+  testWaitForTimeout(1000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,3,0,1);
+  _Clear_DTC(phyreq_ID); 
+  testWaitForTimeout(500);
+  if(DTC_Temp == 0)
+  {
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    mask = DTC_19[Node_1904_Pos][2];
+  }
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,mask,DID_Function[Fun_DIDPos].Sig_Step,DID_Function[Fun_DIDPos].Value_Set[3],0);
+  testWaitForTimeout(1000);
+
+  if(DTC_Temp == 0)
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID); 
+  testWaitForTimeout(1000);
+  _Set_Sig(DID_Function[Fun_DIDPos].Sig_Name,DID_Function[Fun_DIDPos].Value_Set[2]);
+}
+
+// void _Serve22_D123(dword FunDID, dword ID, byte Session)
+// {
+//   byte Send_Data_22[3] = {0x22,0x33,0x0C};
+//   int Fun_DIDPos,i,j,ResLen;
+//   int OffSet,LenLen,AddLen,CountLen;
+//   struct SaveDataForD123
+//   {
+//     dword Addr[10];
+//     int Len[10];
+//     int AddrCount;
+//   };
+//   struct SaveDataForD123 SaveData;
+  
+//   _Get_FunDID_Data();
+//   Send_Data_22[1] = (FunDID>>8)&0xFF;
+//   Send_Data_22[2] = (FunDID)&0xFF;
+//   Fun_DIDPos = _Check_DID_Pos(FunDID);
+//   GetInforMationFromVBF();
+//   _Send_Diag(0x3,ID,Send_Data_22);
+//   _TestResult(SendData,ID,"",-1);
+//   if(Fun_DIDPos == -1)
+//     _WriteEx_and_Report("","未查询到0x%04X对应数据",FunDID);
+//   if(diagGetLastResponseCode(SendData) == -1 && Fun_DIDPos != -1)
+//   {
+//     ResLen = DiagGetRespPrimitiveSize(SendData);
+//     if(ResLen != DID_Function[Fun_DIDPos].ExLen)
+//       testStepFail("","返回长度异常，期望长度为0x%02X，实际长度为0x%02X",DID_Function[Fun_DIDPos].ExLen,ResLen);
+//     else
+//       testStepPass("","长度与预期一致");
+//     if(DiagGetRespPrimitiveByte(SendData,3) != 0x03)
+//       testStepFail("","返回数据段个数异常，期望为0x03，实际长度为0x%02X",DiagGetRespPrimitiveByte(SendData,3));
+//     else
+//       testStepPass("","返回数据段个数与预期一致为3");
+//     if(DiagGetRespPrimitiveByte(SendData,4) != 0x24)
+//       testStepFail("","返回数据段个数异常，期望为0x24，实际长度为0x%02X",DiagGetRespPrimitiveByte(SendData,3));
+//     else
+//       testStepPass("","返回数据段个数与预期一致为0x24");
+//     OffSet = 5;
+//     LenLen = (DiagGetRespPrimitiveByte(SendData,4)>>4)&0xF;
+//     AddLen = (DiagGetRespPrimitiveByte(SendData,4))&0xF;
+//     CountLen = LenLen + AddLen;
+//     SaveData.AddrCount = (ResLen - OffSet)/CountLen;
+//     for(i=0;i<SaveData.AddrCount;i++) //装载所有文件地址
+//     {
+//       SaveData.Len[i] = 0;
+//       SaveData.Addr[i] = 0;
+//       for(j=0;j<LenLen;j++)
+//         SaveData.Len[i] = SaveData.Len[i] + (DiagGetRespPrimitiveByte(SendData,j+OffSet+i*CountLen)<<(8*(LenLen-j-1)));
+//       for(j=0;j<AddLen;j++)
+//         SaveData.Addr[i] = SaveData.Addr[i] + (DiagGetRespPrimitiveByte(SendData,LenLen+j+OffSet+i*CountLen)<<(8*(AddLen-j-1)));
+//     }
+//     for(i=0;i<SaveData.AddrCount;i++)
+//     {
+//       for(j=0;j<2;j++)
+//       {
+//         if((SaveData.Addr[i] == Struct_VBF_Addr[j].StartAddr[0])  || (SaveData.Addr[i] != Struct_VBF_Addr[j].StartAddr[0]+SaveData.Len[i]))
+//           break;
+//       }
+//       if(j>=2)
+//         testStepFail("","当前返回数据地址段0x%08X不在文件地址中",SaveData.Addr[i]);
+//       else
+//         testStepPass("","返回地址段0x%08X在输入文件中",SaveData.Addr[i]);
+//     }
+//   }
+// }
+
+void _Serve22_DD0C(dword FunDID,dword ID,byte Session)/*用于Geely3.5以上平台测试*/
+{
+  byte Send_Data_22[3] = {0x22,0x33,0x0C};
+  byte Res_Data_22[4] = {0x62,0x33,0x02,0xFF};
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x20};
+  byte mask;
+  int Fun_DIDPos,result ,i,j;
+  byte TempEx;
+  diagStartTesterPresent(Cdd_Name);
+  Init_For_Snapshot();
+  DTC_H = (Snapshot_Geely_DTC>>16); DTC_M = (Snapshot_Geely_DTC>>8); DTC_L = (Snapshot_Geely_DTC&0xFF);
+  Data_Send[2] = DTC_H;  Data_Send[3] = DTC_M;  Data_Send[4] = DTC_L;
+  Send_Data_22[1] = (FunDID>>8)&0xFF; Send_Data_22[2] = (FunDID)&0xFF;
+  Res_Data_22[1] = (FunDID>>8)&0xFF; Res_Data_22[2] = (FunDID)&0xFF;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  _Power_Down();
+  _TestDisableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(200);
+  _Power_Up();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,0,0xFF,0,0);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,0,DID_Function[Fun_DIDPos].Sig_Step,0xFF,0);
+
+
+  /*超过最大值测试*/
+  _Set_Sig(PwrLvlElecMai_Sig,6);
+  _Set_Sig(PwrLvlElecSubtyp_Sig,6);
+  testWaitForTimeout(200);
+  _TestEnableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(6000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0xFF,0,0);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,0,DID_Function[Fun_DIDPos].Sig_Step,0xFF,0);
+  
+  /*正常值测试*/
+  _Set_Sig(PwrLvlElecMai_Sig,5);
+  _Set_Sig(PwrLvlElecSubtyp_Sig,0x0F);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0x5F,0,0);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,0,DID_Function[Fun_DIDPos].Sig_Step,0x5F,0);
+  
+  /*信号无效后测试*/
+  
+  _Set_Sig(DID_Function[Fun_DIDPos].SigInvalid,DID_Function[Fun_DIDPos].SigInvalidValue);
+  testWaitForTimeout(200);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0x5F,0,0);
+ _Clear_DTC(phyreq_ID);
+ testWaitForTimeout(500);
+ _Send_Diag(6,phyreq_ID,Data_Send);
+ _Check_1904(SendData,0,DID_Function[Fun_DIDPos].Sig_Step,0x5F,0);
+ _Set_Sig(DID_Function[Fun_DIDPos].SigInvalid,DID_Function[Fun_DIDPos].SigNormalValue);
+ testWaitForTimeout(1000);
+  
+  /*有效值- 丢失*/
+  _Set_Sig(PwrLvlElecMai_Sig,1);
+  _Set_Sig(PwrLvlElecSubtyp_Sig,1);
+  testWaitForTimeout(10000);
+  _TestDisableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(6000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0x11,0,0);
+  _Clear_DTC(phyreq_ID); 
+  testWaitForTimeout(500);
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,0,DID_Function[Fun_DIDPos].Sig_Step,0x11,0);
+  _TestEnableMsg(atol(DID_Function[Fun_DIDPos].Sig_From));
+  testWaitForTimeout(1000);
+  
+  
+  /*有效值- 最大值*/
+  _Set_Sig(PwrLvlElecMai_Sig,3);
+  _Set_Sig(PwrLvlElecSubtyp_Sig,0x0F);
+  testWaitForTimeout(10000);
+  _Set_Sig(PwrLvlElecMai_Sig,0x0A);
+  _Set_Sig(PwrLvlElecSubtyp_Sig,0x0A);
+  testWaitForTimeout(1000);
+  Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,0x3F,0,0);
+  _Clear_DTC(phyreq_ID); 
+  testWaitForTimeout(500);
+  _Send_Diag(6,phyreq_ID,Data_Send);
+  _Check_1904(SendData,0,DID_Function[Fun_DIDPos].Sig_Step,0x3F,0);
+  testWaitForTimeout(1000);
+  diagStopTesterPresent(Cdd_Name);
+  
+  
+  for(i=0;i<=0xF;i++)
+  {
+    _Set_Sig(PwrLvlElecMai_Sig,i);
+    for(j=0;j<=0xF;j++)
+    {
+      _Set_Sig(PwrLvlElecSubtyp_Sig,j);
+      testWaitForTimeout(200);
+      if((i!=1 && i!= 2 && i<=5) || (i == 1 && j<2) || (i == 2 && j< 5))
+        TempEx = ((i<<4)|j);
+      Check_ReadFunDID(Send_Data_22,Fun_DIDPos,ID,1,TempEx,0,0);
+      _Clear_DTC(phyreq_ID); 
+      testWaitForTimeout(500);
+      _Send_Diag(6,phyreq_ID,Data_Send);
+      _Check_1904(SendData,0,DID_Function[Fun_DIDPos].Sig_Step,TempEx,0);
+    }
+  }
+  _Set_Sig(PwrLvlElecMai_Sig,0);
+  _Set_Sig(PwrLvlElecSubtyp_Sig,0);
+}
+
+void _Serve19_02_1_Geely(dword ID,byte Session)  //19 02 读故障
+{
+  byte Send_Data_89[3] = {0x19,0x02,0x89};
+  byte Send_Data_19[6] = {0x19,0x04,0,0,0,0x20};
+  byte Send_Data_BT[2] = {0x10,0x02};
+  int Pos;
+  Pos = Get_Node_Pos(Node_1904,1);
+  Send_Data_19[2] = (DTC_19[Pos][1]>>16);
+  Send_Data_19[3] = (DTC_19[Pos][1]>>8);
+  Send_Data_19[4] = (DTC_19[Pos][1]&0xFF);
+  
+  _Set_Ready(0);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_190201(SendData,0,0);
+  _Close_One_Node(DTC_19[Pos]);
+  StepByGeely3_0(0x19,1);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0x2F);
+  _Open_One_Node(DTC_19[Pos]);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0x2E);
+  _Send_Diag(6,ID,Send_Data_19);
+  if(diagGetLastResponseCode(SendData)==0)
+    testWaitForDiagResponse(SendData,200);
+  if(DiagGetRespPrimitiveSize(SendData)<=7)
+    testStepFail("","未收到快照信息");
+  
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  _K30_OFF();
+  testWaitForTimeout(3000);
+  _K30_ON();
+  testWaitForTimeout(7000);
+  if(Session != defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_190201(SendData,0,0);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  _Close_One_Node(DTC_19[Pos]);
+  _Open_One_Node(DTC_19[Pos]);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_190201(SendData,DTC_19[Pos][1],0X2E);
+  _Set_Ready(0);
+  _Send_Diag(2,phyreq_ID,Send_Data_BT);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(11000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0X2C);
+  _Set_Ready(0);
+  _Set_11_Restoration();
+  StepByGeely3_0(0x19,1);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0X28);
+  
+  _Set_Ready(0);
+  StepByGeely3_0(0x19,1);
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0X2F);
+  _Set_Ready(0);
+  _Send_Diag(2,phyreq_ID,Send_Data_BT);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(11000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0X2F);
+  _Set_Ready(0);
+  _Set_11_Restoration();
+  StepByGeely3_0(0x19,1);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0X2F);
+  _Open_One_Node(DTC_19[Pos]);
+}
+void _Serve19_02_2_Geely(dword ID,byte Session)  //19 02 读故障
+{
+  byte Send_Data_FF[3] = {0x19,0x02,0xFF};
+  dword DTC;
+  DTC = 0xEE0368;
+  
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  if(Session!=defsession)
+    _SetSession(Session);
+  StepByGeely3_0(0x19,1);
+  _Clear_DTC(phyreq_ID);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x50);
+  testWaitForTimeout(3000);
+  _Set_Battery(18.5);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x27);
+  _Set_Battery(13);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x26);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Set_Battery(18.5);
+  _Set_Battery(13);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x26);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Set_Battery(18.5);
+  _Set_Battery(13);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x26);
+  _WriteEx_and_Report("","步骤1-4完成");
+  _Set_Battery(18.5);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x27);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(10000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x27);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(10000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0xAF);
+  _WriteEx_and_Report("","步骤5-7完成");
+  _Set_Battery(13);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x2E);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(10000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x2C);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(10000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x28);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(10000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_FF);
+  _Check_1902(SendData,DTC,0x28);
+  _WriteEx_and_Report("","步骤8-11完成");
+}
+void _Serve19_01_Geely(dword ID,byte Session) 
+{
+  byte Send_Data_08[3] = {0x19,0x02,0x08};
+  byte Send_Data_19[6] = {0x19,0x06,0,0,0,0x02};
+  byte Res[8] = {0x59,0x06,0,0,0,0x6C,0x02,0};
+  int Pos,i;
+  _Set_Ready(0);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(1000);
+  if(Session!=defsession)
+    _SetSession(Session);
+  StepByGeely3_0(0x19,1);
+  Pos = Get_Node_Pos(Node_1904,1);
+  Send_Data_19[2] = (DTC_19[Pos][1]>>16);
+  Send_Data_19[3] = (DTC_19[Pos][1]>>8);
+  Send_Data_19[4] = (DTC_19[Pos][1]&0xFF);
+  Res[2] = (DTC_19[Pos][1]>>16);
+  Res[3] = (DTC_19[Pos][1]>>8);
+  Res[4] = (DTC_19[Pos][1]&0xFF);
+  _Clear_DTC(phyreq_ID);
+  _Send_Diag(3,ID,Send_Data_08);
+  _Check_190201(SendData,0,0);
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(3,ID,Send_Data_08);
+  _Check_1902(SendData,DTC_19[Pos][1],0x2F);
+  _Open_One_Node(DTC_19[Pos]);
+  _Send_Diag(3,ID,Send_Data_08);
+  _Check_1902(SendData,DTC_19[Pos][1],0x2E);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(6000);
+  Res[7] = 0;
+  StepByGeely3_0(0x19,1);
+  if(Session != defsession)
+    _SetSession(Session);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_Response(SendData,5,8,Res);
+  _Send_Diag(3,ID,Send_Data_08);
+  _Check_1902(SendData,DTC_19[Pos][1],0x2C);
+  
+  for(i=1;i<=257;i++)
+  {
+    _WriteEx_and_Report("","第 %d 次上下电",i);
+    Res[7] = i;
+    if(i>=255)
+      Res[7] = 0xFF;
+    
+    _Set_Ready(0);
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(6000);
+    if(Session != defsession)
+      _SetSession(Session);
+    _Send_Diag(6,ID,Send_Data_19);
+    _Check_Response(SendData,5,8,Res);
+    if(i>=255)
+      _Check_DTC_Res(0x08,0,DTC_19[Pos][1]);
+    else
+    {
+      _Send_Diag(3,ID,Send_Data_08);
+      _Check_1902(SendData,DTC_19[Pos][1],0x28);
+    }
+  }
+}
+void _Serve19_02_Geely(dword ID,byte Session) //故障溢出机制
+{
+  int i,Count;
+  byte Send_Data_89[3] = {0x19,0x02,0x89};
+  _Set_Ready(0);
+  _Clear_DTC(phyreq_ID);
+  StepByGeely3_0(0x19,1);
+  Count = 0;
+  for(i=0;i<DTC_19_Count;i++)
+  {
+    if(DTC_19[i][0] == Struct_Ready.Sig_Id) //发动机异常导致故障无法报出
+      continue;
+    Count++;
+    _testDisableMsg(DTC_19[i][0]);
+  }
+  testWaitForTimeout(3000);
+  _Open_All();
+  testWaitForTimeout(2000);
+
+  for(i=0;i<Node_Invalid_Count;i++)
+  {
+    if(Node_Invalid[i].Node == Struct_Ready.Sig_Id)
+      continue;
+    Count++;
+    _Set_Sig(Node_Invalid[i].Signal_Name,Node_Invalid[i].Invalid_Value);
+    testWaitForTimeout(Node_Invalid[i].Time*1.2);
+    _Set_Sig(Node_Invalid[i].Signal_Name,Node_Invalid[i].Normal_Value);
+    testWaitForTimeout(Node_Invalid[i].Time*1.2);
+    // _Invalid_Node(Node_Invalid[i].Node);
+  }
+  // testWaitForTimeout(5000);
+  _Invalid_Node(Struct_Ready.Sig_Id);
+  testWaitForTimeout(2000);
+  Count++;
+  // for(i=0;i<Node_Invalid_Count;i++)
+  //   _Recover_Invalid_Node(Node_Invalid[i].Node);
+  testWaitForTimeout(6000);
+  _Set_Battery(22);
+  testWaitForTimeout(1000);
+  _Set_Battery(8);
+  testWaitForTimeout(1000);
+  _Set_Battery(13);
+  testWaitForTimeout(1000);
+  Count = Count+2;
+  if(Session != defsession)
+    _SetSession(Session);
+  _Send_Diag(3,ID,Send_Data_89);
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,2000);
+  if(diagGetLastResponseCode(SendData) != -1)
+    testStepFail("","未收到正响应");
+  else
+  {
+    if(Count>=DTC_19_max)
+    {
+      if(DiagGetRespPrimitiveSize(SendData)<DTC_19_max*4+3)
+        testStepFail("","返回故障长度未达到最大值");
+      else
+        testStepPass("","故障存储达到预期");
+    }
+    else
+    {
+      _WriteEx_and_Report("","当前制造故障个数为%d",Count);
+      _WriteEx_and_Report("","当前存储故障个数为%d",(DiagGetRespPrimitiveSize(SendData)-3)/4);
+    }
+  }
+}
+void _Serve19_03_Geely(dword ID,byte Session) //获取DTC快照记录ID
+{
+  byte Send_Data_89[3] = {0x19,0x02,0x89};
+  byte Send_Data_19[2] = {0x19,0x03};
+  byte Res[2] = {0x59,0x03};
+  int Pos1,Pos2,i;
+  
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  StepByGeely3_0(0x19,1);
+  Pos1 = Get_Node_Pos(Node_1904,1);
+  Pos2 = Get_Node_Pos(0xE0,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_190201(SendData,0,0);
+  _Send_Diag(2,ID,Send_Data_19);
+  _TestResult(SendData,ID,"",-1);
+  _Close_One_Node(DTC_19[Pos1]);
+  _Send_Diag(2,ID,Send_Data_19);
+  _Check_1903(SendData);
+  _Close_One_Node(DTC_19[Pos2]);
+  _Send_Diag(2,ID,Send_Data_19);
+  _Check_1903(SendData);
+  _Open_One_Node(DTC_19[Pos1]);
+  _Open_One_Node(DTC_19[Pos2]);
+}
+void _Serve19_04_Geely(dword ID,byte Session) //19 04读快照
+{
+  byte Send_Data_89[3] = {0x19,0x02,0x89};
+  byte Send_Data_19[6] = {0x19,0x04,0,0,0,0x20};
+  byte Send_Data_19_2[6] = {0x19,0x04,0,0,0,0x20};
+  byte Send_Data_02[2] = {0x10,0x02};
+  byte Res_Data[200];
+  int Pos,Pos_2,i,ResLen;
+  
+  Pos = Get_Node_Pos(Node_1904,1);
+  Pos_2 = Get_Node_Pos(0xE0,1);
+  Send_Data_19[2] = (DTC_19[Pos][1]>>16);
+  Send_Data_19[3] = (DTC_19[Pos][1]>>8);
+  Send_Data_19[4] = (DTC_19[Pos][1]&0xFF);
+  Send_Data_19_2[2] = (DTC_19[Pos_2][1]>>16);
+  Send_Data_19_2[3] = (DTC_19[Pos_2][1]>>8);
+  Send_Data_19_2[4] = (DTC_19[Pos_2][1]&0xFF);
+  
+  _Set_Ready(0);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _Clear_DTC(phyreq_ID);
+  StepByGeely3_0(0x19,1);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_190201(SendData,0,0);
+  
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0x2F);
+  _Send_Diag(6,ID,Send_Data_19);
+  _TestResult(SendData,ID,"",-1);
+  ResLen = DiagGetRespPrimitiveSize(SendData);
+  for(i=0;i<ResLen;i++)
+    Res_Data[i] = DiagGetRespPrimitiveByte(SendData,i);
+  
+  _Set_Ready(0);
+  _Send_Diag(2,ID,Send_Data_02);
+  _TestResult(SendData,ID,"",-1);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(11000);
+  if(Session != defsession)
+    _SetSession(Session);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_Response(SendData,5,ResLen,Res_Data);
+  _Set_Ready(0);
+  _Set_11_Restoration();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(6000);
+  if(Session != defsession)
+    _SetSession(Session);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_Response(SendData,5,ResLen,Res_Data);
+  _Send_Diag(6,ID,Send_Data_19_2);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  _Open_One_Node(DTC_19[Pos]);
+  _Send_Diag(3,ID,Send_Data_89);
+  _Check_1902(SendData,DTC_19[Pos][1],0x2E);//
+  _Send_Diag(6,ID,Send_Data_19);
+  _TestResult(SendData,ID,"",-1);
+  ResLen = DiagGetRespPrimitiveSize(SendData);
+  for(i=0;i<ResLen;i++)
+    Res_Data[i] = DiagGetRespPrimitiveByte(SendData,i);
+  _Set_Ready(0);
+  _Send_Diag(2,ID,Send_Data_02);
+  _TestResult(SendData,ID,"",-1);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(11000);
+  if(Session != defsession)
+    _SetSession(Session);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_Response(SendData,5,ResLen,Res_Data);
+  _Set_Ready(0);
+  _Set_11_Restoration();
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(6000);
+  if(Session != defsession)
+    _SetSession(Session);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_Response(SendData,5,ResLen,Res_Data);
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_19_NoFreeze(SendData,"ALL");
+}
+void _Serve19_06_Geely(dword ID,byte Session) //19 06读扩展
+{
+  byte Send_Data_89[3] = {0x19,0x02,0x89};
+  byte Send_Data_19[6] = {0x19,0x06,0,0,0,0xFF};
+  int Pos;
+  char Time_First[50];
+  char Time_FirstComPare[50];
+  
+  Pos = Get_Node_Pos(Node_1904,1);
+  Send_Data_19[2] = (DTC_19[Pos][1]>>16);
+  Send_Data_19[3] = (DTC_19[Pos][1]>>8);
+  Send_Data_19[4] = (DTC_19[Pos][1]&0xFF);
+  
+  _Set_Ready(0);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _Clear_DTC(phyreq_ID);
+  
+  if(_Check_StrPossion_Res("First_Time_Fault_Occurrence_Time",3)!= -1 && _Check_StrPossion_Res("Latest_Time_Fault_Occurrence_Time",3)!= -1)
+  {
+    int Sw_temp;
+    StepByGeely3_0(0x19,1);
+    snprintf(Time_First,elCount(Time_First),"%s","");
+    snprintf(Time_FirstComPare,elCount(Time_FirstComPare),"%s","");
+    Sw_temp = _Check_StrPossion_Res("LocalTime",1);
+    _85_Check_DTC(1,0);
+    
+    _Step_1904("LocalTime",0); //取第0-3组数据
+    testWaitForTimeout(1900);
+    snprintf(Time_First,elCount(Time_First),"20%s%s",Time_First,mixArray[Sw_temp].LocalTime_Value);
+    snprintf(Time_FirstComPare,elCount(Time_FirstComPare),"20%s",mixArray[Sw_temp].LocalTime_Value); //节点偏移2000
+    _Close_One_Node(DTC_19[Pos]);
+    _Send_Diag(6,ID,Send_Data_19);
+    _Check_1906_Time_Geely(SendData,Time_FirstComPare,Time_FirstComPare); //时间戳1 | 时间戳1
+    _Open_One_Node(DTC_19[Pos]);
+    
+    _Step_1904("LocalTime",1); //取第0-3组数据
+    testWaitForTimeout(1900);
+//    snprintf(Time_FirstComPare,elCount(Time_FirstComPare),"20%s",mixArray[Sw_temp].LocalTime_Value); //节点偏移2000
+    _Close_One_Node(DTC_19[Pos]);
+    _Send_Diag(6,ID,Send_Data_19);
+    _Check_1906_Time_Geely(SendData,Time_First,Time_FirstComPare);//时间戳1 | 时间戳1
+    _Open_One_Node(DTC_19[Pos]);
+//    
+    _Clear_DTC(phyreq_ID);
+    testWaitForTimeout(200);
+    _Step_1904("LocalTime",2); //取第0-3组数据
+    testWaitForTimeout(1900);
+    snprintf(Time_FirstComPare,elCount(Time_FirstComPare),"20%s",mixArray[Sw_temp].LocalTime_Value); //节点偏移2000
+    snprintf(Time_First,elCount(Time_First),"20%s",mixArray[Sw_temp].LocalTime_Value); //节点偏移2000
+    _Close_One_Node(DTC_19[Pos]);
+    _Send_Diag(6,ID,Send_Data_19);
+    _Check_1906_Time_Geely(SendData,Time_First,Time_FirstComPare);//时间戳3 | 时间戳3
+    _Open_One_Node(DTC_19[Pos]);
+    _Power_Down();
+    testWaitForTimeout(2000);
+    _Power_Up();
+    testWaitForTimeout(5000);
+    _Step_1904("LocalTime",3); //取第0-3组数据
+    testWaitForTimeout(1900);
+    if(Session != defsession)
+      _SetSession(Session);
+    snprintf(Time_FirstComPare,elCount(Time_FirstComPare),"20%s",mixArray[Sw_temp].LocalTime_Value); //节点偏移2000
+    _Close_One_Node(DTC_19[Pos]);
+    _Send_Diag(6,ID,Send_Data_19);
+    _Check_1906_Time_Geely(SendData,Time_First,Time_FirstComPare);//时间戳3 | 时间戳3
+    _Open_One_Node(DTC_19[Pos]);
+    _Clear_DTC(phyreq_ID);
+    testWaitForTimeout(1000);
+    _Send_Diag(6,ID,Send_Data_19);
+    _Check_19_NoFreeze(SendData,"First_Time_Fault_Occurrence_Time");
+  }
+  else
+    _WriteEx_and_Report("First_Time_Fault_Occurrence_Time","该项目内无此测试项");
+}
+
+void _Serve19_06_01_Geely(dword ID,byte Session) //19 06 (30)
+{
+  byte Send_Data_89[3] = {0x19,0x02,0x89};
+  byte Send_Data_19[6] = {0x19,0x06,0,0,0,0x30};
+  byte Send_Data_19_2[6] = {0x19,0x06,0,0,0,0x2};
+  byte Res[8] = {0x59,0x06,0,0,0,0x02,0x30,0x80};
+  int Pos,i,OCC2_Res;
+  char Time_First[50];
+  
+  Pos = Get_Node_Pos(Node_1904,1);
+  Send_Data_19[2] = (DTC_19[Pos][1]>>16);
+  Send_Data_19[3] = (DTC_19[Pos][1]>>8);
+  Send_Data_19[4] = (DTC_19[Pos][1]&0xFF);
+  Send_Data_19_2[2] = (DTC_19[Pos][1]>>16);
+  Send_Data_19_2[3] = (DTC_19[Pos][1]>>8);
+  Send_Data_19_2[4] = (DTC_19[Pos][1]&0xFF);
+  Res[2] = (DTC_19[Pos][1]>>16);
+  Res[3] = (DTC_19[Pos][1]>>8);
+  Res[4] = (DTC_19[Pos][1]&0xFF);
+  
+  _Set_Ready(0);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _Clear_DTC(phyreq_ID);
+  StepByGeely3_0(0x19,1);
+  _Check_DTC_Res(0x89,0,DTC_19[Pos][1]);
+
+  Res[5] = 0x2F;
+  Res[7] = 0x80;
+  _Close_One_Node(DTC_19[Pos]);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_Response(SendData,8,Res);
+  _Open_One_Node(DTC_19[Pos]);
+  Res[5] = 0x2E;
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_Response(SendData,8,Res);
+  Res[5] = 0x2C;
+  for(i =1;i<=260;i++)
+  {
+    _WriteEx_and_Report("","第 %d 次上下电",i);
+    _Set_Ready(0);
+    _K15_OFF();
+    testWaitForTimeout(3000);
+    _K15_ON();
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(5000);
+    if(i == 256)
+      Res[7] = 0x08;
+    testWaitForTimeout(1000);
+    if(Session != defsession)
+      _SetSession(Session);
+    
+    _Send_Diag(6,ID,Send_Data_19);
+    _Check_Response(SendData,5,8,Res);
+    
+    OCC2_Res = i-1;
+    if((i-1)>=0xFF)
+      OCC2_Res = 0xFF;
+    _Send_Diag(6,ID,Send_Data_19_2);
+    _Check_OCC_Resp(2,OCC2_Res);
+    if(i==1)
+      Res[5] = 0x28;
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Send_Data_19);
+  _Check_19_NoFreeze(SendData,"19 06");
+}
+
+
+void Serve_NRC22CarSpd_Lower(byte Serve,dword ID,byte Session,byte Type) //NRC22-车速小于3
+{
+  int i;
+  char Serve_85_CarSpdQFTemp[10];
+  byte Serve_85_CarSpdQF[10];
+  int Serve_85_CarSpdQF_Count;
+  int Res_Send_1_Step1;
+  int Res_Send_2_Step1;
+  
+  GetInformationFlage = 0;
+  
+  /*--------获取QF数据--------*/
+  Serve_85_CarSpdQF_Count = getProfileArray(ECU_project,"Serve_85_CarSpdQF",Serve_85_CarSpdQFTemp,elCount(Serve_85_CarSpdQFTemp),file_name_1);
+  for(i=0;i<Serve_85_CarSpdQF_Count;i++)
+    Serve_85_CarSpdQF[i] = Serve_85_CarSpdQFTemp[i];
+  
+  _Get_NRC_Mapping(Serve);
+  
+  _Set_Ready(0xB);
+  _Set_CarSpd(NRC22_CarSpd-0.5);
+  testWaitForTimeout(500);
+  for(i=0;i<4;i++)
+  {
+    if(Session != defsession)
+      _SetSession(Session);
+    _Set_CarSpd_Invalid(i);
+    testWaitForTimeout(1500);
+    if(_Check_Dword_in_Num(i,Serve_85_CarSpdQF,Serve_85_CarSpdQF_Count)== -1)
+    {
+      Res_Send_1_Step1 = 0;
+      Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+    }
+    else
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+   
+    _WriteEx_and_Report("","步骤2测试"); 
+    if(Serve == 0x28 || Serve == 0x85 || Type == 1) //  28/85丢失车速节点后能正响应
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤3测试");
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    _Set_Sig(CarSpd_E2E_Sig,2);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    if(Serve == 0x28 || Serve == 0x85 || Type == 1) //  28/85视E2E校验异常为通过
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    else 
+    {
+      Res_Send_1_Step1 = 0;
+      Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+    }
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤4测试");
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    _Set_Sig(CarSpd_E2E_Sig,0);
+    testWaitForTimeout(2000);
+  }
+  _Reset_CarSpd_Invalid();
+}
+
+void Serve_NRC22CarSpd_Upper(byte Serve,dword ID,byte Session,byte Type) //NRC22-车速大于3
+{
+  int i;
+  char Serve_85_CarSpdQFTemp[10];
+  byte Serve_85_CarSpdQF[10];
+  int Serve_85_CarSpdQF_Count;
+  int Res_Send_1_Step1;
+  int Res_Send_2_Step1;
+  GetInformationFlage = 0;
+  
+  /*--------获取QF数据--------*/
+  Serve_85_CarSpdQF_Count = getProfileArray(ECU_project,"Serve_85_CarSpdQF",Serve_85_CarSpdQFTemp,elCount(Serve_85_CarSpdQFTemp),file_name_1);
+  for(i=0;i<Serve_85_CarSpdQF_Count;i++)
+    Serve_85_CarSpdQF[i] = Serve_85_CarSpdQFTemp[i];
+  
+  _Get_NRC_Mapping(Serve);
+  
+  _Set_Ready(0xB);
+  _Set_CarSpd(NRC22_CarSpd+1);
+  testWaitForTimeout(500);
+  for(i=0;i<4;i++)
+  {
+    if(Session != defsession)
+      _SetSession(Session);
+    _Set_CarSpd_Invalid(i);
+    testWaitForTimeout(1500);
+    if(_Check_Dword_in_Num(i,Serve_85_CarSpdQF,Serve_85_CarSpdQF_Count)== -1)
+    {
+      Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+      Res_Send_1_Step1 = 0;
+    }
+    else
+    {
+      Res_Send_2_Step1 = CarSpd_NRC;
+      Res_Send_1_Step1 = 0;
+    }
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤2测试");
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    if(Serve == 0x28 || Serve == 0x85 || Type == 1) //  28/85丢失车速节点后能正响应
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤3测试");
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    _Set_Sig(CarSpd_E2E_Sig,2);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    if(Serve == 0x28 || Serve == 0x85 || Type == 1) //  28/85视E2E校验异常为通过
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    else  
+    {
+      Res_Send_1_Step1 = 0;
+      Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+    }
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+        
+    _WriteEx_and_Report("","步骤4测试");
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    _Set_Sig(CarSpd_E2E_Sig,0);
+    _Reset_CarSpd_Invalid();
+    testWaitForTimeout(2000);
+  }
+}
+Serve_NRC22_UsgMode(byte Serve,dword ID,byte Session,byte Type) //NRC22-发动机
+{
+  int i;
+  int Res_Send_1_Step1;
+  int Res_Send_2_Step1;
+  byte UsgMode[5] = {0x0,0x1,0x2,0xB,0xD};
+  GetInformationFlage = 0;
+  
+  _Get_NRC_Mapping(Serve);
+  
+  _Set_Ready(0xB);
+  _Set_CarSpd(0);
+  _Reset_CarSpd_Invalid();
+  testWaitForTimeout(500);
+  for(i=0;i<elcount(UsgMode);i++)
+  {
+    if(Session != defsession)
+      _SetSession(Session);
+    _Set_Ready(UsgMode[i]);
+    testWaitForTimeout(1500);
+    if(UsgMode[i] != 0xD)
+    {
+      Res_Send_2_Step1 = -1;
+      Res_Send_1_Step1 = 1;
+    }
+    else
+    {
+      Res_Send_2_Step1 = Ready_NRC;
+      Res_Send_1_Step1 = 0;
+    }
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤2测试");
+    _TestDisableMsg(Struct_Ready.Sig_Id);
+    testWaitForTimeout(1500);
+    if(Serve == 0x28 || Serve == 0x85 || Type == 1) //  28/85丢失节点后能正响应
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤3测试");
+    _TestEnableMsg(Struct_Ready.Sig_Id);
+    testWaitForTimeout(1500);
+    _Set_Sig(PwrLvlElecMai_Sig,1); //防止CRC出现全0值恰好通过校验
+    _Set_Sig(UsgMode_E2E_Sig,2);
+    testWaitForTimeout(1500);
+    if(Serve == 0x28 || Serve == 0x85 || Type == 1) //  28/85视E2E校验异常为通过
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    else
+    {
+      Res_Send_1_Step1 = 0;
+      Res_Send_2_Step1 = Ready_NRC;
+    }
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+        
+    _WriteEx_and_Report("","步骤4测试");
+    _TestDisableMsg(Struct_Ready.Sig_Id);
+    testWaitForTimeout(1500);
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _TestEnableMsg(Struct_Ready.Sig_Id);
+    _Set_Sig(PwrLvlElecMai_Sig,0);
+    _Set_Sig(UsgMode_E2E_Sig,0);
+    testWaitForTimeout(2000);
+  }
+}
+
+Serve_NRC22_Battery(byte Serve,dword ID,byte Session) //NRC22-电压
+{
+  int i;
+  int Res_Send_1_Step1;
+  int Res_Send_2_Step1;
+  float Temp_Battery[4];
+  int NRC22_Res,Serve_Pos;
+  int Fun_DIDPos,Send_Flage;
+  byte Send_D111[3] = {0x22,0xD1,0x11};
+  dword FunDID = 0xD111;
+  GetInformationFlage = 0;
+  Send_Flage = 1;
+  _Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(FunDID);
+  if(Fun_DIDPos == -1)
+  {
+    Send_Flage = 0;
+    _WriteEx_and_Report("功能DID","未获取到对应的DID:0x%04X数据",FunDID);
+  }
+  _Get_NRC_Mapping(Serve);
+  Serve_Pos = _Check_Serve(Serve,0,0);
+  if(Serve == 0x10)
+    NRC22_Res = _Check_Serve(Serve,0x02,7);
+  else
+    NRC22_Res = _Check_Serve(Serve,Serve_Data[Serve_Pos].Serve_Fun[0],7);
+  
+  _Set_Ready(0xB);
+  _Set_CarSpd(0);
+  _Reset_CarSpd_Invalid();
+  testWaitForTimeout(500);
+  
+  Temp_Battery[0]=NRC22_Battery_Low+0.2;
+  Temp_Battery[1]=NRC22_Battery_Hight-0.2;
+  Temp_Battery[2]=NRC22_Battery_Low-0.2;
+  Temp_Battery[3]=NRC22_Battery_Hight+0.2;
+  
+  for(i=0;i<4;i++)
+  {
+    if(Session != defsession)
+      _SetSession(Session);
+    _Set_Battery(Temp_Battery[i]);
+    if(Send_Flage == 1) //读取并判断电压
+    {
+      Check_ReadFunDID(Send_D111,Fun_DIDPos,phyreq_ID,1,0,0,Temp_Battery[i]);
+    }
+    if(i>1)
+    {
+      if(i == 3)
+        Res_Send_2_Step1 = H_Battery_NRC;
+      if(i == 2)
+        Res_Send_2_Step1 = L_Battery_NRC;
+      Res_Send_1_Step1 = 0;
+      if((NRC22_Res & 2) == 0)
+      {
+        Res_Send_2_Step1 = -1;
+        Res_Send_1_Step1 = 1;
+      }
+    }
+    else
+    {
+      Res_Send_2_Step1 = -1;
+      Res_Send_1_Step1 = 1;
+    }
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    if(Set_Battery_RS232 == 1)
+      _Set_Battery(12);
+  }
+  if(Set_Battery_RS232 == 0)
+    _Set_Battery(12);
+}
+
+Serve_NRC22_NRC_Priority(byte Serve,dword ID,byte Session,byte Type) //NRC22-NRC优先级
+{
+  int i;
+  int Res_Send_1_Step1;
+  int Res_Send_2_Step1;
+  int Res_Send_1_Step2;
+  int Res_Send_2_Step2;
+  int Res_Send_1_Step3;
+  int Res_Send_2_Step3;
+  int NRC22_Res,Serve_Pos;
+  int Flage;
+  
+  GetInformationFlage = 0;
+  _Get_NRC_Mapping(Serve);
+  
+  Serve_Pos = _Check_Serve(Serve,0,0);
+  // if(Serve == 0x10)
+  //   NRC22_Res = _Check_Serve(Serve,0x02,7);
+  // else
+  //   NRC22_Res = _Check_Serve(Serve,Serve_Data[Serve_Pos].Serve_Fun[0],7);
+  NRC22_Res = (Serve == 0x10) ? (_Check_Serve(Serve,0x02,7)):(_Check_Serve(Serve,Serve_Data[Serve_Pos].Serve_Fun[0],7));
+  Flage = ((NRC22_Res & 2) == 0)?1:0;
+  
+  for(i=0;i<5;i++)
+  {
+    if(i == 0)
+    {
+      _Set_Ready(0xD);
+      _Set_CarSpd(NRC22_CarSpd+1);
+      _Set_CarSpd_Invalid(0);
+      _Set_Battery(NRC22_Battery_Low-0.2);
+      testWaitForTimeout(1000);
+      Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+      Res_Send_1_Step1 = 0;
+    }
+    else if(i == 1)
+    {
+      _Set_Ready(0xD);
+      _Set_CarSpd(NRC22_CarSpd+1);
+      _Set_CarSpd_Invalid(3);
+      _Set_Battery(NRC22_Battery_Low-0.2);
+      testWaitForTimeout(1000);
+      Res_Send_2_Step1 = CarSpd_NRC;
+      Res_Send_1_Step1 = 0;
+    }
+    else if(i == 2)
+    {
+      _Set_Ready(0xD);
+      _Set_CarSpd(NRC22_CarSpd-1);
+      _Set_CarSpd_Invalid(3);
+      _Set_Battery(NRC22_Battery_Low-0.2);
+      testWaitForTimeout(1000);
+      Res_Send_2_Step1 = Ready_NRC;
+      Res_Send_1_Step1 = 0;
+    }
+    else if(i == 3)
+    {
+      _Set_Ready(0xB);
+      _Set_CarSpd(NRC22_CarSpd-1);
+      _Set_CarSpd_Invalid(3);
+      _Set_Battery(NRC22_Battery_Low-0.2);
+      testWaitForTimeout(1000);
+      Res_Send_2_Step1 = L_Battery_NRC;
+      Res_Send_1_Step1 = 0;  
+      if(Flage == 1)
+      {
+        Res_Send_2_Step1 = -1;
+        Res_Send_1_Step1 = 1;
+      }
+    }
+    else if(i == 4)
+    {
+      _Set_Ready(0xB);
+      _Set_CarSpd(NRC22_CarSpd-1);
+      _Set_CarSpd_Invalid(3);
+      _Set_Battery(13);
+      testWaitForTimeout(1000);
+      Res_Send_2_Step1 = -1;
+      Res_Send_1_Step1 = 1;
+    }
+    if((Serve == 0x28 || Serve == 0x85) && Res_Send_2_Step1 != -1)
+    {
+      Res_Send_1_Step2 = Ready_NRC;
+      Res_Send_2_Step2 = Ready_NRC;
+      Res_Send_1_Step3 = L_Battery_NRC;
+      Res_Send_2_Step3 = L_Battery_NRC;
+  	  if(i == 3)
+  	  {
+  		  Res_Send_1_Step2 = L_Battery_NRC;
+  		  Res_Send_2_Step2 = L_Battery_NRC;
+  	  }
+    }
+    else
+    {
+      Res_Send_1_Step2 = Res_Send_1_Step1;
+      Res_Send_2_Step2 = Res_Send_2_Step1;
+      Res_Send_1_Step3 = Res_Send_1_Step1;
+      Res_Send_2_Step3 = Res_Send_2_Step1;
+    }
+    
+    if(Type == 1)
+    {
+      if(Flage == 0)
+      {
+        Res_Send_1_Step3 = 0;Res_Send_2_Step3 = L_Battery_NRC;
+      }
+      else
+      {
+        Res_Send_1_Step3 = 1;Res_Send_2_Step3 = -1;
+      }
+      if(i>3)
+      {
+        Res_Send_1_Step1 = 1;Res_Send_2_Step1 = -1;
+        Res_Send_1_Step2 = 1;Res_Send_2_Step2 = -1;
+        Res_Send_1_Step3 = 1;Res_Send_2_Step3 = -1;
+      }
+      switch(i)
+      {
+        case 0: Res_Send_1_Step2 = 0; Res_Send_2_Step2 = Ready_NRC;break;
+        case 1: Res_Send_1_Step2 = 0; Res_Send_2_Step2 = Ready_NRC;break;
+        case 2: Res_Send_1_Step2 = 0; Res_Send_2_Step2 = Ready_NRC;break;
+        default:break;
+      }
+    }
+
+    _SetSession(Session);
+    testWaitForTimeout(1000);
+    
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤2测试");
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step2,Res_Send_2_Step2);
+    
+    _WriteEx_and_Report("","步骤3测试");
+    _TestDisableMsg(Struct_Ready.Sig_Id);
+    testWaitForTimeout(1500);
+    Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step3,Res_Send_2_Step3);
+    
+    {
+      _TestEnableMsg(Struct_CarSpd.Sig_Id);
+      _TestEnableMsg(Struct_Ready.Sig_Id);
+      testWaitForTimeout(2000);
+      _Set_Ready(0xB);
+      _Set_CarSpd(NRC22_CarSpd-1);
+      _Set_CarSpd_Invalid(3);
+      if(Set_Battery_RS232 == 1 && i != 4)
+        _Set_Battery(13);
+      testWaitForTimeout(1000);
+    }
+  }
+}
+
+Serve_NRC22_PowerUp(byte Serve,dword ID,byte Session) //NRC22-上电
+{
+  int Res_Send_1_Step1;
+  int Res_Send_2_Step1;
+  GetInformationFlage = 0;
+  _Get_NRC_Mapping(Serve);
+  
+  _Set_Ready(1);
+  _Set_CarSpd(0);
+  _Set_CarSpd_Invalid(3);
+  testWaitForTimeout(1000);
+  _Power_Down();
+  
+  _Set_Ready(0xD);
+  _Set_CarSpd(NRC22_CarSpd+1);
+  _Set_CarSpd_Invalid(0);
+  _TestDisableMsg(Struct_CarSpd.Sig_Id);
+  _TestDisableMsg(Struct_Ready.Sig_Id);
+  testWaitForTimeout(1000);
+  _K15_ON();
+  testWaitForTimeout(3000);
+  _SetSession(Session);
+  
+  Res_Send_1_Step1 = 1;
+  Res_Send_2_Step1 = -1;
+  Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+  _TestEnableMsg(Struct_CarSpd.Sig_Id);
+  _TestEnableMsg(Struct_Ready.Sig_Id);
+  testWaitForTimeout(7000);
+  if(Session != defsession)
+    _SetSession(Session);
+  Res_Send_1_Step1 = 0;
+  Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+  Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+  
+  _Set_Ready(0x1);
+  _Set_CarSpd(0);
+  _Reset_CarSpd_Invalid();
+  testWaitForTimeout(2000);
+  _K15_OFF();
+  testWaitForTimeout(3000);
+  _TestDisableMsg(Struct_CarSpd.Sig_Id);
+  _TestDisableMsg(Struct_Ready.Sig_Id);
+  testWaitForTimeout(1000);
+  _K15_ON();
+  testWaitForTimeout(3000);
+  _SetSession(Session);
+  Res_Send_1_Step1 = 1;
+  Res_Send_2_Step1 = -1;
+  Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+  _TestEnableMsg(Struct_CarSpd.Sig_Id);
+  _TestEnableMsg(Struct_Ready.Sig_Id);
+  testWaitForTimeout(3000);
+  Geely_NRC22_Test(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+  
+}
+
+/*
+    Geely3.0以及以上平台NRC22测试发送数据
+    Serve：对应服务
+    Res_1:发送数据1对应返回值
+    Res_2:发送数据2对应返回值
+    仅存在一次发送时使用Res_2对应的值
+*/
+int Geely_NRC22_Test(byte Serve,dword ID,byte Session,int Res_1,int Res_2)
+{
+  byte Send_10[2]={0x10,0x02};
+  byte Send_11[2]={0x11,0x01};
+  byte Send_28[3]={0x28,0x00,0x01};
+  byte Send_85_1[2]={0x85,0x02};
+  byte Send_85_2[2]={0x85,0x01};
+  
+  if(GetInformationFlage == 0 && Serve == 0x10)
+  {
+    /*--------获取预编程数据--------*/
+    _get_Arry("Pre_Programmed");
+    for(i=0;i<Arry_Len;i++)
+      Data_Programmed[i] = Arry_Data[i];
+    Data_Programmed_Count = Arry_Len;
+    GetInformationFlage = 1;
+  }
+  if(Serve == 0x10)
+  {
+    _Send_Diag(Data_Programmed_Count,ID,Data_Programmed);
+    _Check_31Routine_Rx(Data_Programmed,Res_1);
+    _Send_Diag(2,ID,Send_10);
+    _TestResult(SendData,ID,"",Res_2);
+    if(diagGetLastResponseCode(SendData) == -1)
+    {
+      testWaitForTimeout(2000);
+      _SetSession(defsession);
+      testWaitForTimeout(2000);
+      if(Session != defsession)
+        _SetSession(Session);
+    }
+  }
+  else if(Serve == 0x11)
+  {
+    _Send_Diag(2,ID,Send_11);
+    _TestResult(SendData,ID,"",Res_2);
+    if(diagGetLastResponseCode(SendData) == -1)
+    {
+      testWaitForTimeout(2000);
+      if(Session != defsession)
+        _SetSession(Session);
+    }
+  }
+  else if(Serve == 0x28)
+  {
+    _Send_Diag(3,ID,Send_28);
+    _TestResult(SendData,ID,"",Res_2);
+  }
+  else if(Serve == 0x85)
+  {
+    _Send_Diag(2,ID,Send_85_1);
+    _TestResult(SendData,ID,"",Res_2);
+    _Send_Diag(2,ID,Send_85_2);
+    _TestResult(SendData,ID,"",Res_2);
+  }
+  
+  return diagGetLastResponseCode(SendData);
+}
+
+
+testcase Case_Phy_Def_FunDID_3012_Geely()/*功能DID 3012*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  FunDID_ReadAndSet(0x3012,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_3017_Geely()//DID_3017
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_3017(0x3017,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_3302_Geely()/*功能DID 3302*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_3302(0x3302,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+// testcase Case_Phy_Def_FunDID_330C_Geely()/*功能DID 330C*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   _Serve22_330C(0x330C,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+// testcase Case_Phy_Def_FunDID_D111_Geely()/*功能DID D111*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   FunDID_ReadAndSet_Snapshot(0xD111,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+// testcase Case_Phy_Def_FunDID_D117_Geely()/*功能DID D117*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   FunDID_ReadAndSet_Snapshot(0xD117,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+// testcase Case_Phy_Def_FunDID_D11C_Geely()/*功能DID D11C*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   FunDID_ReadAndSet_Snapshot(0xD11C,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+
+testcase Case_Phy_Def_FunDID_D134_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_D134(0xD134,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_D900_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_D900(0xD900,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_D901_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_D901(0xD901,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_D902_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_D902(0xD902,ID_From_Title,Session_From_Title);
+  // FunDID_ReadAndSet(0xD902,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_D904_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_D904(0xD904,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+// testcase Case_Phy_Def_FunDID_D905_Geely()/*功能DID*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   _Serve22_D905(0xD905,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+// testcase Case_Phy_Def_FunDID_D906_Geely()/*功能DID*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   _Serve22_D906(0xD906,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+
+testcase Case_Phy_Def_FunDID_D908_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  FunDID_ReadAndSet(0xD908,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_DD00_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_SigSet(0xDD00,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_DD01_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_SigSet(0xDD01,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_DD02_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_SigSet(0xDD02,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_Phy_Def_FunDID_DD06_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_SigSet(0xDD06,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_Phy_Def_FunDID_DD07_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_DD07(0xDD07,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_DD0A_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_SigSet(0xDD0A,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_DD0C_Geely()/*功能DID*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_DD0C(0xDD0C,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+// testcase Case_Phy_Def_FunDID_21AD_Geely()/*功能DID D11C*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   FunDID_ReadAndSet_Snapshot(0x21AD,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+// testcase Case_Phy_Def_FunDID_D123_Geely()/*功能DID D11C*/
+// {
+//   GetInformationFromTitle();
+//   if(Session_From_Title == defsession)
+//     Init_Main_Def();
+//   else
+//     Init_Main_Ex();
+//   _Serve22_D123(0xD123,ID_From_Title,Session_From_Title);
+//   End_Main();
+// }
+
+testcase Case_Phy_Def_FunDID_21AB_Geely()/*功能DID 21AB*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_21AB(0x21AB,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Phy_Def_FunDID_21AC_Geely()/*功能DID 21AC*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve22_21AC(0x21AC,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_FunDID_D01C_Geely()//DID_D01C测试
+{
+  Init_Main_Def();
+  _Serve22_10();
+  End_Main();
+}
+testcase Case_FunDID_D131_Geely()//DID_D131测试
+{
+  Init_Main_Def();
+  _Serve22_11();
+  End_Main();
+}
+
+
+
+
+testcase Case_Serve19_02_1_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_02_1_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_02_2_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_02_2_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_01_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_01_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_02_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_02_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_03_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_03_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_04_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_04_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_06_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_06_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_06_01_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _Serve19_06_01_Geely(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_0A_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_14(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_Support_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_15(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_NRC12_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_16(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_NRC13_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_17(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_NRC31_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_18(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve19_NRC_Geely()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  _19_Serve_20(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+
+testcase Case_Serve_CarSpd_Lower()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22CarSpd_Lower(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_CarSpd_Lower_()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22CarSpd_Lower(Serve_Form_Title,ID_From_Title,Session_From_Title,1);
+  End_Main();
+}
+testcase Case_Serve_CarSpd_Upper()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22CarSpd_Upper(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_CarSpd_Upper_()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22CarSpd_Upper(Serve_Form_Title,ID_From_Title,Session_From_Title,1);
+  End_Main();
+}
+testcase Case_Serve_UsgMode()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_UsgMode(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_UsgMode_()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_UsgMode(Serve_Form_Title,ID_From_Title,Session_From_Title,1);
+  End_Main();
+}
+testcase Case_Serve_Battery()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_Battery(Serve_Form_Title,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_Serve_NRC22_NRC_Priority()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_NRC_Priority(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_NRC22_NRC_Priority_()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_NRC_Priority(Serve_Form_Title,ID_From_Title,Session_From_Title,1);
+  End_Main();
+}
+testcase Case_Serve_NRC22_PowerUp()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_PowerUp(Serve_Form_Title,ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+
+

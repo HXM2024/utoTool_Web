@@ -1,0 +1,1439 @@
+/*@!Encoding:936*/
+
+
+void Snapshot_CCAG_01(dword ID,byte Session)
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xFF};
+  char Str_2[2][50],Str_[50];
+  float Da_Temp[2];
+  int i;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+  for(i=0;i<mixArray_Len;i++)
+  {
+    if(mixArray[i].InitValue != 0)
+      SetVaule_For_Snapshot(mixArray[i].Str_DID_1904,mixArray[i].InitValue,"",0,1);
+  }
+  SetVaule_For_Snapshot("LocalTime",0,"20000101000000",0,1);
+
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Close_All();
+  _TestEnableMsg(0x288);
+  _Power_Up();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Check_DTC_Res(0x09,DTC_19[Node_1904_Pos][1],0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(6000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",mixArray[i].Str_DID_1904);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,1);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,1);
+    testWaitForTimeout(200);
+  }
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Open_All();
+  testWaitForTimeout(6000);
+}
+
+void Snapshot_CCAG_02(dword ID,byte Session)
+{
+  int i;
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_Temp[2][50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+  
+  _Set_Ready(Struct_Ready.Ready_Active);
+  _WriteEx_and_Report("","设置第一次值");
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904(mixArray[i].Str_DID_1904,0);  //单组快照设置为第一次值
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(200);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+
+  _WriteEx_and_Report("","丢失节点保持当前故障，快照为第一次值");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+
+  _WriteEx_and_Report("","设置第二次值");
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904(mixArray[i].Str_DID_1904,1);
+  testWaitForTimeout(1000);
+  _WriteEx_and_Report("","快照保持第一次值");
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+
+  _WriteEx_and_Report("","再次制造丢失，快照为第二次值");
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904_(mixArray[i].Str_DID_1904,1,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  
+  _WriteEx_and_Report("","恢复节点并制造第三次值");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904(mixArray[i].Str_DID_1904,2);
+    
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  _WriteEx_and_Report("","11复位，快照保持不变");
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+
+  _WriteEx_and_Report("","重新丢失节点，快照更新为最新值");
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904_(mixArray[i].Str_DID_1904,2,0);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+
+  _WriteEx_and_Report("","下电并设置第四次值");
+  _Power_Down_19();
+  // _K30_OFF();  //关闭K15无法下电
+  testWaitForTimeout(K15_OFF_Time);
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904(mixArray[i].Str_DID_1904,3);
+  testWaitForTimeout(1000);
+  _WriteEx_and_Report("","重新上电检测快照为第三次值");
+  // _K30_ON();
+  _K15_ON();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  _WriteEx_and_Report("","清除DTC并等待2s，检测快照更新为第四次值");
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904_(mixArray[i].Str_DID_1904,3,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  _WriteEx_and_Report("","恢复节点并清除故障，快照信息清除");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(200);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+}
+
+void Snapshot_CCAG_03(dword ID,byte Session) /*总线信号丢失时的填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_[100];
+  char Str_2[2][100];
+  int i;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  _Set_Ready(Struct_Ready.Ready_Active);
+  _WriteEx_and_Report("","设置第一次值并读取快照");
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    _Step_1904(Str_,0);
+    // _Step_1904_(Freeze_Frame_Special[i],0,1);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+  
+  _WriteEx_and_Report("","丢失节点保持当前故障，快照为第一次值");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[0];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[0]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+
+  _WriteEx_and_Report("","恢复节点，再设置第二次值，再丢失总线测试时相关节点，等待10s后丢失节点");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    _Step_1904(Str_,1);
+  }
+  testWaitForTimeout(3000);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestDisableMsg(Snapshot_Special[i].Sig_ID);
+  testWaitForTimeout(10000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[1];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[1]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+
+  _WriteEx_and_Report("","恢复所有节点并清除故障再读取快照");
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestEnableMsg(Snapshot_Special[i].Sig_ID);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+
+  _WriteEx_and_Report("","丢失节点，再次读取快照");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[1];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[1]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+
+  _WriteEx_and_Report("","恢复节点，设置第三次值后丢失对应节点，下电再丢失测试节点5s后恢复，上电读取快照");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    _Step_1904(Str_,2);
+  }
+  testWaitForTimeout(2000);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestEnableMsg(Snapshot_Special[i].Sig_ID);
+  testWaitForTimeout(10000);
+  _K15_OFF();
+  testWaitForTimeout(3000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(5000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _K15_ON();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[1];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[1]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+
+  _WriteEx_and_Report("","再次丢失测试节点");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[2];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[2]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+
+  _WriteEx_and_Report("","恢复相关节点清除DTC并读取快照");
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestEnableMsg(Snapshot_Special[i].Sig_ID);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+}
+
+void Snapshot_CCAG_04(dword ID,byte Session) /*故障码快照在总线信号无效时的填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_[100];
+  char Str_2[2][100];
+  dword Node_L[10];
+  dword Node_Count_;
+  int i;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  
+  _Set_Ready(Struct_Ready.Ready_Active);
+  _WriteEx_and_Report("","设置第一次值并读取快照");
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    Node_L[Node_Count_] =Snapshot_Special[i].Sig_ID;
+    Node_Count_++;
+  }
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    _Step_1904(Freeze_Frame_Special_Invalid[i],0);
+    // _Step_1904_(Freeze_Frame_Special_Invalid[i],0,1);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+  
+  _WriteEx_and_Report("","丢失节点，设置第二组值 并读取快照");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    _Step_1904(Freeze_Frame_Special_Invalid[i],1);
+    // _Step_1904_(Freeze_Frame_Special_Invalid[i],1,4);
+  }
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[0];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[0]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+
+  _WriteEx_and_Report("","恢复测试节点，再设置所有节点无效后设置第三次值丢失测试节点并再次读取快照");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(5000);
+  for(i=0;i<Node_Count_;i++)
+    _Invalid_Node("",Node_L[i]);
+  testWaitForTimeout(5000);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+    _Step_1904(Freeze_Frame_Special_Invalid[i],2);
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[1];
+    Da_Temp[1] = Da_Temp[0];
+    
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[1]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+  
+  _WriteEx_and_Report("","保持节点丢失状态，清除DTC再读取快照");
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(3000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[1];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[1]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+
+  _WriteEx_and_Report("","恢复所有节点到有效状态");
+  for(i=0;i<Node_Count_;i++)
+    _Recover_Invalid_Node("",Node_L[i]);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(5000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+
+  _WriteEx_and_Report("","丢失测试节点，设置第四组值 并读取快照");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+    _Step_1904(Freeze_Frame_Special_Invalid[i],3);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[2];
+    Da_Temp[1] = Da_Temp[0];
+    
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[2]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+
+  _WriteEx_and_Report("","恢复测试节点，设置相关信号无效后下电，再设置为第一次值后上电，读取快照");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(5000);
+  for(i=0;i<Node_Count_;i++)
+    _Invalid_Node("",Node_L[i]);
+  testWaitForTimeout(2000);
+  _K15_OFF();
+  testWaitForTimeout(3000);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+    _Step_1904(Freeze_Frame_Special_Invalid[i],0);
+  testWaitForTimeout(1000);
+  _K15_ON();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[2];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[2]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(100);
+  }
+  
+  _WriteEx_and_Report("","丢失测试节点再次读取快照");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[3];
+    Da_Temp[1] = Da_Temp[0];
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[3]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+
+  _WriteEx_and_Report("","恢复相关节点清除DTC并读取快照");
+  for(i=0;i<Node_Count_;i++)
+    _Recover_Invalid_Node("",Node_L[i]);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+}
+
+void Snapshot_CCAG_05(dword ID,byte Session,dword DID_Set)  //电源电压
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  dword DTC_Snapshot = 0x560017;
+  char Str[50];
+  float Da_Temp;
+  
+  Data_Send[2] = (DTC_Snapshot>>16)&0xFF;
+  Data_Send[3] = (DTC_Snapshot>>8)&0xFF;
+  Data_Send[4] = (DTC_Snapshot>>0)&0xFF;
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","Battery");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  // for(i=0;i<mixArray[Pos_].Snapshot_Loop_Count;i++)
+  // {
+  //   _Set_Battery(mixArray[Pos_].Snapshot_Loop[i]);
+  //   Da_Temp = mixArray[Pos_].Snapshot_Loop[i];
+  //   _Clear_DTC(phyreq_ID);
+  //   testWaitForTimeout(1000);
+  //   _Send_Diag(6,ID,Data_Send);
+  //   _Check_1904(SendData,0,Str,Da_Temp,0);
+  // }
+  
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Set_Battery(mixArray[Pos_].DID_Value_max);
+  Da_Temp = mixArray[Pos_].DID_Value_max;
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Set_Battery(mixArray[Pos_].DID_Value_max+1);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Set_Battery(12);
+  _Clear_DTC(phyreq_ID);
+}
+
+void Snapshot_CCAG_06(dword ID,byte Session,dword DID_Set)  //30 02 方向盘角度
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","Angle");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  for(i=0;i<mixArray[Pos_].Snapshot_Loop_Count;i++)
+  {
+    _TestWaitForTesterConfirmation("此处需人为判断，转动方向盘到 %.2f °，然后点击YES，判断输出的角度与转动角度是否一致",mixArray[Pos_].Snapshot_Loop[i]);
+    _Clear_DTC(phyreq_ID);
+    testWaitForTimeout(1000);
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    testWaitForTimeout(500);
+    _Send_Diag(6,ID,Data_Send);
+    _Check_1904(SendData,0,Str,mixArray[Pos_].Snapshot_Loop[i],2);
+    Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,mixArray[Pos_].Snapshot_Loop[i],0,2);
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _TestWaitForTesterConfirmation("转动方向盘到 90 °，再拔掉传感器，然后点击YES");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,0,1);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,1,0);
+  _TestWaitForTesterConfirmation("恢复传感器，然后点击YES");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Set_11_Restoration();
+}
+
+void Snapshot_CCAG_07(dword ID,byte Session,dword DID_Set)  //30 03 方向盘角速度
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","AngSpd");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  for(i=0;i<mixArray[Pos_].Snapshot_Loop_Count;i++)
+  {
+    _TestWaitForTesterConfirmation("此处需人为判断，匀速转动方向盘趋近于 %.2f °/s，然后点击YES",mixArray[Pos_].Snapshot_Loop[i]);
+    _Clear_DTC(phyreq_ID);
+    testWaitForTimeout(1000);
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    testWaitForTimeout(500);
+    _Send_Diag(6,ID,Data_Send);
+    _Check_1904(SendData,0,Str,mixArray[Pos_].Snapshot_Loop[i],2);
+    Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,mixArray[Pos_].Snapshot_Loop[i],0,2);
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _TestWaitForTesterConfirmation("拔掉传感器，然后点击YES");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,0,1);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,1,0);
+  _TestWaitForTesterConfirmation("恢复传感器，然后点击YES");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Set_11_Restoration();
+}
+void Snapshot_CCAG_08(dword ID,byte Session,dword DID_Set)  //30 04 ECU温度
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int Pos_,Fun_DIDPos;
+  char Str[50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","ECU_Temperature");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,0,2);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,0,2);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+}
+
+void Snapshot_CCAG_09(dword ID,byte Session,dword DID_Set)  //30 05 方向盘手力矩
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","Torque");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  for(i=0;i<mixArray[Pos_].Snapshot_Loop_Count;i++)
+  {
+    _TestWaitForTesterConfirmation("此处需人为判断，维持手力矩为 %.2f Nm，然后点击YES，判断输出的手力矩是否与输入一致",mixArray[Pos_].Snapshot_Loop[i]);
+    _Clear_DTC(phyreq_ID);
+    testWaitForTimeout(1000);
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    testWaitForTimeout(500);
+    _Send_Diag(6,ID,Data_Send);
+    _Check_1904(SendData,0,Str,mixArray[Pos_].Snapshot_Loop[i],2);
+    Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,mixArray[Pos_].Snapshot_Loop[i],0,2);
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _TestWaitForTesterConfirmation("维持手力矩为-5Nm，再拔掉传感器，然后点击YES");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,0,1);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,1,0);
+  _TestWaitForTesterConfirmation("恢复传感器，然后点击YES");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Set_11_Restoration();
+}
+void Snapshot_CCAG_10(dword ID,byte Session,dword DID_Set)  //30 06 系统状态
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  float Da_Temp;
+  char Str[50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","System_State");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+  
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  Da_Temp = getSignal(mixArray[Pos_].Sig_Name[0]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Da_Temp = getSignal(mixArray[Pos_].Sig_Name[0]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _TestWaitForTesterConfirmation("拔掉传感器，然后点击YES");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Da_Temp = getSignal(mixArray[Pos_].Sig_Name[0]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _TestWaitForTesterConfirmation("恢复传感器，然后点击YES");
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Set_11_Restoration();
+}
+
+void Snapshot_CCAG_11(dword ID,byte Session,dword DID_Set)  //30 07 电机力矩
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","Motor_Torque");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  for(i=0;i<mixArray[Pos_].Snapshot_Loop_Count;i++)
+  {
+    _TestWaitForTesterConfirmation("此处需人为判断，维持手力矩为 %.2f Nm，然后点击YES，判断输出的手力矩是否与输入一致",mixArray[Pos_].Snapshot_Loop[i]);
+    _Clear_DTC(phyreq_ID);
+    testWaitForTimeout(1000);
+    _Close_One_Node(DTC_19[Node_1904_Pos]);
+    testWaitForTimeout(500);
+    _Send_Diag(6,ID,Data_Send);
+    _Check_1904(SendData,0,Str,mixArray[Pos_].Snapshot_Loop[i],2);
+    Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,mixArray[Pos_].Snapshot_Loop[i],0,2);
+    _Open_One_Node(DTC_19[Node_1904_Pos]);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _TestWaitForTesterConfirmation("维持手力矩为-5Nm，再拔掉传感器，然后点击YES");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,0,1);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,1,0);
+  _TestWaitForTesterConfirmation("恢复传感器，然后点击YES");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Set_11_Restoration();
+}
+
+void Snapshot_CCAG_12(dword ID,byte Session,dword DID_Set)  //30 08 车速
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  float Da_Temp;
+
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","CarSpd");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _WriteEx_and_Report("","设置车速为最大值");
+  _Clear_DTC(phyreq_ID);
+  Da_Temp = mixArray[Pos_].DID_Value_max;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+
+  // _WriteEx_and_Report("","设置车速为大于最大值");
+  // _Set_Sig(mixArray[Pos_].Sig_Name[0],20);
+  // testWaitForTimeout(2000);
+  // _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp+1);
+  // testWaitForTimeout(2000);
+  // Da_Temp = 20;
+  // _Close_One_Node(DTC_19[Node_1904_Pos]);
+  // Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  // _Send_Diag(6,ID,Data_Send);
+  // _Check_1904(SendData,0,Str,Da_Temp,0);
+  // _Open_One_Node(DTC_19[Node_1904_Pos]);
+  // _Clear_DTC(phyreq_ID);
+
+  _WriteEx_and_Report("","设置车速为60,然后丢失");
+  Da_Temp = 60;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(2000);
+  _TestDisableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,1,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,1);
+  _TestEnableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  _WriteEx_and_Report("","设置车速为120,然后无效");
+  Da_Temp = 120;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(2000);
+  _Set_CarSpd_Invalid(Struct_CarSpd.Invalid_Value[i]);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,1,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,1);
+  _Reset_CarSpd_Invalid();
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],0);
+  _Clear_DTC(phyreq_ID);
+}
+
+void Snapshot_CCAG_13(dword ID,byte Session,dword DID_Set)  //30 09 发动机状态
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  float Da_Temp;
+
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","Ready_State");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    snprintf(Str,elCount(Str),"%s","Engine_Speed");
+    Pos_ = _Check_StrPossion_Res(Str,1);  
+    if(Pos_ == -1)
+    {
+      _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+      return;
+    }
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _WriteEx_and_Report("","设置发动机状态为1");
+  _Clear_DTC(phyreq_ID);
+  Da_Temp = 1;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+
+  _WriteEx_and_Report("","设置发动机状态为2");
+  Da_Temp = 2;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  
+  _WriteEx_and_Report("","设置发动机状态为3");
+  Da_Temp = 3;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(500);
+  Da_Temp = 2;
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+
+  _WriteEx_and_Report("","设置发动机状态为1再丢失发动机节点");
+  Da_Temp = 1;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(1000);
+  _TestDisableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(1000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _TestEnableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+
+  _WriteEx_and_Report("","设置发动机状态为2再无效发动机节点");
+  Da_Temp = 2;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(1000);
+  _Invalid_Node(atol(mixArray[Pos_].Sig_Name_Node));
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Recover_Invalid_Node(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+}
+
+void Snapshot_CCAG_14(dword ID,byte Session,dword DID_Set)  //30 0A 本地时间
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  char Te[100];
+  char Da_Temp[2][50];
+
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","LocalTime");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  _Clear_DTC(phyreq_ID);
+  _WriteEx_and_Report("","设置时间为 2025-01-10 12:36:54");
+  snprintf(Te,elCount(Te),"%s","2025/01/10_12:36:54");
+  _Set_Time(Te,1);
+  testWaitForTimeout(1000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20250110123654");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20250110123654"); 
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,0,1);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+
+  _WriteEx_and_Report("","设置时间为 2025-02-15 11:22:22");
+  snprintf(Te,elCount(Te),"%s","2025/02/15_11:22:22");
+  _Set_Time(Te,1);
+  testWaitForTimeout(5000);
+  _WriteEx_and_Report("","设置时间为 2269-13-32 24:60:60");
+  snprintf(Te,elCount(Te),"%s","2269/13/32_24:60:60");
+  _Set_Time(Te,1);
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20250215112222");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20250215112222"); 
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,0,1);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  
+  _WriteEx_and_Report("","设置时间为 2025-02-18 13:15:35");
+  snprintf(Te,elCount(Te),"%s","2025/02/18_13:15:35");
+  _Set_Time(Te,1);
+  testWaitForTimeout(3000);
+  _TestDisableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(6000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20250218131535");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20250218131535"); 
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,0,1);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _TestEnableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(3000);
+  _Clear_DTC(phyreq_ID);
+  
+  _WriteEx_and_Report("","设置时间为 2025-02-25 05:34:58");
+  snprintf(Te,elCount(Te),"%s","2025/02/25_05:34:58");
+  _Set_Time(Te,1);
+  testWaitForTimeout(3000);
+  _Invalid_Node(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(6000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20250225053458");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20250225053458"); 
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,0,1);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Recover_Invalid_Node(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(3000);
+  _Clear_DTC(phyreq_ID);
+  
+  _WriteEx_and_Report("","设置时间为 2025-02-20 02:36:54");
+  snprintf(Te,elCount(Te),"%s","2025/02/20_02:36:54");
+  _Set_Time(Te,1);
+  testWaitForTimeout(3000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  snprintf(DID_Function[Fun_DIDPos].LocalTime_Ex[0],elCount(DID_Function[Fun_DIDPos].LocalTime_Ex[0]),"20250220023654");
+  snprintf(Da_Temp[0],elCount(Da_Temp[0]),"20250220023654"); 
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,0,0,1);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  _Check_1904_Specified(Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Clear_DTC(phyreq_ID);
+}
+
+void Snapshot_CCAG_15(dword ID,byte Session,dword DID_Set)  //30 0B 总里程
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  float Da_Temp;
+
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","Mileage");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _WriteEx_and_Report("","设置总里程为最大值");
+  _Clear_DTC(phyreq_ID);
+  Da_Temp = mixArray[Pos_].DID_Value_max;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  // _WriteEx_and_Report("","设置总里程为大于最大值");
+  // _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp+1);
+  // testWaitForTimeout(2000);
+  // _Close_One_Node(DTC_19[Node_1904_Pos]);
+  // Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  // _Send_Diag(6,ID,Data_Send);
+  // _Check_1904(SendData,0,Str,Da_Temp,0);
+  // _Open_One_Node(DTC_19[Node_1904_Pos]);
+  // _Clear_DTC(phyreq_ID);
+  _WriteEx_and_Report("","设置总里程为10000,然后丢失");
+  Da_Temp = 10000;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(2000);
+  _TestDisableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,1,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,1);
+  _TestEnableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  _WriteEx_and_Report("","设置总里程为666666,然后无效");
+  Da_Temp = 666666;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(2000);
+  _Invalid_Node("",atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Recover_Invalid_Node("",atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+}
+
+void Snapshot_CCAG_16(dword ID,byte Session,dword DID_Set)  //30 0C 档位
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0x01};
+  byte Read_DID[3];
+  int i,Pos_,Fun_DIDPos;
+  char Str[50];
+  float Da_Temp;
+
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);DTC_M = (DTC_19[Node_1904_Pos][1]>>8);DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;Data_Send[3] = DTC_M;Data_Send[4] = DTC_L;
+
+  Read_DID[0] = 0x22; Read_DID[1] = (DID_Set>>8)&0xFF;  Read_DID[2] = (DID_Set&0xFF);_Get_FunDID_Data();
+  Fun_DIDPos = _Check_DID_Pos(DID_Set);
+
+  snprintf(Str,elCount(Str),"%s","GearPosn");
+  Pos_ = _Check_StrPossion_Res(Str,1);  
+  if(Pos_ == -1)
+  {
+    _WriteEx_and_Report("","未查询到正确的DID字符串索引，跳过测试");
+    return;
+  }
+  if(Fun_DIDPos != -1)
+    DID_Function[Fun_DIDPos].Value_Set_Flage = 1;
+
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(2000);
+  _WriteEx_and_Report("","设置档位为1");
+  _Clear_DTC(phyreq_ID);
+  Da_Temp = 1;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+
+  _WriteEx_and_Report("","设置档位为2");
+  Da_Temp = 2;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  
+  _WriteEx_and_Report("","设置档位为0");
+  Da_Temp = 0;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(2000);
+  Da_Temp = 2;
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+  
+  _WriteEx_and_Report("","设置档位为3，再丢失档位节点");
+  Da_Temp = 3;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(1000);
+  _TestDisableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  testWaitForTimeout(1000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _TestEnableMsg(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+
+  _WriteEx_and_Report("","设置档位为4，再无效档位节点");
+  Da_Temp = 4;
+  _Set_Sig(mixArray[Pos_].Sig_Name[0],Da_Temp);
+  testWaitForTimeout(1000);
+  _Invalid_Node(atol(mixArray[Pos_].Sig_Name_Node));
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  Check_ReadFunDID(Read_DID,Fun_DIDPos,ID,1,Da_Temp,0,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,0,Str,Da_Temp,0);
+  _Recover_Invalid_Node(atol(mixArray[Pos_].Sig_Name_Node));
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Clear_DTC(phyreq_ID);
+}
+
+
+testcase Case_Snapshot_CCAG_01() //快照初始值确认
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_01(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_02() //全局快照更新及存储机制测试
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_02(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_03() //总线信号丢失时的填充值测试
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_03(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_04() //总线信号无效时的填充值测试
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_04(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_05() //3001电压
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_05(phyreq_ID,defsession,0x3001);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_06() //3002方向盘角度
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_06(phyreq_ID,defsession,0x3002);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_07() //3003方向盘转速
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_07(phyreq_ID,defsession,0x3003);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_08() //3004ECU温度
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_08(phyreq_ID,defsession,0x3004);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_09() //3005手力矩
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_09(phyreq_ID,defsession,0x3005);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_10() //3006系统状态
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_10(phyreq_ID,defsession,0x3006);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_11() //3007电机力矩
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_11(phyreq_ID,defsession,0x3007);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_12() //3008车速
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_12(phyreq_ID,defsession,0x3008);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_13() //3009发动机状态
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_13(phyreq_ID,defsession,0x3009);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_14() //300A本地时间
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_14(phyreq_ID,defsession,0x300A);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_15() //300B总里程
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_15(phyreq_ID,defsession,0x300B);
+  End_Main();
+}
+testcase Case_Snapshot_CCAG_16() //300C档位
+{
+  Init_Main_Def();
+  Init_For_Snapshot();
+  Snapshot_CCAG_16(phyreq_ID,defsession,0x300C);
+  End_Main();
+}
+
+
+
+

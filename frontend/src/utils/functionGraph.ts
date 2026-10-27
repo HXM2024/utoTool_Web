@@ -1576,6 +1576,69 @@ export function resolveFrameNumbers(frame: CaseFrame): FrameNumberInfo {
   return { edgeNums, caseNums }
 }
 
+/** 新建连线那一刻按「左/右分区」规则算出编号（结果由调用方固化到 edge.pair）。
+ *  规则：
+ *  - 连到主序列左侧接口（卡片 → 主序列）：在左区已占编号里填最小空位；
+ *  - 连到主序列右侧接口（主序列 → 卡片）：在右区已占编号里填最小空位（与左区完全独立）；
+ *  - 卡片互连：继承源卡片的入线编号并集；两端都没有编号（空白卡互连）→ 取所在侧已用最大编号。
+ *  存量连线的编号永远由 resolveFrameNumbers 按原规则解析（或沿用已固化的 pair），不被本函数改写。
+ *  返回 null 表示无法判定（无主序列等），此时保持不写编号。 */
+export function assignNewEdgeNumber(frame: CaseFrame, fromKey: string, toKey: string): number[] | null {
+  const seqId = frameSequenceId(frame)
+  if (!seqId) return null
+  const fromSeq = parseSeqPortKey(fromKey)
+  const toSeq = parseSeqPortKey(toKey)
+  const fromCard = isCardKey(fromKey)
+  const toCard = isCardKey(toKey)
+  const isEntry = fromCard && !!toSeq && toSeq.seqId === seqId
+  const isExit = !!fromSeq && fromSeq.seqId === seqId && toCard
+  const isChain = fromCard && toCard
+  if (!isEntry && !isExit && !isChain) return null
+
+  const laneIndex = new Map<string, number>()
+  frameLanes(frame).forEach((lane, li) => lane.nodeIds.forEach((nid) => laneIndex.set(nid, li)))
+  const seqLaneIdx = laneIndex.get(seqId) ?? Number.MAX_SAFE_INTEGER
+
+  // 现状生效编号（显式 pair 优先，未编号存量线按原规则解析）
+  const { edgeNums } = resolveFrameNumbers(frame)
+  const leftUsed = new Set<number>()
+  const rightUsed = new Set<number>()
+  for (const e of Object.values(frame.edges || {})) {
+    const nums = edgeNums.get(frameEdgeKey(e)) || []
+    if (!nums.length) continue
+    const eFrom = parseSeqPortKey(e.from)
+    const eTo = parseSeqPortKey(e.to)
+    if (isCardKey(e.from) && eTo && eTo.seqId === seqId) {
+      for (const n of nums) leftUsed.add(n)
+    } else if (eFrom && eFrom.seqId === seqId && isCardKey(e.to)) {
+      for (const n of nums) rightUsed.add(n)
+    } else if (isCardKey(e.from) && isCardKey(e.to)) {
+      const right = (laneIndex.get(cardKeyNodeId(e.from)) ?? Number.MAX_SAFE_INTEGER) > seqLaneIdx
+      for (const n of nums) (right ? rightUsed : leftUsed).add(n)
+    }
+  }
+  const nextFree = (used: Set<number>): number => {
+    let n = 1
+    while (used.has(n)) n++
+    return n
+  }
+  if (isEntry) return [nextFree(leftUsed)]
+  if (isExit) return [nextFree(rightUsed)]
+  // 卡片互连：继承源卡片的入线编号并集
+  const fromNid = cardKeyNodeId(fromKey)
+  const inherited = new Set<number>()
+  for (const e of Object.values(frame.edges || {})) {
+    if (e.to !== fromKey) continue
+    for (const n of edgeNums.get(frameEdgeKey(e)) || []) inherited.add(n)
+  }
+  if (inherited.size) return [...inherited].sort((a, b) => a - b)
+  // 两端都没有编号：取所在侧已用最大编号（都没有则从 1 起）
+  const right = (laneIndex.get(fromNid) ?? Number.MAX_SAFE_INTEGER) > seqLaneIdx
+  const used = right ? rightUsed : leftUsed
+  const max = used.size ? Math.max(...used) : 0
+  return [max > 0 ? max : 1]
+}
+
 /**
  * 按工况框连线语义展开为有序端口 key 路径（与后端 _expand_frame_paths 一致）。
  * - 主序列为主干（按步骤从上到下，保留多个接线口）。

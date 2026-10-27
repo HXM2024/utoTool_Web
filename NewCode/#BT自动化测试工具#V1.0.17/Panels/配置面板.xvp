@@ -1,0 +1,532 @@
+<?xml version="1.0"?>
+<Panel Type="Vector.CANalyzer.Panels.PanelSerializer, Vector.CANalyzer.Panels.Serializer, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null">
+  <Object Type="Vector.CANalyzer.Panels.Runtime.Panel, Vector.CANalyzer.Panels.Common, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="Panel" Children="Controls" ControlName="配置面板">
+    <Object Type="Vector.CANalyzer.Panels.Design.RadioButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="RadioButtonControl5" Children="Controls" ControlName="Radio Button">
+      <Property Name="Name">RadioButtonControl5</Property>
+      <Property Name="Size">119, 17</Property>
+      <Property Name="Location">262, 87</Property>
+      <Property Name="Text">整段擦除(36循环)</Property>
+      <Property Name="SwitchValueVT">1;Lower;3</Property>
+      <Property Name="SwitchValue">3</Property>
+      <Property Name="SymbolConfiguration">5;16;AUTO;;;EraseMode_Switch;1;;;-1;;;</Property>
+      <Property Name="TabIndex">80</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.RadioButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="RadioButtonControl4" Children="Controls" ControlName="Radio Button">
+      <Property Name="Name">RadioButtonControl4</Property>
+      <Property Name="Size">215, 17</Property>
+      <Property Name="Location">262, 39</Property>
+      <Property Name="Text">分段擦除(FF00,34,36,37,0202循环)</Property>
+      <Property Name="SymbolConfiguration">5;16;AUTO;;;EraseMode_Switch;1;;;-1;;;</Property>
+      <Property Name="TabIndex">76</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.RadioButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="RadioButtonControl3" Children="Controls" ControlName="Radio Button">
+      <Property Name="Name">RadioButtonControl3</Property>
+      <Property Name="Size">167, 17</Property>
+      <Property Name="Location">262, 63</Property>
+      <Property Name="Text">整段擦除(34、36、37循坏)</Property>
+      <Property Name="SwitchValueVT">1;Lower;2</Property>
+      <Property Name="SwitchValue">2</Property>
+      <Property Name="SymbolConfiguration">5;16;AUTO;;;EraseMode_Switch;1;;;-1;;;</Property>
+      <Property Name="TabIndex">75</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.PathControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="PathControl2" Children="Controls" ControlName="Path Dialog">
+      <Property Name="Name">PathControl2</Property>
+      <Property Name="Size">232, 23</Property>
+      <Property Name="Location">17, 79</Property>
+      <Property Name="FileDlgFilter">All Files|*.hex</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;openhex1;4;;;-1;;;</Property>
+      <Property Name="TabIndex">74</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.NumericUpDownControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="NumericUpDownControl2" Children="Controls" ControlName="Numeric Up/Down 2">
+      <Property Name="Name">NumericUpDownControl2</Property>
+      <Property Name="Size">39, 21</Property>
+      <Property Name="Location">111, 647</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;waitvoltage;1;;;-1;;;</Property>
+      <Property Name="TabIndex">70</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl40" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl40</Property>
+      <Property Name="Size">246, 17</Property>
+      <Property Name="Location">16, 649</Property>
+      <Property Name="Text">写驱动后等待         秒（手动调电压）</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC202;1;;;-1;;;</Property>
+      <Property Name="TabIndex">69</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl39" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl39</Property>
+      <Property Name="Size">108, 17</Property>
+      <Property Name="Location">16, 625</Property>
+      <Property Name="Text">调整块大小：0X</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC201;1;;;-1;;;</Property>
+      <Property Name="TabIndex">68</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.TextBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="TextBoxControl1" Children="Controls" ControlName="Input/Output Box">
+      <Property Name="Name">TextBoxControl1</Property>
+      <Property Name="Size">49, 21</Property>
+      <Property Name="Location">124, 623</Property>
+      <Property Name="AlarmUpperTextColor">WindowText</Property>
+      <Property Name="ValueDecimalPlaces">0</Property>
+      <Property Name="AlarmLowerBkgColor">Salmon</Property>
+      <Property Name="ValueDisplay">Hexadecimal</Property>
+      <Property Name="AlarmUpperBkgColor">IndianRed</Property>
+      <Property Name="AlarmLowerTextColor">WindowText</Property>
+      <Property Name="AlarmGeneralSettings">1;0;0;0</Property>
+      <Property Name="DisplayLabel">Hide</Property>
+      <Property Name="DescriptionText">
+      </Property>
+      <Property Name="DescriptionSize">0, 0</Property>
+      <Property Name="UsedValueTable">PhysicalValue</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;blocksize;1;;;-1;;;</Property>
+      <Property Name="TabIndex">63</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StartStopControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StartStopControl1" Children="Controls" ControlName="Start Stop Control">
+      <Property Name="Name">StartStopControl1</Property>
+      <Property Name="Size">48, 24</Property>
+      <Property Name="Location">409, 8</Property>
+      <Property Name="TabIndex">58</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl38" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl38</Property>
+      <Property Name="Size">108, 17</Property>
+      <Property Name="Location">16, 601</Property>
+      <Property Name="Text">数据传输后复位</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC130;1;;;-1;;;</Property>
+      <Property Name="TabIndex">54</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl37" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl37</Property>
+      <Property Name="Size">108, 17</Property>
+      <Property Name="Location">16, 577</Property>
+      <Property Name="Text">程序擦除后复位</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC129;1;;;-1;;;</Property>
+      <Property Name="TabIndex">53</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl36" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl36</Property>
+      <Property Name="Size">144, 17</Property>
+      <Property Name="Location">105, 14</Property>
+      <Property Name="Text">发生异常是否中断刷写</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;stoptest;1;;;-1;;;</Property>
+      <Property Name="TabIndex">49</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl35" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl35</Property>
+      <Property Name="Size">180, 17</Property>
+      <Property Name="Location">194, 554</Property>
+      <Property Name="Text">相关性校验过程功能寻址握手</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC128;1;;;-1;;;</Property>
+      <Property Name="TabIndex">45</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl34" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl34</Property>
+      <Property Name="Size">90, 17</Property>
+      <Property Name="Location">194, 530</Property>
+      <Property Name="Text">CRC校验错误</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC127;1;;;-1;;;</Property>
+      <Property Name="TabIndex">41</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl33" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl33</Property>
+      <Property Name="Size">96, 17</Property>
+      <Property Name="Location">194, 506</Property>
+      <Property Name="Text">擦除地址错误</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC126;1;;;-1;;;</Property>
+      <Property Name="TabIndex">40</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl32" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl32</Property>
+      <Property Name="Size">72, 17</Property>
+      <Property Name="Location">194, 482</Property>
+      <Property Name="Text">秘钥错误</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC124;1;;;-1;;;</Property>
+      <Property Name="TabIndex">36</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl31" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl31</Property>
+      <Property Name="Size">96, 17</Property>
+      <Property Name="Location">194, 458</Property>
+      <Property Name="Text">跳过安全访问</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC123;1;;;-1;;;</Property>
+      <Property Name="TabIndex">35</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl3" Children="Controls" ControlName="Static Text 3">
+      <Property Name="Name">StaticTextControl3</Property>
+      <Property Name="Size">89, 13</Property>
+      <Property Name="Location">17, 110</Property>
+      <Property Name="Text">选择缺失步骤：</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl2" Children="Controls" ControlName="Static Text 2">
+      <Property Name="Name">StaticTextControl2</Property>
+      <Property Name="Size">83, 13</Property>
+      <Property Name="Location">17, 15</Property>
+      <Property Name="Text">选择hex文件：</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl1" Children="Controls" ControlName="Static Text">
+      <Property Name="Name">StaticTextControl1</Property>
+      <Property Name="Size">65, 13</Property>
+      <Property Name="Location">16, 436</Property>
+      <Property Name="Text">异常注入：</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl30" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl30</Property>
+      <Property Name="Size">132, 17</Property>
+      <Property Name="Location">17, 554</Property>
+      <Property Name="Text">发送3602后发送3601</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC1103;1;;;-1;;;</Property>
+      <Property Name="TabIndex">34</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl29" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl29</Property>
+      <Property Name="Size">132, 17</Property>
+      <Property Name="Location">17, 530</Property>
+      <Property Name="Text">发送3601后发送3604</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC1102;1;;;-1;;;</Property>
+      <Property Name="TabIndex">33</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl28" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl28</Property>
+      <Property Name="Size">96, 17</Property>
+      <Property Name="Location">17, 506</Property>
+      <Property Name="Text">发送两次3601</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC1101;1;;;-1;;;</Property>
+      <Property Name="TabIndex">32</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl27" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl27</Property>
+      <Property Name="Size">168, 17</Property>
+      <Property Name="Location">17, 482</Property>
+      <Property Name="Text">数据校验过程功能寻址握手</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC108;1;;;-1;;;</Property>
+      <Property Name="TabIndex">31</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl26" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl26</Property>
+      <Property Name="Size">144, 17</Property>
+      <Property Name="Location">17, 458</Property>
+      <Property Name="Text">擦除过程功能寻址握手</Property>
+      <Property Name="SymbolConfiguration">5;16;Faultinsert;;;TC107;1;;;-1;;;</Property>
+      <Property Name="TabIndex">30</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl24" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl24</Property>
+      <Property Name="Size">48, 17</Property>
+      <Property Name="Location">185, 391</Property>
+      <Property Name="Text">24、</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step24;1;;;-1;;;</Property>
+      <Property Name="TabIndex">28</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl23" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl23</Property>
+      <Property Name="Size">48, 17</Property>
+      <Property Name="Location">185, 367</Property>
+      <Property Name="Text">23、</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step23;1;;;-1;;;</Property>
+      <Property Name="TabIndex">27</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl22" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl22</Property>
+      <Property Name="Size">48, 17</Property>
+      <Property Name="Location">185, 343</Property>
+      <Property Name="Text">22、</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step22;1;;;-1;;;</Property>
+      <Property Name="TabIndex">26</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl21" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl21</Property>
+      <Property Name="Size">90, 17</Property>
+      <Property Name="Location">185, 320</Property>
+      <Property Name="Text">21、打开DTC</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step21;1;;;-1;;;</Property>
+      <Property Name="TabIndex">25</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl20" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl20</Property>
+      <Property Name="Size">96, 17</Property>
+      <Property Name="Location">185, 296</Property>
+      <Property Name="Text">20、恢复通信</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step20;1;;;-1;;;</Property>
+      <Property Name="TabIndex">24</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl19" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl19</Property>
+      <Property Name="Size">90, 17</Property>
+      <Property Name="Location">185, 272</Property>
+      <Property Name="Text">19、ECU复位</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step19;1;;;-1;;;</Property>
+      <Property Name="TabIndex">23</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl18" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl18</Property>
+      <Property Name="Size">168, 17</Property>
+      <Property Name="Location">185, 248</Property>
+      <Property Name="Text">18、软硬件一致性检查FF01</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step18;1;;;-1;;;</Property>
+      <Property Name="TabIndex">22</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl17" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl17</Property>
+      <Property Name="Size">144, 17</Property>
+      <Property Name="Location">185, 224</Property>
+      <Property Name="Text">17、检查传输序列0202</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step17;1;;;-1;;;</Property>
+      <Property Name="TabIndex">21</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl16" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl16</Property>
+      <Property Name="Size">108, 17</Property>
+      <Property Name="Location">185, 200</Property>
+      <Property Name="Text">16、写数据之37</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step16;1;;;-1;;;</Property>
+      <Property Name="TabIndex">20</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl15" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl15</Property>
+      <Property Name="Size">108, 17</Property>
+      <Property Name="Location">185, 177</Property>
+      <Property Name="Text">15、写数据之36</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step15;1;;;-1;;;</Property>
+      <Property Name="TabIndex">19</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl14" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl14</Property>
+      <Property Name="Size">108, 17</Property>
+      <Property Name="Location">185, 153</Property>
+      <Property Name="Text">14、写数据之34</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step14;1;;;-1;;;</Property>
+      <Property Name="TabIndex">18</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl13" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl13</Property>
+      <Property Name="Size">120, 17</Property>
+      <Property Name="Location">185, 129</Property>
+      <Property Name="Text">13、写数据之FF00</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step13;1;;;-1;;;</Property>
+      <Property Name="TabIndex">17</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl12" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl12</Property>
+      <Property Name="Size">156, 17</Property>
+      <Property Name="Location">17, 391</Property>
+      <Property Name="Text">12、驱动后检查传输序列</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step12;1;;;-1;;;</Property>
+      <Property Name="TabIndex">16</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl11" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl11</Property>
+      <Property Name="Size">138, 17</Property>
+      <Property Name="Location">17, 367</Property>
+      <Property Name="Text">11、写flash驱动之37</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step11;1;;;-1;;;</Property>
+      <Property Name="TabIndex">15</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl10" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl10</Property>
+      <Property Name="Size">138, 17</Property>
+      <Property Name="Location">17, 343</Property>
+      <Property Name="Text">10、写flash驱动之36</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step10;1;;;-1;;;</Property>
+      <Property Name="TabIndex">14</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl9" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl9</Property>
+      <Property Name="Size">138, 17</Property>
+      <Property Name="Location">17, 320</Property>
+      <Property Name="Text">09、写flash驱动之34</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step09;1;;;-1;;;</Property>
+      <Property Name="TabIndex">13</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl8" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl8</Property>
+      <Property Name="Size">96, 17</Property>
+      <Property Name="Location">17, 296</Property>
+      <Property Name="Text">08、完全访问</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step08;1;;;-1;;;</Property>
+      <Property Name="TabIndex">12</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl7" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl7</Property>
+      <Property Name="Size">120, 17</Property>
+      <Property Name="Location">17, 272</Property>
+      <Property Name="Text">07、编程会话模式</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step07;1;;;-1;;;</Property>
+      <Property Name="TabIndex">11</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl6" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl6</Property>
+      <Property Name="Size">96, 17</Property>
+      <Property Name="Location">17, 248</Property>
+      <Property Name="Text">06、安全访问</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step06;1;;;-1;;;</Property>
+      <Property Name="TabIndex">10</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl5" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl5</Property>
+      <Property Name="Size">96, 17</Property>
+      <Property Name="Location">17, 224</Property>
+      <Property Name="Text">05、关闭通信</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step05;1;;;-1;;;</Property>
+      <Property Name="TabIndex">9</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl4" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl4</Property>
+      <Property Name="Size">90, 17</Property>
+      <Property Name="Location">17, 200</Property>
+      <Property Name="Text">04、关闭DTC</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step04;1;;;-1;;;</Property>
+      <Property Name="TabIndex">8</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl3" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl3</Property>
+      <Property Name="Size">120, 17</Property>
+      <Property Name="Location">17, 177</Property>
+      <Property Name="Text">03、功能扩展会话</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step03;1;;;-1;;;</Property>
+      <Property Name="TabIndex">7</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl2" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl2</Property>
+      <Property Name="Size">120, 17</Property>
+      <Property Name="Location">17, 153</Property>
+      <Property Name="Text">02、更新条件查询</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step02;1;;;-1;;;</Property>
+      <Property Name="TabIndex">6</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.CheckBoxControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="CheckBoxControl1" Children="Controls" ControlName="Check Box">
+      <Property Name="Name">CheckBoxControl1</Property>
+      <Property Name="Size">120, 17</Property>
+      <Property Name="Location">17, 129</Property>
+      <Property Name="Text">01、物理扩展会话</Property>
+      <Property Name="CheckValueVT">1;Lower;0</Property>
+      <Property Name="CheckValue">0</Property>
+      <Property Name="UncheckValueVT">1;Lower;1</Property>
+      <Property Name="UncheckValue">1</Property>
+      <Property Name="SymbolConfiguration">5;16;TestStep;;;step01;1;;;-1;;;</Property>
+      <Property Name="TabIndex">5</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.RadioButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="RadioButtonControl2" Children="Controls" ControlName="Radio Button 2">
+      <Property Name="Name">RadioButtonControl2</Property>
+      <Property Name="Size">41, 17</Property>
+      <Property Name="Location">311, 12</Property>
+      <Property Name="Text">SOS</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;bootmode;1;;;-1;;;</Property>
+      <Property Name="TabIndex">4</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.RadioButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="RadioButtonControl1" Children="Controls" ControlName="Radio Button">
+      <Property Name="Name">RadioButtonControl1</Property>
+      <Property Name="Size">41, 17</Property>
+      <Property Name="Location">264, 12</Property>
+      <Property Name="Text">UDS</Property>
+      <Property Name="SwitchValueVT">1;Lower;0</Property>
+      <Property Name="SwitchValue">0</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;bootmode;1;;;-1;;;</Property>
+      <Property Name="TabIndex">3</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.PathControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="PathControl1" Children="Controls" ControlName="Path Dialog">
+      <Property Name="Name">PathControl1</Property>
+      <Property Name="Size">232, 23</Property>
+      <Property Name="Location">17, 38</Property>
+      <Property Name="FileDlgFilter">All Files|*.hex</Property>
+      <Property Name="SymbolConfiguration">5;16;Test;;;openhex;4;;;-1;;;</Property>
+      <Property Name="TabIndex">2</Property>
+    </Object>
+    <Property Name="Name">Panel</Property>
+    <Property Name="Size">480, 681</Property>
+    <Property Name="BackColor">White</Property>
+  </Object>
+</Panel>

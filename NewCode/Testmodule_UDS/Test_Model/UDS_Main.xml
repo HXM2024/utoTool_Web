@@ -1,0 +1,1121 @@
+﻿<testmodule title="UDS_Test" version="1.0">
+  <variants>
+    <variant name="All"/>
+    <variant name="Serve_10"/>
+    <variant name="Serve_11"/>
+    <variant name="Serve_14"/>
+    <variant name="Serve_19"/>
+    <variant name="Serve_22"/>
+    <variant name="Serve_23"/>
+    <variant name="Serve_27"/>
+    <variant name="Serve_28"/>
+    <variant name="Serve_2E"/>
+    <variant name="Serve_31"/>
+    <variant name="Serve_3E"/>
+    <variant name="Serve_85"/>
+    <variant name="TP-CAN"/>
+    <variant name="TP-CANFD"/>
+    <variant name="特殊工况"/>
+    <variant name="APP数据存储"/>
+    <variant name="报文格式验证"/>
+    <variant name="异常测试NRC"/>
+    <variant name="不支持的服务"/>
+    <variant name="高负载率测试"/>
+    <variant name="相关功能测试"/>
+    <variant name="Interrupt"/>
+  </variants>
+
+  <testgroup title="调试" >
+    <capltestcase name="K15_ON" title="上点火" />
+    <capltestcase name="K15_OFF" title="下点火" />
+    <capltestcase name="K30_ON" title="上K30电" />
+    <capltestcase name="K30_OFF" title="下K30电" />
+    <capltestcase name="_unlockECU_Pass" title="安全访问" />
+    <capltestcase name="_Ang_Calibration" title="对中" />
+    <capltestcase name="_Clear_Angle_Calibration" title="清除对中" />
+    <capltestcase name="_Fac" title="工厂模式" />
+    <capltestcase name="test" title="验证" />
+  </testgroup>
+
+  <testgroup title="特殊工况" variants="特殊工况 All">
+    <capltestcase name="Case_ID_Traversal" title="常规寻址方式(11bit)" />
+    <capltestcase name="Case_ID_ExTraversal" title="拓展寻址方式(11bit)" />
+    <capltestcase name="Case_ID_Mix_Traversal" title="混合寻址方式_常规(29bit)" />
+    <capltestcase name="Case_ID_Mix_ExTraversal" title="混合寻址方式_混合(29bit)" />
+    <capltestcase name="Case_Geely1_0_NRC22_Test" title="Geely1.0_NRC22测试" />
+    <capltestcase name="HardwareTest" title="进入工装程序并写入信息" />
+    <capltestcase name="TestCase_EOL" title="EOL流程测试" />
+  </testgroup>
+
+  <testgroup title="APP数据存储" variants="APP数据存储 All">
+    <capltestcase name="Case_APP_Valid_1002" title="1002跳转过程中下电" />
+    <capltestcase name="Case_APP_Valid_Serve_11" title="11h过程中下电" />
+    <capltestcase name="Case_APP_Valid_Serve_2E" title="2Eh过程中下电" />
+    <capltestcase name="Case_APP_Valid_Serve_31" title="31h过程中下电" />
+    <capltestcase name="Case_APP_Valid_Serve_27" title="27h过程中下电" />
+    <capltestcase name="Case_APP_Valid_Serve_Other" title="其他服务异常下电" />
+  </testgroup>
+
+  <testgroup title="相关功能测试" variants="相关功能测试 All">
+    <testgroup title="通用">
+      <capltestcase name="Case_General_31_AngCal"   title="通用_角度对中" />
+      <capltestcase name="Case_General_31_AngCal_Clear"   title="通用_清除角度对中" />
+    </testgroup>
+    <testgroup title="Geely">
+      <capltestcase name="Case_Geely_31_0206"   title="相关功能测试_更新条件查询(02 06)" />
+      <capltestcase name="Case_Geely_31_3080"   title="相关功能测试_清除角度中位标定(30 80)" />
+      <capltestcase name="Case_Geely_31_3080_307B"   title="相关功能测试_角度中位标定测试(3080_307B)" />
+      <capltestcase name="Case_Geely_31_3082"   title="相关功能测试_角度中位自学习开关(30 82)" />
+      <capltestcase name="Case_Geely_31_3083"   title="相关功能测试_清除PDC(30 83)" />
+      <capltestcase name="Case_Geely_31_308B"   title="相关功能测试_重置PSCM转向角度学习(30 8B)" />
+      <capltestcase name="Case_Geely_31_3088"   title="相关功能测试_重置末端学习(30 88)" />
+      <capltestcase name="Case_Geely_31_SentError"   title="相关功能测试_传感器异常" />
+    </testgroup>
+    <testgroup title="广汽GAC">
+      <capltestcase name="Case_GAC_31_0203"   title="UDS31物理_拓展(检查编程条件)" />
+      <capltestcase name="Case_GAC_31_64D1"   title="UDS31物理_拓展(中位标定)" />
+      <capltestcase name="Case_GAC_31_64D2"   title="UDS31物理_拓展(清除中位标定)" />
+      <capltestcase name="Case_GAC_31_64D3"   title="UDS31物理_拓展(清除EOT末端学习值)" />
+      <capltestcase name="Case_GAC_31_64D4"   title="UDS31物理_拓展(清除PDC学习值)" />
+    </testgroup>
+    <testgroup title="比亚迪">
+      <capltestcase name="Case_BYD_31_0203"   title="UDS31物理_拓展(更新条件查询)" />
+      <capltestcase name="Case_BYD_31_AC00"   title="UDS31物理_拓展(角度对中)" />
+      <capltestcase name="Case_BYD_31_F004"   title="UDS31物理_拓展(清除PDC学习值)" />
+      <capltestcase name="Case_BYD_31_3001"   title="UDS31物理_拓展(清除软止点学习数据)" />
+      <capltestcase name="Case_BYD_31_3002"   title="UDS31物理_拓展(擦除角度标定数据)" />
+      <capltestcase name="Case_BYD_31_A001"   title="UDS31物理_拓展(擦除偏移角度信息数据)" />
+      <capltestcase name="Case_BYD_31_3003_02"   title="UDS31物理_拓展_02(Shimmy-PDC功能开关)" />
+      <capltestcase name="Case_BYD_31_3003_04"   title="UDS31物理_拓展_04(Shimmy-PDC功能开关)" />
+      <capltestcase name="Case_BYD_31_3003_08"   title="UDS31物理_拓展_08(Shimmy-PDC功能开关)" />
+      <capltestcase name="Case_BYD_31_3003_0E"   title="UDS31物理_拓展_0E(Shimmy-PDC功能开关)" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="3E 80不打断NRC78测试" variants="Interrupt All">
+    <capltestcase name="Case_Interrupt_10H" title="10服务" />
+    <capltestcase name="Case_Interrupt_11H" title="11服务" />
+    <capltestcase name="Case_Interrupt_14H" title="14服务" />
+    <capltestcase name="Case_Interrupt_27H" title="27服务" />
+    <capltestcase name="Case_Interrupt_2EH" title="2E服务" />
+    <capltestcase name="Case_Interrupt_31H" title="31服务" />
+  </testgroup>
+
+  <testgroup title="10服务" variants="Serve_10 All">
+    <testgroup title="自动测试部分">
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_10_Phy_Def_01"   title="UDS10物理_默认(10 01)" />
+        <capltestcase name="Case_10_Phy_Def_02"   title="UDS10物理_默认(10 02)" />
+        <capltestcase name="Case_10_Phy_Def_03"   title="UDS10物理_默认(10 03)" />
+        <capltestcase name="Case_10_Phy_Def_04"   title="UDS10物理_默认_肯定响应抑制位" />
+        <capltestcase name="Case_10_Phy_Def_08"   title="UDS10物理_默认(NRC13)" />
+        <capltestcase name="Case_10_Phy_Def_09"   title="UDS10物理_默认(NRC12)" />
+        <capltestcase name="Case_10_Phy_Def_NRC"   title="UDS10物理_默认(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_24"   title="UDS10物理_默认(1002_S3server)" />
+        <capltestcase name="Case_10_Phy_Def_11"   title="UDS10物理_默认(S3server)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS10物理_默认(NRC22遍历_自动)" />
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_10_Phy_Def_01"   title="UDS10物理_拓展(10 01)" />
+        <capltestcase name="Case_10_Phy_EX_13_Ruls"   title="UDS10物理_拓展(10 02条件)" />
+        <capltestcase name="Case_10_Phy_EX_20"   title="UDS10物理_拓展(NRC22预编程)" />
+        <capltestcase name="Case_10_Phy_Def_02"   title="UDS10物理_拓展(10 02)" />
+        <capltestcase name="Case_10_Phy_Def_03"   title="UDS10物理_拓展(10 03)" />
+        <capltestcase name="Case_10_Phy_Def_04"   title="UDS10物理_拓展_肯定响应抑制位" />
+        <capltestcase name="Case_10_Phy_EX_19"   title="UDS10物理_拓展(NRC33)" />
+        <capltestcase name="Case_10_Phy_Def_08"   title="UDS10物理_拓展(NRC13)" />
+        <capltestcase name="Case_10_Phy_Def_09"   title="UDS10物理_拓展(NRC12)" />
+        <capltestcase name="Case_10_Phy_Def_24"   title="UDS10物理_拓展(1002_S3server)" />
+        <capltestcase name="Case_10_Phy_Def_NRC"   title="UDS10物理_拓展(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS10物理_拓展(NRC22遍历_自动)" />
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_10_Phy_Def_01"   title="UDS10功能_默认(10 01)" />
+        <capltestcase name="Case_10_Phy_Def_02"   title="UDS10功能_默认(10 02)" />
+        <capltestcase name="Case_10_Phy_Def_03"   title="UDS10功能_默认(10 03)" />
+        <capltestcase name="Case_10_Phy_Def_04"   title="UDS10功能_默认_肯定响应抑制位" />
+        <capltestcase name="Case_10_Phy_Def_08"   title="UDS10功能_默认(NRC13)" />
+        <capltestcase name="Case_10_Phy_Def_09"   title="UDS10功能_默认(NRC12)" />
+        <capltestcase name="Case_10_Phy_Def_NRC"   title="UDS10功能_默认(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS10功能_默认(NRC22遍历_自动)" />
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_10_Phy_Def_01"   title="UDS10功能_拓展(10 01)" />
+        <capltestcase name="Case_10_Phy_Def_02"   title="UDS10功能_拓展(10 02)" />
+        <capltestcase name="Case_10_Phy_Def_03"   title="UDS10功能_拓展(10 03)" />
+        <capltestcase name="Case_10_Phy_Def_04"   title="UDS10功能_拓展_肯定响应抑制位" />
+        <capltestcase name="Case_10_Phy_Def_NRC"   title="UDS10功能_拓展(NRC优先级)" />
+        <capltestcase name="Case_10_Fun_Ex_42"   title="UDS10功能_拓展(NRC33)" />
+        <capltestcase name="Case_10_Fun_Ex_43"   title="UDS10功能_拓展(NRC22预编程)" />
+        <capltestcase name="Case_10_Phy_Def_08"   title="UDS10功能_拓展(NRC13)" />
+        <capltestcase name="Case_10_Phy_Def_09"   title="UDS10功能_拓展(NRC12)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS10功能_拓展(NRC22遍历_自动)" />
+      </testgroup>
+    </testgroup>
+    <testgroup title="NRC22(NRC22遍历_自动中包含车速/发动机/档位)">
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS10物理_默认(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS10物理_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS10功能_默认(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS10功能_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_10_CarSpd"   title="UDS10物理_默认(NRC22车速)" />
+      <capltestcase name="Case_10_Phy_Def_10_Ready"   title="UDS10物理_默认(NRC22发动机)" />
+      <capltestcase name="Case_10_Phy_Def_10_Battery"   title="UDS10物理_默认(NRC22电压)" />
+      <capltestcase name="Case_10_Phy_Def_10_Torque"   title="UDS10物理_默认(NRC22力矩)" />
+      <capltestcase name="Case_10_Phy_EX_21"   title="UDS10物理_拓展(NRC22车速)" />
+      <capltestcase name="Case_10_Phy_Def_10_Ready"   title="UDS10物理_拓展(NRC22发动机)" />
+      <capltestcase name="Case_10_Phy_Def_10_Battery"   title="UDS10物理_拓展(NRC22电压)" />
+      <capltestcase name="Case_10_Phy_Def_10_Torque"   title="UDS10物理_拓展(NRC22力矩)" />
+      <capltestcase name="Case_10_Phy_Def_10_CarSpd"   title="UDS10功能_默认(NRC22车速)" />
+      <capltestcase name="Case_10_Phy_Def_10_Ready"   title="UDS10功能_默认(NRC22发动机)" />
+      <capltestcase name="Case_10_Phy_Def_10_Battery"   title="UDS10功能_默认(NRC22电压)"/>
+      <capltestcase name="Case_10_Phy_Def_10_Torque"   title="UDS10功能_默认(NRC22力矩)" />
+      <capltestcase name="Case_10_Phy_EX_21"   title="UDS10功能_拓展(NRC22车速)" />
+      <capltestcase name="Case_10_Phy_Def_10_Ready"   title="UDS10功能_拓展(NRC22发动机)" />
+      <capltestcase name="Case_10_Phy_Def_10_Battery"   title="UDS10功能_拓展(NRC22电压)" />
+      <capltestcase name="Case_10_Phy_Def_10_Torque"   title="UDS10功能_拓展(NRC22力矩)" />
+      <capltestcase name="Case_10_Phy_Def_10_Geely3_0"   title="UDS10物理_默认(吉利3_0  NRC22)" />
+      <capltestcase name="Case_10_Phy_Def_10_Geely3_0"   title="UDS10物理_拓展(吉利3_0  NRC22)" />
+      <capltestcase name="Case_10_Phy_Def_10_Geely3_0"   title="UDS10功能_默认(吉利3_0  NRC22)" />
+      <capltestcase name="Case_10_Phy_Def_10_Geely3_0"   title="UDS10功能_拓展(吉利3_0  NRC22)" />
+    </testgroup>
+    <testgroup title="长安工厂模式测试">
+      <capltestcase name="Case_10_CCAG_Fac_Torque"   title="UDS10物理_拓展_退出工厂模式_力矩" />
+      <capltestcase name="Case_10_CCAG_Fac_Torque"   title="UDS10功能_拓展_退出工厂模式_力矩" />
+      <capltestcase name="Case_10_CCAG_Fac_Battery_In"   title="UDS10物理_拓展_进入工厂模式_电压" />
+      <capltestcase name="Case_10_CCAG_Fac_Battery_Out"   title="UDS10物理_拓展_退出工厂模式_电压" />
+      <capltestcase name="Case_10_CCAG_Fac_Battery_In"   title="UDS10功能_拓展_进入工厂模式_电压" />
+      <capltestcase name="Case_10_CCAG_Fac_Battery_Out"   title="UDS10功能_拓展_退出工厂模式_电压" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="10服务异常测试" variants="Serve_10 All">
+    <capltestcase name="Case_10_Phy_Def_47"   title="UDS10_1002自动退出诊断故障" />
+    <capltestcase name="Case_10_Phy_Def_48"   title="UDS10_1002会话切换诊断故障" />
+    <capltestcase name="Case_10_Phy_Def_49"   title="UDS10_1002复位诊断故障" />
+  </testgroup>
+
+  <testgroup title="11服务" variants="Serve_11 All">
+    <testgroup title="自动测试部分">
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_ServeNRC7F"   title="UDS11物理_默认(7F＞13)" /> 
+        <capltestcase name="Case_11_Phy_Def_01"   title="UDS11物理_默认(遍历支持的子功能)" /> 
+        <capltestcase name="Case_11_Phy_Def_02"   title="UDS11物理_默认(肯定响应抑制位)" /> 
+        <capltestcase name="Case_11_Phy_Def_03"   title="UDS11物理_默认(NRC12)" /> 
+        <capltestcase name="Case_11_Phy_Def_04"   title="UDS11物理_默认(NRC13)" /> 
+        <capltestcase name="Case_11_Phy_Def_07"   title="UDS11物理_默认(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS11物理_默认(NRC22遍历_自动)" />
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_11_Phy_Def_01"   title="UDS11物理_拓展(遍历支持的子功能)" /> 
+        <capltestcase name="Case_11_Phy_Def_02"   title="UDS11物理_拓展(肯定响应抑制位)" /> 
+        <capltestcase name="Case_11_Phy_Def_03"   title="UDS11物理_拓展(NRC12)" /> 
+        <capltestcase name="Case_11_Phy_Def_04"   title="UDS11物理_拓展(NRC13)" /> 
+        <capltestcase name="Case_11_Phy_Def_07"   title="UDS11物理_拓展(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS11物理_拓展(NRC22遍历_自动)" />
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_ServeNRC7F"   title="UDS11功能_默认(7F＞13)" /> 
+        <capltestcase name="Case_11_Phy_Def_01"   title="UDS11功能_默认(遍历支持的子功能)" /> 
+        <capltestcase name="Case_11_Phy_Def_02"   title="UDS11功能_默认(肯定响应抑制位)" /> 
+        <capltestcase name="Case_11_Phy_Def_03"   title="UDS11功能_默认(NRC12)" /> 
+        <capltestcase name="Case_11_Phy_Def_04"   title="UDS11功能_默认(NRC13)" /> 
+        <capltestcase name="Case_11_Phy_Def_07"   title="UDS11功能_默认(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS11功能_默认(NRC22遍历_自动)" />
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_11_Phy_Def_01"   title="UDS11功能_拓展(遍历支持的子功能)" /> 
+        <capltestcase name="Case_11_Phy_Def_02"   title="UDS11功能_拓展(肯定响应抑制位)" /> 
+        <capltestcase name="Case_11_Phy_Def_03"   title="UDS11功能_拓展(NRC12)" /> 
+        <capltestcase name="Case_11_Phy_Def_04"   title="UDS11功能_拓展(NRC13)" /> 
+        <capltestcase name="Case_11_Phy_Def_07"   title="UDS11功能_拓展(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS11功能_拓展(NRC22遍历_自动)" />
+      </testgroup>
+    </testgroup>
+    <testgroup title="NRC22(NRC22遍历_自动中包含车速/发动机/档位)">
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS11物理_默认(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS11物理_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS11功能_默认(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS11功能_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_11_Phy_Def_05"   title="UDS11物理_默认(NRC22_车速)" /> 
+      <capltestcase name="Case_11_Phy_Def_06"   title="UDS11物理_默认(NRC22_档位)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Ready"   title="UDS11物理_默认(NRC22_发动机)" /> 
+      <capltestcase name="Case_11_Phy_Def_05"   title="UDS11物理_拓展(NRC22_车速)" /> 
+      <capltestcase name="Case_11_Phy_Def_06"   title="UDS11物理_拓展(NRC22_档位)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Ready"   title="UDS11物理_拓展(NRC22_发动机)" /> 
+      <capltestcase name="Case_11_Phy_Def_05"   title="UDS11功能_默认(NRC22_车速)" /> 
+      <capltestcase name="Case_11_Phy_Def_06"   title="UDS11功能_默认(NRC22_档位)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Ready"   title="UDS11功能_默认(NRC22_发动机)" /> 
+      <capltestcase name="Case_11_Phy_Def_05"   title="UDS11功能_拓展(NRC22_车速)" /> 
+      <capltestcase name="Case_11_Phy_Def_06"   title="UDS11功能_拓展(NRC22_档位)" />  
+      <capltestcase name="Case_11_Phy_Def_06_Ready"   title="UDS11功能_拓展(NRC22_发动机)" />  
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Torque"   title="UDS11物理_默认(工厂模式_NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Battery"   title="UDS11物理_默认(工厂模式_NRC22_电压)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Torque"   title="UDS11物理_默认(NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Battery"   title="UDS11物理_默认(NRC22_电压)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Torque"   title="UDS11物理_拓展(工厂模式_NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Battery"   title="UDS11物理_拓展(工厂模式_NRC22_电压)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Torque"   title="UDS11物理_拓展(NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Battery"   title="UDS11物理_拓展(NRC22_电压)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Torque"   title="UDS11功能_默认(工厂模式_NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Battery"   title="UDS11功能_默认(工厂模式_NRC22_电压)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Torque"   title="UDS11功能_默认(NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Battery"   title="UDS11功能_默认(NRC22_电压)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Torque"   title="UDS11功能_拓展(工厂模式_NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Fac_Battery"   title="UDS11功能_拓展(工厂模式_NRC22_电压)" /> 
+      <capltestcase name="Case_11_Phy_Def_06_Torque"   title="UDS11功能_拓展(NRC22_力矩)" />
+      <capltestcase name="Case_11_Phy_Def_06_Battery"   title="UDS11功能_拓展(NRC22_电压)" />
+      <capltestcase name="Case_11_Phy_Def_08"   title="UDS11物理_默认(NRC22_Geely3.0)" /> 
+      <capltestcase name="Case_11_Phy_Def_08"   title="UDS11物理_拓展(NRC22_Geely3.0)" /> 
+      <capltestcase name="Case_11_Phy_Def_08"   title="UDS11功能_默认(NRC22_Geely3.0)" /> 
+      <capltestcase name="Case_11_Phy_Def_08"   title="UDS11功能_拓展(NRC22_Geely3.0)" /> 
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="14服务" variants="Serve_14 All">
+    <testgroup title="自动测试部分">
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_14_Phy_Def_01" title="UDS14物理_默认(FFFFFF)" />
+        <capltestcase name="Case_14_Phy_Def_02" title="UDS14物理_默认(NRC13)" />
+        <capltestcase name="Case_14_Phy_Def_05" title="UDS14物理_默认(NRC31)" />
+        <capltestcase name="Case_14_Phy_Def_03" title="UDS14物理_默认(清除指定DTC检测)" />
+        <capltestcase name="Case_14_Phy_Def_04" title="UDS14物理_默认(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS14物理_默认(NRC22遍历_自动)" />
+        <capltestcase name="Case_14_Phy_Def_07"   title="UDS14物理_默认(状态位20_27测试)" />
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_14_Phy_Def_01"   title="UDS14物理_拓展(FFFFFF)" />
+        <capltestcase name="Case_14_Phy_Def_02"   title="UDS14物理_拓展(NRC13)" />
+        <capltestcase name="Case_14_Phy_Def_05"   title="UDS14物理_拓展(NRC31)" />
+        <capltestcase name="Case_14_Phy_Def_03"   title="UDS14物理_拓展(清除指定DTC检测)" />
+        <capltestcase name="Case_14_Phy_Def_04"   title="UDS14物理_拓展(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS14物理_拓展(NRC22遍历_自动)" />
+        <capltestcase name="Case_14_Phy_Def_07"   title="UDS14物理_拓展(状态位20_27测试)" />
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_14_Phy_Def_01" title="UDS14功能_默认(FFFFFF)" />
+        <capltestcase name="Case_14_Phy_Def_02" title="UDS14功能_默认(NRC13)" />
+        <capltestcase name="Case_14_Phy_Def_05" title="UDS14功能_默认(NRC31)" />
+        <capltestcase name="Case_14_Phy_Def_03" title="UDS14功能_默认(清除指定DTC检测)" />
+        <capltestcase name="Case_14_Phy_Def_04" title="UDS14功能_默认(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS14功能_默认(NRC22遍历_自动)" />
+        <capltestcase name="Case_14_Phy_Def_07"   title="UDS14功能_默认(状态位20_27测试)" />
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_14_Phy_Def_01"   title="UDS14功能_拓展(FFFFFF)" />
+        <capltestcase name="Case_14_Phy_Def_02"   title="UDS14功能_拓展(NRC13)" />
+        <capltestcase name="Case_14_Phy_Def_05"   title="UDS14功能_拓展(NRC31)" />
+        <capltestcase name="Case_14_Phy_Def_03"   title="UDS14功能_拓展(清除指定DTC检测)" />
+        <capltestcase name="Case_14_Phy_Def_04"   title="UDS14功能_拓展(NRC优先级)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS14功能_拓展(NRC22遍历_自动)" />
+        <capltestcase name="Case_14_Phy_Def_07"   title="UDS14功能_拓展(状态位20_27测试)" />
+      </testgroup>
+    </testgroup>
+    <testgroup title="NRC22(NRC22遍历_自动中包含车速/发动机/档位)">
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS14物理_默认(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS14物理_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS14功能_默认(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS14功能_拓展(NRC22遍历_手动)" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="22服务" variants="Serve_22 All">
+    <testgroup title="遍历与异常写入">
+      <capltestcase name="Case_22_Phy_Def_40" title="UDS22物理寻址_默认(遍历填入的DID)"/>
+      <capltestcase name="Case_22_Phy_Def_40" title="UDS22物理寻址_拓展(遍历填入的DID)"/>
+      <capltestcase name="Case_22_Phy_Def_40" title="UDS22功能寻址_默认(遍历填入的DID)"/>
+      <capltestcase name="Case_22_Phy_Def_40" title="UDS22功能寻址_拓展(遍历填入的DID)"/>
+      <capltestcase name="Case_22_Phy_Ex_41" title="UDS22物理寻址_拓展(异常写入测试)"/>
+    </testgroup>
+    <testgroup title="物理_默认">
+      <capltestcase name="Case_22_Phy_Def_01" title="UDS22物理_默认(NRC优先级)"/>
+      <capltestcase name="Case_22_Phy_Def_02" title="UDS22物理_默认(NRC13)"/>
+      <capltestcase name="Case_22_Phy_Def_03" title="UDS22物理_默认(NRC31)"/>
+      <capltestcase name="Case_22_Phy_Def_04" title="UDS22物理_默认(一次性读多个DID)"/>
+      <capltestcase name="Case_22_Phy_Def_05" title="UDS22物理_默认(一次性读多个相同的DID)"/>
+      <capltestcase name="Case_22_Phy_Def_06" title="UDS22物理_默认(读取数据中含不支持DID)"/>
+      <capltestcase name="Case_22_Phy_Def_07" title="UDS22物理_默认(读取数据_其他项次)"/>
+    </testgroup>
+    <testgroup title="物理_拓展">
+      <capltestcase name="Case_22_Phy_Def_01" title="UDS22物理_拓展(NRC优先级)"/>
+      <capltestcase name="Case_22_Phy_Def_02" title="UDS22物理_拓展(NRC13)"/>
+      <capltestcase name="Case_22_Phy_Def_03" title="UDS22物理_拓展(NRC31)"/>
+      <capltestcase name="Case_22_Phy_Def_04" title="UDS22物理_拓展(一次性读多个DID)"/>
+      <capltestcase name="Case_22_Phy_Def_05" title="UDS22物理_拓展(一次性读多个相同的DID)"/>
+      <capltestcase name="Case_22_Phy_Def_06" title="UDS22物理_拓展(读取数据中含不支持DID)"/>
+      <capltestcase name="Case_22_Phy_Def_07" title="UDS22物理_拓展(读取数据_其他项次)"/>
+    </testgroup>
+    <testgroup title="功能_默认">
+      <capltestcase name="Case_22_Phy_Def_01" title="UDS22功能_默认(NRC优先级)"/>
+      <capltestcase name="Case_22_Phy_Def_02" title="UDS22功能_默认(NRC13)"/>
+      <capltestcase name="Case_22_Phy_Def_03" title="UDS22功能_默认(NRC31)"/>
+      <capltestcase name="Case_22_Phy_Def_04" title="UDS22功能_默认(一次性读多个DID)"/>
+      <capltestcase name="Case_22_Phy_Def_05" title="UDS22功能_默认(一次性读多个相同的DID)"/>
+      <capltestcase name="Case_22_Phy_Def_06" title="UDS22功能_默认(读取数据中含不支持DID)"/>
+      <capltestcase name="Case_22_Phy_Def_07" title="UDS22功能_默认(读取数据_其他项次)"/>
+    </testgroup>
+    <testgroup title="功能_拓展">
+      <capltestcase name="Case_22_Phy_Def_01" title="UDS22功能_拓展(NRC优先级)"/>
+      <capltestcase name="Case_22_Phy_Def_02" title="UDS22功能_拓展(NRC13)"/>
+      <capltestcase name="Case_22_Phy_Def_03" title="UDS22功能_拓展(NRC31)"/>
+      <capltestcase name="Case_22_Phy_Def_04" title="UDS22功能_拓展(一次性读多个DID)"/>
+      <capltestcase name="Case_22_Phy_Def_05" title="UDS22功能_拓展(一次性读多个相同的DID)"/>
+      <capltestcase name="Case_22_Phy_Def_06" title="UDS22功能_拓展(读取数据中含不支持DID)"/>
+      <capltestcase name="Case_22_Phy_Def_07" title="UDS22功能_拓展(读取数据_其他项次)"/>
+    </testgroup>
+    <testgroup title="Geely测试">
+        <capltestcase name="Case_FunDID_D01C_Geely" title="UDS22_DID_D01C"/>
+        <capltestcase name="Case_FunDID_D131_Geely" title="UDS22_DID_D131"/>
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_Phy_Def_FunDID_3012_Geely" title="UDS22物理_默认_DID_3012"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3017_Geely" title="UDS22物理_默认_DID_3017"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3302_Geely" title="UDS22物理_默认_DID_3302"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D134_Geely" title="UDS22物理_默认_DID_D134"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D900_Geely" title="UDS22物理_默认_DID_D900"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D901_Geely" title="UDS22物理_默认_DID_D901"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D902_Geely" title="UDS22物理_默认_DID_D902"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D904_Geely" title="UDS22物理_默认_DID_D904"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D908_Geely" title="UDS22物理_默认_DID_D908"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD00_Geely" title="UDS22物理_默认_DID_DD00"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD01_Geely" title="UDS22物理_默认_DID_DD01"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD02_Geely" title="UDS22物理_默认_DID_DD02"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD06_Geely" title="UDS22物理_默认_DID_DD06"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD07_Geely" title="UDS22物理_默认_DID_DD07"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0A_Geely" title="UDS22物理_默认_DID_DD0A"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0C_Geely" title="UDS22物理_默认_DID_DD0C"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AB_Geely" title="UDS22物理_默认_DID_21AB"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AC_Geely" title="UDS22物理_默认_DID_21AC"/>
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_Phy_Def_FunDID_3012_Geely" title="UDS22物理_拓展_DID_3012"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3017_Geely" title="UDS22物理_拓展_DID_3017"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3302_Geely" title="UDS22物理_拓展_DID_3302"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D134_Geely" title="UDS22物理_拓展_DID_D134"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D900_Geely" title="UDS22物理_拓展_DID_D900"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D901_Geely" title="UDS22物理_拓展_DID_D901"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D902_Geely" title="UDS22物理_拓展_DID_D902"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D904_Geely" title="UDS22物理_拓展_DID_D904"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D908_Geely" title="UDS22物理_拓展_DID_D908"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD00_Geely" title="UDS22物理_拓展_DID_DD00"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD01_Geely" title="UDS22物理_拓展_DID_DD01"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD02_Geely" title="UDS22物理_拓展_DID_DD02"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD06_Geely" title="UDS22物理_拓展_DID_DD06"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD07_Geely" title="UDS22物理_拓展_DID_DD07"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0A_Geely" title="UDS22物理_拓展_DID_DD0A"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0C_Geely" title="UDS22物理_拓展_DID_DD0C"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AB_Geely" title="UDS22物理_拓展_DID_21AB"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AC_Geely" title="UDS22物理_拓展_DID_21AC"/>
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_Phy_Def_FunDID_3012_Geely" title="UDS22功能_默认_DID_3012"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3017_Geely" title="UDS22功能_默认_DID_3017"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3302_Geely" title="UDS22功能_默认_DID_3302"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D134_Geely" title="UDS22功能_默认_DID_D134"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D900_Geely" title="UDS22功能_默认_DID_D900"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D901_Geely" title="UDS22功能_默认_DID_D901"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D902_Geely" title="UDS22功能_默认_DID_D902"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D904_Geely" title="UDS22功能_默认_DID_D904"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D908_Geely" title="UDS22功能_默认_DID_D908"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD00_Geely" title="UDS22功能_默认_DID_DD00"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD01_Geely" title="UDS22功能_默认_DID_DD01"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD02_Geely" title="UDS22功能_默认_DID_DD02"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD06_Geely" title="UDS22功能_默认_DID_DD06"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD07_Geely" title="UDS22功能_默认_DID_DD07"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0A_Geely" title="UDS22功能_默认_DID_DD0A"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0C_Geely" title="UDS22功能_默认_DID_DD0C"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AB_Geely" title="UDS22功能_默认_DID_21AB"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AC_Geely" title="UDS22功能_默认_DID_21AC"/>
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_Phy_Def_FunDID_3012_Geely" title="UDS22功能_拓展_DID_3012"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3017_Geely" title="UDS22功能_拓展_DID_3017"/>
+        <capltestcase name="Case_Phy_Def_FunDID_3302_Geely" title="UDS22功能_拓展_DID_3302"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D134_Geely" title="UDS22功能_拓展_DID_D134"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D900_Geely" title="UDS22功能_拓展_DID_D900"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D901_Geely" title="UDS22功能_拓展_DID_D901"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D902_Geely" title="UDS22功能_拓展_DID_D902"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D904_Geely" title="UDS22功能_拓展_DID_D904"/>
+        <capltestcase name="Case_Phy_Def_FunDID_D908_Geely" title="UDS22功能_拓展_DID_D908"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD00_Geely" title="UDS22功能_拓展_DID_DD00"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD01_Geely" title="UDS22功能_拓展_DID_DD01"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD02_Geely" title="UDS22功能_拓展_DID_DD02"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD06_Geely" title="UDS22功能_拓展_DID_DD06"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD07_Geely" title="UDS22功能_拓展_DID_DD07"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0A_Geely" title="UDS22功能_拓展_DID_DD0A"/>
+        <capltestcase name="Case_Phy_Def_FunDID_DD0C_Geely" title="UDS22功能_拓展_DID_DD0C"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AB_Geely" title="UDS22功能_拓展_DID_21AB"/>
+        <capltestcase name="Case_Phy_Def_FunDID_21AC_Geely" title="UDS22功能_拓展_DID_21AC"/>
+      </testgroup>
+
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="23服务" variants="Serve_23 All">
+      <capltestcase name="Case_23_Phy_Def_01"   title="UDS23物理_默认(7F＞13)" />
+      <capltestcase name="Case_23_Fun_Def_01"   title="UDS23功能_默认(7F＞13)" />
+      <capltestcase name="Case_23_Fun_Ex_01"   title="UDS23功能_拓展(7F＞13)" />
+      <capltestcase name="Case_23_Phy_Ex_02"   title="UDS23物理_拓展(肯定应答)" />
+      <capltestcase name="Case_23_Phy_Ex_03"   title="UDS23物理_拓展(NRC优先级)" />
+      <capltestcase name="Case_23_Phy_Ex_04"   title="UDS23物理_拓展(NRC13)" />
+      <capltestcase name="Case_23_Phy_Ex_05"   title="UDS23物理_拓展(NRC31地址和长度格式标识符)" />
+      <capltestcase name="Case_23_Phy_Ex_06"   title="UDS23物理_拓展(请求报文中地址内存无效)" />
+      <capltestcase name="Case_23_Phy_Ex_07"   title="UDS23物理_拓展(请求报文中地址内存被限制)" />
+      <capltestcase name="Case_23_Phy_Ex_08"   title="UDS23物理_拓展(请求报文中不支持的内存大小)" />
+      <capltestcase name="Case_23_Phy_Ex_09"   title="UDS23物理_拓展(请求报文中内存大小参数值为0)" />
+  </testgroup>
+
+  <testgroup title="27服务" variants="Serve_27 All">
+    <testgroup title="适用全主机厂">
+      <capltestcase name="Case_ServeNRC7F"   title="UDS27物理_默认(7F＞13)" />
+      <capltestcase name="Case_27_Phy_Ex_01"   title="UDS27物理_拓展(支持的子功能)" />
+      <capltestcase name="Case_27_Phy_Ex_33"   title="UDS27物理_拓展(肯定响应抑制位)" />
+      <capltestcase name="Case_27_Phy_Ex_34"   title="UDS27物理_拓展(肯定响应抑制位混合测试)" />
+      <capltestcase name="Case_27_Phy_Ex_02"   title="UDS27物理_拓展(解锁后计数器清零)" />
+      <capltestcase name="Case_27_Phy_Ex_05"   title="UDS27物理_拓展(已解锁状态_会话切换)" />
+      <capltestcase name="Case_27_Phy_Ex_28"   title="UDS27物理_拓展(已解锁状态-11重启_KL15)" />
+      <capltestcase name="Case_27_Phy_Ex_06"   title="UDS27物理_拓展(不正确的报文对错误计数影响测试)" />
+      <capltestcase name="Case_27_Phy_Ex_07"   title="UDS27物理_拓展(连续请求种子)" />
+      <capltestcase name="Case_27_Serve_07_"   title="UDS27物理_拓展(连续请求种子计数器累加(发完种子则计数器+1)_连续请求与中途打断)" />
+      <capltestcase name="Case_27_Phy_Ex_08"   title="UDS27物理_拓展(延时时间)" />
+      <capltestcase name="Case_27_Phy_Ex_10"   title="UDS27物理_拓展(延时时间届满-错误计数器处理)" />
+      <capltestcase name="Case_27_Phy_Ex_11"   title="UDS27物理_拓展(未解锁状态_会话切换)" />
+      <capltestcase name="Case_27_Phy_Ex_12"   title="UDS27物理_拓展(未解锁状态_上下电)" />
+      <capltestcase name="Case_27_Phy_Ex_17"   title="UDS27物理_拓展(未解锁状态-11重启)" />
+      <capltestcase name="Case_27_Phy_Ex_18"   title="UDS27物理_拓展(不连续请求种子验证重复率(种子随机))" />
+      <capltestcase name="Case_27_Phy_Ex_18_1"   title="UDS27物理_拓展(连续请求种子验证重复率(种子随机))" />
+      <capltestcase name="Case_27_Phy_Ex_18_2"   title="UDS27物理_拓展(多次过安全访问验证种子重复性)" />
+      <capltestcase name="Case_27_Phy_Ex_19"   title="UDS27物理_拓展(NRC优先级)" />
+      <capltestcase name="Case_27_Phy_Ex_21"   title="UDS27物理_拓展(NRC13)" />
+      <capltestcase name="Case_27_Phy_Ex_22"   title="UDS27物理_拓展(NRC12)" />
+      <capltestcase name="Case_27_Phy_Ex_23"   title="UDS27物理_拓展(NRC24)" />
+      <capltestcase name="Case_27_Phy_Ex_24"   title="UDS27物理_拓展(NRC22)" />
+      <capltestcase name="Case_27_Phy_Ex_25"   title="UDS27物理_拓展(AES_CBC请求顺序验证)" />
+      <capltestcase name="Case_27_Phy_Ex_29"   title="UDS27物理_拓展(长度不对的正确秘钥)" />
+      <capltestcase name="Case_27_Phy_Ex_30"   title="UDS27物理_拓展(子功能错误的秘钥正确)" />
+      <capltestcase name="Case_27_Fun_Def_01"   title="UDS27功能_默认(无响应)" />
+      <capltestcase name="Case_27_Fun_Def_01"   title="UDS27功能_拓展(无响应)" />
+     </testgroup>
+     <testgroup title="主机厂划分">
+      <capltestcase name="Case_27_Phy_Ex_35"   title="UDS27物理_拓展(吉利3.0未解锁状态-上下电及11复位)" />
+      <capltestcase name="Case_27_Phy_Ex_09"   title="UDS27物理_拓展(延时时间执行规则(赛力斯))" />
+      <capltestcase name="Case_27_Phy_Ex_13_1"   title="UDS27物理_拓展(云度下电对错误计数影响测试_错误计数器未满)" />
+      <capltestcase name="Case_27_Phy_Ex_13_2"   title="UDS27物理_拓展(云度下电对错误计数影响测试_错误计数器为1)" />
+      <capltestcase name="Case_27_Phy_Ex_14"   title="UDS27物理_拓展(云度下电对错误计数影响测试_过安全访问)" />
+      <capltestcase name="Case_27_Phy_Ex_15_1"   title="UDS27物理_拓展(云度重启对错误计数影响测试_安全计数器未满)" />
+      <capltestcase name="Case_27_Phy_Ex_15_2"   title="UDS27物理_拓展(云度重启对错误计数影响测试_安全计数器为1)" />
+      <capltestcase name="Case_27_Phy_Ex_16"   title="UDS27物理_拓展(云度重启对错误计数影响测试_过安全访问)" />
+      <capltestcase name="Case_27_Phy_Ex_13"   title="UDS27物理_拓展(云度下电对错误计数影响测试_错误计数器满)" />
+      <capltestcase name="Case_27_Phy_Ex_15"   title="UDS27物理_拓展(云度重启对错误计数影响测试_安全计数器满)" />
+     </testgroup>
+  </testgroup>
+
+  <testgroup title="28服务" variants="Serve_28 All">
+    <testgroup title="自动测试部分">
+      <testgroup title="物理寻址">
+        <capltestcase name="Case_ServeNRC7F"   title="UDS28物理_默认(7F＞13)" />
+        <capltestcase name="Case_28_Phy_Ex_1"   title="UDS28物理_拓展(禁收禁发)" />
+        <capltestcase name="Case_28_Phy_Ex_2"   title="UDS28物理_拓展(能收禁发)" />
+        <capltestcase name="Case_28_Phy_Ex_3"   title="UDS28物理_拓展(禁收能发)" />
+        <capltestcase name="Case_28_Phy_Ex_4"   title="UDS28物理_拓展(S3Timeout)" />
+        <capltestcase name="Case_28_Phy_Ex_5"   title="UDS28物理_拓展(会话切换)" />
+        <capltestcase name="Case_28_Phy_Ex_6"   title="UDS28物理_拓展(rest)" />
+        <capltestcase name="Case_28_Phy_Ex_7"   title="UDS28物理_拓展(正常上下电)" />
+        <capltestcase name="Case_28_Phy_Ex_8"   title="UDS28物理_拓展(NRC优先级)" />
+        <capltestcase name="Case_28_Phy_Ex_9"   title="UDS28物理_拓展(NRC13)" />
+        <capltestcase name="Case_28_Phy_Ex_10"   title="UDS28物理_拓展(NRC12)" />
+        <capltestcase name="Case_28_Phy_Ex_11"   title="UDS28物理_拓展(NRC31)" />
+        <capltestcase name="Case_28_Phy_Ex_19"   title="UDS28物理_拓展(禁止通讯后立即停发)" />
+        <capltestcase name="Case_28_Phy_Ex_20"   title="UDS28物理_拓展(异常断电后功能实现正常)" />
+        <capltestcase name="Case_28_Phy_Ex_22"   title="UDS28物理_拓展(静默时长)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS28物理_拓展(NRC22遍历_自动)" />
+      </testgroup>
+      <testgroup title="功能寻址">
+        <capltestcase name="Case_ServeNRC7F"   title="UDS28功能_默认(7F＞13)" />
+        <capltestcase name="Case_28_Phy_Ex_1"   title="UDS28功能_拓展(禁收禁发)" />
+        <capltestcase name="Case_28_Phy_Ex_2"   title="UDS28功能_拓展(能收禁发)" />
+        <capltestcase name="Case_28_Phy_Ex_3"   title="UDS28功能_拓展(禁收能发)" />
+        <capltestcase name="Case_28_Phy_Ex_4"   title="UDS28功能_拓展(S3Timeout)" />
+        <capltestcase name="Case_28_Phy_Ex_5"   title="UDS28功能_拓展(会话切换)" />
+        <capltestcase name="Case_28_Phy_Ex_6"   title="UDS28功能_拓展(rest)" />
+        <capltestcase name="Case_28_Phy_Ex_7"   title="UDS28功能_拓展(正常上下电)" />
+        <capltestcase name="Case_28_Phy_Ex_8"   title="UDS28功能_拓展(NRC优先级)" />
+        <capltestcase name="Case_28_Phy_Ex_9"   title="UDS28功能_拓展(NRC13)" />
+        <capltestcase name="Case_28_Phy_Ex_10"   title="UDS28功能_拓展(NRC12)" />
+        <capltestcase name="Case_28_Phy_Ex_11"   title="UDS28功能_拓展(NRC31)" />
+        <capltestcase name="Case_28_Phy_Ex_19"   title="UDS28功能_拓展(禁止通讯后立即停发)" />
+        <capltestcase name="Case_28_Phy_Ex_20"   title="UDS28功能_拓展(异常断电后功能实现正常)" />
+        <capltestcase name="Case_28_Phy_Ex_22"   title="UDS28功能_拓展(静默时长)" />
+        <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS28功能_拓展(NRC22遍历_自动)" />
+      </testgroup>
+    </testgroup>
+    <testgroup title="NRC22(NRC22遍历_自动中包含车速/发动机/档位)">
+      <capltestcase name="Case_28_Phy_Ex_16"   title="UDS28物理_拓展(车速-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_17"   title="UDS28物理_拓展(档位-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_18"   title="UDS28物理_拓展(发动机-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_16"   title="UDS28功能_拓展(车速-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_17"   title="UDS28功能_拓展(档位-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_18"   title="UDS28功能_拓展(发动机-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_12"   title="UDS28物理_拓展(长安工厂模式-力矩-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_13"   title="UDS28物理_拓展(长安工厂模式-电压-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_14"   title="UDS28物理_拓展(长安-力矩-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_15"   title="UDS28物理_拓展(长安-电压-NRC22)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS28物理_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_28_Phy_Ex_12"   title="UDS28功能_拓展(长安工厂模式-力矩-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_13"   title="UDS28功能_拓展(长安工厂模式-电压-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_14"   title="UDS28功能_拓展(长安-力矩-NRC22)" />
+      <capltestcase name="Case_28_Phy_Ex_15"   title="UDS28功能_拓展(长安-电压-NRC22)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS28功能_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_28_Phy_Ex_21"   title="UDS28物理_拓展(NRC22_Geely3.0)" />
+      <capltestcase name="Case_28_Phy_Ex_21"   title="UDS28功能_拓展(NRC22_Geely3.0)" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="2E服务" variants="Serve_2E All">
+    <testgroup title="自动测试部分">
+      <capltestcase name="Case_ServeNRC7F"   title="UDS2E物理_默认(7F＞13)" />
+      <capltestcase name="Case_2E_Phy_Ex_1"   title="UDS2E物理_拓展(遍历所有DID写入)" />
+      <capltestcase name="Case_2E_Phy_Ex_2"   title="UDS2E物理_拓展(零件号)" />
+      <capltestcase name="Case_2E_Phy_Ex_3"   title="UDS2E物理_拓展(优先级)" />
+      <capltestcase name="Case_2E_Phy_Ex_4"   title="UDS2E物理_拓展(NRC33)" />
+      <capltestcase name="Case_2E_Phy_Ex_5"   title="UDS2E物理_拓展(NRC13)" />
+      <capltestcase name="Case_2E_Phy_Ex_6"   title="UDS2E物理_拓展(NRC31)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS2E物理_拓展(NRC22遍历_自动)" />
+      <capltestcase name="Case_2E_Phy_Def_1"   title="UDS2E功能_默认(无响应)" />
+      <capltestcase name="Case_2E_Phy_Def_1"   title="UDS2E功能_拓展(无响应)" />
+    </testgroup>
+    <testgroup title="NRC22(NRC22遍历_自动中包含车速/发动机/档位)">
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS2E物理_拓展(NRC22遍历_手动)" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="31服务" variants="Serve_31 All">
+     <testgroup title="自动测试部分">
+        <!-- <capltestcase name="Case_31_Phy_Def_01"   title="UDS31物理_默认(7F＞13)" /> -->
+        <capltestcase name="Case_ServeNRC7F"   title="UDS31物理_默认(7F＞13)" />
+        <capltestcase name="Case_31_Phy_Def_00"   title="UDS31物理_拓展(遍历所有支持RID)" />
+        <capltestcase name="Case_31_Phy_Def_29"   title="UDS31物理_拓展(NRC12)" />
+        <capltestcase name="Case_31_Phy_Def_30"   title="UDS31物理_拓展(NRC13)" />
+        <capltestcase name="Case_31_Phy_Def_31"   title="UDS31物理_拓展(NRC31_RID无效)" />
+        <capltestcase name="Case_31_Phy_Def_31_"   title="UDS31物理_拓展(NRC31_控制选项无效)" />
+        <capltestcase name="Case_31_Phy_Def_33"   title="UDS31物理_拓展(NRC33)" />
+        <capltestcase name="Case_31_Phy_Def_41_NRC"   title="UDS31物理_拓展(NRC优先级)" />
+        <capltestcase name="Case_31_Phy_Def_LoopNRC22_Au"   title="UDS31物理_拓展(NRC22遍历_自动)" />
+        <capltestcase name="Case_31_Phy_Def_01"   title="UDS31功能_默认(7F＞13)" />
+        <capltestcase name="Case_31_Phy_Def_01"   title="UDS31功能_拓展(7F＞13)" />
+     </testgroup>
+     <testgroup title="手动测试部分">
+        <capltestcase name="Case_31_Phy_Ex_NRC_Special"   title="UDS31物理_拓展(特殊优先级测试)" />
+        <capltestcase name="Case_31_Phy_Ex_41_Ready"   title="UDS31物理_拓展(NRC22_发动机)" />
+        <capltestcase name="Case_31_Phy_Ex_33_1"   title="UDS31物理_拓展(NRC33_清除对中_手动)" />
+        <capltestcase name="Case_31_Phy_Ex_33_2"   title="UDS31物理_拓展(NRC33_对中_手动)" />
+        <capltestcase name="Case_31_Phy_Def_LoopNRC22_"   title="UDS31物理_默认(NRC22遍历_手动)" />
+        <capltestcase name="Case_31_Phy_Def_LoopNRC22_"   title="UDS31物理_拓展(NRC22遍历_手动)" />
+        <capltestcase name="Case_31_Phy_Def_LoopNRC22_"   title="UDS31功能_默认(NRC22遍历_手动)" />
+        <capltestcase name="Case_31_Phy_Def_LoopNRC22_"   title="UDS31功能_拓展(NRC22遍历_手动)" />
+     </testgroup>
+     <testgroup title="Geely3.0及以上平台">
+        <testgroup title="物理_默认">
+            <capltestcase name="Case_31_Phy_Def_00"   title="UDS31物理_默认(遍历所有支持RID)" />
+            <capltestcase name="Case_31_Phy_Def_29"   title="UDS31物理_默认(NRC12)" />
+            <capltestcase name="Case_31_Phy_Def_30"   title="UDS31物理_默认(NRC13)" />
+            <!-- <capltestcase name="Case_31_Phy_Def_31"   title="UDS31物理_默认(NRC31_RID无效)" />
+            <capltestcase name="Case_31_Phy_Def_31_"   title="UDS31物理_默认(NRC31_控制选项无效)" /> -->
+            <capltestcase name="Case_31_Phy_Def_33"   title="UDS31物理_默认(NRC33)" />
+            <capltestcase name="Case_31_Phy_Def_41_NRC"   title="UDS31物理_默认(NRC优先级)" />
+            <capltestcase name="Case_31_Phy_Def_LoopNRC22_Au"   title="UDS31物理_默认(NRC22遍历_自动)" />
+            <capltestcase name="Case_31_Phy_Def_45"   title="UDS31物理_默认(更新条件检查02 06)" />
+            <capltestcase name="Case_31_Phy_Def_46"   title="UDS31物理_默认(正常情况下对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_1"   title="UDS31物理_默认(S信号异常对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_2"   title="UDS31物理_默认(角度超范围对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_3"   title="UDS31物理_默认(扭矩超范围)" />
+            <capltestcase name="Case_31_Phy_Def_46_4"   title="UDS31物理_默认(NVM等待中对中)" />
+            <!-- <capltestcase name="Case_31_Phy_Def_47"   title="UDS31物理_默认(清除对中)" />
+            <capltestcase name="Case_31_Phy_Def_48"   title="UDS31物理_默认(对中与清除对中)" />
+            <capltestcase name="Case_31_Phy_Def_49"   title="UDS31物理_默认(角度中位自学习关闭)" />
+            <capltestcase name="Case_31_Phy_Def_49_1"   title="UDS31物理_默认(角度中位自学习开启)" />
+            <capltestcase name="Case_31_Phy_Def_49_2"   title="UDS31物理_默认(3082功能测试)" />
+            <capltestcase name="Case_31_Phy_Def_50"   title="UDS31物理_默认(30 83清除PDC)" />
+            <capltestcase name="Case_31_Phy_Def_51"   title="UDS31物理_默认(30 8B重置PSCM转向角度学习)" />
+            <capltestcase name="Case_31_Phy_Def_52"   title="UDS31物理_默认(30 88重置末端学习)" />
+            <capltestcase name="Case_31_Phy_Def_53"   title="UDS31物理_默认(肯定响应抑制位)" /> -->
+        </testgroup>
+        <testgroup title="物理_拓展">
+            <capltestcase name="Case_31_Phy_Def_00"   title="UDS31物理_拓展(遍历所有支持RID)" />
+            <capltestcase name="Case_31_Phy_Def_29"   title="UDS31物理_拓展(NRC12)" />
+            <capltestcase name="Case_31_Phy_Def_30"   title="UDS31物理_拓展(NRC13)" />
+            <capltestcase name="Case_31_Phy_Def_31"   title="UDS31物理_拓展(NRC31_RID无效)" />
+            <capltestcase name="Case_31_Phy_Def_31_"   title="UDS31物理_拓展(NRC31_控制选项无效)" />
+            <capltestcase name="Case_31_Phy_Def_33"   title="UDS31物理_拓展(NRC33)" />
+            <capltestcase name="Case_31_Phy_Def_41_NRC"   title="UDS31物理_拓展(NRC优先级)" />
+            <capltestcase name="Case_31_Phy_Def_LoopNRC22_Au"   title="UDS31物理_拓展(NRC22遍历_自动)" />
+            <capltestcase name="Case_31_Phy_Def_45"   title="UDS31物理_拓展(更新条件检查02 06)" />
+            <capltestcase name="Case_31_Phy_Def_46"   title="UDS31物理_拓展(正常情况下对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_1"   title="UDS31物理_拓展(S信号异常对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_2"   title="UDS31物理_拓展(角度超范围对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_3"   title="UDS31物理_拓展(扭矩超范围)" />
+            <capltestcase name="Case_31_Phy_Def_46_4"   title="UDS31物理_拓展(NVM等待中对中)" />
+            <capltestcase name="Case_31_Phy_Def_47"   title="UDS31物理_拓展(清除对中)" />
+            <capltestcase name="Case_31_Phy_Def_49"   title="UDS31物理_拓展(角度中位自学习开关)" />
+            <capltestcase name="Case_31_Phy_Def_50"   title="UDS31物理_拓展(30 83清除PDC)" />
+            <capltestcase name="Case_31_Phy_Def_51"   title="UDS31物理_拓展(30 8B重置PSCM转向角度学习)" />
+            <capltestcase name="Case_31_Phy_Def_52"   title="UDS31物理_拓展(30 88重置末端学习)" />
+            <capltestcase name="Case_31_Phy_Def_53"   title="UDS31物理_拓展(肯定响应抑制位)" />
+        </testgroup>
+        <testgroup title="功能_默认">
+            <capltestcase name="Case_31_Phy_Def_00"   title="UDS31功能_默认(遍历所有支持RID)" />
+            <capltestcase name="Case_31_Phy_Def_29"   title="UDS31功能_默认(NRC12)" />
+            <capltestcase name="Case_31_Phy_Def_30"   title="UDS31功能_默认(NRC13)" />
+            <!-- <capltestcase name="Case_31_Fun_Def_31"   title="UDS31功能_默认(NRC31_RID无效)" />
+            <capltestcase name="Case_31_Fun_Def_31_"   title="UDS31功能_默认(NRC31_控制选项无效)" /> -->
+            <capltestcase name="Case_31_Phy_Def_33"   title="UDS31功能_默认(NRC33)" />
+            <capltestcase name="Case_31_Phy_Def_41_NRC"   title="UDS31功能_默认(NRC优先级)" />
+            <capltestcase name="Case_31_Phy_Def_LoopNRC22_Au"   title="UDS31功能_默认(NRC22遍历_自动)" />
+            <capltestcase name="Case_31_Phy_Def_45"   title="UDS31功能_默认(更新条件检查02 06)" />
+            <capltestcase name="Case_31_Phy_Def_46"   title="UDS31功能_默认(正常情况下对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_1"   title="UDS31功能_默认(S信号异常对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_2"   title="UDS31功能_默认(角度超范围对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_3"   title="UDS31功能_默认(扭矩超范围)" />
+            <capltestcase name="Case_31_Phy_Def_46_4"   title="UDS31功能_默认(NVM等待中对中)" />
+            <!-- <capltestcase name="Case_31_Fun_Def_47"   title="UDS31功能_默认(清除对中)" />
+            <capltestcase name="Case_31_Fun_Def_48"   title="UDS31功能_默认(对中与清除对中)" />
+            <capltestcase name="Case_31_Fun_Def_49"   title="UDS31功能_默认(角度中位自学习关闭)" />
+            <capltestcase name="Case_31_Fun_Def_49_1"   title="UDS31功能_默认(角度中位自学习开启)" />
+            <capltestcase name="Case_31_Fun_Def_49_2"   title="UDS31功能_默认(3082功能测试)" />
+            <capltestcase name="Case_31_Fun_Def_50"   title="UDS31功能_默认(30 83清除PDC)" />
+            <capltestcase name="Case_31_Fun_Def_51"   title="UDS31功能_默认(30 8B重置PSCM转向角度学习)" />
+            <capltestcase name="Case_31_Fun_Def_52"   title="UDS31功能_默认(30 88重置末端学习)" />
+            <capltestcase name="Case_31_Fun_Def_53"   title="UDS31功能_默认(肯定响应抑制位)" /> -->
+        </testgroup>
+        <testgroup title="功能_拓展">
+            <capltestcase name="Case_31_Phy_Def_00"   title="UDS31功能_拓展(遍历所有支持RID)" />
+            <capltestcase name="Case_31_Phy_Def_29"   title="UDS31功能_拓展(NRC12)" />
+            <capltestcase name="Case_31_Phy_Def_30"   title="UDS31功能_拓展(NRC13)" />
+            <capltestcase name="Case_31_Phy_Def_31"   title="UDS31功能_拓展(NRC31_RID无效)" />
+            <capltestcase name="Case_31_Phy_Def_31_"   title="UDS31功能_拓展(NRC31_控制选项无效)" />
+            <capltestcase name="Case_31_Phy_Def_33"   title="UDS31功能_拓展(NRC33)" />
+            <capltestcase name="Case_31_Phy_Def_41_NRC"   title="UDS31功能_拓展(NRC优先级)" />
+            <capltestcase name="Case_31_Phy_Def_LoopNRC22_Au"   title="UDS31功能_拓展(NRC22遍历_自动)" />
+            <capltestcase name="Case_31_Phy_Def_45"   title="UDS31功能_拓展(更新条件检查02 06)" />
+            <capltestcase name="Case_31_Phy_Def_46"   title="UDS31功能_拓展(正常情况下对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_1"   title="UDS31功能_拓展(S信号异常对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_2"   title="UDS31功能_拓展(角度超范围对中)" />
+            <capltestcase name="Case_31_Phy_Def_46_3"   title="UDS31功能_拓展(扭矩超范围)" />
+            <capltestcase name="Case_31_Phy_Def_46_4"   title="UDS31功能_拓展(NVM等待中对中)" />
+            <capltestcase name="Case_31_Phy_Def_47"   title="UDS31功能_拓展(清除对中)" />
+            <capltestcase name="Case_31_Phy_Def_49"   title="UDS31功能_拓展(角度中位自学习开关)" />
+            <capltestcase name="Case_31_Phy_Def_50"   title="UDS31功能_拓展(30 83清除PDC)" />
+            <capltestcase name="Case_31_Phy_Def_51"   title="UDS31功能_拓展(30 8B重置PSCM转向角度学习)" />
+            <capltestcase name="Case_31_Phy_Def_52"   title="UDS31功能_拓展(30 88重置末端学习)" />
+            <capltestcase name="Case_31_Phy_Def_53"   title="UDS31功能_拓展(肯定响应抑制位)" />
+        </testgroup>
+
+     </testgroup>
+     <testgroup title="31服务_细分" >
+        <capltestcase name="Case_31_Serve_44_VX11"   title="UDS31物理_拓展(特殊优先级处理Geely1.0)" />
+        <capltestcase name="Case_31_Phy_Ex_01"   title="UDS31物理_拓展(预编程)" />
+        <capltestcase name="Case_31_Phy_Ex_02_CCAG"   title="UDS31物理_拓展(长安清除角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_03_CCAG"   title="UDS31物理_拓展(长安角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_04_BYD"   title="UDS31物理_拓展(BYD角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_05_BYD"   title="UDS31物理_拓展(BYD清除角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_06_BYD"   title="UDS31物理_拓展(BYD清除软止点)" />
+        <capltestcase name="Case_31_Phy_Ex_07_BYD"   title="UDS31物理_拓展(BYD清除偏移角度)" />
+        <capltestcase name="Case_31_Phy_Ex_08_BYD"   title="UDS31物理_拓展(BYD清除PDC)" />
+        <capltestcase name="Case_31_Phy_Ex_09_BYD"   title="UDS31物理_拓展(BYD功能开关)" />
+        <capltestcase name="Case_31_Phy_Ex_10_YunDu"   title="UDS31物理_拓展(YunDu角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_11_YunDu"   title="UDS31物理_拓展(YunDu清除对中)" />
+        <capltestcase name="Case_31_Phy_Ex_12_YunDu"   title="UDS31物理_拓展(YunDu检查标定状态)" />
+        <capltestcase name="Case_31_Phy_Ex_13_DongFeng"   title="UDS31物理_拓展(DongFeng角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_14_JAC"   title="UDS31物理_拓展(江淮角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_15_JAC"   title="UDS31物理_拓展(江淮清除对中)" />
+        <capltestcase name="Case_31_Phy_Ex_16_JAC"   title="UDS31物理_拓展(江淮检查标定状态_角度无效)" />
+        <capltestcase name="Case_31_Phy_Ex_17_JAC"   title="UDS31物理_拓展(江淮检查标定状态_电压限制)" />
+        <capltestcase name="Case_31_Phy_Ex_18_JAC"   title="UDS31物理_拓展(江淮检查标定状态_车速限制)" />
+        <capltestcase name="Case_31_Phy_Ex_19_JAC"   title="UDS31物理_拓展(江淮检查标定状态_扭矩限制)" />
+        <capltestcase name="Case_31_Phy_Ex_20_JAC"   title="UDS31物理_拓展(江淮检查标定状态_转速限制)" />
+        <capltestcase name="Case_31_Phy_Ex_21_Chery"   title="UDS31物理_拓展(奇瑞角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_22_Chery"   title="UDS31物理_拓展(奇瑞A＋B≠0)" />
+        <capltestcase name="Case_31_Phy_Ex_23_Chery"   title="UDS31物理_拓展(奇瑞X3=1)" />
+        <capltestcase name="Case_31_Phy_Ex_24_Chery"   title="UDS31物理_拓展(奇瑞A＋B≠0且X3=1)" />
+        <capltestcase name="Case_31_Phy_Ex_25_RC"   title="UDS31物理_拓展(瑞驰角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_26_RC"   title="UDS31物理_拓展(瑞驰清除角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_27_SGMW"   title="UDS31物理_拓展(五菱角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_28_SRM"   title="UDS31物理_拓展(鑫源角度对中)" />
+        <capltestcase name="Case_31_Phy_Ex_32_SGMW"   title="UDS31物理_拓展(五菱NRC22)" />
+        <capltestcase name="Case_31_Phy_Ex_34_CCAG"   title="UDS31物理_拓展(长安工厂模式下力矩导致回NRC22)" />
+        <capltestcase name="Case_31_Phy_Ex_35_CCAG"   title="UDS31物理_拓展(长安工厂模式下电压导致回NRC22)" />
+        <capltestcase name="Case_31_Phy_Ex_36_CCAG"   title="UDS31物理_拓展(长安非工厂模式下力矩导致回NRC22)" />
+        <capltestcase name="Case_31_Phy_Ex_37_CCAG"   title="UDS31物理_拓展(长安非工厂模式下电压导致回NRC22)" />
+        <capltestcase name="Case_31_Phy_Ex_38_CCAG"   title="UDS31物理_拓展(长安车速过大导致回NRC22)" />
+        <capltestcase name="Case_31_Phy_Ex_39_CCAG"   title="UDS31物理_拓展(长安车速无效)" />
+        <capltestcase name="Case_31_Phy_Ex_40_Chery"   title="UDS31物理_拓展(奇瑞NRC优先级)" />
+        <capltestcase name="Case_31_Phy_Ex_40_YunDU"   title="UDS31物理_拓展(云度NRC优先级)" />
+     </testgroup>
+  </testgroup>
+
+  <testgroup title="3E服务" variants="Serve_3E All">
+    <testgroup title="物理_默认">
+      <capltestcase name="Case_3E_Phy_Def_1"   title="UDS3E物理_默认(3E 00)" />
+      <capltestcase name="Case_3E_Phy_Def_2"   title="UDS3E物理_默认(3E 80)" />
+      <capltestcase name="Case_3E_Phy_Def_3"   title="UDS3E物理_默认(NRC优先级)" />
+      <capltestcase name="Case_3E_Phy_Def_4"   title="UDS3E物理_默认(NRC13)" />
+      <capltestcase name="Case_3E_Phy_Def_5"   title="UDS3E物理_默认(NRC12)" />
+    </testgroup>
+    <testgroup title="物理_拓展">
+      <capltestcase name="Case_3E_Phy_Ex_1"   title="UDS3E物理_拓展(3E 00)" />
+      <capltestcase name="Case_3E_Phy_Ex_2"   title="UDS3E物理_拓展(3E 80)" />
+      <capltestcase name="Case_3E_Phy_Def_3"   title="UDS3E物理_拓展(NRC优先级)" />
+      <capltestcase name="Case_3E_Phy_Def_4"   title="UDS3E物理_拓展(NRC13)" />
+      <capltestcase name="Case_3E_Phy_Def_5"   title="UDS3E物理_拓展(NRC12)" />
+    </testgroup>
+    <testgroup title="功能_默认">
+      <capltestcase name="Case_3E_Phy_Def_1"   title="UDS3E功能_默认(3E 00)" />
+      <capltestcase name="Case_3E_Phy_Def_2"   title="UDS3E功能_默认(3E 80)" />
+      <capltestcase name="Case_3E_Phy_Def_3"   title="UDS3E功能_默认(NRC优先级)" />
+      <capltestcase name="Case_3E_Phy_Def_4"   title="UDS3E功能_默认(NRC13)" />
+      <capltestcase name="Case_3E_Phy_Def_5"   title="UDS3E功能_默认(NRC12)" />
+    </testgroup>
+    <testgroup title="功能_拓展">
+      <capltestcase name="Case_3E_Phy_Ex_1"   title="UDS3E功能_拓展(3E 00)" />
+      <capltestcase name="Case_3E_Phy_Ex_2"   title="UDS3E功能_拓展(3E 80)" />
+      <capltestcase name="Case_3E_Phy_Def_3"   title="UDS3E功能_拓展(NRC优先级)" />
+      <capltestcase name="Case_3E_Phy_Def_4"   title="UDS3E功能_拓展(NRC13)" />
+      <capltestcase name="Case_3E_Phy_Def_5"   title="UDS3E功能_拓展(NRC12)" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="85服务" variants="Serve_85 All">
+    <testgroup title="物理寻址">
+      <capltestcase name="Case_ServeNRC7F"   title="UDS85物理_默认(7F＞13)" />
+      <capltestcase name="Case_85_Phy_Ex_1"   title="UDS85物理_拓展(85 01或02)" />
+      <capltestcase name="Case_85_Phy_Ex_2"   title="UDS85物理_拓展(85 81或82)" />
+      <capltestcase name="Case_85_Phy_Ex_3"   title="UDS85物理_拓展(S3Timeout)" />
+      <capltestcase name="Case_85_Phy_Ex_4"   title="UDS85物理_拓展(会话切换)" />
+      <capltestcase name="Case_85_Phy_Ex_5"   title="UDS85物理_拓展(11重置)" />
+      <capltestcase name="Case_85_Phy_Ex_6"   title="UDS85物理_拓展(上下电)" />
+      <capltestcase name="Case_85_Phy_Ex_7"   title="UDS85物理_拓展(NRC优先级)" />
+      <capltestcase name="Case_85_Phy_Ex_10"   title="UDS85物理_拓展(NRC13)" />
+      <capltestcase name="Case_85_Phy_Ex_11"   title="UDS85物理_拓展(NRC12)" />
+      <capltestcase name="Case_85_Phy_Ex_13"   title="UDS85物理_拓展(85服务禁止后清除当前故障后无当前故障)" />
+      <capltestcase name="Case_85_Phy_Ex_14"   title="UDS85物理_拓展(85服务异常断电后功能实现正常)" />
+      <capltestcase name="Case_85_Phy_Ex_15"   title="UDS85物理_拓展(85服务禁止和启用时故障码的检测)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS85物理_拓展(NRC22遍历_自动)" />
+    </testgroup>
+    <testgroup title="功能寻址">
+      <capltestcase name="Case_ServeNRC7F"   title="UDS85功能_默认(7F＞13)" />
+      <capltestcase name="Case_85_Phy_Ex_1"   title="UDS85功能_拓展(85 01或02)" />
+      <capltestcase name="Case_85_Phy_Ex_2"   title="UDS85功能_拓展(85 81或82)" />
+      <capltestcase name="Case_85_Phy_Ex_3"   title="UDS85功能_拓展(S3Timeout)" />
+      <capltestcase name="Case_85_Phy_Ex_4"   title="UDS85功能_拓展(会话切换)" />
+      <capltestcase name="Case_85_Phy_Ex_5"   title="UDS85功能_拓展(11重置)" />
+      <capltestcase name="Case_85_Phy_Ex_6"   title="UDS85功能_拓展(上下电)" />
+      <capltestcase name="Case_85_Phy_Ex_7"   title="UDS85功能_拓展(NRC优先级)" />
+      <capltestcase name="Case_85_Phy_Ex_10"   title="UDS85功能_拓展(NRC13)" />
+      <capltestcase name="Case_85_Phy_Ex_11"   title="UDS85功能_拓展(NRC12)" />
+      <capltestcase name="Case_85_Phy_Ex_13"   title="UDS85功能_拓展(85服务禁止后清除当前故障后无当前故障)" />
+      <capltestcase name="Case_85_Phy_Ex_14"   title="UDS85功能_拓展(85服务异常断电后功能实现正常)" />
+      <capltestcase name="Case_85_Phy_Ex_15"   title="UDS85功能_拓展(85服务禁止和启用时故障码的检测)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_Au"   title="UDS85功能_拓展(NRC22遍历_自动)" />
+    </testgroup>
+    <testgroup title="NRC22(NRC22遍历_自动中包含车速/发动机/档位)">
+      <capltestcase name="Case_85_Phy_Ex_9"   title="UDS85物理_拓展(Geely3.0_NRC22)" />
+      <capltestcase name="Case_85_Phy_Ex_9"   title="UDS85功能_拓展(Geely3.0_NRC22)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS85物理_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_10_Phy_Def_LoopNRC22_"   title="UDS85功能_拓展(NRC22遍历_手动)" />
+      <capltestcase name="Case_85_Phy_Ex_8_CarSpd"   title="UDS85物理_拓展(NRC22_车速)" />
+      <capltestcase name="Case_85_Phy_Ex_8_Ready"   title="UDS85物理_拓展(NRC22_发动机)" />
+      <capltestcase name="Case_85_Phy_Ex_8_CarSpd"   title="UDS85功能_拓展(NRC22_车速)" />
+      <capltestcase name="Case_85_Phy_Ex_8_Ready"   title="UDS85功能_拓展(NRC22_发动机)" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="19服务" variants="Serve_19 All">
+    <testgroup title="物理_默认">
+      <capltestcase name="Case_19_Phy_Def_01"   title="UDS19_物理_默认_19_01" />
+      <capltestcase name="Case_19_Phy_Def_02"   title="UDS19_物理_默认_19_02" />
+      <capltestcase name="Case_19_Phy_Def_02_1"   title="UDS19_物理_默认_19_02_上下电读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_2"   title="UDS19_物理_默认_19_02_11复位读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_3"   title="UDS19_物理_默认_19_02_支持的Bit位测试(08_09_FF)" />
+      <capltestcase name="Case_19_Phy_Def_04"   title="UDS19_物理_默认_19_04" />
+      <capltestcase name="Case_19_Phy_Def_05"   title="UDS19_物理_默认_19_04单个快照信息" />
+      <capltestcase name="Case_19_Phy_Def_06"   title="UDS19_物理_默认_19_06" />
+      <capltestcase name="Case_19_Phy_Def_07"   title="UDS19_物理_默认_故障发生计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_08"   title="UDS19_物理_默认_故障发生计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_09"   title="UDS19_物理_默认_老化计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_10"   title="UDS19_物理_默认_老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_11"   title="UDS19_物理_默认_已老化计数器更新机制(时间较长)" />
+      <capltestcase name="Case_19_Phy_Def_12"   title="UDS19_物理_默认_已老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_13"   title="UDS19_物理_默认_故障发生时间" />
+      <capltestcase name="Case_19_Phy_Def_14"   title="UDS19_物理_默认_19_0A" />
+      <capltestcase name="Case_19_Phy_Def_15"   title="UDS19_物理_默认_SuppressBit" />
+      <capltestcase name="Case_19_Phy_Def_16"   title="UDS19_物理_默认_NRC12" />
+      <capltestcase name="Case_19_Phy_Def_17"   title="UDS19_物理_默认_NRC13" />
+      <capltestcase name="Case_19_Phy_Def_18"   title="UDS19_物理_默认_NRC31" />
+      <capltestcase name="Case_19_Phy_Def_19"   title="UDS19_物理_默认_19_01_02" />
+      <capltestcase name="Case_19_Phy_Def_20"   title="UDS19_物理_默认_NRC优先级" />
+      <capltestcase name="Case_19_Phy_Def_21_"   title="UDS19_物理_默认_故障老化验证" />
+    </testgroup>
+    <testgroup title="物理_拓展"> 
+      <capltestcase name="Case_19_Phy_Def_01"   title="UDS19_物理_拓展_19_01" />
+      <capltestcase name="Case_19_Phy_Def_02"   title="UDS19_物理_拓展_19_02" />
+      <capltestcase name="Case_19_Phy_Def_02_1"   title="UDS19_物理_拓展_19_02_上下电读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_2"   title="UDS19_物理_拓展_19_02_11复位读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_3"   title="UDS19_物理_拓展_19_02_支持的Bit位测试(08_09_FF)" />
+      <capltestcase name="Case_19_Phy_Def_04"   title="UDS19_物理_拓展_19_04" />
+      <capltestcase name="Case_19_Phy_Def_05"   title="UDS19_物理_拓展_19_04单个快照信息" />
+      <capltestcase name="Case_19_Phy_Def_06"   title="UDS19_物理_拓展_19_06" />
+      <capltestcase name="Case_19_Phy_Def_07"   title="UDS19_物理_拓展_故障发生计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_08"   title="UDS19_物理_拓展_故障发生计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_09"   title="UDS19_物理_拓展_老化计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_10"   title="UDS19_物理_拓展_老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_11"   title="UDS19_物理_拓展_已老化计数器更新机制(时间较长)" />
+      <capltestcase name="Case_19_Phy_Def_12"   title="UDS19_物理_拓展_已老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_13"   title="UDS19_物理_拓展_故障发生时间" />
+      <capltestcase name="Case_19_Phy_Def_14"   title="UDS19_物理_拓展_19_0A" />
+      <capltestcase name="Case_19_Phy_Def_15"   title="UDS19_物理_拓展_SuppressBit" />
+      <capltestcase name="Case_19_Phy_Def_16"   title="UDS19_物理_拓展_NRC12" />
+      <capltestcase name="Case_19_Phy_Def_17"   title="UDS19_物理_拓展_NRC13" />
+      <capltestcase name="Case_19_Phy_Def_18"   title="UDS19_物理_拓展_NRC31" />
+      <capltestcase name="Case_19_Phy_Def_19"   title="UDS19_物理_拓展_19_01_02" />
+      <capltestcase name="Case_19_Phy_Def_20"   title="UDS19_物理_拓展_NRC优先级" />
+      <capltestcase name="Case_19_Phy_Def_21_"   title="UDS19_物理_拓展_故障老化验证" />
+    </testgroup>
+    <testgroup title="功能_默认">
+      <capltestcase name="Case_19_Phy_Def_01"   title="UDS19_功能_默认_19_01" />
+      <capltestcase name="Case_19_Phy_Def_02"   title="UDS19_功能_默认_19_02" />
+      <capltestcase name="Case_19_Phy_Def_02_1"   title="UDS19_功能_默认_19_02_上下电读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_2"   title="UDS19_功能_默认_19_02_11复位读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_3"   title="UDS19_功能_默认_19_02_支持的Bit位测试(08_09_FF)" />
+      <capltestcase name="Case_19_Phy_Def_04"   title="UDS19_功能_默认_19_04" />
+      <capltestcase name="Case_19_Phy_Def_05"   title="UDS19_功能_默认_19_04单个快照信息" />
+      <capltestcase name="Case_19_Phy_Def_06"   title="UDS19_功能_默认_19_06" />
+      <capltestcase name="Case_19_Phy_Def_07"   title="UDS19_功能_默认_故障发生计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_08"   title="UDS19_功能_默认_故障发生计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_09"   title="UDS19_功能_默认_老化计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_10"   title="UDS19_功能_默认_老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_11"   title="UDS19_功能_默认_已老化计数器更新机制(时间较长)" />
+      <capltestcase name="Case_19_Phy_Def_12"   title="UDS19_功能_默认_已老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_13"   title="UDS19_功能_默认_故障发生时间" />
+      <capltestcase name="Case_19_Phy_Def_14"   title="UDS19_功能_默认_19_0A" />
+      <capltestcase name="Case_19_Phy_Def_15"   title="UDS19_功能_默认_SuppressBit" />
+      <capltestcase name="Case_19_Phy_Def_16"   title="UDS19_功能_默认_NRC12" />
+      <capltestcase name="Case_19_Phy_Def_17"   title="UDS19_功能_默认_NRC13" />
+      <capltestcase name="Case_19_Phy_Def_18"   title="UDS19_功能_默认_NRC31" />
+      <capltestcase name="Case_19_Phy_Def_19"   title="UDS19_功能_默认_19_01_02" />
+      <capltestcase name="Case_19_Phy_Def_20"   title="UDS19_功能_默认_NRC优先级" />
+      <capltestcase name="Case_19_Phy_Def_21_"   title="UDS19_功能_默认_故障老化验证" />
+    </testgroup>
+    <testgroup title="功能_拓展">
+      <capltestcase name="Case_19_Phy_Def_01"   title="UDS19_功能_拓展_19_01" />
+      <capltestcase name="Case_19_Phy_Def_02"   title="UDS19_功能_拓展_19_02" />
+      <capltestcase name="Case_19_Phy_Def_02_1"   title="UDS19_功能_拓展_19_02_上下电读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_2"   title="UDS19_功能_拓展_19_02_11复位读取故障" />
+      <capltestcase name="Case_19_Phy_Def_02_3"   title="UDS19_功能_拓展_19_02_支持的Bit位测试(08_09_FF)" />
+      <capltestcase name="Case_19_Phy_Def_04"   title="UDS19_功能_拓展_19_04" />
+      <capltestcase name="Case_19_Phy_Def_05"   title="UDS19_功能_拓展_19_04单个快照信息" />
+      <capltestcase name="Case_19_Phy_Def_06"   title="UDS19_功能_拓展_19_06" />
+      <capltestcase name="Case_19_Phy_Def_07"   title="UDS19_功能_拓展_故障发生计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_08"   title="UDS19_功能_拓展_故障发生计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_09"   title="UDS19_功能_拓展_老化计数器更新机制" />
+      <capltestcase name="Case_19_Phy_Def_10"   title="UDS19_功能_拓展_老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_11"   title="UDS19_功能_拓展_已老化计数器更新机制(时间较长)" />
+      <capltestcase name="Case_19_Phy_Def_12"   title="UDS19_功能_拓展_已老化计数器被14服务清零" />
+      <capltestcase name="Case_19_Phy_Def_13"   title="UDS19_功能_拓展_故障发生时间" />
+      <capltestcase name="Case_19_Phy_Def_14"   title="UDS19_功能_拓展_19_0A" />
+      <capltestcase name="Case_19_Phy_Def_15"   title="UDS19_功能_拓展_SuppressBit" />
+      <capltestcase name="Case_19_Phy_Def_16"   title="UDS19_功能_拓展_NRC12" />
+      <capltestcase name="Case_19_Phy_Def_17"   title="UDS19_功能_拓展_NRC13" />
+      <capltestcase name="Case_19_Phy_Def_18"   title="UDS19_功能_拓展_NRC31" />
+      <capltestcase name="Case_19_Phy_Def_19"   title="UDS19_功能_拓展_19_01_02" />
+      <capltestcase name="Case_19_Phy_Def_20"   title="UDS19_功能_拓展_NRC优先级" />
+      <capltestcase name="Case_19_Phy_Def_21_"   title="UDS19_功能_拓展_故障老化验证" />
+    </testgroup>
+      <capltestcase name="Case_19_04_17"   title="UDS19_ECU同时可存储DTC的最小数量" />
+  </testgroup>
+
+  <testgroup title="异常测试NRC" variants="异常测试NRC All">
+      <capltestcase name="Case_Abnormal_NRC_1"   title="异常测试NRC_10h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_2"   title="异常测试NRC_11h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_3"   title="异常测试NRC_14h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_4"   title="异常测试NRC_19h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_5"   title="异常测试NRC_22h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_6"   title="异常测试NRC_2Eh-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_7"   title="异常测试NRC_27h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_8"   title="异常测试NRC_28h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_9"   title="异常测试NRC_31h-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_10"   title="异常测试NRC_3Eh-NRC13" />
+      <capltestcase name="Case_Abnormal_NRC_11"   title="异常测试NRC_85h-NRC13" />
+  </testgroup>
+
+  <testgroup title="不支持的服务" variants="不支持的服务 All">
+    <capltestcase name="Case_Not_Support_Fun_Phy"   title="不支持的服务_物理" />
+    <capltestcase name="Case_Not_Support_Fun_Phy"   title="不支持的服务_功能" />
+  </testgroup>
+
+  <testgroup title="高负载率测试" variants="高负载率测试 All">
+    <capltestcase name="_High_BUS_loader_H_1"   title="对中_干扰报文优先级高于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_2"   title="写DID_干扰报文优先级高于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_5"   title="对中与写入_干扰报文优先级高于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_7"   title="对中与写入_变动负载率_干扰报文优先级高于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_3"   title="对中_干扰报文优先级低于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_4"   title="写DID_干扰报文优先级低于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_6"   title="对中与写入_干扰报文优先级低于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_8"   title="对中与写入_变动负载率_干扰报文优先级低于发送ID" />
+    <capltestcase name="_High_BUS_loader_H_9"   title="对中与写入_负载率由IG模块控制" />
+  </testgroup>
+
+  <testgroup title="TP层-CAN" variants="TP-CAN All">
+      <testgroup title="单帧请求以及单帧应答报文测试">
+        <capltestcase name="Can_TP_SF_1"   title="TP_CAN_单帧请求报文SF_DL错误测试" />
+        <capltestcase name="Can_TP_SF_2"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试(不应答 DLC=1-7)" />
+        <capltestcase name="Can_TP_SF_5"   title="TP_CAN_协议控制信息为FF的单帧请求报文测试" />
+        <capltestcase name="Can_TP_SF_6"   title="TP_CAN_确认控制器发送的单帧响应报文SF_DL有效_1" />
+        <capltestcase name="Can_TP_SF_7"   title="TP_CAN_确认控制器发送的单帧响应报文SF_DL有效_2" />
+      </testgroup>
+      <testgroup title="单帧请求CAN帧报文的DLC错误测试-需要应答">
+        <capltestcase name="Can_TP_SF_3"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_(需应答 DLC = 1或2)" />
+        <capltestcase name="Can_TP_SF_3_3"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_(需应答 DLC = 3)" />
+        <capltestcase name="Can_TP_SF_3_4"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_(需应答 DLC = 4)" />
+        <capltestcase name="Can_TP_SF_3_5"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_(需应答 DLC = 5)" />
+        <capltestcase name="Can_TP_SF_3_6"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_(需应答 DLC = 6)" />
+        <capltestcase name="Can_TP_SF_3_7"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_(需应答 DLC = 7)" />
+      </testgroup>
+      <testgroup title="首帧请求报文以及首帧应答报文测试">
+        <capltestcase name="Can_TP_FF_1"   title="TP_CAN_首帧请求报文FF_DL错误测试_1" />
+        <capltestcase name="Can_TP_FF_2"   title="TP_CAN_首帧请求报文FF_DL错误测试_2" />
+        <capltestcase name="Can_TP_FF_3"   title="TP_CAN_首帧请求报文FF_DL错误测试_3" />
+        <capltestcase name="Can_TP_FF_4"   title="TP_CAN_功能寻址请求首帧测试" />
+        <capltestcase name="Can_TP_FF_5"   title="TP_CAN_确认控制器发送的首帧响应报文FF_DL" />
+      </testgroup>
+      <testgroup title="连续帧请求报文和连续帧响应报文测试">
+        <capltestcase name="Can_TP_CF_1"   title="TP_CAN_停止发送后续部分连续帧" />
+        <capltestcase name="Can_TP_CF_2"   title="TP_CAN_不发送所有连续帧" />
+        <capltestcase name="Can_TP_CF_3"   title="TP_CAN_不发送某连续帧" />
+        <capltestcase name="Can_TP_CF_4"   title="TP_CAN_重复发送第一个连续帧" />
+        <capltestcase name="Can_TP_CF_5"   title="TP_CAN_多帧请求报文连续帧DLC错误" />
+        <capltestcase name="Can_TP_CF_10"   title="TP_CAN_连续帧SN值测试" />
+        <capltestcase name="Can_TP_CF_7"   title="TP_CAN_错误连续帧报文" />
+        <capltestcase name="Can_TP_CF_8"   title="TP_CAN_后续帧请求测试" />
+      </testgroup>
+      <testgroup title="流控帧请求报文和流控帧响应报文测试">
+        <capltestcase name="Can_TP_Stmin_1"   title="TP_CAN_Stmin值测试" />
+        <capltestcase name="Can_TP_Stmin_1_"   title="TP_CAN_Stmin值测试-边界值" />
+        <capltestcase name="Can_TP_Stmin_2"   title="TP_CAN_Stmin无效测试-us级值" />
+        <capltestcase name="Can_TP_Stmin_3"   title="TP_CAN_Stmin无效测试-保留值" />
+        <capltestcase name="Can_TP_FC_8"   title="TP_CAN_控制器收到的BlockSize测试" />
+        <capltestcase name="Can_TP_CF_11"   title="TP_CAN_确认控制器的流控制帧参数STmin有效" />
+        <capltestcase name="Can_TP_CF_9"   title="TP_CAN_确认控制器发送的流控帧中的BS和Stmin" />
+        <capltestcase name="Can_TP_CF_19"   title="TP_CAN_等待流控制帧" />
+        <capltestcase name="Can_TP_CF_19_1"   title="TP_CAN_等待流控制帧的N_WFTmax" />
+        <capltestcase name="Can_TP_CF_18"   title="TP_CAN_流控制状态为OVFLW溢出" />
+        <capltestcase name="Can_TP_CF_16"   title="TP_CAN_无效流控制帧-FS无效值" />
+        <capltestcase name="Can_TP_CF_12"   title="TP_CAN_不发送流控制帧" />
+        <capltestcase name="Can_TP_CF_13"   title="TP_CAN_重复发送流控制帧" />
+        <capltestcase name="Can_TP_CF_14"   title="TP_CAN_长度不正确流控制帧" />
+        <capltestcase name="Can_TP_CF_15"   title="TP_CAN_功能寻址流控制帧" />
+        <capltestcase name="Can_TP_CF_17"   title="TP_CAN_流控帧请求测试" />
+        <capltestcase name="Can_TP_CF_20"   title="TP_CAN_未知请求报文测试" />
+      </testgroup>
+      <testgroup title="接收非期望 N_PDU 的处理测试">
+        <capltestcase name="Can_TP_Disturb_1"   title="TP_CAN_控制器多帧发送被非预期单帧请求报文干扰" />
+        <capltestcase name="Can_TP_Disturb_2"   title="TP_CAN_控制器多帧发送被非预期多帧请求报文第一帧干扰" />
+        <capltestcase name="Can_TP_Disturb_3"   title="TP_CAN_控制器多帧发送被非预期连续帧干扰" />
+        <capltestcase name="Can_TP_Disturb_4"   title="TP_CAN_控制器多帧发送被非预期流控制帧干扰" />
+        <capltestcase name="Can_TP_Disturb_5"   title="TP_CAN_控制器多帧发送被非预期未知报文干扰" />
+        <capltestcase name="Can_TP_Disturb_6"   title="TP_CAN_控制器多帧接收被新的单帧请求报文干扰" />
+        <capltestcase name="Can_TP_Disturb_7"   title="TP_CAN_控制器多帧接收被新的多帧请求报文第一帧干扰" />
+        <capltestcase name="Can_TP_Disturb_8"   title="TP_CAN_握手命令干扰多帧请求" />
+        <capltestcase name="Can_TP_Disturb_9"   title="TP_CAN_控制器多帧接收被流控制报文干扰" />
+        <capltestcase name="Can_TP_Disturb_10"   title="TP_CAN_控制器多帧接收被未知报文干扰" />
+      </testgroup>
+      <testgroup title="网络层定时参数测试">
+        <capltestcase name="Can_TP_Time_1"   title="TP_CAN_N_Bs时间测试" />
+        <capltestcase name="Can_TP_Time_2"   title="TP_CAN_N_Cr时间测试" />
+        <capltestcase name="Can_TP_Time_4"   title="TP_CAN_N_Cs时间测试" />
+        <capltestcase name="Can_TP_Time_5"   title="TP_CAN_N_Br时间测试" />
+      </testgroup>
+      <testgroup title="EPS应答流控帧BS值测试">
+        <capltestcase name="Can_TP_Time_3"   title="TP_CAN_BS值测试" />
+      </testgroup>
+  </testgroup>
+
+  <testgroup title="TP层-CANFD" variants="TP-CANFD All">
+      <testgroup title="单帧请求报文的DLC错误测试">
+        <capltestcase name="CANFD_TP_DLC_Error_1"   title="TP_CANFD_DLC错误测试（CAN_DL≤8）" />
+      </testgroup>
+      <testgroup title="单帧请求报文SF_DL测试/单帧请求报文(CAN_DL＞8)字节1低四位不为0测试">
+        <capltestcase name="CanFD_TP_SF_1"   title="TP_CANFD_单帧请求报文(CAN_DL≤8)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_2"   title="TP_CANFD_单帧请求报文(CAN_DL=12)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_3"   title="TP_CANFD_单帧请求报文(CAN_DL=16)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_4"   title="TP_CANFD_单帧请求报文(CAN_DL=20)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_5"   title="TP_CANFD_单帧请求报文(CAN_DL=24)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_6"   title="TP_CANFD_单帧请求报文(CAN_DL=32)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_7"   title="TP_CANFD_单帧请求报文(CAN_DL=48)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_8"   title="TP_CANFD_单帧请求报文(CAN_DL=64)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_9"   title="TP_CANFD_协议控制信息为FF的单帧请求报文测试(CAN_DL)" />
+      </testgroup>
+      <testgroup title="首帧请求报文以及首帧应答报文测试">
+        <capltestcase name="CanFD_TP_FF_1"   title="TP_CANFD_首帧请求报文FF_DL错误测试_1" />
+        <capltestcase name="CanFD_TP_FF_2"   title="TP_CANFD_首帧请求报文FF_DL错误测试_2" />
+        <capltestcase name="CanFD_TP_FF_3"   title="TP_CANFD_功能寻址请求首帧测试" />
+        <capltestcase name="CanFD_TP_FF_4"   title="TP_CANFD_FF_DL＜4095" />
+        <capltestcase name="CanFD_TP_FF_5"   title="TP_CANFD_FF_DL＞4095" />
+      </testgroup>
+      <testgroup title="连续帧请求报文和连续帧响应报文测试">
+        <capltestcase name="CanFD_TP_CF_1"   title="TP_CANFD_停止发送后续部分连续帧" />
+        <capltestcase name="CanFD_TP_CF_2"   title="TP_CANFD_不发送所有连续帧" />
+        <capltestcase name="CanFD_TP_CF_3"   title="TP_CANFD_不发送某连续帧" />
+        <capltestcase name="CanFD_TP_CF_4"   title="TP_CANFD_重复发送第一个连续帧" />
+
+        <capltestcase name="CanFD_TP_CF_6"   title="TP_CANFD_连续帧SN值测试" />
+        <capltestcase name="CanFD_TP_CF_7"   title="TP_CANFD_错误连续帧报文" />
+        <capltestcase name="CanFD_TP_CF_8"   title="TP_CANFD_后续帧请求测试" />
+        <capltestcase name="CanFD_TP_CF_9"   title="TP_CANFD_最后一个连续帧CAN_DL测试" />
+      </testgroup>
+      <testgroup title="流控帧请求报文和流控帧响应报文测试">
+        <capltestcase name="CANFD_TP_Stmin_1"   title="TP_CANFD_Stmin值测试" />
+        <capltestcase name="CANFD_TP_Stmin_1_"   title="TP_CANFD_Stmin值测试-边界值" />
+        <capltestcase name="CANFD_TP_Stmin_2"   title="TP_CANFD_Stmin无效测试-us级值" />
+        <capltestcase name="CANFD_TP_Stmin_3"   title="TP_CANFD_Stmin无效测试-保留值" />
+        <capltestcase name="CANFD_TP_FC_8"   title="TP_CANFD_控制器收到的BlockSize测试" />
+        <capltestcase name="CANFD_TP_FC_2_"   title="TP_CANFD_确认控制器的流控制帧参数STmin有效" />
+        <capltestcase name="CANFD_TP_FC_2"   title="TP_CANFD_确认控制器发送的流控帧中的BS和STmin" />
+        <capltestcase name="CANFD_TP_FC_11"   title="TP_CANFD_等待流控制帧" />
+        <capltestcase name="CANFD_TP_FC_11_1"   title="TP_CANFD_等待流控制帧的N_WFTmax" />
+        <capltestcase name="CANFD_TP_FC_7"   title="TP_CANFD_流控制状态为OVFLW溢出" />
+        <capltestcase name="CANFD_TP_FC_10"   title="TP_CANFD_无效流控制帧-FS无效值" />
+        <capltestcase name="CANFD_TP_FC_3"   title="TP_CANFD_上位机收到首帧后-不发送流控帧" />
+        <capltestcase name="CANFD_TP_FC_4"   title="TP_CANFD_上位机收到首帧后-重复发送流控帧" />
+        <capltestcase name="CANFD_TP_FC_5"   title="TP_CANFD_长度不正确流控制帧" />
+        <capltestcase name="CANFD_TP_FC_6"   title="TP_CANFD_上位机发送功能寻址流控帧" />
+        <capltestcase name="CANFD_TP_FC_12"   title="TP_CANFD_流控帧请求测试" />
+        <capltestcase name="CANFD_TP_FC_13"   title="TP_CANFD_发送未知类型的诊断帧" />
+      </testgroup>
+      <testgroup title="接收非期望 N_PDU 的处理测试">
+        <capltestcase name="CanFD_TP_Disturb_1"   title="TP_CANFD_控制器多帧发送被非预期单帧请求报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_2"   title="TP_CANFD_控制器多帧发送被非预期多帧请求报文第一帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_3"   title="TP_CANFD_控制器多帧发送被非预期连续帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_4"   title="TP_CANFD_控制器多帧发送被非预期流控制帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_5"   title="TP_CANFD_控制器多帧发送被非预期未知报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_6"   title="TP_CANFD_控制器多帧接收被新的单帧请求报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_7"   title="TP_CANFD_控制器多帧接收被新的多帧请求报文第一帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_8"   title="TP_CANFD_握手命令干扰多帧请求" />
+        <capltestcase name="CanFD_TP_Disturb_9"   title="TP_CANFD_控制器多帧接收被流控制报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_10"   title="TP_CANFD_控制器多帧接收被未知报文干扰" />
+      </testgroup>
+      <testgroup title="网络层定时参数测试">
+        <capltestcase name="CanFD_TP_Time_1"   title="TP_CANFD_N_Bs时间测试" />
+        <capltestcase name="CanFD_TP_Time_2"   title="TP_CANFD_N_Cr时间测试" />
+        <capltestcase name="CanFD_TP_Time_4"   title="TP_CANFD_N_Cs时间测试" />
+        <capltestcase name="CanFD_TP_Time_5"   title="TP_CANFD_N_Br时间测试" />
+      </testgroup>
+      <testgroup title="EPS应答流控帧BS值测试">
+        <capltestcase name="CanFD_TP_Time_3"   title="TP_CANFD_EPS应答流控帧BS值测试" />
+      </testgroup>
+  </testgroup>
+
+  <testgroup title="报文格式验证" variants="报文格式验证 All">
+      <capltestcase name="Case_Message_Type_Check_CAN"   title="仅支持CAN" />
+      <capltestcase name="Case_Message_Type_Check_CANFD"   title="仅支持CANFD" />
+      <capltestcase name="Case_Message_Type_Check_ALL"   title="CANFD同时兼容CAN" />
+  </testgroup>
+
+</testmodule>

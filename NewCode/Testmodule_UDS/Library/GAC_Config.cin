@@ -1,0 +1,869 @@
+/*@!Encoding:936*/
+variables
+{
+
+}
+
+void GAC_31_0203(dword ID,byte Session)/*检测编程条件*/
+{
+  byte Serve_1002[2]={0x10,0x02};
+  _get_Arry("Pre_Programmed");
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",-1);
+  _Send_Diag(2,ID,Serve_1002);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+  _SetSession(defsession);
+  testWaitForTimeout(1000);
+  _Set_11_Restoration();
+  _SetSession(exsession);
+  Arry_Data[1] |=0x80;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",0);
+  _Send_Diag(2,ID,Serve_1002);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+  _SetSession(defsession);
+  testWaitForTimeout(1000);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(1000);
+  Arry_Data[1] &=0x0F;
+  _SetSession(exsession);
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",-1);
+  _Send_Diag(2,ID,Serve_1002);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+  _SetSession(defsession);
+  testWaitForTimeout(1000);
+  _K30_OFF();
+  testWaitForTimeout(2000);
+  _K30_ON();
+  testWaitForTimeout(2000);
+  _SetSession(exsession);
+  Arry_Data[1] |=0x80;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",0);
+  _Send_Diag(2,ID,Serve_1002);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+  _SetSession(defsession);
+  testWaitForTimeout(1000);
+}
+
+void GAC_31_64D1(dword ID,byte Session)/*中位标定*/
+{
+  byte Clear_Ang[10];
+  int i,Len_Clear_Ang,Pos;
+  float AngNow;
+  _WriteEx_and_Report("","此条用例需要接入传感器");
+  _WriteEx_and_Report("","步骤1");
+  _get_Arry("Clear_Angle_Calibration");
+  Len_Clear_Ang = Arry_Len;
+  for(i=0;i<Arry_Len;i++)
+    Clear_Ang[i] = Arry_Data[i];
+  _Set_CarSpd(5);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  _unlockECU();
+  _Send_Diag(Len_Clear_Ang,ID,Clear_Ang);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(500);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+  _get_Arry("Angle_Calibration");
+  Arry_Data[1] |= 0x80; 
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",0);
+  testWaitForTimeout(100);
+  Arry_Data[1] = 0x03;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  _Check_DTC_Res(0x01,0,Ang_NotCal);
+  Pos = _Check_StrPossion_Res("Angle",1);
+  if(Pos != -1)
+  {
+    AngNow = _Get_Signal(mixArray[Pos].Sig_Name[0]);
+    if(AngNow>= 1 || AngNow<= -1)
+      testStepfail("","当前角度非0°，为%.2f",AngNow);
+    else
+      testStepPass("","当前角度在0°左右");
+  }
+  else
+  {
+    diagStartTesterPresent(Cdd_Name);
+    _TestWaitForTesterConfirmation("查看当前角度是否为0°");
+  }
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  if(Pos != -1)
+  {
+    AngNow = _Get_Signal(mixArray[Pos].Sig_Name[0]);
+    if(AngNow>= 1 || AngNow<= -1)
+      testStepfail("","当前角度非0°，为%.2f",AngNow);
+    else
+      testStepPass("","当前角度在0°左右");
+  }
+  else
+    _TestWaitForTesterConfirmation("查看当前角度是否为0°");
+  
+  _WriteEx_and_Report("","步骤2");
+  _unlockECU();
+  _Send_Diag(Len_Clear_Ang,ID,Clear_Ang);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(500);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+  _get_Arry("Angle_Calibration");
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  testWaitForTimeout(100);
+  Arry_Data[1] = 0x83;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",0);
+  _Check_DTC_Res(0x01,0,Ang_NotCal);
+
+  _Set_11_Restoration(0);
+  if(Pos != -1)
+  {
+    AngNow = _Get_Signal(mixArray[Pos].Sig_Name[0]);
+    if(AngNow>= 1 || AngNow<= -1)
+      testStepfail("","当前角度非0°，为%.2f",AngNow);
+    else
+      testStepPass("","当前角度在0°左右");
+  }
+  else
+    _TestWaitForTesterConfirmation("查看当前角度是否为0°");
+
+  _WriteEx_and_Report("","步骤3");
+  _unlockECU();
+  _Send_Diag(Len_Clear_Ang,ID,Clear_Ang);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(500);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+  _get_Arry("Angle_Calibration");
+  Arry_Data[1] = 0x81;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",0);
+  testWaitForTimeout(100);
+  Arry_Data[1] = 0x83;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",0);
+  _Check_DTC_Res(0x01,0,Ang_NotCal);
+  
+  _Set_CarSpd(6);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  _K30_OFF();
+  testWaitForTimeout(2000);
+  _K30_ON();
+  testWaitForTimeout(2000);
+  if(Pos != -1)
+  {
+    AngNow = _Get_Signal(mixArray[Pos].Sig_Name[0]);
+    if(AngNow>= 1 || AngNow<= -1)
+      testStepfail("","当前角度非0°，为%.2f",AngNow);
+    else
+      testStepPass("","当前角度在0°左右");
+  }
+  else
+    _TestWaitForTesterConfirmation("查看当前角度是否为0°");
+  _WriteEx_and_Report("","步骤4");
+  _unlockECU();
+  _Send_Diag(Len_Clear_Ang,ID,Clear_Ang);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(500);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+  _get_Arry("Angle_Calibration");
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  testWaitForTimeout(100);
+  Arry_Data[1] = 0x03;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  _Check_DTC_Res(0x01,0,Ang_NotCal);
+  if(Pos != -1)
+  {
+    AngNow = _Get_Signal(mixArray[Pos].Sig_Name[0]);
+    if(AngNow>= 1 || AngNow<= -1)
+      testStepfail("","当前角度非0°，为%.2f",AngNow);
+    else
+      testStepPass("","当前角度在0°左右");
+  }
+  else
+    _TestWaitForTesterConfirmation("查看当前角度是否为0°");
+}
+
+void GAC_31_64D2(dword ID,byte Session)/*清除中位标定*/
+{
+  byte Angle_Calibration[10];
+  int i,Len_Angle_Calibration,Pos;
+  float AngNow;
+  _WriteEx_and_Report("","此条用例需要接入传感器");
+  _WriteEx_and_Report("","步骤1");
+  _get_Arry("Angle_Calibration");
+  Len_Angle_Calibration = Arry_Len;
+  for(i=0;i<Arry_Len;i++)
+    Angle_Calibration[i] = Arry_Data[i];
+  _Set_CarSpd(5);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  _unlockECU();
+  _get_Arry("Clear_Angle_Calibration");
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",NRC22);
+  Arry_Data[1] = 0x03;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",NRC24);
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+
+  _WriteEx_and_Report("","步骤2");
+  _Set_CarSpd(0);
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _unlockECU();
+  _Send_Diag(Len_Angle_Calibration,ID,Angle_Calibration);
+  _Check_31Routine_Rx(Angle_Calibration,1);
+  testWaitForTimeout(200);
+  _Check_DTC_Res(0x01,0,Ang_NotCal);
+  _get_Arry("Clear_Angle_Calibration");
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  testWaitForTimeout(100);
+  Arry_Data[1] = 0x03;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+  _Set_11_Restoration(0);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+
+  _WriteEx_and_Report("","步骤3");
+  _unlockECU();
+  _Send_Diag(Len_Angle_Calibration,ID,Angle_Calibration);
+  _Check_31Routine_Rx(Angle_Calibration,1);
+  testWaitForTimeout(200);
+  _Check_DTC_Res(0x01,0,Ang_NotCal);
+  _get_Arry("Clear_Angle_Calibration");
+  Arry_Data[1] |= 0x80;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _TestResult(SendData,ID,"",0);
+  testWaitForTimeout(100);
+  Arry_Data[1] = 0x03;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+  
+  _Set_CarSpd(6);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  _K30_OFF();
+  testWaitForTimeout(2000);
+  _K30_ON();
+  testWaitForTimeout(2000);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+
+  _WriteEx_and_Report("","步骤4");
+  _unlockECU();
+  _Send_Diag(Len_Angle_Calibration,ID,Angle_Calibration);
+  _Check_31Routine_Rx(Angle_Calibration,1);
+  testWaitForTimeout(200);
+  _Check_DTC_Res(0x01,0,Ang_NotCal);
+  _get_Arry("Clear_Angle_Calibration");
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  testWaitForTimeout(100);
+  Arry_Data[1] = 0x03;
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+
+  _WriteEx_and_Report("","测试完成，重新对中");
+  _Send_Diag(Len_Angle_Calibration,ID,Angle_Calibration);
+  _Check_31Routine_Rx(Angle_Calibration,1);
+}
+
+void GAC_31_64D3(dword ID,byte Session)/*清除EOT末端值*/
+{
+  byte Angle_Calibration[10];
+  byte DataSend[4] = {0x31,0x01,0x64,0xD3};
+  dword EOT_DTC = 0x563054;
+  int i,Len_Angle_Calibration,Pos;
+  float AngNow;
+  _WriteEx_and_Report("","此条用例需要接入传感器");
+  diagStartTesterPresent(Cdd_Name);
+  
+  _Set_Ready(Struct_Ready.Ready_Active);
+  _WriteEx_and_Report("","步骤1");
+  _get_Arry("Angle_Calibration");
+  _unlockECU();
+  _Send_Diag(Arry_Len,ID,Arry_Data);
+  _Check_31Routine_Rx(Arry_Data,1);
+  _TestWaitForTesterConfirmation("此处需人为判断末端值是否恢复到初始值");
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _TestWaitForTesterConfirmation("此处需人为判断末端值是否恢复到初始值");
+
+
+  _WriteEx_and_Report("","步骤2");
+  _TestWaitForTesterConfirmation("往左打方向学习末端");
+  _unlockECU();
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x83;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _TestResult(SendData,ID,"",0);
+  _Check_DTC_Res(0x01,EOT_DTC,0);
+  _TestWaitForTesterConfirmation("此处需人为判断末端值是否被擦除");
+  
+  _WriteEx_and_Report("","步骤3");
+  _TestWaitForTesterConfirmation("往右打方向学习末端");
+  DataSend[1] = 0x81;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _TestResult(SendData,ID,"",0);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x03;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  _Check_DTC_Res(0x01,EOT_DTC,0);
+  _K30_OFF();
+  testWaitForTimeout(2000);
+  _K30_ON();
+  testWaitForTimeout(2000);
+  _TestWaitForTesterConfirmation("此处需人为判断末端值是否被擦除");
+  
+  _WriteEx_and_Report("","步骤4");
+  _TestWaitForTesterConfirmation("往左打方向学习末端");
+  _unlockECU();
+  DataSend[1] = 0x01;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x03;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  _Check_DTC_Res(0x01,EOT_DTC,0);
+  _Set_11_Restoration(0);
+  _Check_DTC_Res(0x01,Ang_NotCal,0);
+  _TestWaitForTesterConfirmation("此处需人为判断末端值是否被擦除");
+
+  _WriteEx_and_Report("","步骤5");
+  _TestWaitForTesterConfirmation("往右打方向学习末端");
+  _unlockECU();
+  DataSend[1] = 0x01;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x03;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  _Check_DTC_Res(0x01,EOT_DTC,0);
+}
+
+void GAC_31_64D4(dword ID,byte Session)/*清除PDC补偿力矩值*/
+{
+  byte Angle_Calibration[10];
+  byte DataSend[4] = {0x31,0x01,0x64,0xD4};
+  dword EOT_DTC = 0x123456;
+  int i,Len_Angle_Calibration,Pos;
+  float AngNow;
+  _WriteEx_and_Report("","此条用例需要接入传感器");
+  diagStartTesterPresent(Cdd_Name);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  _WriteEx_and_Report("","步骤1");
+  _unlockECU();
+  DataSend[1] = 0x01;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x83;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _TestResult(SendData,ID,"",0);
+  _TestWaitForTesterConfirmation("此处需人为判断PDC是否被清除");
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _TestWaitForTesterConfirmation("此处需人为判断PDC是否被清除");
+  
+  _WriteEx_and_Report("","步骤2");
+  _TestWaitForTesterConfirmation("此处需人为重新学习PDC值");
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _unlockECU();
+  DataSend[1] = 0x81;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _TestResult(SendData,ID,"",0);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x03;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  _TestWaitForTesterConfirmation("此处需人为判断PDC是否被清除");
+  _Set_11_Restoration(0);
+  _TestWaitForTesterConfirmation("此处需人为判断PDC是否被清除");
+  
+  _WriteEx_and_Report("","步骤3");
+  _TestWaitForTesterConfirmation("此处需人为重新学习PDC值");
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _unlockECU();
+  DataSend[1] = 0x81;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _TestResult(SendData,ID,"",0);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x83;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _TestResult(SendData,ID,"",0);
+  _TestWaitForTesterConfirmation("此处需人为判断PDC是否被清除");
+  _K30_OFF();
+  testWaitForTimeout(2000);
+  _K30_ON();
+  testWaitForTimeout(2000);
+  _TestWaitForTesterConfirmation("此处需人为判断PDC是否被清除");
+
+  _WriteEx_and_Report("","步骤4");
+  _TestWaitForTesterConfirmation("此处需人为重新学习PDC值");
+  _Power_Down();
+  testWaitForTimeout(2000);
+  _Power_Up();
+  testWaitForTimeout(2000);
+  _unlockECU();
+  DataSend[1] = 0x01;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+  testWaitForTimeout(100);
+  DataSend[1] = 0x03;
+  _Send_Diag(elCount(DataSend),ID,DataSend);
+  _Check_31Routine_Rx(DataSend,1);
+}
+
+
+
+void GAC_UnFac_Config(dword ID,byte Session)
+{
+  int i,j,k,ServePos,DIDPos;
+  byte DataRead[3] = {0x22,0x01,0x10};
+  byte DataWrite[4] = {0x2E,0x01,0x10,0x00};
+  byte DataWrite_Other[100],DataSend_31H[6];
+  dword DID,TempRID;
+  DID = 0x0100;
+  ServePos = _Check_Serve(0x2E,0,0);
+  DIDPos   = _Check_Serve(0x2E,DID,4);
+  DataWrite_Other[0] = 0x2E;
+  DataWrite_Other[1] = (DID>>8)&0xFF;
+  DataWrite_Other[2] = (DID>>0)&0xFF;
+  DataSend_31H[0] = 0x31;
+  _Send_Diag(elCount(DataRead),ID,DataRead);
+  _TestResult(SendData,ID,"",-1);
+  for(i=0;i<=0x0F;i++)
+  {
+    DataWrite[3] = i;
+    _unlockECU();
+    _Send_Diag(elCount(DataWrite),ID,DataWrite);
+    _TestResult(SendData,ID,"",-1);
+    _WriteEx_and_Report("","重置解锁状态测试是否在工厂模式中");
+    _SetSession(exsession);
+    _Send_Diag(elCount(DataRead),ID,DataRead);_TestResult(SendData,ID,"",-1);
+    _Check_Response_Config(SendData,DataWrite);
+    _SetSession(defsession);
+    _SetSession(exsession);
+    _unlockECU();
+    for(k=0;k<3;k++)
+    {
+      if(k == 0)
+        _Set_11_Restoration(0);
+      else if(k == 1)
+      {
+        _Power_Down();testWaitForTimeout(1000);
+        _Power_Up();testWaitForTimeout(1000);
+      }
+      else if(k == 2)
+      {
+        _K30_OFF();testWaitForTimeout(2000);
+        _K30_ON(); testWaitForTimeout(2000);
+      }
+      _WriteEx_and_Report("","验证是否需要安全访问");
+      _SetSession(defsession);
+      _SetSession(exsession);
+      if(DIDPos != -1)
+      {
+        for(j=0;j<Serve_Data[ServePos].Serve_Fun_Len[DIDPos]-3;j++)
+          DataWrite_Other[j+3] = i;
+        _Send_Diag(Serve_Data[ServePos].Serve_Fun_Len[DIDPos],ID,DataWrite_Other);
+        _TestResult(SendData,ID,"",NRC33);
+        testWaitForTimeout(100);
+      }
+      for(j=0;j<Serve_31_Hex_Count;j++)
+      {
+        TempRID = ((Serve_31_Hex[j].Routine[0]<<8)|(Serve_31_Hex[j].Routine[1]));
+        if(TempRID == 0x0203)
+          continue;
+        DataSend_31H[2] = Serve_31_Hex[j].Routine[0];DataSend_31H[3] = Serve_31_Hex[j].Routine[1];
+        DataSend_31H[1] = Serve_31_Hex[j].Control_Type[0];
+        if(Serve_31_Hex[j].Routine_Len > 4)
+          DataSend_31H[4] = Serve_31_Hex[j].Control_Option[0][0];
+        _Send_Diag(Serve_31_Hex[j].Routine_Len,ID,DataSend_31H);
+        _TestResult(SendData,ID,"",NRC33);
+        if(Serve_31_Hex[j].Control_Type_Count>1)
+        {
+          DataSend_31H[1] = Serve_31_Hex[j].Control_Type[1];
+          _Send_Diag(Serve_31_Hex[j].Routine_Len,ID,DataSend_31H);
+          _TestResult(SendData,ID,"",NRC33);
+        }
+        testWaitForTimeout(50);
+      }
+    }
+  }
+}
+
+void GAC_Fac_Config(dword ID,byte Session)
+{
+  int i,j,k,ServePos,DIDPos;
+  byte DataRead[3] = {0x22,0x01,0x10};
+  byte DataWrite[4] = {0x2E,0x01,0x10,0x00};
+  byte DataWrite_Other[100],DataSend_31H[6];
+  dword DID,TempRID;
+  DID = 0x0100;
+  ServePos = _Check_Serve(0x2E,0,0);
+  DIDPos   = _Check_Serve(0x2E,DID,4);
+  DataWrite_Other[0] = 0x2E;
+  DataWrite_Other[1] = (DID>>8)&0xFF;
+  DataWrite_Other[2] = (DID>>0)&0xFF;
+  DataSend_31H[0] = 0x31;
+  _Send_Diag(elCount(DataRead),ID,DataRead);
+  _TestResult(SendData,ID,"",-1);
+  for(i=0x10;i<=0xFF;i++)
+  {
+    DataWrite[3] = i;
+    _unlockECU();
+    _Send_Diag(elCount(DataWrite),ID,DataWrite);
+    _TestResult(SendData,ID,"",-1);
+    _WriteEx_and_Report("","重置解锁状态测试是否在工厂模式中");
+    _SetSession(exsession);
+    _Send_Diag(elCount(DataRead),ID,DataRead);_TestResult(SendData,ID,"",-1);
+    _Check_Response_Config(SendData,DataWrite);
+    _SetSession(defsession);
+    _SetSession(exsession);
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+    _TestResult(SendData,ID,"",NRC24);
+
+    for(k=0;k<3;k++)
+    {
+      if(k == 0)
+        _Set_11_Restoration(0);
+      else if(k == 1)
+      {
+        _Power_Down();testWaitForTimeout(1000);
+        _Power_Up();testWaitForTimeout(1000);
+      }
+      else if(k == 2)
+      {
+        _K30_OFF();testWaitForTimeout(2000);
+        _K30_ON(); testWaitForTimeout(2000);
+      }
+      _WriteEx_and_Report("","验证是否需要安全访问");
+      _SetSession(defsession);
+      _SetSession(exsession);
+      if(DIDPos != -1)
+      {
+        for(j=0;j<Serve_Data[ServePos].Serve_Fun_Len[DIDPos]-3;j++)
+          DataWrite_Other[j+3] = i;
+        _Send_Diag(Serve_Data[ServePos].Serve_Fun_Len[DIDPos],ID,DataWrite_Other);
+        _TestResult(SendData,ID,"",-1);
+        testWaitForTimeout(100);
+      }
+      for(j=0;j<Serve_31_Hex_Count;j++)
+      {
+        TempRID = ((Serve_31_Hex[j].Routine[0]<<8)|(Serve_31_Hex[j].Routine[1]));
+        if(TempRID == 0x0203)
+          continue;
+        DataSend_31H[2] = Serve_31_Hex[j].Routine[0];DataSend_31H[3] = Serve_31_Hex[j].Routine[1];
+        DataSend_31H[1] = Serve_31_Hex[j].Control_Type[0];
+        if(Serve_31_Hex[j].Routine_Len > 4)
+          DataSend_31H[4] = Serve_31_Hex[j].Control_Option[0][0];
+        _Send_Diag(Serve_31_Hex[j].Routine_Len,ID,DataSend_31H);
+        _Check_31Routine_Rx(DataSend_31H,1);
+        if(Serve_31_Hex[j].Control_Type_Count>1)
+        {
+          DataSend_31H[1] = Serve_31_Hex[j].Control_Type[1];
+          _Send_Diag(Serve_31_Hex[j].Routine_Len,ID,DataSend_31H);
+          _Check_31Routine_Rx(DataSend_31H,1);
+        }
+        testWaitForTimeout(50);
+      }
+    }
+  }
+}
+
+void GAC_ALL_Zero_Config(dword ID,byte Session)
+{
+  int i,k;
+  byte DataRead[3] = {0x22,0x01,0x10};
+  byte DataWrite[4] = {0x2E,0x01,0x10,0x00};
+  _Send_Diag(elCount(DataRead),ID,DataRead);
+  _TestResult(SendData,ID,"",-1);
+  for(i=0x01;i<=0xFF;i++)
+  {
+    DataWrite[3] = 0;
+    _unlockECU();
+    _Send_Diag(elCount(DataWrite),ID,DataWrite);
+    _TestResult(SendData,ID,"",-1);
+    _WriteEx_and_Report("","重置解锁状态测试是否在工厂模式中");
+    _SetSession(exsession);
+    _Send_Diag(elCount(DataRead),ID,DataRead);_TestResult(SendData,ID,"",-1);
+    _Check_Response_Config(SendData,DataWrite);
+    _unlockECU();
+    DataWrite[3] = i;
+    _Send_Diag(elCount(DataWrite),ID,DataWrite);
+    _TestResult(SendData,ID,"",NRC22);
+    DataWrite[3] = 0;
+    _Send_Diag(elCount(DataRead),ID,DataRead);_TestResult(SendData,ID,"",-1);
+    _Check_Response_Config(SendData,DataWrite);
+
+    for(k=0;k<3;k++)
+    {
+      if(k == 0)
+        _Set_11_Restoration(0);
+      else if(k == 1)
+      {
+        _Power_Down();testWaitForTimeout(1000);
+        _Power_Up();testWaitForTimeout(1000);
+      }
+      else if(k == 2)
+      {
+        _K30_OFF();testWaitForTimeout(2000);
+        _K30_ON(); testWaitForTimeout(2000);
+      }
+      _Send_Diag(elCount(DataRead),ID,DataRead);_TestResult(SendData,ID,"",-1);
+      _Check_Response_Config(SendData,DataWrite);
+    }
+  }
+}
+
+void GAC_Config_Turn(dword ID,byte Session)
+{
+  byte SendData_2E[0x0B] = {0x2E,0x01,0x01,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte SendData_2201[3] = {0x22,0x01,0x01};
+  byte SendData_2202[3] = {0x22,0x01,0x02};
+  byte GetNowSteeringMode[4];
+  int i;
+  char SetSteeringModeSig[100],GetSteeringModeSig[100];
+
+  snprintf(SetSteeringModeSig,elCount(SetSteeringModeSig),"x190_GSM_VehDriveMode");
+  snprintf(GetSteeringModeSig,elCount(GetSteeringModeSig),"x366_EPS_SteeringModeSt");
+  SendData_2E[0] = 0x2E;SendData_2E[1] = 0x01; SendData_2E[2] = 0x01;
+  GetNowSteeringMode[0] = 0x62;GetNowSteeringMode[1] = 0x01;
+  GetNowSteeringMode[2] = 0x02;GetNowSteeringMode[3] = 0x00;
+
+  _SetSession(exsession);
+  _unlockECU();
+  _Set_Sig(SetSteeringModeSig,0x01);
+  _Check_SignalMacth(GetSteeringModeSig,2,500);
+  for(i=3;i<0x0B;i++)
+    SendData_2E[i] = 0x00;
+  SendData_2E[3] = 0x03;
+  _Send_Diag(elCount(SendData_2E),ID,SendData_2E); _TestResult(SendData,ID,"",-1);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  GetNowSteeringMode[3] = 0x03;_Check_Response_Config(SendData,GetNowSteeringMode);
+  _Check_SignalMacth(GetSteeringModeSig,3,500);
+  _Power_Down(); testWaitForTimeout(2000);   _Power_Up(); testWaitForTimeout(2000);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Set_Sig(SetSteeringModeSig,0x03);
+  _Check_SignalMacth(GetSteeringModeSig,1,500);
+
+  _SetSession(exsession);
+  _unlockECU();
+  _Set_Sig(SetSteeringModeSig,0x05);
+  _Check_SignalMacth(GetSteeringModeSig,3,500);
+  SendData_2E[3] = 0x02;SendData_2E[4] = 0x0F;
+  _Send_Diag(elCount(SendData_2E),ID,SendData_2E); _TestResult(SendData,ID,"",-1);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  SendData_2E[3] = 0x02;SendData_2E[4] = 0x00; _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  GetNowSteeringMode[3] = 0x02; _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Check_SignalMacth(GetSteeringModeSig,1,500);
+  _Set_11_Restoration(0);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Set_Sig(SetSteeringModeSig,0x02);
+  _Check_SignalMacth(GetSteeringModeSig,2,500);
+
+  _SetSession(exsession);
+  _unlockECU();
+  _Set_Sig(SetSteeringModeSig,0x03);
+  _Check_SignalMacth(GetSteeringModeSig,1,500);
+  SendData_2E[3] = 0x01;SendData_2E[4] = 0x00;
+  _Send_Diag(elCount(SendData_2E),ID,SendData_2E); _TestResult(SendData,ID,"",-1);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  GetNowSteeringMode[3] = 0x01; _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Check_SignalMacth(GetSteeringModeSig,2,500);
+  _K30_OFF(); testWaitForTimeout(2000);  _K30_ON(); testWaitForTimeout(2000);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Set_Sig(SetSteeringModeSig,0x05);
+  _Check_SignalMacth(GetSteeringModeSig,3,500);
+}
+
+void GAC_Config_Turn_Off(dword ID,byte Session)
+{
+  byte SendData_2E[0x0B] = {0x2E,0x01,0x01,0x03,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
+  byte SendData_2201[3] = {0x22,0x01,0x01};
+  byte SendData_2202[3] = {0x22,0x01,0x02};
+  byte GetNowSteeringMode[4];
+  int i;
+  char SetSteeringModeSig[100],GetSteeringModeSig[100];
+
+  snprintf(SetSteeringModeSig,elCount(SetSteeringModeSig),"x190_GSM_VehDriveMode");
+  snprintf(GetSteeringModeSig,elCount(GetSteeringModeSig),"x366_EPS_SteeringModeSt");
+  SendData_2E[0] = 0x2E;SendData_2E[1] = 0x01; SendData_2E[2] = 0x01;
+  GetNowSteeringMode[0] = 0x62;GetNowSteeringMode[1] = 0x01;
+  GetNowSteeringMode[2] = 0x02;GetNowSteeringMode[3] = 0x00;
+  
+  _SetSession(exsession);
+  _unlockECU();
+  _Set_Sig(SetSteeringModeSig,0x01);
+  _Check_SignalMacth(GetSteeringModeSig,1,500);
+  for(i=3;i<0x0B;i++)
+    SendData_2E[i] = 0x00;
+  SendData_2E[3] = 0x04;  SendData_2E[4] = 0x0F;
+  _Send_Diag(elCount(SendData_2E),ID,SendData_2E); _TestResult(SendData,ID,"",-1);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  SendData_2E[3] = 0x01;  SendData_2E[4] = 0x00; _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  GetNowSteeringMode[3] = 0x01;_Check_Response_Config(SendData,GetNowSteeringMode);
+  _Check_SignalMacth(GetSteeringModeSig,2,500);
+  _Power_Down(); testWaitForTimeout(2000);   _Power_Up(); testWaitForTimeout(2000);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Set_Sig(SetSteeringModeSig,0x03);
+  _Check_SignalMacth(GetSteeringModeSig,1,500);
+
+  _SetSession(exsession);
+  _unlockECU();
+  _Set_Sig(SetSteeringModeSig,0x01);
+  _Check_SignalMacth(GetSteeringModeSig,2,500);
+  SendData_2E[3] = 0xFF;SendData_2E[4] = 0x00;
+  _Send_Diag(elCount(SendData_2E),ID,SendData_2E); _TestResult(SendData,ID,"",NRC31);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  SendData_2E[3] = 0x01;SendData_2E[4] = 0x00; _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  GetNowSteeringMode[3] = 0x01; _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Check_SignalMacth(GetSteeringModeSig,2,500);
+  _Set_11_Restoration(0);
+  _Send_Diag(elCount(SendData_2201),ID,SendData_2201); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,SendData_2E);
+  _Send_Diag(elCount(SendData_2202),ID,SendData_2202); _TestResult(SendData,ID,"",-1);
+  _Check_Response_Config(SendData,GetNowSteeringMode);
+  _Set_Sig(SetSteeringModeSig,0x05);
+  _Check_SignalMacth(GetSteeringModeSig,3,500);
+}
+
+
+testcase Case_GAC_31_0203() /*检测编程条件*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  GAC_31_0203(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_GAC_31_64D1() /*中位标定*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  GAC_31_64D1(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+testcase Case_GAC_31_64D2() /*清除中位标定*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  GAC_31_64D2(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_GAC_31_64D3() /*清除EOT末端角度值*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  GAC_31_64D3(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+testcase Case_GAC_31_64D4() /*清除PDC补偿力矩值*/
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  GAC_31_64D4(ID_From_Title,Session_From_Title);
+  End_Main();
+}
+
+
+testcase Case_GAC_UnFac_Config() /*广汽_非工厂模式*/
+{
+  Init_Main_Def();
+  GAC_UnFac_Config(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_GAC_Fac_Config() /*广汽_工厂模式*/
+{
+  Init_Main_Def();
+  GAC_Fac_Config(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_GAC_ALL_Zero_Config() /*广汽_写入全0后再次写入*/
+{
+  Init_Main_Def();
+  GAC_ALL_Zero_Config(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_GAC_Config_Turn() /*广汽_配置转向模式*/
+{
+  Init_Main_Def();
+  GAC_Config_Turn(phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_GAC_Config_Turn_Off() /*广汽_配置转向模式失效*/
+{
+  Init_Main_Def();
+  GAC_Config_Turn_Off(phyreq_ID,defsession);
+  End_Main();
+}

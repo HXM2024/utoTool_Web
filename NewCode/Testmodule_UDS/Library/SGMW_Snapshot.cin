@@ -1,0 +1,1693 @@
+/*@!Encoding:936*/
+includes
+{
+  
+}
+variables
+{
+  
+}
+//on preStart
+//{
+//  State_Loop = 0;
+//  @sysvar::Prog_power::K30Volt = 12;
+//  @sysvar::Prog_power::K30Curr = 10;
+//  @sysvar::Prog_power::K30 = 1;
+//}
+void Init_Main_19()
+{
+  Init_Main_Special("\\五菱_快照\\",defsession);
+  Init_For_Snapshot();
+}
+void End_Main_19()
+{
+  End_Main();
+}
+
+ int _Step_1904_Skip(char str[],dword Type) //取第0-3组数据
+{
+  int n;
+  int Sw_temp,Step_Flage;
+  char str_T[500];
+  char Te[500];
+  snprintf(str_T,elCount(str_T),"%s","");
+  snprintf(str_T,elCount(str_T),"%s",str);
+  Sw_temp = _Check_StrPossion_Res(str,1);
+  _Str_Upper(str_T);
+  Step_Flage = -1;
+  snprintf(Te,elCount(Te),"%s","");
+  if(Sw_temp!= -1) 
+    Step_Flage = _Check_mixArray_SetValue(str,Sw_temp);
+  if(Sw_temp!= -1 && Step_Flage == 1)
+  {
+    if(((strncmp(str_T,"CARSPD",strlen(str_T)) == 0) || (strncmp(str_T,"VEHICLESPEED",strlen(str_T)) == 0)))
+    {
+//      _Set_CarSpd(mixArray[Sw_temp].Vaule_Set[Type]);
+      _Set_Sig(mixArray[Sw_temp].Sig_Name[0],mixArray[Sw_temp].Vaule_Set[Type]);
+      CarSpd_Now = mixArray[Sw_temp].Vaule_Set[Type];
+      mixArray[Sw_temp].Vaule_Ex = mixArray[Sw_temp].Vaule_Set[Type];
+      mixArray[Sw_temp].Step_Flage = 1;
+      if(Group_Count>1)
+        mixArray[Sw_temp].Vaule_Ex_2[Type] = mixArray[Sw_temp].Vaule_Set[Type];
+      return 0;
+    }
+    else if(strncmp(str_T,"READY_STATE",strlen(str_T)) == 0 )
+    {
+      _Set_Sig(mixArray[Sw_temp].Sig_Name[0],mixArray[Sw_temp].Vaule_Set[Type]);
+      Engine_State = mixArray[Sw_temp].Vaule_Set[Type];
+      mixArray[Sw_temp].Vaule_Ex = mixArray[Sw_temp].Vaule_Set[Type];
+      mixArray[Sw_temp].Step_Flage = 1;
+      if(Group_Count>1)
+        mixArray[Sw_temp].Vaule_Ex_2[Type] = mixArray[Sw_temp].Vaule_Set[Type];
+      return 0;
+    }
+    else if(strncmp(str_T,"MILEAGE",strlen(str_T)) == 0 )
+    {
+      _Set_Sig(mixArray[Sw_temp].Sig_Name[0],mixArray[Sw_temp].Vaule_Set[Type]);
+      mixArray[Sw_temp].Vaule_Ex = mixArray[Sw_temp].Vaule_Set[Type];
+      mixArray[Sw_temp].Step_Flage = 1;
+      if(Group_Count>1)
+        mixArray[Sw_temp].Vaule_Ex_2[Type] = mixArray[Sw_temp].Vaule_Set[Type];
+      return 0;
+    }
+    else if(strncmp(str_T,"LOCALTIME",strlen(str_T)) == 0)
+    {
+      snprintf(Te,elCount(Te),"%s",mixArray[Sw_temp].LocalTime_Set[Type]);
+      _WriteEx_and_Report("   设置LocalTime",Te);
+      mixArray[Sw_temp].Step_Flage = 1;
+      _Set_Time(Te,1);
+      testWaitForTimeout(1000);
+      if(Group_Count>1)
+        snprintf(mixArray[Sw_temp].LocalTime_Value_2[Type],elCount(mixArray[Sw_temp].LocalTime_Value_2[Type]),"%s",mixArray[Sw_temp].LocalTime_Value);
+      snprintf(mixArray[Sw_temp].LocalTime_Value_Set[Type],elCount(mixArray[Sw_temp].LocalTime_Value_Set[Type]),"%s",mixArray[Sw_temp].LocalTime_Value);
+      return 0;
+    }
+    for(n=0;n<mixArray_Len;n++)
+    {
+      if(strncmp(str,mixArray[n].Str_DID_1904,strlen(str)) == 0 )
+      {
+        _Check_ID_(mixArray[n].Sig_Name_Node);
+        if(Canoe_Node_Flage == 1)
+        {
+          char str__[50];
+          snprintf(str__,elCount(str__),"%s","");
+          snprintf(str__,elCount(str__),"EV_%s",mixArray[n].Sig_Name[0]);
+          setSignal(mixArray[n].Sig_Name[0],(int)mixArray[Sw_temp].Vaule_Set[Type]);
+          putValue(str__,(int)mixArray[Sw_temp].Vaule_Set[Type]);
+          mixArray[Sw_temp].Vaule_Ex = mixArray[Sw_temp].Vaule_Set[Type];
+          mixArray[Sw_temp].Step_Flage = 1;
+          testWaitForTimeout(100);
+          if(Group_Count>1)
+            mixArray[Sw_temp].Vaule_Ex_2[Type] = mixArray[Sw_temp].Vaule_Set[Type];
+          return 0;
+        }
+      }
+    }
+  }
+  else if(Step_Flage == 0)
+  {
+    mixArray[Sw_temp].Step_Flage = -1;
+    _WriteEx_and_Report(str,"输入值为全0,跳过测试");
+    return -1;
+  }
+  {
+    mixArray[Sw_temp].Step_Flage = -1;
+    return -1;
+  }
+}
+
+void Snapshot_Change(dword ID,byte Session)
+{
+  int i;
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_Temp[2][50];
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  _Close_All();
+  testWaitForTimeout(5000);
+  TestStep_ReadDTC("",DTC_19[Node_1904_Pos][1],1,0,1,1);
+  _Open_All();
+  testWaitForTimeout(2000);
+  _WriteEx_and_Report("","设置第一次值");
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+    _Step_1904_(mixArray[i].Str_DID_1904,0,1);
+  }
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(200);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+  _WriteEx_and_Report("","丢失节点保持当前故障，两组快照均为第一次值");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  _WriteEx_and_Report("","设置第二次值");
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+    _Step_1904_(mixArray[i].Str_DID_1904,1,2);
+    _Step_1904_(mixArray[i].Str_DID_1904,0,1);
+  }
+  testWaitForTimeout(1000);
+  _WriteEx_and_Report("","故障恢复为历史故障，两组快照保持第一次值");
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  
+  _WriteEx_and_Report("","再次制造丢失，第零组快照保持不变，第一组快照更新为第二次值");
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904_(mixArray[i].Str_DID_1904,1,1);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  
+  _WriteEx_and_Report("","下电并设置第三次值");
+  _K15_OFF();
+  testWaitForTimeout(500);
+  _Power_Down_19();
+  testWaitForTimeout(K15_OFF_Time);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,2);
+    _Step_1904_(mixArray[i].Str_DID_1904,2,1);
+  }
+  testWaitForTimeout(1000);
+  _WriteEx_and_Report("","重新上电，第零组快照保持不变，第一组快照更新为第三次值");
+  _Power_Up_19();
+  if(Session != defsession)
+    _SetSession(Session);
+  testWaitForTimeout(5000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  
+  _WriteEx_and_Report("","下电并停发报文，设置第四次值");
+  _Power_Down_19();
+  testWaitForTimeout(K15_OFF_Time);
+  _Close_All();
+  testWaitForTimeout(2000);
+  _Open_All(DTC_19[Node_1904_Pos]);
+
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,3);
+    _Step_1904_(mixArray[i].Str_DID_1904,3,1);
+  }
+  testWaitForTimeout(1000);
+  _WriteEx_and_Report("","重新上电检测第零组快照保持不变，第一组快照更新为第四次值");
+  _Power_Up_19();
+  testWaitForTimeout(5000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  _WriteEx_and_Report("","清除DTC并等待2s，检测两组快照均更新为第四次值");
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  for(i=0;i<mixArray_Len;i++)
+    _Step_1904_(mixArray[i].Str_DID_1904,3,0);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+  _Open_All();
+}
+
+_19_04_3(dword ID,byte Session) /*所有故障码快照记录及更新一致性测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_Temp[2][50];
+  int i;
+  _Close_All();
+  _Power_Down();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  _Open_All(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+    _Step_1904_(mixArray[i].Str_DID_1904,0,1);
+  }
+  _Clear_DTC(phyreq_ID);
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  for(i=0;i<Freeze_Frame_Number_Count;i++)
+  {
+    testWaitForTimeout(2000);
+    Data_Send[5] = Freeze_Frame_Number[i];
+    _Send_Diag(6,ID,Data_Send);
+    _Check_1904(SendData,"All",Da_Temp,Str_Temp,2);
+    testWaitForTimeout(300);
+  }
+  _Open_All();
+}
+_19_04_4(dword ID,byte Session) /*总线信号丢失时的填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_[100];
+  char Str_2[2][100];
+  int i;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  TestStep_ReadDTC("",DTC_19[Node_1904_Pos][1],1,0,1,1);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"All");
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_CAN_Error_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_CAN_Error[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,1);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,1);
+    testWaitForTimeout(500);
+  }
+  _Open_All();
+}
+_19_04_5(dword ID,byte Session) /*信号先正常后丢失填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_[100];
+  char Str_2[2][100];
+  int i;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  _Power_Down();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+    _Step_1904_(mixArray[i].Str_DID_1904,0,1);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_2,2);
+  testWaitForTimeout(1000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Close_All_Expect(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(300);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_CAN_Error_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s","");
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_CAN_Error[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[0];
+    Da_Temp[1] = mixArray[Pos_].Invalid;
+    
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[0]);
+    snprintf(Str_2[0],elCount(Str_2[0]),"%x",mixArray[Pos_].Invalid);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Open_All();
+  diagStopTesterPresent(Cdd_Name);
+}
+
+_19_04_6(dword ID,byte Session) /*总线信号无效时填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_[100];
+  char Str_2[2][100];
+  int i,Temp_P;
+  dword Node_Temp;
+  dword Node_L[10];
+  dword Node_Count_;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  Node_Count_ = 0;
+  _Power_Down();
+  testWaitForTimeout(1000);
+  _Close_All();
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<Freeze_Frame_CAN_Error_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_CAN_Error[i]);
+    Temp_P = _Check_StrPossion_Res(Str_,1);
+    if(Temp_P != -1)
+    {
+      Node_L[Node_Count_] = atol(mixArray[Temp_P].Sig_Name_Node);
+      _Invalid_Node(Str_,Node_L[Node_Count_]);
+      Node_Count_++;
+      testWaitForTimeout(500);
+      _TestEnableMsg(atol(mixArray[Temp_P].Sig_Name_Node));
+    }
+  }
+  testWaitForTimeout(1000);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+    _Step_1904_(mixArray[i].Str_DID_1904,0,1);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  testWaitForTimeout(1000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_CAN_Error_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_CAN_Error[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,1);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,1);
+    testWaitForTimeout(500);
+  }
+  _Open_All();
+  for(i=0;i<Node_Count_;i++)
+    _Recover_Invalid_Node("",Node_L[i]);
+}
+_19_04_7(dword ID,byte Session) /*总线信号先正常后无效填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  float Da_Temp[2];
+  char Str_[100];
+  char Str_2[2][100];
+  int i,Temp_P;
+  dword Node_Temp;
+  dword Node_L[10];
+  dword Node_Count_;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  Node_Count_ = 0;
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  _Open_All();
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+    _Step_1904_(mixArray[i].Str_DID_1904,0,1);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  testWaitForTimeout(2000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_1904(SendData,"All",Da_Temp,Str_2,2);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<Freeze_Frame_CAN_Error_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_CAN_Error[i]);
+    Temp_P = _Check_StrPossion_Res(Str_,1);
+    if(Temp_P != -1)
+    {
+      Node_L[Node_Count_] = atol(mixArray[Temp_P].Sig_Name_Node);
+      _Invalid_Node(Str_,Node_L[Node_Count_]);
+      Node_Count_++;
+      testWaitForTimeout(500);
+    }
+  }
+  testWaitForTimeout(1000);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+  }
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_CAN_Error_Count;i++)
+  {
+    int Pos_;
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s","");
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_CAN_Error[i]);
+    Pos_ = _Check_StrPossion_Res(Str_,1);
+    Da_Temp[0] = mixArray[Pos_].Vaule_Ex_2[0];
+    Da_Temp[1] = mixArray[Pos_].Invalid;
+    snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[Pos_].LocalTime_Value_2[0]);
+    snprintf(Str_2[0],elCount(Str_2[0]),"%x",mixArray[Pos_].Invalid);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Open_All();
+  for(i=0;i<Node_Count_;i++)
+    _Recover_Invalid_Node("",Node_L[i]);
+}
+
+_19_04_8(dword ID,byte Session) /*里程及时间特殊策略_总线丢失时当前循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  char Str_2[2][100];
+  int i,n;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  
+  Node_Count_ = 0;
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        Node_Count_ ++;
+        _TestEnableMsg(atol(mixArray[i].Sig_Name_Node));
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[1];
+      }
+    }
+  }
+  testWaitForTimeout(500);
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestDisableMsg(Node_L[i]);
+  testWaitForTimeout(11000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    Da_Temp[1] = Da_Temp[0];
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Open_All();
+}
+_19_04_9(dword ID,byte Session) /*里程及时间特殊策略_总线丢失时跨循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  char Str_2[2][100];
+  int i,n;
+  
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  Node_Count_ = 0;
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        Node_Count_ ++;
+        _TestEnableMsg(atol(mixArray[i].Sig_Name_Node));
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[1];
+      }
+    }
+  }
+  testWaitForTimeout(500);
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");;
+  
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestDisableMsg(Node_L[i]);
+  testWaitForTimeout(11000);
+  _Power_Down_19();
+  testWaitForTimeout(K15_OFF_Time);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Power_Up_19();
+  testWaitForTimeout(CAN_Init_Time + 1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(200);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    Da_Temp[1] = Da_Temp[0];
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Open_All();
+}
+
+_19_04_10(dword ID,byte Session) /*里程及时间特殊策略_总线先正常后丢失当前循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  char Str_2[2][100];
+  
+  int i,n;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  Node_Count_ = 0;
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  testWaitForTimeout(5000);
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        Node_Count_ ++;
+        _TestEnableMsg(atol(mixArray[i].Sig_Name_Node));
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[1];
+      }
+    }
+  }
+  Da_Temp[1] = Da_Temp[0];
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(200);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  
+   _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,2);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[1],elCount(Str_2[1]),"%s",mixArray[i].LocalTime_Value_2[2]);
+        else
+          Da_Temp[1] = mixArray[i].Vaule_Ex_2[2];
+      }
+    }
+  }
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestDisableMsg(Node_L[i]);
+  testWaitForTimeout(11000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  snprintf(Str_2[0],elCount(Str_2[0]),"%s",Str_2[1]);
+  Da_Temp[0] = Da_Temp[1];
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Open_All();
+}
+_19_04_11(dword ID,byte Session) /*里程及时间特殊策略_总线先正常后丢失跨循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  float Temp;
+  char Str_2[2][100];
+  char Str[100];
+  
+  int i,n;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  Node_Count_ = 0;
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        Node_Count_ ++;
+        _TestEnableMsg(atol(mixArray[i].Sig_Name_Node));
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[1];
+      }
+    }
+  }
+  Da_Temp[1] = Da_Temp[0];
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(200);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,2);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str,elCount(Str),"%s",mixArray[i].LocalTime_Value_2[2]);
+        else
+          Temp = mixArray[i].Vaule_Ex_2[2];
+      }
+    }
+  }
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+    _TestDisableMsg(Node_L[i]);
+  testWaitForTimeout(11000);
+  
+  _Power_Down_19();
+  testWaitForTimeout(K15_OFF_Time);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  _Power_Up_19();
+  testWaitForTimeout(5000);
+  
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  Da_Temp[1] = Temp;
+  snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  snprintf(Str_2[0],elCount(Str_2[0]),"%s",Str_2[1]);
+  Da_Temp[0] = Da_Temp[1];  
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  
+  _Open_All();
+}
+
+_19_04_12(dword ID,byte Session) /*里程及时间特殊策略_总线无效当前循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  char Str_2[2][100];
+  
+  int i,n;
+  Node_Count_ = 0;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  _SetSession(Session);
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(5000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        Node_Count_++;
+        _TestEnableMsg(atol(mixArray[i].Sig_Name_Node));
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[0]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[0];
+      }
+    }
+  }
+  testWaitForTimeout(500);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  for(i=0;i<Node_Count_;i++)
+  {
+    _Invalid_Node("",Node_L[i]);
+  }
+  testWaitForTimeout(300);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[1],elCount(Str_2[1]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        else
+          Da_Temp[1] = mixArray[i].Vaule_Ex_2[1];
+      }
+    }
+  }
+  testWaitForTimeout(1000);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,2);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[1],elCount(Str_2[1]),"%s",mixArray[i].LocalTime_Value_2[2]);
+        else
+          Da_Temp[1] = mixArray[i].Vaule_Ex_2[0];
+      }
+    }
+  }
+  testWaitForTimeout(1000);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    Da_Temp[1] = Da_Temp[0];
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }  
+  for(i=0;i<Node_Count_;i++)
+  {
+    _Recover_Invalid_Node("",Node_L[i]);
+  }
+  _Open_All();
+}
+_19_04_13(dword ID,byte Session) /*里程及时间特殊策略_总线无效跨循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  char Str_2[2][100];
+  
+  int i,n;
+  Node_Count_ = 0;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(1000);
+  _Power_Up();
+  testWaitForTimeout(5000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        Node_Count_ ++;
+        _TestEnableMsg(atol(mixArray[i].Sig_Name_Node));
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[0]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[0];
+      }
+    }
+  }
+  testWaitForTimeout(500);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  for(i=0;i<Node_Count_;i++)
+  {
+    _Invalid_Node("",Node_L[i]);
+  }
+  testWaitForTimeout(300);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[1],elCount(Str_2[1]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        else
+          Da_Temp[1] = mixArray[i].Vaule_Ex_2[1];
+      }
+    }
+  }
+  testWaitForTimeout(1000);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,2);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[1],elCount(Str_2[1]),"%s",mixArray[i].LocalTime_Value_2[0]);
+        else
+          Da_Temp[1] = mixArray[i].Vaule_Ex_2[0];
+      }
+    }
+  }
+  testWaitForTimeout(1000);
+  _K15_OFF();
+  testWaitForTimeout(K15_OFF_Time);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  
+  for(i=0;i<Node_Count_;i++)
+    _TestDisableMsg(Node_L[i]);
+  testWaitForTimeout(5000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<Node_Count_;i++)
+    _TestEnableMsg(Node_L[i]);
+  testWaitForTimeout(500);
+  _K15_ON();
+  testWaitForTimeout(6000);
+  
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }  
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    Da_Temp[1] = Da_Temp[0];
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }  
+  for(i=0;i<Node_Count_;i++)
+    _Recover_Invalid_Node("",Node_L[i]);
+  _Open_All();
+}
+
+_19_04_14(dword ID,byte Session) /*里程及时间特殊策略_总线先正常后无效当前循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  char Str_2[2][100];
+  
+  int i,n;
+  Node_Count_ = 0;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(3000);
+  _Power_Up();
+  testWaitForTimeout(5000);
+  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        _TestEnableMsg(Node_L[Node_Count_]);
+        Node_Count_ ++;
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[0]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[0];
+      }
+    }
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+  Da_Temp[1] = Da_Temp[0];
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[1],elCount(Str_2[1]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        else
+          Da_Temp[1] = mixArray[i].Vaule_Ex_2[1];
+      }
+    }
+  }
+  for(i=0;i<Node_Count_;i++)
+    _Invalid_Node("",Node_L[i]);
+  
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,2);
+    }
+  }
+  testWaitForTimeout(500);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,3);
+    }
+  }
+  testWaitForTimeout(500);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(500);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send); 
+  _Get_1904_All_Data(SendData); 
+  
+  snprintf(Str_2[0],elCount(Str_2[0]),"%s",Str_2[1]);
+  Da_Temp[0] = Da_Temp[1];
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  
+  for(i=0;i<Node_Count_;i++)
+    _Recover_Invalid_Node("",Node_L[i]);
+  _Open_All();
+}
+
+_19_04_15(dword ID,byte Session) /*里程及时间特殊策略_总线先正常后无效跨循环填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  
+  dword Node_L[10];
+  dword Node_Count_;
+  float Da_Temp[2];
+  char Str_2[2][100];
+  float Da_Temp_[2];
+  char Str_2_[2][100];
+  
+  int i,n;
+  Node_Count_ = 0;
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  
+  _Power_Down();
+  _Close_All();
+  testWaitForTimeout(3000);
+  _Power_Up();
+  testWaitForTimeout(5000);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,0);
+        Node_L[Node_Count_] = atol(mixArray[i].Sig_Name_Node);
+        _TestEnableMsg(Node_L[Node_Count_]);
+        Node_Count_ ++;
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+          snprintf(Str_2[0],elCount(Str_2[0]),"%s",mixArray[i].LocalTime_Value_2[0]);
+        else
+          Da_Temp[0] = mixArray[i].Vaule_Ex_2[0];
+      }
+    }
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Check_19_NoFreeze(SendData,"ALL");
+  
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+  Da_Temp[1] = Da_Temp[0];
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }  
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+      {
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,1);
+        if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+        {
+          snprintf(Str_2[1],elCount(Str_2[1]),"%s",mixArray[i].LocalTime_Value_2[1]);
+          snprintf(Str_2_[1],elCount(Str_2_[1]),"%s",mixArray[i].LocalTime_Value_2[1]);
+        }
+        else
+        {
+          Da_Temp[1] = mixArray[i].Vaule_Ex_2[1];
+          Da_Temp_[1] = mixArray[i].Vaule_Ex_2[1];
+        }
+      }
+    }
+  }
+  for(i=0;i<Node_Count_;i++)
+    _Invalid_Node("",Node_L[i]);
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,2);
+    }
+  }
+  for(i=0;i<mixArray_Len;i++)
+  {
+    for(n=0;n<Freeze_Frame_Special_Invalid_Count;n++)
+    {
+      if(strncmp(mixArray[i].Str_DID_1904,Freeze_Frame_Special_Invalid[n],strlen(mixArray[i].Str_DID_1904))==0)
+        _Step_1904_Skip(mixArray[i].Str_DID_1904,3);
+    }
+  }
+  _K15_OFF();
+  testWaitForTimeout(K15_OFF_Time);
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  for(i=0;i<Node_Count_;i++)
+    _TestDisableMsg(Node_L[i]);
+  testWaitForTimeout(5000);
+  for(i=0;i<Node_Count_;i++)
+    _TestEnableMsg(Node_L[i]);
+  _Open_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(1000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send);
+  _Get_1904_All_Data(SendData);
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2[0]);
+    Da_Temp[1] = Da_Temp[0];
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Close_One_Node(DTC_19[Node_1904_Pos]);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send); 
+  _Get_1904_All_Data(SendData); 
+  snprintf(Str_2[1],elCount(Str_2[1]),"%s",Str_2_[1]);
+  Da_Temp[1] = Da_Temp_[1];
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(2000);
+  _Send_Diag(6,ID,Data_Send); 
+  _Get_1904_All_Data(SendData);
+  snprintf(Str_2[0],elCount(Str_2[0]),"%s",Str_2_[1]);
+  Da_Temp[0] = Da_Temp_[1];
+  for(i=0;i<Freeze_Frame_Special_Invalid_Count;i++)
+  {
+    snprintf(Str_,elCount(Str_),"%s","");
+    snprintf(Str_,elCount(Str_),"%s",Freeze_Frame_Special_Invalid[i]);
+    if(strncmp(Str_,"LocalTime",strlen(Str_))==0)
+      _Check_1904_Specified(Str_,Str_2,0);
+    else
+      _Check_1904_Specified(Str_,Da_Temp,0);
+    testWaitForTimeout(500);
+  }
+  for(i=0;i<Node_Count_;i++)
+    _Recover_Invalid_Node("",Node_L[i]);
+  _Open_All();
+}
+
+_19_04_16(dword ID,byte Session) /*故障码时间快照在总线信号不合理时的填充值测试*/
+{
+  byte Data_Send[6] = {0x19,0x04,0,0,0,0xff};
+  char Str_[100];
+  char Str_2_[2][100];
+  int i;
+  snprintf(Str_2_[0],elCount(Str_2_[0]),"%s","");
+  snprintf(Str_2_[1],elCount(Str_2_[1]),"%s","");
+  DTC_H = (DTC_19[Node_1904_Pos][1]>>16);
+  DTC_M = (DTC_19[Node_1904_Pos][1]>>8);
+  DTC_L = (DTC_19[Node_1904_Pos][1]&0xFF);
+  Data_Send[2] = DTC_H;
+  Data_Send[3] = DTC_M;
+  Data_Send[4] = DTC_L;
+  for(i=0;i<mixArray_Len;i++)
+  {
+    if(strncmp(mixArray[i].Str_DID_1904,"LocalTime",strlen(mixArray[i].Str_DID_1904))==0)
+    {
+      snprintf(Str_,elCount(Str_),"%s","2025/14/31_28:63:62");
+      _WriteEx_and_Report("设置时间为",Str_);
+      _Set_Time(Str_,1);
+      _Clear_DTC(phyreq_ID);
+      testWaitForTimeout(2000);
+      _Send_Diag(6,ID,Data_Send); 
+      _Check_19_NoFreeze(SendData,"ALL");
+      _Close_One_Node(DTC_19[Node_1904_Pos]);
+      testWaitForTimeout(500);
+      _Send_Diag(6,ID,Data_Send);
+      _Get_1904_All_Data(SendData); 
+      if(LocalTime_Error==0)
+        snprintf(Str_2_[0],elCount(Str_2_[0]),"%s","20251431286362");
+      else
+        snprintf(Str_2_[0],elCount(Str_2_[0]),"%s","202525531255255255");
+      snprintf(Str_2_[1],elCount(Str_2_[1]),"%s",Str_2_[0]);
+      _Check_1904_Specified("LocalTime",Str_2_,0);
+      _Open_One_Node(DTC_19[Node_1904_Pos]);
+    }
+  }
+}
+
+_19_04_17(dword ID,byte Session) /*ECU同时可存储DTC的最小数量*/
+{
+  int i,len,dtc_num;
+  byte Data_Send[3] = {0x19,0x02,0x09};
+  _Clear_DTC(phyreq_ID);
+  _Close_All();
+  testWaitForTimeout(5000);
+  _Open_All();
+  for(i=0;i<Node_Invalid_Count;i++)
+  {
+    _Set_Sig(Node_Invalid[i].Signal_Name,Node_Invalid[i].Invalid_Value);
+    testWaitForTimeout(Node_Invalid[i].Time*1.2);
+    _Set_Sig(Node_Invalid[i].Signal_Name,Node_Invalid[i].Normal_Value);
+    testWaitForTimeout(Node_Invalid[i].Time*1.2);
+  }
+  testWaitForTimeout(2000);
+
+  Data_Send[2] = 0x09;
+  _Send_Diag(3,ID,Data_Send);
+  if(diagGetLastResponseCode(SendData)==0)
+    testWaitForDiagResponse(SendData,2000);
+  if(diagGetLastResponseCode(SendData)==-1)
+  {
+    len = DiagGetRespPrimitiveSize(SendData);
+    dtc_num = (len-3)/4;
+    if(Node_Invalid_Count+DTC_19_Count<=DTC_19_max)
+    {
+      if(dtc_num==(Node_Invalid_Count+DTC_19_Count))
+        testStepPass("","当前网络DTC个数未达到最小值,反馈DTC个数与期望个数一致");
+      else
+        testStepFail("","当前网络DTC个数未达到最小值,反馈DTC个数为 %d ,期望个数为 %d",dtc_num,Node_Invalid_Count+DTC_19_Count);
+    }
+    else
+    {
+      if(dtc_num>DTC_19_max)
+        testStepPass("","当前网络DTC个数达到最小值,反馈DTC个数为 %d ,最小个数为 %d",dtc_num,DTC_19_max);
+      else
+        testStepFail("","当前网络DTC个数达到最小值,反馈DTC个数为 %d ,最小个数为 %d",dtc_num,DTC_19_max);
+    }
+  }
+}
+
+testcase Case_19_Snapshot_Change()/*故障码全局快照更新及存储机制测试*/
+{
+  int i;
+  Init_Main_19();
+  Snapshot_Change(phyreq_ID,defsession);
+  End_Main_19();
+}
+testcase Case_19_04_3()   /*所有故障码快照记录及更新一致性测试*/
+{
+  Init_Main_19();
+  _19_04_3(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_4()   /*快照在总线信号丢失时的填充值测试*/
+{
+  Init_Main_19();
+  _19_04_4(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_5()   /*快照在总线信号先正常后丢失时的填充值测试*/
+{
+  Init_Main_19();
+  _19_04_5(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_6()   /*快照在总线信号无效时填充值测试*/
+{
+  Init_Main_19();
+  _19_04_6(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_7()   /*快照在总线信号先正常后无效时的填充值测试*/
+{
+  Init_Main_19();
+  _19_04_7(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_8()   /*特殊策略_总线丢失当前循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_8(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_9()   /*特殊策略_总线丢失跨循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_9(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_10()   /*特殊策略_总线先正常后丢失当前循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_10(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_11()   /*特殊策略_总线先正常后丢失跨循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_11(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_12()   /*特殊策略_总线先正常后丢失跨循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_12(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_13()   /*特殊策略_总线先正常后丢失跨循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_13(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_14()   /*里程及时间特殊策略_总线先正常后无效当前循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_14(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_15()   /*里程及时间特殊策略_总线先正常后无效跨循环填充值测试*/
+{
+  Init_Main_19();
+  _19_04_15(phyreq_ID,defsession);  
+  End_Main_19();
+}testcase Case_19_04_16()   /*故障码时间快照在总线信号不合理时的填充值测试*/
+{
+  Init_Main_19();
+  _19_04_16(phyreq_ID,defsession);  
+  End_Main_19();
+}
+testcase Case_19_04_17()   /*ECU同时可存储DTC的最大数量*/
+{
+  Init_Main_19();
+  _19_04_17(phyreq_ID,defsession);  
+  End_Main_19();
+}

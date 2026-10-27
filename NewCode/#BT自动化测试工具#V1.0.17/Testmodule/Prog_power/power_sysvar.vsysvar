@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<systemvariables version="4">
+  <namespace name="" comment="" interface="">
+    <namespace name="Prog_power" comment="" interface="">
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="ClearDate" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K15" comment="电源开关" bitcount="32" isSigned="true" encoding="65001" type="int" startValue="0" minValue="0" minValuePhys="0" maxValue="0" maxValuePhys="0" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K15Curr" comment="" bitcount="64" isSigned="true" encoding="65001" type="float" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K15Port" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" minValue="0" minValuePhys="0" maxValue="10" maxValuePhys="10">
+        <valuetable name="EUNM" definesMinMax="false">
+          <valuetableentry value="0" lowerBound="0" upperBound="0" description="port0" displayString="port0" />
+          <valuetableentry value="1" lowerBound="1" upperBound="1" description="port1" displayString="port1" />
+          <valuetableentry value="2" lowerBound="2" upperBound="2" description="port2" displayString="port2" />
+          <valuetableentry value="3" lowerBound="3" upperBound="3" description="port3" displayString="port3" />
+          <valuetableentry value="4" lowerBound="4" upperBound="4" description="port4" displayString="port4" />
+          <valuetableentry value="5" lowerBound="5" upperBound="5" description="port5" displayString="port5" />
+          <valuetableentry value="6" lowerBound="6" upperBound="6" description="port6" displayString="port6" />
+          <valuetableentry value="7" lowerBound="7" upperBound="7" description="port7" displayString="port7" />
+          <valuetableentry value="8" lowerBound="8" upperBound="8" description="port8" displayString="port8" />
+        </valuetable>
+      </variable>
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K15send" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K15Volt" comment="" bitcount="64" isSigned="true" encoding="65001" type="float" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K30" comment="电源开关" bitcount="32" isSigned="true" encoding="65001" type="int" startValue="0" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K30Curr" comment="" bitcount="64" isSigned="true" encoding="65001" type="float" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K30Port" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" minValue="0" minValuePhys="0" maxValue="10" maxValuePhys="10">
+        <valuetable name="EUNM" definesMinMax="false">
+          <valuetableentry value="0" lowerBound="0" upperBound="0" description="port0" displayString="port0" />
+          <valuetableentry value="1" lowerBound="1" upperBound="1" description="port1" displayString="port1" />
+          <valuetableentry value="2" lowerBound="2" upperBound="2" description="port2" displayString="port2" />
+          <valuetableentry value="3" lowerBound="3" upperBound="3" description="port3" displayString="port3" />
+          <valuetableentry value="4" lowerBound="4" upperBound="4" description="port4" displayString="port4" />
+          <valuetableentry value="5" lowerBound="5" upperBound="5" description="port5" displayString="port5" />
+          <valuetableentry value="6" lowerBound="6" upperBound="6" description="port6" displayString="port6" />
+          <valuetableentry value="7" lowerBound="7" upperBound="7" description="port7" displayString="port7" />
+          <valuetableentry value="8" lowerBound="8" upperBound="8" description="port8" displayString="port8" />
+        </valuetable>
+      </variable>
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K30send" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="K30Volt" comment="" bitcount="64" isSigned="true" encoding="65001" type="float" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="port" comment="" bitcount="32" isSigned="true" encoding="65001" type="int" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="RecepData" comment="" bitcount="64" isSigned="false" encoding="65001" type="data" arrayLength="0" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SendData" comment="发送数据" bitcount="64" isSigned="false" encoding="65001" type="data" arrayLength="0" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SendData_K15" comment="发送数据" bitcount="64" isSigned="false" encoding="65001" type="data" arrayLength="0" />
+      <variable anlyzLocal="2" readOnly="false" valueSequence="false" unit="" name="SendData_K30" comment="发送数据" bitcount="64" isSigned="false" encoding="65001" type="data" arrayLength="0" />
+    </namespace>
+  </namespace>
+</systemvariables>

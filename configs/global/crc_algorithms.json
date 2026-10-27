@@ -46,5 +46,13 @@
   {
     "name": "CRC_Checksum_XOR",
     "code": "byte CRC_Checksum_XOR(byte data[],byte bytelbit[],int dataLength)\n{\n  int index;\n  byte crc;\n  crc=0;\n  for ( index = 0; index < 8; index++)\n  {\n    if((index) == bytelbit[0])\n      {continue;}\n    crc ^= data[index];\n  }\n  return crc;\n}"
+  },
+  {
+    "name": "E2E_1D_ID_CRC8",
+    "code": "byte E2E_1D_ID_CRC8(byte da[],byte bytelbit[],int dataLength,word dataId)\n{\n  byte byte_index=0,bit_index=0,byte_i = 0;\n  byte CRC=0;\n  byte POLY;\n  byte b=0;\n  byte_index=0;\n  bit_index=0;\n  CRC=0xFF;\n  POLY=0x1d;\n\n  // 校验数组 = DataID 低字节、高字节（小端序）+ 原校验数组\n  for(byte_index=0;byte_index<dataLength+2;byte_index++)\n  {\n    if(byte_index==0)\n    {\n      b=(byte)(dataId & 0xFF);\n    }\n    else if(byte_index==1)\n    {\n      b=(byte)((dataId >> 8) & 0xFF);\n    }\n    else\n    {\n      b=da[byte_index-2];\n      for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n      {\n        if(bytelbit[byte_i]==byte_index-2)\n         { break;}\n      }\n      if(byte_i<elcount(bytelbit))\n      {\n        continue;\n      }\n    }\n    CRC ^=b;\n\n    for( bit_index=0; bit_index<8; ++bit_index )\n    {\n      if( (CRC & 0x80) > 0 )\n      {\n        CRC = (CRC << 1) ^ POLY;\n      }\n      else\n        CRC = (CRC << 1);\n    }\n  }\n  CRC^=0xFF;\n  return CRC;\n  }"
+  },
+  {
+    "name": "E2E_1021_CRC16_ID",
+    "code": "word E2E_1021_CRC16_ID(byte data[],byte bytelbit[],int dataLength,word dataId)\n{\n  int index;\n  int bit=0;\n  byte byte_index=0,byte_i = 0;\n  int c15=0;\n  int i=0 ;\n  byte b=0;\n  qword crc;\n  qword  polynomial;\n  polynomial = 0x1021;\n  crc = 0xffff;\n\n  // 校验数组 = 原数组（跳过 bytelbit 指定字节）+ 末尾追加 DataID 低字节、高字节（小端序）\n  for ( byte_index = 0; byte_index < dataLength + 2; byte_index++)\n  {\n    if(byte_index < dataLength)\n    {\n      for ( byte_i = 0; byte_i < elcount(bytelbit); byte_i++)\n      {\n        if(bytelbit[byte_i]==byte_index)\n         { break;}\n      }\n      if(byte_i<elcount(bytelbit))\n      {\n        continue;\n      }\n      b = data[byte_index];\n    }\n    else if(byte_index == dataLength)\n    {\n      b = (byte)(dataId & 0xFF);\n    }\n    else\n    {\n      b = (byte)((dataId >> 8) & 0xFF);\n    }\n    for ( i = 0; i < 8; i++)\n    {\n      bit = ((b >> (7 - i) & 1) == 1);\n      c15 = ((crc >> 15 & 1) == 1);\n      crc <<= 1;\n      if (c15 ^ bit)\n      {crc ^= polynomial;}\n    }\n  }\n  crc &= 0xffff;\n  return crc;\n}"
   }
 ]

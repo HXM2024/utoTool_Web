@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<Panel Type="Vector.CANalyzer.Panels.PanelSerializer, Vector.CANalyzer.Panels.Serializer, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null">
+  <Object Type="Vector.CANalyzer.Panels.Runtime.Panel, Vector.CANalyzer.Panels.Common, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="Panel" Children="Controls" ControlName="VBF文件输入">
+    <Object Type="Vector.CANalyzer.Panels.Design.ButtonControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="ButtonControl1" Children="Controls" ControlName="Button">
+      <Property Name="Name">ButtonControl1</Property>
+      <Property Name="Size">75, 23</Property>
+      <Property Name="Location">84, 80</Property>
+      <Property Name="Text">文件清除</Property>
+      <Property Name="SymbolConfiguration">5;16;DID;;;ClearPath;1;;;-1;;;</Property>
+      <Property Name="TabIndex">2</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl2" Children="Controls" ControlName="Static Text">
+      <Property Name="Name">StaticTextControl2</Property>
+      <Property Name="Size">29, 13</Property>
+      <Property Name="Location">256, 55</Property>
+      <Property Name="Text">SWP2</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.StaticTextControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="StaticTextControl1" Children="Controls" ControlName="Static Text">
+      <Property Name="Name">StaticTextControl1</Property>
+      <Property Name="Size">29, 13</Property>
+      <Property Name="Location">256, 23</Property>
+      <Property Name="Text">SWP1</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.PathControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="PathControl2" Children="Controls" ControlName="Path Dialog">
+      <Property Name="Name">PathControl2</Property>
+      <Property Name="Size">241, 23</Property>
+      <Property Name="Location">8, 49</Property>
+      <Property Name="SymbolConfiguration">5;16;DID;;;SWP2_Path;4;;;-1;;;</Property>
+      <Property Name="TabIndex">1</Property>
+    </Object>
+    <Object Type="Vector.CANalyzer.Panels.Design.PathControl, Vector.CANalyzer.Panels.CommonControls, Version=12.0.75.0, Culture=neutral, PublicKeyToken=null" Name="PathControl1" Children="Controls" ControlName="Path Dialog">
+      <Property Name="Name">PathControl1</Property>
+      <Property Name="Size">241, 23</Property>
+      <Property Name="Location">8, 16</Property>
+      <Property Name="FileDlgFilter">All Files|*.vbf*</Property>
+      <Property Name="SymbolConfiguration">5;16;DID;;;SWP1_Path;4;;;-1;;;</Property>
+      <Property Name="TabIndex">0</Property>
+    </Object>
+    <Property Name="Name">Panel</Property>
+    <Property Name="Size">299, 112</Property>
+    <Property Name="BackColor">White</Property>
+  </Object>
+</Panel>

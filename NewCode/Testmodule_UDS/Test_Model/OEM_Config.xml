@@ -1,0 +1,582 @@
+﻿<testmodule title="主机厂相关测试" version="1.0">
+  <variants>
+    <variant name="All"/>
+    <variant name="BYD"/>
+    <variant name="Geely_1.0"/>
+    <variant name="Geely_3.0_NRC22"/>
+    <variant name="Geely_3.0_19服务"/>
+    <variant name="Geely_OCC"/>
+    <variant name="Geely_CCP"/>
+    <variant name="长安"/>
+    <variant name="五菱"/>
+    <variant name="奇瑞"/>
+    <variant name="广汽"/>
+  </variants>
+
+  <testgroup title="BYD" variants="BYD All">
+    <testgroup title="BYD程序更新附加要求">
+      <capltestcase name="Case_Other_BYD_01"   title="BYD_复位11服务后3s开始检测通信类故障" />
+      <capltestcase name="Case_Other_BYD_02"   title="BYD_复位11服务后3s开始检测通信类故障_1" />
+      <capltestcase name="Case_Other_BYD_03"   title="BYD_85服务后3s开始检测通信类故障" />
+      <capltestcase name="Case_Other_BYD_04"   title="BYD_85服务后3s开始检测通信类故障_1" />
+      <capltestcase name="Case_Other_BYD_05"   title="BYD_85H禁止DTC检测后立即停止故障检测" />
+      <capltestcase name="Case_Other_BYD_06"   title="BYD_28H接收到使能报文发送后1s内开始应用报文发送" />
+      <capltestcase name="Case_Other_BYD_07"   title="BYD_程序更新后11H复位后2s内完成自检及报文发送" />
+    </testgroup>
+
+    <testgroup title="BYD_34/36/37">
+      <capltestcase name="Case_Serve_34_Phy_Def"   title="BYD_Serve_34物理默认" />
+      <capltestcase name="Case_Serve_34_Phy_Ex"   title="BYD_Serve_34物理拓展" />
+      <capltestcase name="Case_Serve_34_Fun_Def"   title="BYD_Serve_34功能默认" />
+      <capltestcase name="Case_Serve_34_Fun_Ex"   title="BYD_Serve_34功能拓展" />
+      <capltestcase name="Case_Serve_36_Phy_Def"   title="BYD_Serve_36物理默认" />
+      <capltestcase name="Case_Serve_36_Phy_Ex"   title="BYD_Serve_36物理拓展" />
+      <capltestcase name="Case_Serve_36_Fun_Def"   title="BYD_Serve_36功能默认" />
+      <capltestcase name="Case_Serve_36_Fun_Ex"   title="BYD_Serve_36功能拓展" />
+      <capltestcase name="Case_Serve_37_Phy_Def"   title="BYD_Serve_37物理默认" />
+      <capltestcase name="Case_Serve_37_Phy_Ex"   title="BYD_Serve_37物理拓展" />
+      <capltestcase name="Case_Serve_37_Fun_Def"   title="BYD_Serve_37功能默认" />
+      <capltestcase name="Case_Serve_37_Fun_Ex"   title="BYD_Serve_37功能拓展" />
+    </testgroup>
+
+    <testgroup title="BYD配置字2100">
+      <capltestcase name="Case_2100_config_0"   title="BYD配置字2100_遍历默认车型配置" />
+      <capltestcase name="Case_2100_config_1"   title="BYD配置字2100_低阶" />
+      <capltestcase name="Case_2100_config_2"   title="BYD配置字2100_高阶" />      
+      <capltestcase name="Case_2100_config_3"   title="BYD配置字2100_配置ADAS电机扭矩控制接口" />
+      <capltestcase name="Case_2100_config_4"   title="BYD配置字2100_配置LKA(转角)" />      
+      <capltestcase name="Case_2100_config_5"   title="BYD配置字2100_配置DST" />
+      <capltestcase name="Case_2100_config_6"   title="BYD配置字2100_配置RCS" />
+      <capltestcase name="Case_2100_config_7"   title="BYD配置字2100_配置SFS" />
+      <capltestcase name="Case_2100_config_8"   title="BYD配置字2100_配置ATS" />
+      <capltestcase name="Case_2100_config_9"   title="BYD配置字2100_配置LKA(扭矩)" />
+      <capltestcase name="Case_2100_config_10"   title="BYD配置字2100_配置APA" />
+      <capltestcase name="Case_2100_config_11"   title="BYD配置字2100_配置LDW" />
+      <capltestcase name="Case_2100_config_12"   title="BYD配置字2100_配置ADS转角转矩接口" />
+      <capltestcase name="Case_2100_config_13"   title="BYD配置字2100_配置SVC通用振动接口" />
+      <capltestcase name="Case_2100_config_14"   title="BYD配置字2100_配置SAC通用振动接口" />
+      <capltestcase name="Case_2100_config_15"   title="BYD配置字2100_配置SMS目标转向档位" />
+      <capltestcase name="Case_2100_config_16"   title="BYD配置字2100_配置原地转向(VOT)" />
+      <capltestcase name="Case_2100_config_17"   title="BYD配置字2100_配置ADS方案多级振感功能(扭矩)" />
+      <capltestcase name="Case_2100_config_18"   title="BYD配置字2100_配置ADS方案多级振感功能(转角)" />
+      <capltestcase name="Case_2100_config_19"   title="BYD配置字2100_配置其他助力手感" />
+      <capltestcase name="Case_2100_config_20"   title="BYD配置字2100_全不配置" />
+      <capltestcase name="Case_2100_config_21"   title="BYD配置字2100_否定响应码测试" />
+      <capltestcase name="Case_2100_config_22"   title="BYD配置字2100_否定响应码测试_2" />
+    </testgroup>
+    
+    <testgroup title="BYD配置字F1A1">
+      <capltestcase name="Case_F1A1_config_0"   title="BYD配置字F1A1_遍历默认车型配置" />
+      <capltestcase name="Case_F1A1_Default_Config"   title="BYD配置字默认值_出厂默认值" />
+      <capltestcase name="Case_F1A1_config_Clear"   title="BYD配置字擦除" />
+      <capltestcase name="Case_F1A1_config_1"   title="BYD配置字F1A1_低阶" />
+      <capltestcase name="Case_F1A1_config_2"   title="BYD配置字F1A1_高阶" />      
+      <capltestcase name="Case_F1A1_config_3"   title="BYD配置字F1A1_配置ADAS电机扭矩控制接口" />
+      <capltestcase name="Case_F1A1_config_4"   title="BYD配置字F1A1_配置LKA(转角)" />      
+      <capltestcase name="Case_F1A1_config_5"   title="BYD配置字F1A1_配置DST" />
+      <capltestcase name="Case_F1A1_config_6"   title="BYD配置字F1A1_配置RCS" />
+      <capltestcase name="Case_F1A1_config_7"   title="BYD配置字F1A1_配置SFS" />
+      <capltestcase name="Case_F1A1_config_8"   title="BYD配置字F1A1_配置ATS" />
+      <capltestcase name="Case_F1A1_config_9"   title="BYD配置字F1A1_配置LKA(扭矩)" />
+      <capltestcase name="Case_F1A1_config_10"   title="BYD配置字F1A1_配置APA" />
+      <capltestcase name="Case_F1A1_config_11"   title="BYD配置字F1A1_配置LDW" />
+      <capltestcase name="Case_F1A1_config_12"   title="BYD配置字F1A1_配置ADS转角转矩接口" />
+      <capltestcase name="Case_F1A1_config_13"   title="BYD配置字F1A1_配置SVC通用振动接口" />
+      <capltestcase name="Case_F1A1_config_14"   title="BYD配置字F1A1_配置SAC通用振动接口" />
+      <capltestcase name="Case_F1A1_config_15"   title="BYD配置字F1A1_配置SMS目标转向档位" />
+      <capltestcase name="Case_F1A1_config_16"   title="BYD配置字F1A1_配置原地转向(VOT)" />
+      <capltestcase name="Case_F1A1_config_17"   title="BYD配置字F1A1_配置ADS方案多级振感功能(扭矩)" />
+      <capltestcase name="Case_F1A1_config_18"   title="BYD配置字F1A1_配置ADS方案多级振感功能(转角)" />
+      <capltestcase name="Case_F1A1_config_19"   title="BYD配置字F1A1_配置其他助力手感" />
+      <capltestcase name="Case_F1A1_config_20"   title="BYD配置字F1A1_全不配置" />
+      <capltestcase name="Case_F1A1_config_21"   title="BYD配置字F1A1_否定响应码测试" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="Geely_1.0配置字" variants="Geely_1.0 All">
+    <testgroup title="车辆类型">
+      <capltestcase name="Case_Config_MPV"   title="车辆类型_MPV" />
+      <capltestcase name="Case_Config_SUV"   title="车辆类型_SUV" />
+      <capltestcase name="Case_Config_Sedan"   title="车辆类型_Sedan" />
+      <capltestcase name="Case_Config_Cross"   title="车辆类型_Cross" />
+    </testgroup>
+    <testgroup title="调教参数">	    
+      <capltestcase name="Case_Config_Tradition"   title="调教参数_Tradition" />
+      <capltestcase name="Case_Config_Hybrid"   title="调教参数_Hybrid" />
+      <capltestcase name="Case_Config_EV"   title="调教参数_EV" />
+      <capltestcase name="Case_Config_Reserved"   title="调教参数_Reserved" />
+    </testgroup>
+    <testgroup title="功能配置_仅检测故障码">	  
+      <capltestcase name="Case_Config_Default_Geely1_0"   title="默认状态" />
+      <capltestcase name="Case_Config_DrvMode_Geely1_0"   title="驾驶模式" />
+      <capltestcase name="Case_Config_LKA_LDW_Geely1_0"   title="LKA_LDW" />
+      <capltestcase name="Case_Config_PAS_Geely1_0"   title="自动泊车" />
+      <capltestcase name="Case_Config_STT_Geely1_0"   title="启停功能" />
+      <capltestcase name="Case_Config_No_Geely1_0"   title="功能全不配置" />
+      <capltestcase name="Case_Config_ALL_Geely1_0"   title="功能全配置" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="Geely_3.0_NRC22" variants="Geely_3.0_NRC22 All">
+    <testgroup title="10服务_存在E2E及Last值校验">
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS10物理_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS10物理_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS10物理_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10物理_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS10物理_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10物理_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS10物理_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS10物理_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS10物理_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10物理_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS10物理_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10物理_拓展_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS10功能_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS10功能_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS10功能_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10功能_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS10功能_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10功能_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS10功能_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS10功能_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS10功能_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10功能_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS10功能_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10功能_拓展_NRC22_上电测试"/>
+      </testgroup>
+    </testgroup>
+    <testgroup title="11服务_存在E2E及Last值校验">
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS11物理_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS11物理_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS11物理_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11物理_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS11物理_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11物理_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS11物理_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS11物理_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS11物理_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11物理_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS11物理_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11物理_拓展_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS11功能_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS11功能_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS11功能_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11功能_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS11功能_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11功能_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS11功能_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS11功能_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS11功能_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11功能_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS11功能_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11功能_拓展_NRC22_上电测试"/>
+      </testgroup>
+    </testgroup>
+    <testgroup title="28服务">
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS28物理_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS28物理_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS28物理_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS28物理_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS28物理_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS28物理_拓展_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS28功能_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS28功能_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS28功能_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS28功能_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS28功能_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS28功能_拓展_NRC22_上电测试"/>
+      </testgroup>
+    </testgroup>
+    <testgroup title="85服务">
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS85物理_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS85物理_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS85物理_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS85物理_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS85物理_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS85物理_拓展_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower" title="UDS85功能_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper" title="UDS85功能_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode" title="UDS85功能_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS85功能_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority" title="UDS85功能_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS85功能_拓展_NRC22_上电测试"/>
+      </testgroup>
+    </testgroup>
+    
+    <testgroup title="10服务_无E2E及Last值校验">
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS10物理_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS10物理_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS10物理_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10物理_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS10物理_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10物理_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS10物理_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS10物理_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS10物理_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10物理_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS10物理_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10物理_拓展_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS10功能_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS10功能_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS10功能_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10功能_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS10功能_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10功能_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS10功能_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS10功能_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS10功能_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS10功能_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS10功能_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS10功能_拓展_NRC22_上电测试"/>
+      </testgroup>
+    </testgroup>
+    <testgroup title="11服务_无E2E及Last值校验">
+      <testgroup title="物理_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS11物理_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS11物理_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS11物理_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11物理_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS11物理_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11物理_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="物理_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS11物理_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS11物理_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS11物理_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11物理_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS11物理_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11物理_拓展_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_默认">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS11功能_默认_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS11功能_默认_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS11功能_默认_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11功能_默认_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS11功能_默认_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11功能_默认_NRC22_上电测试"/>
+      </testgroup>
+      <testgroup title="功能_拓展">
+        <capltestcase name="Case_Serve_CarSpd_Lower_" title="UDS11功能_拓展_NRC22车速小于3"/>
+        <capltestcase name="Case_Serve_CarSpd_Upper_" title="UDS11功能_拓展_NRC22车速大于3"/>
+        <capltestcase name="Case_Serve_UsgMode_" title="UDS11功能_拓展_NRC22_UsgMode"/>
+        <capltestcase name="Case_Serve_Battery" title="UDS11功能_拓展_NRC22_Battery"/>
+        <capltestcase name="Case_Serve_NRC22_NRC_Priority_" title="UDS11功能_拓展_NRC22_优先级"/>
+        <capltestcase name="Case_Serve_NRC22_PowerUp" title="UDS11功能_拓展_NRC22_上电测试"/>
+      </testgroup>
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="Geely_3.0_19服务" variants="Geely_3.0_19服务 All">
+    <testgroup title="物理_默认">
+      <capltestcase name="Case_Serve19_02_1_Geely" title="UDS19物理_默认_读故障_01"/>
+      <capltestcase name="Case_Serve19_02_2_Geely" title="UDS19物理_默认_读故障_02"/>
+      <capltestcase name="Case_Serve19_01_Geely" title="UDS19物理_默认_故障老化测试"/>
+      <capltestcase name="Case_Serve19_02_Geely" title="UDS19物理_默认_故障码溢出机制测试"/>
+      <capltestcase name="Case_Serve19_03_Geely" title="UDS19物理_默认_获取DTC快照记录ID"/>
+      <capltestcase name="Case_Serve19_04_Geely" title="UDS19物理_默认_读快照"/>
+      <capltestcase name="Case_Serve19_06_Geely" title="UDS19物理_默认_读扩展"/>
+      <capltestcase name="Case_Serve19_06_01_Geely" title="UDS19物理_默认_19_06(30)"/>
+      <capltestcase name="Case_Serve19_0A_Geely" title="UDS19物理_默认_19_0A"/>
+      <capltestcase name="Case_Serve19_Support_Geely" title="UDS19物理_默认_肯定响应抑制位"/>
+      <capltestcase name="Case_Serve19_NRC12_Geely" title="UDS19物理_默认_NRC12"/>
+      <capltestcase name="Case_Serve19_NRC13_Geely" title="UDS19物理_默认_NRC13"/>
+      <capltestcase name="Case_Serve19_NRC31_Geely" title="UDS19物理_默认_NRC31"/>
+      <capltestcase name="Case_Serve19_NRC_Geely" title="UDS19物理_默认_NRC优先级"/>
+    </testgroup>
+    <testgroup title="物理_拓展">
+      <capltestcase name="Case_Serve19_02_1_Geely" title="UDS19物理_拓展_读故障_01"/>
+      <capltestcase name="Case_Serve19_02_2_Geely" title="UDS19物理_拓展_读故障_02"/>
+      <capltestcase name="Case_Serve19_01_Geely" title="UDS19物理_拓展_故障老化测试"/>
+      <capltestcase name="Case_Serve19_02_Geely" title="UDS19物理_拓展_故障码溢出机制测试"/>
+      <capltestcase name="Case_Serve19_03_Geely" title="UDS19物理_拓展_获取DTC快照记录ID"/>
+      <capltestcase name="Case_Serve19_04_Geely" title="UDS19物理_拓展_读快照"/>
+      <capltestcase name="Case_Serve19_06_Geely" title="UDS19物理_拓展_读扩展"/>
+      <capltestcase name="Case_Serve19_06_01_Geely" title="UDS19物理_拓展_19_06(30)"/>
+      <capltestcase name="Case_Serve19_0A_Geely" title="UDS19物理_拓展_19_0A"/>
+      <capltestcase name="Case_Serve19_Support_Geely" title="UDS19物理_拓展_肯定响应抑制位"/>
+      <capltestcase name="Case_Serve19_NRC12_Geely" title="UDS19物理_拓展_NRC12"/>
+      <capltestcase name="Case_Serve19_NRC13_Geely" title="UDS19物理_拓展_NRC13"/>
+      <capltestcase name="Case_Serve19_NRC31_Geely" title="UDS19物理_拓展_NRC31"/>
+      <capltestcase name="Case_Serve19_NRC_Geely" title="UDS19物理_拓展_NRC优先级"/>
+    </testgroup>
+    <testgroup title="功能_默认">
+      <capltestcase name="Case_Serve19_02_1_Geely" title="UDS19功能_默认_读故障_01"/>
+      <capltestcase name="Case_Serve19_02_2_Geely" title="UDS19功能_默认_读故障_02"/>
+      <capltestcase name="Case_Serve19_01_Geely" title="UDS19功能_默认_故障老化测试"/>
+      <capltestcase name="Case_Serve19_02_Geely" title="UDS19功能_默认_故障码溢出机制测试"/>
+      <capltestcase name="Case_Serve19_03_Geely" title="UDS19功能_默认_获取DTC快照记录ID"/>
+      <capltestcase name="Case_Serve19_04_Geely" title="UDS19功能_默认_读快照"/>
+      <capltestcase name="Case_Serve19_06_Geely" title="UDS19功能_默认_读扩展"/>
+      <capltestcase name="Case_Serve19_06_01_Geely" title="UDS19功能_默认_19_06(30)"/>
+      <capltestcase name="Case_Serve19_0A_Geely" title="UDS19功能_默认_19_0A"/>
+      <capltestcase name="Case_Serve19_Support_Geely" title="UDS19功能_默认_肯定响应抑制位"/>
+      <capltestcase name="Case_Serve19_NRC12_Geely" title="UDS19功能_默认_NRC12"/>
+      <capltestcase name="Case_Serve19_NRC13_Geely" title="UDS19功能_默认_NRC13"/>
+      <capltestcase name="Case_Serve19_NRC31_Geely" title="UDS19功能_默认_NRC31"/>
+      <capltestcase name="Case_Serve19_NRC_Geely" title="UDS19功能_默认_NRC优先级"/>
+    </testgroup>
+    <testgroup title="功能_拓展">
+      <capltestcase name="Case_Serve19_02_1_Geely" title="UDS19功能_拓展_读故障_01"/>
+      <capltestcase name="Case_Serve19_02_2_Geely" title="UDS19功能_拓展_读故障_02"/>
+      <capltestcase name="Case_Serve19_01_Geely" title="UDS19功能_拓展_故障老化测试"/>
+      <capltestcase name="Case_Serve19_02_Geely" title="UDS19功能_拓展_故障码溢出机制测试"/>
+      <capltestcase name="Case_Serve19_03_Geely" title="UDS19功能_拓展_获取DTC快照记录ID"/>
+      <capltestcase name="Case_Serve19_04_Geely" title="UDS19功能_拓展_读快照"/>
+      <capltestcase name="Case_Serve19_06_Geely" title="UDS19功能_拓展_读扩展"/>
+      <capltestcase name="Case_Serve19_06_01_Geely" title="UDS19功能_拓展_19_06(30)"/>
+      <capltestcase name="Case_Serve19_0A_Geely" title="UDS19功能_拓展_19_0A"/>
+      <capltestcase name="Case_Serve19_Support_Geely" title="UDS19功能_拓展_肯定响应抑制位"/>
+      <capltestcase name="Case_Serve19_NRC12_Geely" title="UDS19功能_拓展_NRC12"/>
+      <capltestcase name="Case_Serve19_NRC13_Geely" title="UDS19功能_拓展_NRC13"/>
+      <capltestcase name="Case_Serve19_NRC31_Geely" title="UDS19功能_拓展_NRC31"/>
+      <capltestcase name="Case_Serve19_NRC_Geely" title="UDS19功能_拓展_NRC优先级"/>
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="Geely_OCC" variants="Geely_OCC All">
+      <capltestcase name="Case_OCC_ALL"   title="OCC测试" />
+      <capltestcase name="Case_OCC1"   title="OCC1测试" />
+      <capltestcase name="Case_OCC2"   title="OCC2测试" />
+      <capltestcase name="Case_OCC3"   title="OCC3测试" />
+      <capltestcase name="Case_OCC4"   title="OCC4测试" />
+      <capltestcase name="Case_OCC6_1"   title="OCC6_1测试" />
+      <capltestcase name="Case_OCC6_2"   title="OCC6_2测试" />
+      <capltestcase name="Case_OCC7"   title="OCC7测试" />
+      <capltestcase name="Case_OCC1_OCC3"   title="OCC1_OCC3测试" />
+      <capltestcase name="Case_OCC4_Count"   title="OCC4计数值测试" />
+  </testgroup>
+
+  <testgroup title="Geely_CCP" variants="Geely_CCP All">
+    <testgroup title="CCP_测试">
+      <capltestcase name="Test_CCP"   title="CCP验证" />
+      <capltestcase name="Send_CCP_Normal"   title="CCP正常发送默认值" />
+      <testgroup title="默认状态">
+        <capltestcase name="Case_CCP_1"   title="没有接收到VCP信号" />
+        <capltestcase name="Case_CCP_2"   title="没有接收到完整的VCP信号" />
+        <capltestcase name="Case_CCP_3"   title="无效的VCP信号接收" />
+        <capltestcase name="Case_CCP_4"   title="无效的某个CCP信号接收" />
+        <capltestcase name="Case_CCP_6"   title="没有接收到完整的VCP信号(丢失与无效同时存在)" />
+        <capltestcase name="Case_CCP_7"   title="报故障码的前提条件-Car_Mode=normal" />
+        <capltestcase name="Case_CCP_9"   title="报故障码的前提条件-ElPowerLevel !=1 or 2" />
+        <capltestcase name="Case_CCP_8"   title="报故障码的前提条件-电压9_18V" />
+        <capltestcase name="Case_CCP_10"   title="14清除未配置故障码" />
+        <capltestcase name="Case_CCP_5"   title="接收有效的VCP信号过程中断电" />
+        <capltestcase name="Case_CCP_100"   title="接收有效的VCP信号过程中高电压后恢复电压" />
+        <capltestcase name="Case_CCP_101"   title="接收有效的VCP信号过程中低电压后恢复电压" />
+      </testgroup>
+
+      <testgroup title="配置状态">
+        <capltestcase name="Case_CCP_11"   title="有效的VCP信号接收(由未配置转到已配置第一条)" />
+        <capltestcase name="Case_CCP_12"   title="先正常后缺失部分CCP" />
+        <capltestcase name="Case_CCP_13"   title="随机的VCP信号接收" />
+        <capltestcase name="Case_CCP_14"   title="先正常后发送无效CCP" />
+        <capltestcase name="Case_CCP_15"   title="改变UsgMode(0x2E0)" />
+        <capltestcase name="Case_CCP_16"   title="有效-无效-无效CCP" />
+        <capltestcase name="Case_CCP_18"   title="无效-有效-无效CCP" />
+        <capltestcase name="Case_CCP_19"   title="无效-无效-有效CCP" />
+        <capltestcase name="Case_CCP_20"   title="无效值覆盖_CCP[1]=00_所有CCP=FF(GEEA3.5)" />
+        <capltestcase name="Case_CCP_20_1"   title="无效值覆盖_CCP[1]=00_所有CCP=FF(GEEA3.0)" />
+        <capltestcase name="Case_CCP_21"   title="无效值覆盖_CCP[1]=00_所有CCP未发送(GEEA3.5)" />
+        <capltestcase name="Case_CCP_21_1"   title="无效值覆盖_CCP[1]=00_所有CCP未发送(GEEA3.0)" />
+        <capltestcase name="Case_CCP_22"   title="无效值覆盖_CCP[1]=00_CCP[3]=00(GEEA3.5)" />
+        <capltestcase name="Case_CCP_22_1"   title="无效值覆盖_CCP[1]=00_CCP[3]=00(GEEA3.0)" />
+        <capltestcase name="Case_CCP_23"   title="无效值覆盖_所有CCP=00_所有CCP=FF(GEEA3.5)" />
+        <capltestcase name="Case_CCP_23_1"   title="无效值覆盖_所有CCP=00_所有CCP=FF(GEEA3.0)" />
+        <capltestcase name="Case_CCP_24"   title="无效值覆盖_所有CCP=FF_所有CCP=FF" />
+        <capltestcase name="Case_CCP_25"   title="无效值覆盖（随机无效值被有效值覆盖）(GEEA3.5)" />
+        <capltestcase name="Case_CCP_25_1"   title="无效值覆盖（随机无效值被有效值覆盖）(GEEA3.0)" />
+        <capltestcase name="Case_CCP_26"   title="无效CCP参数记录_仅10个无效CCP(GEEA3.5)" />
+        <capltestcase name="Case_CCP_26_1"   title="无效CCP参数记录_仅10个无效CCP(GEEA3.0)" />
+        <capltestcase name="Case_CCP_27"   title="无效CCP参数记录_仅记录前10个无效CCP(GEEA3.5)" />
+        <capltestcase name="Case_CCP_27_1"   title="无效CCP参数记录_仅记录前10个无效CCP(GEEA3.0)" />
+        <capltestcase name="Case_CCP_28"   title="无效CCP参数记录_多次发送不同无效值（GEEA3.5)" />
+        <capltestcase name="Case_CCP_28_1"   title="无效CCP参数记录_多次发送不同无效值后上下电（GEEA3.5)" />
+        <capltestcase name="Case_CCP_29"   title="无效CCP参数记录_多次发送不同无效值（GEEA3.0)" />
+        <capltestcase name="Case_CCP_29_1"   title="无效CCP参数记录_多次发送不同无效值后上下电（GEEA3.0)" />
+        <capltestcase name="Case_CCP_30"   title="无效CCP参数记录-无效个数最大记录值0xFF（GEEA3.0）" />
+        <capltestcase name="Case_CCP_31"   title="接收有效的VCP信号过程中断电" />
+        <capltestcase name="Case_CCP_32"   title="接收无效的VCP信号过程中断电" />
+        <capltestcase name="Case_CCP_33"   title="已配置状态_报故障码的前提条件-Car Mode=0：normal" />
+        <capltestcase name="Case_CCP_34"   title="已配置状态_报故障码的前提条件-电压9_18V" />
+        <capltestcase name="Case_CCP_35"   title="已配置状态_报故障码的前提条件-ElPowerLevel !=1 or 2" />
+        <capltestcase name="Case_CCP_36"   title="已配置状态_报故障码的前提条件-未满足Usgmode激活后30s" />
+
+        <capltestcase name="Case_CCP_102"   title="接收有效的VCP信号过程中高电压后恢复电压" />
+        <capltestcase name="Case_CCP_103"   title="接收有效的VCP信号过程中低电压后恢复电压" />
+        <capltestcase name="Case_CCP_104"   title="接收无效的VCP信号过程中高电压后恢复电压" />
+        <capltestcase name="Case_CCP_105"   title="接收无效的VCP信号过程中低电压后恢复电压" />
+      </testgroup>
+    </testgroup>
+    <testgroup title="CCP有效值与无效值测试">	    
+      <capltestcase name="CCP1_ValidList" title="CCP1有效值遍历测试"/>
+      <capltestcase name="CCP1_InValidList" title="CCP1无效值遍历测试"/>
+      <capltestcase name="CCP3_ValidList" title="CCP3有效值遍历测试"/>
+      <capltestcase name="CCP3_InValidList" title="CCP3无效值遍历测试"/>
+      <capltestcase name="CCP13_ValidList" title="CCP13有效值遍历测试"/>
+      <capltestcase name="CCP13_InValidList" title="CCP13无效值遍历测试"/>
+      <capltestcase name="CCP16_ValidList" title="CCP16有效值遍历测试"/>
+      <capltestcase name="CCP16_InValidList" title="CCP16无效值遍历测试"/>
+      <capltestcase name="CCP17_ValidList" title="CCP17有效值遍历测试"/>
+      <capltestcase name="CCP17_InValidList" title="CCP17无效值遍历测试"/>
+      <capltestcase name="CCP50_ValidList" title="CCP50有效值遍历测试"/>
+      <capltestcase name="CCP50_InValidList" title="CCP50无效值遍历测试"/>
+      <capltestcase name="CCP57_ValidList" title="CCP57有效值遍历测试"/>
+      <capltestcase name="CCP57_InValidList" title="CCP57无效值遍历测试"/>
+      <capltestcase name="CCP58_ValidList" title="CCP58有效值遍历测试"/>
+      <capltestcase name="CCP58_InValidList" title="CCP58无效值遍历测试"/>
+      <capltestcase name="CCP62_ValidList" title="CCP62有效值遍历测试"/>
+      <capltestcase name="CCP62_InValidList" title="CCP62无效值遍历测试"/>
+      <capltestcase name="CCP142_ValidList" title="CCP142有效值遍历测试"/>
+      <capltestcase name="CCP142_InValidList" title="CCP142无效值遍历测试"/>
+      <capltestcase name="CCP150_ValidList" title="CCP150有效值遍历测试"/>
+      <capltestcase name="CCP150_InValidList" title="CCP150无效值遍历测试"/>
+      <capltestcase name="CCP316_ValidList" title="CCP316有效值遍历测试"/>
+      <capltestcase name="CCP316_InValidList" title="CCP316无效值遍历测试"/>
+      <capltestcase name="CCP317_ValidList" title="CCP317有效值遍历测试"/>
+      <capltestcase name="CCP317_InValidList" title="CCP317无效值遍历测试"/>
+      <capltestcase name="CCP494_ValidList" title="CCP494有效值遍历测试"/>
+      <capltestcase name="CCP494_InValidList" title="CCP494无效值遍历测试"/>
+      <capltestcase name="CCP540_ValidList" title="CCP540有效值遍历测试"/>
+      <capltestcase name="CCP540_InValidList" title="CCP540无效值遍历测试"/>
+      <capltestcase name="CCP547_ValidList" title="CCP547有效值遍历测试"/>
+      <capltestcase name="CCP547_InValidList" title="CCP547无效值遍历测试"/>
+      <capltestcase name="CCP565_ValidList" title="CCP565有效值遍历测试"/>
+      <capltestcase name="CCP565_InValidList" title="CCP565无效值遍历测试"/>
+      <capltestcase name="CCP615_ValidList" title="CCP615有效值遍历测试"/>
+      <capltestcase name="CCP615_InValidList" title="CCP615无效值遍历测试"/>
+      <capltestcase name="CCP639_ValidList" title="CCP639有效值遍历测试"/>
+      <capltestcase name="CCP639_InValidList" title="CCP639无效值遍历测试"/>
+      <capltestcase name="CCP640_ValidList" title="CCP640有效值遍历测试"/>
+      <capltestcase name="CCP640_InValidList" title="CCP640无效值遍历测试"/>
+      <capltestcase name="CCP695_ValidList" title="CCP695有效值遍历测试"/>
+      <capltestcase name="CCP695_InValidList" title="CCP695无效值遍历测试"/>
+      <capltestcase name="CCP773_ValidList" title="CCP773有效值遍历测试"/>
+      <capltestcase name="CCP773_InValidList" title="CCP773无效值遍历测试"/>
+      <capltestcase name="CCP784_ValidList" title="CCP784有效值遍历测试"/>
+      <capltestcase name="CCP784_InValidList" title="CCP784无效值遍历测试"/>
+      <capltestcase name="CCP798_ValidList" title="CCP798有效值遍历测试"/>
+      <capltestcase name="CCP798_InValidList" title="CCP798无效值遍历测试"/>
+      <capltestcase name="CCP829_ValidList" title="CCP829有效值遍历测试"/>
+      <capltestcase name="CCP829_InValidList" title="CCP829无效值遍历测试"/>
+      <capltestcase name="CCP831_ValidList" title="CCP831有效值遍历测试"/>
+      <capltestcase name="CCP831_InValidList" title="CCP831无效值遍历测试"/>
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="长安" variants="长安 All">
+    <testgroup title="长安配置字">
+      <capltestcase name="Case_Config_Default_ChangAn"   title="默认值" />
+      <capltestcase name="Case_Config_ALL_ChangAn"   title="配置所有功能" />
+      <capltestcase name="Case_Config_DTC_ChangAn"   title="DTC测试" />
+      <capltestcase name="Case_Config_Byte0_ChangAn"   title="整车调试参数" />
+      <capltestcase name="Case_Config_Byte1_bit0_ChangAn"   title="变速箱类型" />
+      <capltestcase name="Case_Config_STT_ChangAn"   title="Byte1_bit1_STT" />
+      <capltestcase name="Case_Config_DMS_ChangAn"   title="Byte1_bit2_多助力模式" />
+      <capltestcase name="Case_Config_WIR_ChangAn"   title="Byte1_bit3_WIR" />
+      <capltestcase name="Case_Config_APA_ChangAn"   title="Byte1_bit4_APA" />
+      <capltestcase name="Case_Config_IACC_ChangAn"   title="Byte1_bit5_IACC" />
+      <capltestcase name="Case_Config_LDW_ChangAn"   title="Byte1_bit6_LDW" />
+      <capltestcase name="Case_Config_ESS_ChangAn"   title="Byte1_bit7_ESS" />
+      <capltestcase name="Case_Config_Byte2_bit0_ChangAn"   title="Byte2_bit0_车辆动力类型" />
+      <capltestcase name="Case_Config_TSC_ChangAn"   title="Byte2_bit1_TSC" />
+      <capltestcase name="Case_Config_APC_ChangAn"   title="Byte2_bit2_APC" />
+    </testgroup>
+    <testgroup title="冻结帧测试">
+      <capltestcase name="Case_FixDataSave_1"   title="烧录完程序后读取冻结帧默认值" />
+      <capltestcase name="Case_FixDataSave_2"   title="AD无效故障存储机制测试" />
+      <capltestcase name="Case_FixDataSave_3"   title="LDW无效故障存储机制测试" />
+      <capltestcase name="Case_FixDataSave_4"   title="主路轮速信号1无效故障存储机制测试" />
+      <capltestcase name="Case_FixDataSave_5"   title="重启,上下点火异常工况测试" />
+      <capltestcase name="Case_FixDataSave_6"   title="14清除冻结帧数据测试" />
+      <capltestcase name="Case_FixDataSave_7"   title="遍历所有信号" />
+    </testgroup>
+    <testgroup title="工厂模式">
+      <capltestcase name="Case_Fac_Config"   title="工厂模式_配置字" />
+      <capltestcase name="Case_Fac_Angle_Calibration"   title="工厂模式_中位标定" />
+      <capltestcase name="Case_Fac_AngleAndConfig"   title="工厂模式_配置字和中位标定" />
+    </testgroup>
+    <testgroup title="功能DID">
+      <capltestcase name="Case_FunDID_3001_CCAG"   title="长安功能DID_3001" />
+      <capltestcase name="Case_FunDID_3002_CCAG"   title="长安功能DID_3002" />
+      <capltestcase name="Case_FunDID_3003_CCAG"   title="长安功能DID_3003" />
+      <capltestcase name="Case_FunDID_3004_CCAG"   title="长安功能DID_3004" />
+      <capltestcase name="Case_FunDID_3005_CCAG"   title="长安功能DID_3005" />
+      <capltestcase name="Case_FunDID_3006_CCAG"   title="长安功能DID_3006" />
+      <capltestcase name="Case_FunDID_3007_CCAG"   title="长安功能DID_3007" />
+      <capltestcase name="Case_FunDID_3008_CCAG"   title="长安功能DID_3008" />
+      <capltestcase name="Case_FunDID_3009_CCAG"   title="长安功能DID_3009" />
+      <capltestcase name="Case_FunDID_300A_CCAG"   title="长安功能DID_300A" />
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="五菱" variants="五菱 All">
+    <testgroup title="五菱配置字" >
+      <capltestcase name="Case_Config_Default_SGMW"   title="默认值" />
+      <capltestcase name="Case_Config_Common_SGMW"   title="已配置_无功能(8002)" />
+      <capltestcase name="Case_Config_Common_SGMW"   title="已配置_无功能(8003)" />
+      <capltestcase name="Case_Config_Common_SGMW"   title="已配置_车型配置(C002)" />
+      <capltestcase name="Case_Config_Common_SGMW"   title="已配置_车型配置(C102)" />
+      <capltestcase name="Case_Config_Common_SGMW"   title="已配置_车型配置(E002)" />
+      <capltestcase name="Case_Config_Unconfig_SGMW"   title="未配置_DTC测试" />
+      <capltestcase name="Case_Config_0xFF_SGMW"   title="配置全0xFF" />
+      <capltestcase name="Case_Config_NoADAS_SGMW"   title="未配置_配置位为0其余全1(7FFF)" />
+      <capltestcase name="Case_Config_Restriction_SGMW"   title="动力车型限制写入" />
+    </testgroup>
+    <testgroup title="五菱特殊工况" >
+      <capltestcase name="Case_SGMW_F190_Loop"   title="五菱F190写入值压力测试" />
+      <capltestcase name="Case_SGMW_Part_number"   title="上下电是否改变零件号测试" />
+    </testgroup>
+
+  </testgroup>
+
+  <testgroup title="奇瑞配置字" variants="奇瑞 All">
+    <capltestcase name="Case_Config_Default_Chery"   title="默认值" />
+    <capltestcase name="Case_Config_LKA_Chery"   title="配置LKA_扭矩" />
+    <capltestcase name="Case_Config_APA_Chery"   title="配置APA" />
+    <capltestcase name="Case_Config_LKA_APA_Chery"   title="配置LKA与APA" />
+    <capltestcase name="Case_Config_NO_Chery"   title="不配置LKA_APA" />
+    <capltestcase name="Case_Config_APA_Chery"   title="配置APA" />
+    <capltestcase name="Case_Config_Is_0xC4_Chery"   title="配置0x0C4转角外发" />
+    <capltestcase name="Case_Config_No_0xC4_Chery"   title="不配置0x0C4转角外发" />
+  </testgroup>
+  
+  <testgroup title="广汽" variants="广汽 All">
+    <testgroup title="广汽工厂模式" >
+      <capltestcase name="Case_GAC_UnFac_Config"   title="广汽_非工厂模式" />
+      <capltestcase name="Case_GAC_Fac_Config"   title="广汽_工厂模式" />
+      <capltestcase name="Case_GAC_ALL_Zero_Config"   title="广汽_写入全0后再次写入" />
+    </testgroup>
+    <testgroup title="广汽配置字" >
+      <capltestcase name="Case_GAC_Config_Turn"   title="广汽_配置转向模式" />
+      <capltestcase name="Case_GAC_Config_Turn_Off"   title="广汽_配置转向模式失效" />
+    </testgroup>
+  </testgroup>
+
+</testmodule>

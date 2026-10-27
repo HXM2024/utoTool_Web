@@ -195,6 +195,7 @@ import SanbaoCaseLibrary, { type CaseLibraryItem } from '@/components/SanbaoCase
 import SanbaoSequenceEditor, { type SequenceStep } from '@/components/SanbaoSequenceEditor.vue'
 import SanbaoTestCaseList from '@/components/SanbaoTestCaseList.vue'
 import { useModuleStore } from '@/stores/modules'
+import { defaultAlgoForOem } from '@/utils/securityAlgo'
 import { getConfig, saveConfig } from '@/api/config'
 import { generateSanbao, getGlobalLibrary, saveGlobalLibrary } from '@/api/sanbao'
 import { useResizableSize } from '@/composables/useResizableSize'
@@ -313,6 +314,7 @@ function buildSanbaoSaveData() {
     steps: sequenceSteps.value,
     test_cases: testCases.value,
     oem: store.selectedOem,
+    securityAlgo: store.selectedAlgo,
     // 生成参数（A2L/CDD 限定符 + Ready 信号），随配置保存
     a2lQualifierLineEdit: configPageData.value.a2lQualifierLineEdit,
     cddQualifierLineEdit: configPageData.value.cddQualifierLineEdit,
@@ -361,6 +363,7 @@ async function onCreate(name: string) {
       steps: [],
       test_cases: [],
       oem: store.selectedOem,
+      securityAlgo: store.selectedAlgo,
       a2lQualifierLineEdit: '',
       cddQualifierLineEdit: '',
       readySignal: '',
@@ -449,6 +452,13 @@ async function onConfigChange(name: string) {
     // 回填主机厂选择
     if (data.oem) {
       store.setSelectedOem(data.oem)
+    }
+    // 回填安全算法；历史配置只有 oem 时按该厂默认算法兜底
+    if (data.securityAlgo) {
+      store.setSelectedAlgo(data.securityAlgo)
+    } else if (data.oem) {
+      const fallback = defaultAlgoForOem(data.oem)
+      if (fallback) store.setSelectedAlgo(fallback)
     }
     // 标记内存数据归属该配置，后续切换时据此安全自动保存
     loadedConfig.value = name

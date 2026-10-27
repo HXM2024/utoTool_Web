@@ -1,0 +1,791 @@
+/*@!Encoding:936*/
+includes
+{
+  
+}
+variables
+{
+  
+}
+
+_Check_RCS(byte type) /*0:不转动，无变化   1：存在角度变化*/
+{
+  float Angle_1;
+  testStep("","检测遥控驾驶");
+  writeEx(-3,0,"检测遥控驾驶");
+  Angle_1 = _Get_Ang_Now();    
+  _Active_RCS();
+  _set_0x299_RemoteCtrCommand(7);
+  testWaitForTimeout(500);
+  _set_0x299_RemoteCtrCommand(0);
+  _Close_RCS();
+  _Check_AngChange(Angle_1,_Get_Ang_Now(),type);
+  _Return_Ang();
+}
+_Check_SFS(byte type)
+{
+  int Tmep_Value;
+  int Tmep_Value_2;
+  testStep("","检测多助力模式");
+  writeEx(-3,0,"检测多助力模式");
+  Tmep_Value = _get_0x24C_SteeringMode();
+  writeEx(-3,0,"操作前当前模式为  %d",Tmep_Value);
+  if(Tmep_Value==1)
+    _set_0x4E3_SteeringMode(3);
+  else
+    _set_0x4E3_SteeringMode(1);
+  testWaitForTimeout(1000*1.5);
+  Tmep_Value_2 = _get_0x24C_SteeringMode();
+  writeEx(-3,0,"操作后当前模式为  %d",Tmep_Value_2);
+  if(type==0)
+  {
+    if(Tmep_Value_2==Tmep_Value)
+      _testStepPass("SFS","当前助力模式与预期一致,无变化");
+    else
+      _testStepFail("SFS","预期助力模式无变化,实测助力模式发生改变");
+  }
+  else
+  {
+    if(Tmep_Value_2==Tmep_Value)
+      _testStepFail("SFS","预期助力模式发生改变,实测无变化");
+    else
+      _testStepPass("SFS","当前助力模式与预期一致,发生改变");
+  }
+}
+_Check_ATS(byte type)
+{
+  int Tmep_Value,Tmep_Value_2;
+  int Tmep_Value_3,Tmep_Value_4;
+  testStep("","检测全地形模式");
+  writeEx(-3,0,"检测全地形模式");
+  Tmep_Value = _get_0x24C_SteeringMode();
+  Tmep_Value_2 = _get_0x24C_AllowForSteeringMode();
+  writeEx(-3,0,"操作前当前模式为  %d",Tmep_Value);
+  writeEx(-3,0,"操作前是否允许设置标志位为  %d",Tmep_Value_2);
+  if(Tmep_Value==1)
+    _set_0x240_ActRoadMode(3);
+  else
+    _set_0x240_ActRoadMode(4);
+  testWaitForTimeout(1000*1.5);
+  Tmep_Value_3 = _get_0x24C_SteeringMode();
+  Tmep_Value_4 = _get_0x24C_AllowForSteeringMode();
+  writeEx(-3,0,"操作后当前模式为  %d",Tmep_Value_3);
+  writeEx(-3,0,"操作后是否允许设置标志位为  %d",Tmep_Value_4);
+  if(type==0)
+  {
+    if(Tmep_Value_3==Tmep_Value && Tmep_Value_2 == Tmep_Value_4)
+      _testStepPass("ATS","当前助力模式与预期一致,无变化");
+    else if(Tmep_Value_3!=Tmep_Value && Tmep_Value_2 != Tmep_Value_4)
+      _testStepFail("ATS","预期助力模式无变化,实测助力模式发生改变");
+    else if(Tmep_Value_3!=Tmep_Value && Tmep_Value_2 == Tmep_Value_4)
+      _testStepFail("ATS","助力手感发生改变,但禁止切换标志位保持未变");
+    else
+      _testStepFail("ATS","助力手感未发生改变,但禁止切换标志位被改变");
+  }
+  else
+  {
+    if(Tmep_Value_3==Tmep_Value && Tmep_Value_2 == Tmep_Value_4)
+      _testStepFail("ATS","预期助力模式发生改变,实测无变化");
+    else if(Tmep_Value_3!=Tmep_Value && Tmep_Value_2 != Tmep_Value_4)
+      _testStepPass("ATS","当前助力模式与预期一致,发生改变");
+    else if(Tmep_Value_3!=Tmep_Value && Tmep_Value_2 == Tmep_Value_4)
+      _testStepFail("ATS","助力手感发生改变,但禁止切换标志位保持未变");
+    else
+      _testStepFail("ATS","助力手感未发生改变,但禁止切换标志位被改变");
+  }
+  _set_0x240_ActRoadMode(1);
+  testWaitForTimeout(100);
+}
+_Check_DST(byte type)
+{
+  float Angle_1;
+  testStep("","检测DST控制状态");
+  writeEx(-3,0,"检测DST控制状态");
+  testWaitForTimeout(2000);
+  Angle_1 = _Get_Ang_Now();
+  _Active_DST();
+  _Check_AngChange(Angle_1,_Get_Ang_Now(),type);
+  if(type==1)
+  {
+    if(testWaitForSignalMatch(x27F_EPS_DST_Control_status,2,500)==1)/*DST激活后状态位为2*/
+      _testStepPass("DST","DST激活后状态机变为激活状态");
+    else
+      _testStepFail("DST","DST激活后状态机外发异常");
+    if(testWaitForSignalMatch(x27F_EPS_DST_Value_VD,1,500)==1)/*DST激活后输出值有效状态为1*/
+      _testStepPass("DST","DST激活后输出值有效状态与期望一致保持为1");
+    else
+      _testStepFail("DST","DST激活后输出值有效状态异常");
+  }
+  _Close_DST();
+  _Return_Ang();
+}
+_Check_APA(byte type)
+{
+  float Angle_1;
+  testStep("","检测APA状态");
+  writeEx(-3,0,"检测APA状态");
+  _Active_APA();
+  Angle_1  =_Get_Ang_Now();
+  _Ang_Step_Increase(x134_APA_Tar_StrAgl,Angle_1+10);
+  _Check_AngChange(Angle_1,_Get_Ang_Now(),type);
+  if(type==1)
+  {
+    if(testWaitForSignalMatch(x135_EPS_APA_CtrlStas,2,500)==1)/*APA激活后状态机为2*/
+      _testStepPass("APA","APA激活后状态机外发Active");
+    else
+      _testStepFail("APA","APA激活后状态机外发状态异常");
+    _Ang_Step_Increase(x134_APA_Tar_StrAgl,0);
+  }
+  _Ang_Step_Increase(x134_APA_Tar_StrAgl,0);
+  _Close_APA();
+  _Return_Ang();
+}
+_Check_LDW(byte type)
+{
+  float Angle_1;
+  testStep("","检测LDW");
+  writeEx(-3,0,"检测LDW");
+  Angle_1  =_Get_Ang_Now();
+  _set_0x316_LDW_Waring_style(0);
+  testWaitForTimeout(100);
+  _set_0x316_Left_line_tracking_status(3);
+  if(type == 1 && LDW==1)
+  {
+//    if(testWaitForSignalMatch(EPS7_0x1FC::Vibration_status,1,500)==1)
+//      testStepPass("LDW","期望LDW震动,实测震动状态位变为震动中");
+//    else
+//      testStepFail("LDW","期望LDW震动,实测震动状态位变未发生改变");
+    testWaitForTimeout(1000);
+    _Check_AngChange(Angle_1,_Get_Ang_Now(),1);
+  }
+  else
+  {
+//    if(testWaitForSignalMatch(EPS7_0x1FC::Vibration_status,1,500)==1)
+//      testStepFail("LDW","期望LDW不震动,实测震动状态位变为震动中");
+//    else
+//      testStepPass("LDW","期望LDW不震动,实测震动状态位变未发生改变");
+    testWaitForTimeout(1000);
+    _Check_AngChange(Angle_1,_Get_Ang_Now(),0);
+  }
+  _set_0x316_Left_line_tracking_status(0);
+  testWaitForTimeout(500);
+}
+_Check_ADAS_LKA_Ang(byte type)
+{
+  float Angle_1;
+  testStep("","检测LKA_角度控制状态");
+  writeEx(-3,0,"检测LKA_角度控制状态");
+  _Active_ADAS_LKA_Ang();
+  Angle_1  =_Get_Ang_Now();
+  _Ang_Step_Increase(x1E2_ADAS_ECU_AngleReq,Angle_1+10);
+  _Check_AngChange(Angle_1,_Get_Ang_Now(),type);
+  if(type==1)
+  {
+    if(testWaitForSignalMatch(x1FC_LKA_tune_status,1,500)==1)/*LKA激活后独立曲线标志位为1*/
+      _testStepPass("LKA_Ang","角度控制车道保持调用独立曲线成功");
+    else
+      _testStepFail("LKA_Ang","角度控制车道保持未调用独立曲线");
+    if(testWaitForSignalMatch(x1FC_EPSAngleCtrlSt_S,2,500)==1)/*LKA激活后状态机为2*/
+      _testStepPass("LKA_Ang","LKA激活后状态机外发Active");
+    else
+      _testStepFail("LKA_Ang","LKA激活后状态机外发状态异常");
+  }
+  _Ang_Step_Increase(x1E2_ADAS_ECU_AngleReq,0);
+  _Close_ADAS_LKA_Ang();
+  _Return_Ang();
+}
+_Check_ADAS_LKA_Torque(byte type)
+{
+  float Angle_1;
+  testStep("","检测LKA_扭矩控制状态");
+  writeEx(-3,0,"检测LKA_扭矩控制状态");
+  Angle_1 = _Get_Ang_Now();
+  _Active_ADAS_LKA_Torque();
+  $x316_MPC_TorqueReq = 0.5;
+  testWaitForTimeout(1000);
+  $x316_MPC_TorqueReq = 0;
+  _Close_ADAS_LKA_Torque();
+  _Check_AngChange(Angle_1,_Get_Ang_Now(),type);
+  _Return_Ang();
+}
+_Check_ADS_Torque(byte type)
+{
+  float Angle_1;
+  testStep("","检测高阶转矩控制");
+  writeEx(-3,0,"检测高阶转矩控制");
+  Angle_1 = _Get_Ang_Now();
+  _Active_ADS_Torque();
+  $x57_ADS_SteerTqReq = 0.5;
+  testWaitForTimeout(1000);
+  $x57_ADS_SteerTqReq = 0;
+  _Close_ADS_Torque();
+  _Check_AngChange(Angle_1,_Get_Ang_Now(),type);
+  _Return_Ang();
+}
+_Check_ADS_Ang(byte type)
+{
+  float Angle_1;
+  testStep("","检测高阶转角控制");
+  writeEx(-3,0,"检测高阶转角控制");
+  Angle_1 = _Get_Ang_Now();
+  _Active_ADS_Ang();
+  _Ang_Step_Increase(x57_ADS_SteerAgReq,_Get_Ang_Now()+10);
+  _Check_AngChange(Angle_1,_Get_Ang_Now(),type);
+  _Ang_Step_Increase(x57_ADS_SteerAgReq,0);
+  _Close_ADS_Ang();
+  _Return_Ang();
+}
+_Check_ADS_LDW(byte type)
+{
+  testStep("","检测高阶LDW");
+  writeEx(-3,0,"检测高阶LDW");
+  $x57_ADS_LdwWarningCmdVld = 1;
+  testWaitForTimeout(20);
+  $x57_ADS_LdwWarningCmd = 1;
+  testWaitForTimeout(10);
+  if(type==1 && LDW==1)
+  {
+    if(testWaitForSignalInRange(x6D_EPS_LdwWarnSts,1,2,500)==1)
+      _testStepPass("高阶LDW","期望高阶LDW生效,实测LDW外发状态正常");
+    else
+      _testStepFail("高阶LDW","期望高阶LDW生效,实测外发状态异常");
+  }
+  else
+  {
+    if(testWaitForSignalInRange(x6D_EPS_LdwWarnSts,1,2,500)==1)
+      _testStepFail("高阶LDW","期望高阶LDW不生效,实测LDW外发状态正常");
+    else
+      _testStepPass("高阶LDW","期望高阶LDW不生效,实测外发状态异常");
+  }
+  $x57_ADS_LdwWarningCmd = 0;
+  testWaitForTimeout(500);
+}
+_Ang_Step_Increase(Signal *sg,int Ang_Target)
+{
+  float Ang_Now;
+  int k;
+  Ang_Now  =_Get_Ang_Now();
+  if(Ang_Target>=Ang_Now)
+  {
+    for(k=(int)Ang_Now;k<=Ang_Target;k++)
+    {
+      setSignal(sg,k);
+      testWaitForTimeout(20);
+    }
+  }
+  else
+  {
+    for(k=(int)Ang_Now;k>=Ang_Target;k--)
+    {
+      setSignal(sg,k);
+      testWaitForTimeout(20);
+    } 
+  }
+}
+
+
+
+
+_Return_Ang()
+{
+  testStep("回正","-----角度回正-----");
+  _Set_Ready(Struct_Ready.Ready_Active);
+  if(abs(_Get_Ang_Now())<=3) 
+    return;
+  else
+  {
+    _Set_CarSpd(5);
+    testWaitForTimeout(2000);
+    _Set_CarSpd(0);
+  }
+}
+_BYD_unlockECU()
+{
+  _unlockECU();
+}
+_Check_DTC(qword DTC)
+{
+//  TestStep_ReadDTC("获取DTC",DTC,1,0,1,1);
+  _85_Check_DTC(1,DTC);
+}
+_Check_DTC_Som(dword expDTC[])
+{
+  byte expStatus[20];
+  int k;
+  for(k=0;k<elcount(expDTC);k++)
+    expStatus[k]=0x00;
+  TestStep_Read_Multi_DTC("获取DTC",expDTC,expStatus,1,0);
+}
+_Check_DTC_Som_(dword expDTC_[],dword Count_)
+{
+  dword ReSize;
+  dword DTC_Rx[100],DTC_Rx_Count;
+  dword DTC_UnEx[100],DTC_UnEx_Count;
+  dword expDTC[100],Count;
+  int i,j,Temp_Flag;
+  Count = 0;
+  DTC_Rx_Count = 0;
+  for(i=0;i<Count_;i++)
+  {
+    if(expDTC_[i] != 0 )
+    {
+      expDTC[Count] = expDTC_[i] ;
+      Count++;
+    }
+  }
+  DTC_UnEx_Count = 0;
+  Temp_Flag = 0;
+  _Send_01_Fault(@DID::phyreq_ID);
+  ReSize = DiagGetRespPrimitiveSize(Diag01);
+  DTC_Rx_Count = (ReSize-3)/4;
+  for(i=0;i<DTC_Rx_Count;i++)
+    DTC_Rx[i] = (diagGetRespPrimitiveByte(Diag01,i*4+3)<<16) | (diagGetRespPrimitiveByte(Diag01,i*4+4)<<8) | (diagGetRespPrimitiveByte(Diag01,i*4+5));
+  for(i=0;i<Count;i++)
+  {
+    j = _Check_Dword_in_Num(expDTC[i],DTC_Rx,DTC_Rx_Count);
+    if(j==-1)
+    {
+      Temp_Flag = -1;
+      testStepFail("","期望 0x%06X DTC ,未报出",expDTC[i]);
+    }
+  }
+  for(i=0;i<DTC_Rx_Count;i++)
+  {
+    j = _Check_Dword_in_Num(DTC_Rx[i],expDTC,Count);
+    if(j==-1)
+    {
+      DTC_UnEx[DTC_UnEx_Count] = DTC_Rx[i];
+      DTC_UnEx_Count++;
+    }
+  }
+  if(DTC_UnEx_Count != 0)
+  {
+    for(i=0;i<DTC_UnEx_Count;i++)
+    {
+      j = _Check_Dword_in_Num(DTC_UnEx[i],DTC_Whitelist,DTC_UnEx_Count);
+      if(j==-1)
+      {
+        Temp_Flag = -1;
+        testStepFail("","出现非白名单中故障 0x%06X  ",DTC_UnEx[i]);
+      }
+    }
+  }
+  if(Temp_Flag == 0)
+    testStepPass("","所有DTC均已获取到");
+}
+_Set_11_Restoration_BYD()
+{  
+  byte Temp[2]={0x11,0x01};
+  _BYD_unlockECU();
+  _Send_Diag(2,phyreq_ID,Temp);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(2000);
+}
+_Active_ADAS_LKA_Ang()
+{
+  testStep("操作","激活车道保持角度控制");
+  writeEx(-3,0,"激活车道保持角度控制");
+  _set_0x1E2_MotorTorque_LowerLimit(-3);
+  _set_0x1E2_MotorTorque_UpperLimit(3);
+  _set_0x1E2_AdasEcuAngleReqSt(0);
+  testWaitForTimeout(50);
+  _set_0x1E2_AdasEcuAngleReq(_Get_Ang_Now());
+  _set_0x1E2_AdasEcuAngleReqSt(1);
+  testWaitForTimeout(50);
+  _set_0x1E2_AdasEcuAngleReqSt(2);
+  testWaitForTimeout(500);
+}
+_Close_ADAS_LKA_Ang()
+{
+  _set_0x1E2_AdasEcuAngleReqSt(0);
+  testWaitForTimeout(100);
+}
+_Active_ADAS_LKA_Torque()
+{
+  testStep("操作","激活车道保持扭矩控制");
+  writeEx(-3,0,"激活车道保持扭矩控制");
+  @EV_x316_MPC_TorqueReq = 0;
+  testWaitForTimeout(30);
+  @EV_x316_MPC_TorqueReq = 1;
+  testWaitForTimeout(30);
+  @EV_x316_MPC_TorqueReq = 2;
+  testWaitForTimeout(30);
+}
+_Close_ADAS_LKA_Torque()
+{
+  testStep("操作","关闭车道保持扭矩控制");
+  writeEx(-3,0,"关闭车道保持扭矩控制");
+  @EV_x316_MPC_TorqueReq = 1;
+  testWaitForTimeout(30);
+  @EV_x316_MPC_TorqueReq = 0;
+  testWaitForTimeout(30);
+  $x316_MPC_TorqueReq = 0;
+}
+
+_Active_RCS()
+{
+  testStep("操作","激活遥控驾驶");
+  writeEx(-3,0,"激活遥控驾驶");
+  _set_0x410_EnterRemoteCtr(1);
+  _set_0x35C_GearState(1);
+  testWaitForTimeout(100);
+}
+_Close_RCS()
+{
+  testStep("操作","关闭遥控驾驶");
+  writeEx(-3,0,"关闭遥控驾驶");
+  _set_0x410_EnterRemoteCtr(0);
+  testWaitForTimeout(100);
+  _set_0x299_RemoteCtrCommand(0);
+}
+
+_Active_DST()
+{ 
+  testStep("操作","激活DST");
+  writeEx(-3,0,"激活DST");
+  _set_0x27E_EspDstOk(1);
+  testWaitForTimeout(@Cycle_27E*10);
+  _set_0x27E_MStrWhlOffs(1);
+  testWaitForTimeout(@Cycle_27E*30);
+  _set_0x27E_MStrWhlOffs(0);
+}
+_Close_DST()
+{
+  testStep("操作","退出DST");
+  writeEx(-3,0,"退出DST");
+  _set_0x27E_MStrWhlOffs(0);
+  testWaitForTimeout(@Cycle_27E*3);
+  _set_0x27E_EspDstOk(0);
+  testWaitForTimeout(@Cycle_27E*3);
+}
+
+_Active_APA()
+{
+  testStep("操作","激活APA");
+  writeEx(-3,0,"激活APA");
+  _set_0x134_MainStas(2);
+  _set_0x134_SteeringCtrlReq(0);
+  _set_0x134_SteeringCtrlReqVD(1);
+  testWaitForTimeout(50);
+  _set_0x134_Tar_StrAgl(_Get_Ang_Now());
+  testWaitForTimeout(50);
+  _set_0x134_SteeringCtrlReq(1);
+  testWaitForTimeout(50);
+}
+_Close_APA()
+{
+  testStep("操作","退出APA");
+  writeEx(-3,0,"退出APA");
+  _set_0x134_SteeringCtrlReq(0);
+  testWaitForTimeout(50);
+  _set_0x134_Tar_StrAgl(0);
+}
+
+_Active_ADS_Torque()
+{
+  $x57_ADS_SteerTqVld = 1;
+  $x57_ADS_SteerTqMod = 1;
+  testWaitForTimeout(20);
+  $x57_ADS_SteerTqEna =1;
+  testWaitForTimeout(20);
+  $x57_ADS_SteerTqEna =2;
+  testWaitForTimeout(20);
+}
+_Close_ADS_Torque()
+{
+  $x57_ADS_SteerTqEna =1;
+  testWaitForTimeout(20);
+  $x57_ADS_SteerTqEna =0;
+  testWaitForTimeout(20);
+  $x57_ADS_SteerTqReq = 0;
+}
+_Active_ADS_Ang()
+{
+  $x57_ADS_SteerAgVld = 1;
+  $x57_ADS_SteerAgReq = _Get_Ang_Now();
+  
+  testWaitForTimeout(20);
+  $x57_ADS_SteerAgEna =1;
+  testWaitForTimeout(20);
+  $x57_ADS_SteerAgEna =2;
+  testWaitForTimeout(20);
+  
+}
+_Close_ADS_Ang()
+{
+  $x57_ADS_SteerAgEna =1;
+  testWaitForTimeout(20);
+  $x57_ADS_SteerAgEna =0;
+  testWaitForTimeout(20);
+  $x57_ADS_SteerAgReq = 0;
+}
+
+
+float _Get_Ang_Now()
+{
+  float Ang;
+  Ang = $x11F_LWS_ANGLE;
+  return Ang;
+}
+
+void _Check_AngChange(float Ang_1,float Ang_2,byte type)/*type=0:期望角度无变化  type=1:期望角度存在变化*/
+{
+  float Ang_Change;
+  Ang_Change = abs(Ang_2 - Ang_1);
+  
+  if(type==0)
+  {
+    writeEx(-3,0,"期望  功能未激活，角度  无变化");
+    if(Ang_Change<=1)
+      _testStepPass("","期望角度无变化,实测角度无变化");
+    else
+      _testStepFail("","期望角度无变化,实测角度变化值大于1°");
+  }
+  else
+  {
+    writeEx(-3,0,"期望  功能能够激活，角度  存在变化");
+    if(Ang_Change<=2)
+      _testStepFail("","期望角度存在变化,实测角度无变化");
+    else if(Ang_Change>=5)
+      _testStepPass("","期望角度存在变化,实测角度变化值大于5°");
+    else
+      _testStepPass("","期望角度存在变化,实测角度变化值较小,在5°以内");
+  }
+}
+
+_testStepPass(char Str1[],char Str2[])
+{
+  testStepPass(Str1,Str2);
+  writeEx(-3,0,"%s  %s",Str1,Str2);
+}
+_testStepFail(char Str1[],char Str2[])
+{
+  testStepFail(Str1,Str2);
+  writeEx(-3,0,"%s  %s",Str1,Str2);
+}
+/*---------------------RCS----------------------*/
+void _set_0x410_EnterRemoteCtr(word value)
+{
+  @EV_x410_Remote_driving_condition = value;
+  $x410_Remote_driving_condition = value;
+  testStep("操作","_set_0x410_EnterRemoteCtr:%d",value);
+}
+void _set_0x35C_GearState(word value)
+{
+  @EV_x35C_Gear_recognition = value;
+  $x35C_Gear_recognition = value;
+  testStep("操作","_set_0x35C_GearState:%d",value);
+}
+void _set_0x299_RemoteCtrCommand(word value)
+{
+  @EV_x299_Remote_control_command = value;
+  $x299_Remote_control_command = value;
+  testStep("操作","_set_0x299_RemoteCtrCommand:%d",value);
+}
+/*--------------------------LKA---------------------*/
+void _set_0x1E2_AdasEcuAngleReqSt(word value)
+{
+  @EV_x1E2_ADAS_ECU_AngleReq_St = value;
+  $x1E2_ADAS_ECU_AngleReq_St = value;
+  testStep("操作","_set_0x1E2_SteeringMode:%d",value);
+}
+void _set_0x1E2_MotorTorque_LowerLimit(int value)
+{
+  @EV_x1E2_MotorTorqueL_owerLimit = value;
+  $x1E2_MotorTorqueL_owerLimit = value;
+  testStep("操作","_set_0x1E2_MotorTorque_LowerLimit:%d",value);
+}
+void _set_0x1E2_MotorTorque_UpperLimit(int value)
+{
+  @EV_x1E2_MotorTorqueU_pperLimit = value;
+  $x1E2_MotorTorqueU_pperLimit = value;
+  testStep("操作","_set_0x1E2_MotorTorque_UpperLimit:%d",value);
+}
+void _set_0x1E2_AdasEcuAngleReq(float value)
+{
+  @EV_x1E2_ADAS_ECU_AngleReq = value;
+  $x1E2_ADAS_ECU_AngleReq = value;
+  testStep("操作","_set_0x1E2_AdasEcuAngleReq:%.2f",value);
+}
+/*-------------------APA--------------------*/
+void _set_0x134_SteeringCtrlReq(word value)
+{
+  @EV_x134_APA_SteeringCtrlReqForEPS = value;
+  $x134_APA_SteeringCtrlReqForEPS = value;
+  testStep("操作","_set_0x134_SteeringCtrlReq:%d",value);
+}
+void _set_0x134_SteeringCtrlReqVD(word value)
+{
+  @EV_x134_APA_SteeringCtrlReqForEPSVD = value;
+  $x134_APA_SteeringCtrlReqForEPSVD = value;
+  testStep("操作","_set_0x134_SteeringCtrlReqVD:%d",value);
+}
+void _set_0x134_Tar_StrAgl(float value)
+{
+  @EV_x134_APA_Tar_StrAgl = value;
+  $x134_APA_Tar_StrAgl = value;
+  testStep("操作","_set_0x134_Tar_StrAgl:%.2f",value);
+}
+void _set_0x134_MainStas(word value)
+{
+  @EV_x134_APA_MainStas = value;
+  $x134_APA_MainStas = value;
+  testStep("操作","_set_0x134_MainStas:%d",value);
+}
+/*------------------DST----------------*/
+void _set_0x27E_MStrWhlOffs(float value)
+{
+  @EV_x27E_MStrWhlOffs = value;
+  $x27E_MStrWhlOffs = value;
+  testStep("操作","_set_0x27E_MStrWhlOffs:%.2f",value);
+}
+void _set_0x27E_EspDstOk(word value)
+{
+  @EV_x27E_ESP_DST_OK = value;
+  $x27E_ESP_DST_OK = value;
+  testStep("操作","_set_0x27E_EspDstOk:%d",value);
+}
+/*---------------------SFS/ATS-------------------------*/
+
+void _set_0x240_ActRoadMode(word value)
+{
+  @EV_x240_Actual_road_pattern = value;
+  $x240_Actual_road_pattern = value;
+  testStep("操作","_set_0x240_ActRoadMode:%d",value);
+  testWaitForTimeout(@Cycle_240*3);
+}
+void _set_0x4E3_SteeringMode(word value)
+{
+  _set_0x4E3_Switch(1);
+  @EV_x4E3_Steering_mode_Settings2 = value;
+  $x4E3_Steering_mode_Settings2 = value;
+  testStep("操作","_set_0x4E3_SteeringMode:%d",value);
+  testWaitForTimeout(@Cycle_4E3*3);
+  _set_0x4E3_Switch(0);                                   //事件型报文，触发3帧后停发   
+  @EV_x4E3_Steering_mode_Settings2 = 0;
+  $x4E3_Steering_mode_Settings2 = 0;
+}
+void _set_0x4E3_Switch(word value)
+{
+  @Switch_4E3 = value;
+  testStep("操作","_set_0x4E3_Switch:%d",value);
+}
+/*--------------------------LDW-----------------*/
+void _set_0x316_LDW_Waring_style(word value)
+{
+  @EV_x316_LDW_Waring_style = value;
+  $x316_LDW_Waring_style = value;
+  testStep("操作","_set_0x316_LDW_Waring_style:%d",value);
+}
+void _set_0x316_Left_line_tracking_status(word value)
+{
+  @EV_x316_Left_line_tracking_status = value;
+  $x316_Left_line_tracking_status = value;
+  testStep("操作","_set_0x316_Left_line_tracking_status:%d",value);
+}
+void _set_0x316_Right_line_tracking_status(word value)
+{
+  @EV_x316_Right_line_tracking_status = value;
+  $x316_Right_line_tracking_status = value;
+  testStep("操作","_set_0x316_Right_line_tracking_status:%d",value);
+}
+
+
+
+
+float _get_0x27E_MStrWhlOffs()
+{
+  float value;
+  value = (float)$x27E_MStrWhlOffs;
+  return value;
+}
+word _get_0x24C_SteeringMode()
+{
+  word value;
+  value = (word)$x24C_Steering_mode_state;
+  return value;
+}
+word _get_0x24C_EPSFaultWaring()
+{
+  word value;
+  value = (word)$x24C_EPS_Fault_Waring;
+  return value;
+}
+word _get_0x24C_AllowForSteeringMode()
+{
+  word value;
+  value = (word)$x24C_Steering_mode_Settings;
+  return value;
+}
+word _get_0x24C_SfsConfiguring()
+{
+  word value;
+  value = (word)$x24C_SFS_configuration;
+  return value;
+}
+word _get_0x1FC_EPSAngleCtrlStS()
+{
+  word value;
+  value = (word)$x1FC_EPSAngleCtrlSt_S;
+  return value;
+}
+word _get_0x1FC_StrngWhlTorqVDS()
+{
+  word value;
+  value = (word)$x1FC_StrngWhlTorqVD_1FC_S;
+  return value;
+}
+word _get_0x1FC_AngleCtrlAbortFdback()
+{
+  word value;
+  value = (word)$x1FC_EPSAngleCtrlAbortFeedback;
+  return value;
+}
+float _get_0x1FC_AngleCtrlDlvdValueS()
+{
+  float value;
+  value = (float)$x1FC_EPSAngleCtrlDlvdValue_S;
+  return value;
+}
+word _get_0x1FC_LKATuneStatus()
+{
+  word value;
+  value = (word)$x1FC_LKA_tune_status;
+  return value;
+}
+word _get_0x135_APACtrlStas()
+{
+  word value;
+  value = (word)$x135_EPS_APA_CtrlStas;
+  return value;
+}
+word _get_0x135_APACtrlAbortFeed()
+{
+  word value;
+  value = (word)$x135_EPS_APA_APA_CtrlAbortFeed;
+  return value;
+}
+float _get_0x135_EPSStrWhlTorqVal()
+{
+  float value;
+  value = (float)$x135_EPS_StrWhlTorqVal;
+  return value;
+}
+word _get_0x135_EPSInterDect()
+{
+  word value;
+  value = (word)$x135_EPS_InterDect;
+  return value;
+}
+word _get_0x135_InterDectVD()
+{
+  word value;
+  value = (word)$x135_EPS_InterDectVD;
+  return value;
+}
+word _get_0x135_StrWhlTorqVD()
+{
+  word value;
+  value = (word)$x135_EPS_StrWhlTorqVD;
+  return value;
+}

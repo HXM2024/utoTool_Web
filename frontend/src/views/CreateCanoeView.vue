@@ -157,6 +157,18 @@
                       closable
                       @close="data.genSigFuncType = ''"
                     >{{ data.genSigFuncType }}</el-tag>
+                    <!-- 新增 E2E 算法需要按信号填写 DateID（十六进制，如 0x1122） -->
+                    <el-input
+                      v-if="isDateIdAlgo(data.genSigFuncType)"
+                      :model-value="data.dataId"
+                      class="sig-dataid-input"
+                      size="small"
+                      placeholder="DateID 如 0x1122"
+                      @click.stop
+                      @keydown.stop
+                      @update:model-value="(v: string) => onNodeDateIdInput(data, v)"
+                      @change="(v: string) => onNodeDateIdCommit(data, v)"
+                    />
                   </div>
                 </template>
 
@@ -395,6 +407,39 @@
             </div>
           </div>
 
+          <!-- 版本发布信息（写入《释放记录.txt》） -->
+          <div class="drag-section">
+            <div class="section-label">版本发布信息</div>
+            <div class="release-form">
+              <div class="release-row">
+                <span class="release-label">版本号</span>
+                <el-input
+                  v-model="releaseConfig.version"
+                  size="small"
+                  placeholder="如 V1.0.01（留空自动递增）"
+                />
+              </div>
+              <div class="release-row">
+                <span class="release-label">作者</span>
+                <el-input
+                  v-model="releaseConfig.author"
+                  size="small"
+                  placeholder="留空默认「作者」"
+                />
+              </div>
+              <div class="release-row release-row-block">
+                <span class="release-label">变更说明</span>
+                <el-input
+                  v-model="releaseConfig.changeNote"
+                  type="textarea"
+                  :rows="3"
+                  size="small"
+                  placeholder="功能调整 / 问题修复等变更记录（追加到《释放记录.txt》）"
+                />
+              </div>
+            </div>
+          </div>
+
           <!-- 清空配置 -->
           <div class="drag-section" v-if="configuredSignals.length">
             <el-button
@@ -503,6 +548,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted, watch, nextTick } from 'vue'
 import { useModuleStore } from '@/stores/modules'
+import { defaultAlgoForOem } from '@/utils/securityAlgo'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   Search, Expand, Fold, MagicStick, Cpu,
@@ -512,6 +558,7 @@ import ConfigToolbar from '@/components/ConfigToolbar.vue'
 import { getConfig, saveConfig } from '@/api/config'
 import {
   generateCanoeConfigFromTree,
+  getSuggestedReleaseVersion,
   getCrcAlgorithms,
   saveCrcAlgorithms,
   pullCrcAlgorithms,
@@ -556,6 +603,26 @@ const carSpdConfig = reactive({
 // CAN 通道（两段式：1/2）
 const canChannel = ref(1)
 
+// 版本发布信息（生成时写入 CANoe 输出目录下的《释放记录.txt》）
+const releaseConfig = reactive({
+  version: '',
+  author: '',
+  changeNote: '',
+})
+
+/** 刷新建议版本号（依据输出目录已有《释放记录.txt》推断） */
+async function refreshSuggestedVersion() {
+  if (!outputDir.value) return
+  try {
+    const effectiveConfigName = currentConfig.value
+      || fileName.value.replace(/\.(xlsx|xls|dbc)$/i, '')
+      || 'CANoeConfig'
+    const res: any = await getSuggestedReleaseVersion(outputDir.value, effectiveConfigName)
+    const data = res?.data ?? res ?? {}
+    if (data?.version) releaseConfig.version = data.version
+  } catch { /* 忽略：留空由后端自动递增 */ }
+}
+
 // 继电器模块（三段式：0=老 1=单掷 2=双掷）
 const relayModule = ref(0)
 const relayOptions = [
@@ -594,6 +661,35 @@ const editingNode = ref<any>(null)
 // CRC 算法列表（从后端加载，可编辑/新增/远程共享）
 const crcAlgorithms = ref<CrcAlgorithm[]>([])
 const crcLoading = ref(false)
+
+// 需要 DataID 的 E2E CRC 算法：信号节点上显示 DateID 输入框
+const DATE_ID_ALGOS = ['E2E_1D_ID_CRC8', 'E2E_1021_CRC16_ID']
+function isDateIdAlgo(value: any): boolean {
+  return DATE_ID_ALGOS.includes(String(value || ''))
+}
+
+/** DateID 边输入边过滤：只保留十六进制字符（最多 4 位），已带 0x 前缀时保留 */
+function sanitizeDateIdTyping(raw: any): string {
+  const s = String(raw ?? '')
+  const hasPrefix = /^\s*0[xX]/.test(s)
+  const body = hasPrefix ? s.replace(/^\s*0[xX]/, '') : s
+  const digits = body.replace(/[^0-9a-fA-F]/g, '').slice(0, 4).toUpperCase()
+  return hasPrefix ? `0x${digits}` : digits
+}
+
+/** DateID 提交格式化：统一补 0x 前缀并大写（空值保持空） */
+function normalizeDateId(raw: any): string {
+  const digits = sanitizeDateIdTyping(raw).replace(/^0[xX]/, '')
+  return digits ? `0x${digits}` : ''
+}
+
+function onNodeDateIdInput(node: any, value: string) {
+  if (node) node.dataId = sanitizeDateIdTyping(value)
+}
+
+function onNodeDateIdCommit(node: any, value: string) {
+  if (node) node.dataId = normalizeDateId(value)
+}
 
 // GenSigFuncType 卡片列表 = Counter（静态）+ CRC 算法（动态）
 const genSigFuncTypes = computed(() => {
@@ -1086,6 +1182,7 @@ function buildTreeFromData(type: string, data: any) {
       signalSendType,
       dataType,
       genSigFuncType: autoGenSigFuncType,
+      dataId: '',
       children: sigAttrs.map(attr => ({
         id: `attr_${nodeIdCounter++}`,
         type: 'attr',
@@ -1248,7 +1345,11 @@ function enrichTreeForSubmit(tree: any[]): any[] {
       ...msg,
       children: (msg.children || []).map((child: any) =>
         child.type === 'signal'
-          ? { ...child, 'el-tag-content': deriveSigFuncType(child) }
+          ? {
+              ...child,
+              dataId: normalizeDateId(child.dataId),
+              'el-tag-content': deriveSigFuncType(child),
+            }
           : child
       ),
     })),
@@ -1303,10 +1404,14 @@ async function onGenerateConfig() {
       readyConfig.offValue,
       carSpdConfig.signal,
       store.selectedOem,
+      store.selectedAlgo,
       canChannel.value,
       relayModule.value,
       dtcList.value,
       crcAlgorithms.value,
+      releaseConfig.version,
+      releaseConfig.author,
+      releaseConfig.changeNote,
     )
 
     generateResult.value = result?.data
@@ -1346,6 +1451,7 @@ function collectConfigData(): any {
     relay: relayModule.value,
     dtc: [...dtcList.value],
     oem: store.selectedOem,
+    securityAlgo: store.selectedAlgo,
   }
 }
 
@@ -1379,6 +1485,8 @@ function serializeTree(tree: any[]): any[] {
         if (sig.signalSendType) s.sst = sig.signalSendType
         if (sig.dataType) s.dt = sig.dataType
         if (sig.genSigFuncType) s.gs = sig.genSigFuncType
+        const did = normalizeDateId(sig.dataId)
+        if (did) s.did = did
         return s
       })
       return m
@@ -1424,6 +1532,13 @@ function applyConfigData(data: any) {
   }
   if (Array.isArray(data?.dtc)) {
     dtcList.value = data.dtc.map((d: any) => String(d))
+  }
+  // 安全算法与主机厂相互独立；仅历史配置缺少 securityAlgo 时，按 oem 取默认算法兜底
+  if (data?.securityAlgo) {
+    store.setSelectedAlgo(data.securityAlgo)
+  } else if (data?.oem) {
+    const fallback = defaultAlgoForOem(data.oem)
+    if (fallback) store.setSelectedAlgo(fallback)
   }
   if (data?.oem) {
     store.setSelectedOem(data.oem)
@@ -1525,6 +1640,7 @@ function deserializeTree(compact: any[]): any[] {
           signalSendType: sst,
           dataType: dt,
           genSigFuncType: gs,
+          dataId: normalizeDateId(sig.did),
           children: sigAttrs.map(attr => ({
             id: `attr_${idc++}`,
             type: 'attr',
@@ -1614,6 +1730,11 @@ onMounted(() => {
   updateTreeHeight()
   window.addEventListener('resize', updateTreeHeight)
   loadCrcAlgorithms()
+})
+
+// 输出目录变化时刷新建议版本号（读取该目录下已有《释放记录.txt》）
+watch(outputDir, () => {
+  refreshSuggestedVersion()
 })
 </script>
 
@@ -1820,6 +1941,11 @@ onMounted(() => {
   display: flex;
   gap: 4px;
   flex-shrink: 0;
+  align-items: center;
+}
+
+.sig-dataid-input {
+  width: 150px;
 }
 
 .attr-node {
@@ -1917,6 +2043,34 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 6px;
+}
+
+/* 版本发布信息表单 */
+.release-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.release-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.release-row-block {
+  align-items: flex-start;
+}
+
+.release-label {
+  flex: 0 0 52px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+.release-row .el-input {
+  flex: 1;
 }
 
 .drag-tags {

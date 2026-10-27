@@ -1,0 +1,1902 @@
+/*@!Encoding:936*/
+
+variables
+{
+  byte Read_Config_ChangAn[3] = {0x22,0x01,0x00};
+  byte Write_Config_ChangAn[255];
+  byte Temp_Res_F1F0[200];  //装载每一次获取到的值
+  byte Temp_Res_F1F1[200];
+  byte Temp_Res_F1F2[200];
+  byte Temp_Res_F1F3[200];
+  byte Temp_Res_F1F4[200];
+  byte Temp_Res_F1F5[200];
+  
+  byte Temp_Res_F1F0_1[200]; //需要另存时进行装载
+  byte Temp_Res_F1F1_1[200];
+  byte Temp_Res_F1F2_1[200];
+  byte Temp_Res_F1F3_1[200];
+  byte Temp_Res_F1F4_1[200];
+  byte Temp_Res_F1F5_1[200];
+  
+  int Res_FixData_Len = 0x7E;
+  dword Res_DID;
+  dword Res_DID_[6];
+  int Res_DID_Count;
+  dword DTC_list_F0ToF5[6];
+  int FixDataSave_LastPos;
+}
+void Init_ChangAn_Config()
+{
+  int i;
+  Init_Main_Special("\\长安_配置字\\",exsession);  
+  _get_Arry("Config_ALL");
+  for(i=0;i<3;i++)
+    Write_Config_ChangAn[i] = Arry_Data[i];
+  for(i=3;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  _get_Arry("Read_Config");
+  for(i=0;i<3;i++)
+    Read_Config_ChangAn[i] = Arry_Data[i];
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Set_11_Restoration();
+  testWaitForTimeout(1000);
+  _WriteEx_and_Report("","/*----------------开始测试----------------*/");
+}
+void Init_ChangAn_Config(byte Type)
+{
+  int i;
+  Init_Main_Special("\\长安_配置字\\",exsession);  
+  _get_Arry("Config_ALL");
+  for(i=0;i<3;i++)
+    Write_Config_ChangAn[i] = Arry_Data[i];
+  for(i=3;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  _get_Arry("Read_Config");
+  for(i=0;i<3;i++)
+    Read_Config_ChangAn[i] = Arry_Data[i];
+}
+void End_CCAG()
+{
+  int i;
+  for(i=0;i<6;i++)
+    Res_DID_[i] = 0;
+  Res_DID_Count = 0;
+  Res_DID = 0;
+  End_Main();
+}
+
+void Init_Main_Def_ChangAn()
+{
+  Init();
+  _Start();
+  testWaitForTimeout(50);
+  _SetSession(defsession);
+}
+
+void Config_Default_ChangAn()
+{
+  dword DTC_Ex[100];
+  int i;
+  for(i=3;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _85_Check_DTC(1,Unconfigured);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(5000);
+  _85_Check_DTC(1,Unconfigured);
+  _Open_All_Advanced_function();
+}
+void Config_ALL_ChangAn()
+{
+  dword DTC_Ex[100];
+  int i;
+  _get_Arry("Config_ALL");
+  for(i=0;i<Arry_Len;i++)
+    Write_Config_ChangAn[i] = Arry_Data[i];
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_DTC_ChangAn()
+{
+  dword DTC_Ex[100];
+  int i;
+  Write_Config_ChangAn[3] = 0;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _85_Check_DTC(1,Unconfigured);
+  
+  Write_Config_ChangAn[3] = 1;
+  for(i=4;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _85_Check_DTC(1,0);
+}
+void Config_Byte0_ChangAn() /*整车调试参数*/
+{
+  dword DTC_Ex[100];
+  int i;
+  byte Temp,j;
+  Temp = (Write_Config_ChangAn[3]&0xF0);
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(j=1;j<3;j++)
+  {
+    for(i=4;i<Config_Len;i++)
+      Write_Config_ChangAn[i] = 0;
+    Write_Config_ChangAn[3] = (Temp|j);
+    _unlockECU();
+    _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Check_Response_Config(SendData,Write_Config_ChangAn);
+    _Set_11_Restoration();
+    _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Check_Response_Config(SendData,Write_Config_ChangAn);
+    _85_Check_DTC(1,0);
+  }
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_Byte1_bit0_ChangAn() /*变速箱类型*/
+{
+  dword DTC_Ex[100];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 1;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _85_Check_DTC(1,0);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_STT_ChangAn() /*STT*/
+{
+  int i;
+  dword DTC_Ex[20];
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 2;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_DMS_ChangAn() /*多助力模式*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 4;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_WIR_ChangAn() /*WIR*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 8;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_APA_ChangAn() /*APA*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 0x10;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_IACC_ChangAn() /*IACC*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 0x20;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_LDW_ChangAn() /*LDW*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 0x40;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_ESS_ChangAn() /*ESS*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=5;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 0x80;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_Byte2_bit0_ChangAn() /*车辆动力类型*/
+{
+  dword DTC_Ex[20];
+  int i,j;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  for(i=0;i<2;i++)
+  {
+    Write_Config_ChangAn[4] = 0;
+    Write_Config_ChangAn[3] = 0x01;
+    Write_Config_ChangAn[5] = i;
+    _unlockECU();
+    _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Check_Response_Config(SendData,Write_Config_ChangAn);
+    if(DTC_IsRest == 0)
+      _85_Check_DTC(1,0);
+    else
+      _85_Check_DTC(1,Unconfigured);
+    _Set_11_Restoration();
+    testWaitForTimeout(CAN_Init_Time+2000);
+    _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    _Check_Response_Config(SendData,Write_Config_ChangAn);
+    _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+    _Check_DTC(1,DTC_Ex);
+    if(i==0)
+    {
+      for(j=3;j<Config_Len;j++)
+        Write_Config_ChangAn[j] = 0;
+      _unlockECU();
+      _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+      _TestResult(SendData,phyreq_ID,"",-1);
+      _Set_11_Restoration();
+      testWaitForTimeout(2000);
+    }
+  }
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_TSC_ChangAn() /*TSC*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  Write_Config_ChangAn[4] = 0;
+  Write_Config_ChangAn[5] = 0x02;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+void Config_APC_ChangAn() /*APC*/
+{
+  dword DTC_Ex[20];
+  int i;
+  _Close_All_Advanced_function();
+  testWaitForTimeout(2000);
+  Write_Config_ChangAn[4] = 0;
+  Write_Config_ChangAn[5] = 0x02;
+  Write_Config_ChangAn[3] = 0x01;
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  if(DTC_IsRest == 0)
+    _85_Check_DTC(1,0);
+  else
+    _85_Check_DTC(1,Unconfigured);
+  _Set_11_Restoration();
+  testWaitForTimeout(CAN_Init_Time+2000);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Advanced_function_DTC(Write_Config_ChangAn,DTC_Ex);
+  _Check_DTC(1,DTC_Ex);
+  _Open_All_Advanced_function();
+  testWaitForTimeout(2000);
+}
+
+/*
+  输入数据检测所在原始配置函数的所在位置
+  DTC_Type:故障类型(Lost/CRC/Cntr/Invalid...)
+  Node:节点ID
+  Type = 1: 返回DTC_Type对应的DTC值
+*/
+int64 _Return_FixDataSave_Pos(byte Type,char DTC_Type[],dword Node)
+{
+  int64 Return_Value;
+  int Node_Pos,ErrorType_Pos,i;
+  char Temp_Str_Input[50];
+  char Temp_Str_Config[50];
+  Return_Value = -1;
+  Node_Pos = -1;
+  ErrorType_Pos = -1;
+  
+  toUpper(Temp_Str_Input,DTC_Type,elCount(DTC_Type));
+  for(i=0;i<FixDataSave_Count;i++)
+  {
+    if(FixDataSave[i].Node == Node)
+    {
+      Node_Pos = i;break;
+    }
+  }
+  if(Node_Pos == -1)
+  {
+    _WriteEx_and_Report("","0x%03X未查询到对应节点位置",Node);
+    return -2;
+  }
+  
+  for(i=0;i<FixDataSave[Node_Pos].Error_Type_Count;i++)
+  {
+    toUpper(Temp_Str_Config,FixDataSave[Node_Pos].Error_Type[i],elCount(FixDataSave[Node_Pos].Error_Type[i]));
+    if(strncmp(Temp_Str_Input,Temp_Str_Config,strlen(Temp_Str_Input)) == 0 && strlen(Temp_Str_Input) == strlen(Temp_Str_Config))
+    {
+      ErrorType_Pos = i; break;
+    }
+  }
+  if(ErrorType_Pos == -1)
+  {
+    _WriteEx_and_Report(DTC_Type,"未查询到对应故障类型所在位置");
+    return -1;
+  }
+  
+  if(Type == 1)
+  {
+    return FixDataSave[Node_Pos].DTC[ErrorType_Pos];
+  }
+  
+  return 0;
+}
+/*
+  检测返回的数据冻结帧数据值
+  Type = 0：返回值为全0
+  Type = 1：仅读取判断正响应，不做其余判断
+  Type = 2：返回值为是否为指定DTC所对应的DID
+*/
+int _Check_FixDataSave(byte Type,dword DTC)
+{
+  int ReSize,i,Flage,Return_Value;
+  Return_Value = 0;
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,1000);
+  if(diagGetLastResponseCode(SendData) == 0)
+  {
+    testStepFail("未收到响应");
+    writeEx(-3,0,"未收到响应");
+  }
+  else if(diagGetLastResponseCode(SendData) > 0)
+  {
+    testStepFail("收到消极应答");
+    writeEx(-3,0,"收到消极应答");
+  }
+  else if(diagGetLastResponseCode(SendData) == -1)
+  {
+    ReSize = DiagGetRespPrimitiveSize(SendData);
+    Flage = 0;
+    if(ReSize!= Res_FixData_Len)
+      testStepFail("","返回数据长度异常，跳过数据部分检测");
+    else
+    {
+      switch(DiagGetRespPrimitiveByte(SendData,2))
+      {
+        case 0xF0:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F0[i] = DiagGetRespPrimitiveByte(SendData,i);
+          DTC_list_F0ToF5[0] = ((Temp_Res_F1F0[3]&0xFF)<<16)|((Temp_Res_F1F0[4]&0xFF)<<8)|(Temp_Res_F1F0[5]&0xFF);
+          break;
+        case 0xF1:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F1[i] = DiagGetRespPrimitiveByte(SendData,i);
+          DTC_list_F0ToF5[1] = ((Temp_Res_F1F1[3]&0xFF)<<16)|((Temp_Res_F1F1[4]&0xFF)<<8)|(Temp_Res_F1F1[5]&0xFF);
+          break;
+        case 0xF2:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F2[i] = DiagGetRespPrimitiveByte(SendData,i);
+          DTC_list_F0ToF5[2] = ((Temp_Res_F1F2[3]&0xFF)<<16)|((Temp_Res_F1F2[4]&0xFF)<<8)|(Temp_Res_F1F2[5]&0xFF);
+          break;
+        case 0xF3:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F3[i] = DiagGetRespPrimitiveByte(SendData,i);
+          DTC_list_F0ToF5[3] = ((Temp_Res_F1F3[3]&0xFF)<<16)|((Temp_Res_F1F3[4]&0xFF)<<8)|(Temp_Res_F1F3[5]&0xFF);
+          break;
+        case 0xF4:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F4[i] = DiagGetRespPrimitiveByte(SendData,i);
+          DTC_list_F0ToF5[4] = ((Temp_Res_F1F4[3]&0xFF)<<16)|((Temp_Res_F1F4[4]&0xFF)<<8)|(Temp_Res_F1F4[5]&0xFF);
+          break;
+        case 0xF5:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F5[i] = DiagGetRespPrimitiveByte(SendData,i);
+          DTC_list_F0ToF5[5] = ((Temp_Res_F1F5[3]&0xFF)<<16)|((Temp_Res_F1F5[4]&0xFF)<<8)|(Temp_Res_F1F5[5]&0xFF);
+          break;
+        default:
+            writeEx(-3,0,"收到非预期应答");break;
+      }
+      
+      for(i=0;i<3;i++)
+      {
+        if(i==0)
+        {
+          if(DiagGetRespPrimitiveByte(SendData,i) != (DiagGetPrimitiveByte(SendData,0)^0x40))
+          {
+            testStepFail("","实际反馈值与预期不等,期望为 0x%02X,实际为 0x%02X",(DiagGetPrimitiveByte(SendData,0)^0x40),DiagGetRespPrimitiveByte(SendData,0));
+            Flage = 1;
+          }
+        }
+        else
+        {
+          if(DiagGetRespPrimitiveByte(SendData,i) != DiagGetPrimitiveByte(SendData,i))
+          {
+            testStepFail("","实际反馈值与预期不等,期望数据Byte_%d为 0x%02X,实际为 0x%02X",i,DiagGetPrimitiveByte(SendData,i),DiagGetRespPrimitiveByte(SendData,i));
+            Flage = 1;
+          }
+        }
+      }
+      if(Flage == 0)
+        testStepPass("","前三字节与预期一致");
+      Flage = 0;
+      if(Type == 0)
+      {
+        for(i=3;i<ReSize;i++)
+        {
+          if(DiagGetRespPrimitiveByte(SendData,i) != 0)
+          {
+            Flage = 1;
+            testStepFail("","实际反馈值与预期不等,期望数据Byte_%d为 0x00,实际为 0x%02X",i,DiagGetRespPrimitiveByte(SendData,i));
+          }
+        }
+        if(Flage == 0)
+          testStepPass("","返回数据与预期一致,均全为0x00");
+        return 0;
+      }
+      else if(Type == 2)
+      {
+        dword DTC_Res;
+        DTC_Res = (DiagGetRespPrimitiveByte(SendData,3)<<16) + (DiagGetRespPrimitiveByte(SendData,4)<<8) + DiagGetRespPrimitiveByte(SendData,5);
+        if(DTC_Res == DTC)
+        {
+          Res_DID = (DiagGetRespPrimitiveByte(SendData,1)<<8) + DiagGetRespPrimitiveByte(SendData,2);
+          _WriteEx_and_Report("","0x%04X",Res_DID);
+          return Res_DID;
+        }
+        else
+          return -1;
+      }
+    }
+  }
+  return 0;
+}
+/*
+  检测返回的数据冻结帧数据值
+  Type = 2：返回值为是否为指定DTC所对应的DID中数据
+*/
+int _Check_FixDataSave(byte Type,dword DTC[])
+{
+  int ReSize,i,Flage,Return_Value;
+  Return_Value = 0;
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,1000);
+  if(diagGetLastResponseCode(SendData) == 0)
+  {
+    testStepFail("未收到响应");
+    writeEx(-3,0,"未收到响应");
+  }
+  else if(diagGetLastResponseCode(SendData) > 0)
+  {
+    testStepFail("收到消极应答");
+    writeEx(-3,0,"收到消极应答");
+  }
+  else if(diagGetLastResponseCode(SendData) == -1)
+  {
+    ReSize = DiagGetRespPrimitiveSize(SendData);
+    Flage = 0;
+    if(ReSize!= Res_FixData_Len)
+      testStepFail("","返回数据长度异常，跳过数据部分检测");
+    else
+    {
+      switch(DiagGetRespPrimitiveByte(SendData,2))
+      {
+        case 0xF0:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F0[i] = DiagGetRespPrimitiveByte(SendData,i);
+          break;
+        case 0xF1:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F1[i] = DiagGetRespPrimitiveByte(SendData,i);
+          break;
+        case 0xF2:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F2[i] = DiagGetRespPrimitiveByte(SendData,i);
+          break;
+        case 0xF3:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F3[i] = DiagGetRespPrimitiveByte(SendData,i);
+          break;
+        case 0xF4:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F4[i] = DiagGetRespPrimitiveByte(SendData,i);
+          break;
+        case 0xF5:
+          for(i=0;i<ReSize;i++)
+            Temp_Res_F1F5[i] = DiagGetRespPrimitiveByte(SendData,i);
+          break;
+        default:
+            writeEx(-3,0,"收到非预期应答");break;
+      }
+      for(i=0;i<3;i++)
+      {
+        if(i==0)
+        {
+          if(DiagGetRespPrimitiveByte(SendData,i) != (DiagGetPrimitiveByte(SendData,0)^0x40))
+          {
+            testStepFail("","实际反馈值与预期不等,期望为 0x%02X,实际为 0x%02X",(DiagGetPrimitiveByte(SendData,0)^0x40),DiagGetRespPrimitiveByte(SendData,0));
+            Flage = 1;
+          }
+        }
+        else
+        {
+          if(DiagGetRespPrimitiveByte(SendData,i) != DiagGetPrimitiveByte(SendData,i))
+          {
+            testStepFail("","实际反馈值与预期不等,期望数据Byte_%d为 0x%02X,实际为 0x%02X",i,DiagGetPrimitiveByte(SendData,i),DiagGetRespPrimitiveByte(SendData,i));
+            Flage = 1;
+          }
+        }
+      }
+      if(Flage == 0)
+        testStepPass("","前三字节与预期一致");
+      Flage = 0;
+      if(Type == 0)
+      {
+        for(i=3;i<ReSize;i++)
+        {
+          if(DiagGetRespPrimitiveByte(SendData,i) != 0)
+          {
+            Flage = 1;
+            testStepFail("","实际反馈值与预期不等,期望数据Byte_%d为 0x00,实际为 0x%02X",i,DiagGetRespPrimitiveByte(SendData,i));
+          }
+        }
+        if(Flage == 0)
+          testStepPass("","返回数据与预期一致,均全为0x00");
+        return 0;
+      }
+      else if(Type == 2)
+      {
+        dword DTC_Res;
+        dword DTC_Input[10],DTC_Input_Len;
+        DTC_Input_Len = 0;
+        for(i=0;i<elCount(DTC);i++)
+        {
+          if(DTC[i] != 0)
+          {
+            DTC_Input[DTC_Input_Len] = DTC[i];
+            DTC_Input_Len++;
+          }
+        }
+        DTC_Res = (DiagGetRespPrimitiveByte(SendData,3)<<16) + (DiagGetRespPrimitiveByte(SendData,4)<<8) + DiagGetRespPrimitiveByte(SendData,5);
+        for(i=0;i<DTC_Input_Len;i++)
+        {
+          if(DTC_Res == DTC_Input[i])
+          {
+            Res_DID_[Res_DID_Count] = (DiagGetRespPrimitiveByte(SendData,1)<<8) + DiagGetRespPrimitiveByte(SendData,2);
+            _WriteEx_and_Report("","0x%04X",Res_DID_[Res_DID_Count]);
+            Res_DID_Count++;
+            return Res_DID_[Res_DID_Count-1];
+          }
+        }
+      }
+    }
+  }
+  return 0;
+}
+
+_Save_Arry_FixData()
+{
+  int i;
+  for(i=0;i<Res_FixData_Len;i++)
+  {
+    Temp_Res_F1F0_1[i] = Temp_Res_F1F0[i];
+    Temp_Res_F1F1_1[i] = Temp_Res_F1F1[i];
+    Temp_Res_F1F2_1[i] = Temp_Res_F1F2[i];
+    Temp_Res_F1F3_1[i] = Temp_Res_F1F3[i];
+    Temp_Res_F1F4_1[i] = Temp_Res_F1F4[i];
+    Temp_Res_F1F5_1[i] = Temp_Res_F1F5[i];
+  }
+}
+
+/*
+  判断冻结帧数据是否与期望一致
+  Type = 0：期望不变
+  Type = 1：期望变化
+  Type = 2：期望两组数据一致
+  Check_DID = 0:检测全部DID
+*/
+int _Compara_FixDataSave_Change(byte Type,dword Check_DID)
+{
+  int x,i,Flage,Return_Value; 
+  dword DID_Temp;
+  char DID_[10];
+  byte Compara[200];
+  byte Compara_1[200];
+  Return_Value = 0;
+  if(Check_DID == 0)
+  {
+    for(x=0;x<6;x++)
+    {
+      if(x == 0)
+      {
+        for(i=0;i<Res_FixData_Len;i++)
+        {
+          Compara[i] = Temp_Res_F1F0[i];
+          Compara_1[i] = Temp_Res_F1F0_1[i];
+        }
+      }
+      else if(x == 1)
+      {
+        for(i=0;i<Res_FixData_Len;i++)
+        {
+          Compara[i] = Temp_Res_F1F1[i];
+          Compara_1[i] = Temp_Res_F1F1_1[i];
+        }
+      }
+      else if(x == 2)
+      {
+        for(i=0;i<Res_FixData_Len;i++)
+        {
+          Compara[i] = Temp_Res_F1F2[i];
+          Compara_1[i] = Temp_Res_F1F2_1[i];
+        }
+      }
+      else if(x == 3)
+      {
+        for(i=0;i<Res_FixData_Len;i++)
+        {
+          Compara[i] = Temp_Res_F1F3[i];
+          Compara_1[i] = Temp_Res_F1F3_1[i];
+        }
+      }
+      else if(x == 4)
+      {
+        for(i=0;i<Res_FixData_Len;i++)
+        {
+          Compara[i] = Temp_Res_F1F4[i];
+          Compara_1[i] = Temp_Res_F1F4_1[i];
+        }
+      }
+      else if(x == 5)
+      {
+        for(i=0;i<Res_FixData_Len;i++)
+        {
+          Compara[i] = Temp_Res_F1F5[i];
+          Compara_1[i] = Temp_Res_F1F5_1[i];
+        }
+      }
+      DID_Temp = (Compara[1]<<8) + Compara[2];
+      snprintf(DID_,elCount(DID_),"%04X",DID_Temp);
+      if(Res_DID_Count == 0)
+      {
+        if(DID_Temp == Res_DID)
+          Return_Value = _Compara_Arry(Type,Compara,Compara_1,Res_FixData_Len,DID_);
+        else
+          Return_Value = _Compara_Arry(0,Compara,Compara_1,Res_FixData_Len,DID_);
+      }
+      else
+      {
+        int k,Check_Flage_;
+        Check_Flage_ = 0;
+        for(k=0;k<Res_DID_Count;k++)
+        {
+          if(DID_Temp == Res_DID_[k])
+          {
+            _Compara_Arry(Type,Compara,Compara_1,Res_FixData_Len,DID_);
+            Check_Flage_ = 1;
+            break;
+          }
+        }
+        if(Check_Flage_ == 0)
+          _Compara_Arry(0,Compara,Compara_1,Res_FixData_Len,DID_);
+      }
+    }
+  }
+  return Return_Value;
+}
+
+/*
+  判断冻结帧数据是否与期望一致
+*/
+int _Compara_FixDataSave_Change(dword ReadDid,dword Data_Input[],int Len_Input)
+{
+  int i,Count,Retu; 
+  dword DID_Temp;
+  char DID_[10];
+  byte Compara[200];
+  byte Compara_Input[200];
+  Retu = 0;
+  switch(ReadDid)
+  {
+    case 0xF1F0:
+      for(i=0;i<Res_FixData_Len;i++)
+        Compara[i] = Temp_Res_F1F0[i];
+      break;
+    case 0xF1F1:
+      for(i=0;i<Res_FixData_Len;i++)
+        Compara[i] = Temp_Res_F1F1[i];
+      break;
+    case 0xF1F2:
+      for(i=0;i<Res_FixData_Len;i++)
+        Compara[i] = Temp_Res_F1F2[i];
+      break;
+    case 0xF1F3:
+      for(i=0;i<Res_FixData_Len;i++)
+        Compara[i] = Temp_Res_F1F3[i];
+      break;
+    case 0xF1F4:
+      for(i=0;i<Res_FixData_Len;i++)
+        Compara[i] = Temp_Res_F1F4[i];
+      break;
+    case 0xF1F5:
+      for(i=0;i<Res_FixData_Len;i++)
+        Compara[i] = Temp_Res_F1F5[i];
+      break;
+    default:
+      _WriteEx_and_Report("","未收到正确的DID,即DTC与DID不匹配");
+      Retu = -1;
+      return Retu;
+  }
+  snprintf(DID_,elCount(DID_),"%04X",ReadDid);
+  for(i=0;i<6;i++)
+    Compara_Input[i] = Compara[i];
+  Count = 6;  
+  for(i=0;i<Len_Input;i++)
+  {
+    Compara_Input[Count] = Data_Input[i] &0xFF;
+    // writeEx(-3,0,"对比数据 Compara_Input[%d] = 0x%02X",Count,Compara_Input[Count]);
+    Count++;
+  }
+  Retu = _Compara_Arry(2,Compara,Compara_Input,Res_FixData_Len,DID_);
+  return Retu;
+}
+/*
+  判断冻结帧数据是否与期望一致
+  Type = 0：期望不变
+  Type = 1：期望变化
+  Type = 2：期望两组数据一致
+  Len_Check：对比长度
+  OutPut：打印输出内容
+*/
+int _Compara_Arry(byte Type,byte ExData_1[],byte ExData_2[],int Len_Check,char OutPut[])
+{
+  int Flage,Return_Value;
+  Flage = 0;
+  Return_Value = 0;
+  
+  for(i=0;i<Len_Check;i++)
+  {
+    if(ExData_1[i] != ExData_2[i])
+      Flage = 1;
+  }
+  if(Type == 0)
+  {
+    if(Flage == 0)
+      testStepPass(OutPut,"期望无变化，实际未发生改变");
+    else
+    {
+      Return_Value = -1;
+      testStepFail(OutPut,"期望无变化，实际发生改变");
+    }
+  }
+  else if(Type == 1)
+  {
+    if(Flage == 0)
+    {
+      Return_Value = -1;
+      testStepFail(OutPut,"期望发生变化，实际未发生改变");
+    }
+    else
+      testStepPass(OutPut,"期望发生变化，实际发生改变");
+  }
+  else if(Type == 2)
+  {
+    if(Flage == 0)
+      testStepPass(OutPut,"期望数据与预期一致,实际一致");
+    else
+    {
+      Return_Value = -1;
+      writeEx(-3,0,"%s,返回数据与实际数据不符",OutPut);
+      testStepFail(OutPut,"返回数据与实际数据不符");
+    }
+  }
+  return Return_Value;
+}
+
+
+/*
+    跳过某个DTC或者某个节点，覆盖目前全部存在的值再确定最后一次值的位置
+    Type == 0：输入为ID
+    Type == 1：输入为DTC
+
+    Type == 2：倒序覆盖，不使用ID
+*/
+void DTC_Cover_For_FixDataSave(dword ID,int Type)
+{
+  int i,j,Count,k,Temp;
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  Count = 0;
+  
+  for(k=0xF0;k<=0xF5;k++)
+  {
+    Data_Send[2] = k;
+    _Send_Diag(3,phyreq_ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  if(ID != 0 && Type != 2)
+  {
+    for(i=0;i<FixDataSave_Count+1;i++)
+    {
+      if(Type == 0 && FixDataSave[i].Node == ID)
+        continue;
+      for(j=0;j<FixDataSave[i].Error_Type_Count;j++)
+      {
+        if(Type == 1 && FixDataSave[i].DTC[j] == ID)
+          continue;
+        if(_Check_Dword_in_Num(FixDataSave[i].DTC[j],DTC_list_F0ToF5,elcount(DTC_list_F0ToF5)) != -1)
+          continue;
+        if(strncmp(FixDataSave[i].Error_Type[j],"Lost",strlen(FixDataSave[i].Error_Type[j])) == 0 && strlen(FixDataSave[i].Error_Type[j]) == strlen("Lost"))
+        { 
+          if(FixDataSave[i].Node == Struct_Ready.Sig_Id) //丢失节点跳过发动机情况
+            continue;
+          _TestDisableMsg(FixDataSave[i].Node);
+          testWaitForTimeout(500);
+          _TestEnableMsg(FixDataSave[i].Node);
+          testWaitForTimeout(500);
+          Count++;
+        }
+        else
+        {
+          _Set_Sig(FixDataSave[i].SigName[j],FixDataSave[i].Invalid_Value[j]);
+          testWaitForTimeout(500);
+          _Set_Sig(FixDataSave[i].SigName[j],FixDataSave[i].Normal_Value[j]);
+          testWaitForTimeout(500);
+          Count++;
+        }
+        if(Count>=7)
+        {
+          testWaitForTimeout(500);
+          for(k=0xF0;k<=0xF5;k++)
+          {
+            Data_Send[2] = k;
+            _Send_Diag(3,phyreq_ID,Data_Send);
+            _Check_FixDataSave(1,0);
+            testWaitForTimeout(100);
+          }
+          Count = _Check_Dword_in_Num(FixDataSave[i].DTC[j],DTC_list_F0ToF5,elcount(DTC_list_F0ToF5));
+          FixDataSave_LastPos = (Count != -1)?Count:0; //装载最后一次DTC位置
+          Temp = (FixDataSave_LastPos|0xF1F0)+1;
+          if(Temp>0xF1F5)
+            Temp = 0xF1F0;
+          _WriteEx_and_Report("","已完成冻结帧全部值覆盖，记录最后一次值的位置为%04X",Temp);
+          return;
+        }
+      }
+    }
+  }
+  else if(Type == 2)
+  {
+    for(i=FixDataSave_Count;i>0;i--)
+    {
+      for(j=FixDataSave[i].Error_Type_Count-1;j>0;j--)
+      {
+        if(_Check_Dword_in_Num(FixDataSave[i].DTC[j],DTC_list_F0ToF5,elcount(DTC_list_F0ToF5)) != -1)
+          continue;
+        if(strncmp(FixDataSave[i].Error_Type[j],"Lost",strlen(FixDataSave[i].Error_Type[j])) == 0 && strlen(FixDataSave[i].Error_Type[j]) == strlen("Lost"))
+        { 
+          if(FixDataSave[i].Node == Struct_Ready.Sig_Id) //丢失节点跳过发动机情况
+            continue;
+          _TestDisableMsg(FixDataSave[i].Node);
+          testWaitForTimeout(500);
+          _TestEnableMsg(FixDataSave[i].Node);
+          testWaitForTimeout(500);
+          Count++;
+        }
+        else
+        {
+          _Set_Sig(FixDataSave[i].SigName[j],FixDataSave[i].Invalid_Value[j]);
+          testWaitForTimeout(500);
+          _Set_Sig(FixDataSave[i].SigName[j],FixDataSave[i].Normal_Value[j]);
+          testWaitForTimeout(500);
+          Count++;
+        }
+        if(Count>=7)
+        {
+          testWaitForTimeout(500);
+          for(k=0xF0;k<=0xF5;k++)
+          {
+            Data_Send[2] = k;
+            _Send_Diag(3,phyreq_ID,Data_Send);
+            _Check_FixDataSave(1,0);
+            testWaitForTimeout(100);
+          }
+          Count = _Check_Dword_in_Num(FixDataSave[i].DTC[j],DTC_list_F0ToF5,elcount(DTC_list_F0ToF5));
+          FixDataSave_LastPos = (Count != -1)?Count:0; //装载最后一次DTC位置
+          if(Count == -1)
+            _WriteEx_and_Report("","最后一次位置未在返回中，后续位置不可信");
+          Temp = (FixDataSave_LastPos|0xF1F0)+1;
+          if(Temp>0xF1F5)
+            Temp = 0xF1F0;
+          _WriteEx_and_Report("","已完成冻结帧全部值覆盖，记录最后一次值的位置为%04X",Temp);
+          return;
+        }
+      }
+    }
+  }
+}
+
+/*
+    查找输入信息所在结构体位置
+    ID_Pos 返回ID所在位置
+    Type == 0：节点输入
+    Type == 1：DTC输入
+*/
+int ID_PosFromStruct(dword ID,int ID_Pos,int Type)
+{
+  int i,j;
+  for(i=0;i<FixDataSave_Count+1;i++)
+  {
+    ID_Pos = i;
+    if(Type == 0)
+    {
+      if(FixDataSave[i].Node == ID)
+        return i;
+    }
+    else if(Type == 1)
+    {
+      for(j=0;j<FixDataSave[i].Error_Type_Count;j++)
+      {
+        if(ID == FixDataSave[i].DTC[j])
+          return j;
+      }
+    }
+  }
+  if(Type == 0)
+    _WriteEx_and_Report("","未查询到%X节点输入位置",ID);
+  else if(Type == 1)
+    _WriteEx_and_Report("","未查询到0x%X DTC输入位置",ID);
+  return 0;
+}
+/*
+      对指定DID数据进行覆盖
+      指定的DID     对应的DTC
+      装载的纯数据DataGet   长度Len
+*/
+void Cover_Arry(dword DID,dword DTC,byte DataGet[],int Len)
+{
+  int i;
+  byte DataBefor[6];
+  DataBefor[0] = 0x62;             DataBefor[1] = ((DID>>8)&0xFF);
+  DataBefor[2] = (DID&0xFF);       DataBefor[3] = ((DTC>>16)&0xFF);
+  DataBefor[4] = ((DTC>>8)&0xFF);  DataBefor[5] = ((DTC>>0)&0xFF);
+  for(i=0;i<Len+6;i++)
+  {
+    switch(DID)
+    {
+      case 0xF1F0:
+        Temp_Res_F1F0_1[i] = (i<6)?DataBefor[i]:DataGet[i-6];break;
+      case 0xF1F1:
+        Temp_Res_F1F1_1[i] = (i<6)?DataBefor[i]:DataGet[i-6];break;
+      case 0xF1F2:
+        Temp_Res_F1F2_1[i] = (i<6)?DataBefor[i]:DataGet[i-6];break;
+      case 0xF1F3:
+        Temp_Res_F1F3_1[i] = (i<6)?DataBefor[i]:DataGet[i-6];break;
+      case 0xF1F4:
+        Temp_Res_F1F4_1[i] = (i<6)?DataBefor[i]:DataGet[i-6];break;
+      case 0xF1F5:
+        Temp_Res_F1F5_1[i] = (i<6)?DataBefor[i]:DataGet[i-6];break;
+    }
+  }
+}
+
+void FixDataSave_1(dword ID,byte Session)  /*烧录完程序后读取冻结帧默认值*/
+{
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  int i;
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(0,0);
+    testWaitForTimeout(100);
+  }
+}
+
+void FixDataSave_2(dword ID,byte Session)  /*存储机制测试*/
+{
+  byte SendData2E[6] = {0x2E,0x01,0x00,0x01,0xFF,0x07}; 
+  byte SendData22Read[3] = {0x22,0x01,0x00}; 
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  byte DataGet[200];
+  int ID_Pos,DTC_Pos,ReLen,i;
+  dword DTC = 0xE21187;
+
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _unlockECU();
+  _Send_Diag(elcount(SendData2E),phyreq_ID,SendData2E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Send_Diag(elcount(SendData22Read),phyreq_ID,SendData22Read);
+  _Check_Response_Config(SendData,SendData2E);
+  testWaitForTimeout(1000);
+  _85_Check_DTC(1,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  DTC_Cover_For_FixDataSave(DTC,1);
+  _Save_Arry_FixData();
+  DTC_Pos = ID_PosFromStruct(DTC,ID_Pos,1);
+  ReLen = DataGet_ByDTC(DTC,15,10,5,DataGet);
+  Res_DID = ((FixDataSave_LastPos+1)|0xF1F0);
+  if(Res_DID>0xF1F5)
+    Res_DID = 0xF1F0;
+  _85_Check_DTC(9,DTC);
+  
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+  ReLen = DataGet_ByDTC(DTC,11,10,5,DataGet);
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+}
+
+void FixDataSave_3(dword ID,byte Session)  /*LDW无效故障存储机制测试*/
+{
+  // byte SendData2E[6] = {0x2E,0x01,0x00,0x01,0xFF,0x07}; 
+  // byte SendData22Read[3] = {0x22,0x01,0x00}; 
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  byte DataGet[200];
+  int ID_Pos,DTC_Pos,ReLen,i;
+  dword DTC = 0xE21086;
+
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  // _unlockECU();
+  // _Send_Diag(elcount(SendData2E),phyreq_ID,SendData2E);
+  // _TestResult(SendData,phyreq_ID,"",-1);
+  // _Send_Diag(elcount(SendData22Read),phyreq_ID,SendData22Read);
+  // _Check_Response_Config(SendData,SendData2E);
+  // testWaitForTimeout(1000);
+  // _85_Check_DTC(1,0);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  DTC_Cover_For_FixDataSave(DTC,1);
+  _Save_Arry_FixData();
+  DTC_Pos = ID_PosFromStruct(DTC,ID_Pos,1);
+  ReLen = DataGet_ByDTC(DTC,15,10,5,DataGet);
+  Res_DID = ((FixDataSave_LastPos+1)|0xF1F0);
+  if(Res_DID>0xF1F5)
+    Res_DID = 0xF1F0;
+  _85_Check_DTC(9,DTC);
+  
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+  ReLen = DataGet_ByDTC(DTC,11,10,5,DataGet);
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+}
+
+void FixDataSave_4(dword ID,byte Session)  /*主路轮速信号1无效故障存储机制测试*/
+{
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  byte DataGet[200];
+  int ID_Pos,DTC_Pos,ReLen,i;
+  dword DTC = 0xE20986;
+
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  DTC_Cover_For_FixDataSave(DTC,1);
+  _Save_Arry_FixData();
+  DTC_Pos = ID_PosFromStruct(DTC,ID_Pos,1);
+  ReLen = DataGet_ByDTC(DTC,15,10,5,DataGet);
+  Res_DID = ((FixDataSave_LastPos+1)|0xF1F0);
+  if(Res_DID>0xF1F5)
+    Res_DID = 0xF1F0;
+  _85_Check_DTC(9,DTC);
+  
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+  ReLen = DataGet_ByDTC(DTC,11,10,5,DataGet);
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+}
+
+void FixDataSave_5(dword ID,byte Session)  /*重启,上下点火异常工况测试*/
+{
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  byte DataGet[200];
+  int ID_Pos,DTC_Pos,ReLen,TempPos,i;
+  dword DTC = 0xE21681;
+
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  DTC_Cover_For_FixDataSave(DTC,1);
+  _Save_Arry_FixData();
+  DTC_Pos = ID_PosFromStruct(DTC,ID_Pos,1);
+  ReLen = DataGet_ByDTC(DTC,15,10,5,DataGet);
+  Res_DID = ((FixDataSave_LastPos+1)|0xF1F0);
+  if(Res_DID>0xF1F5)
+    Res_DID = 0xF1F0;
+  _85_Check_DTC(9,DTC);
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+  _Save_Arry_FixData();
+  _Set_11_Restoration();
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(0,0);
+
+  DTC = 0xE21486; 
+  TempPos = _Check_Dword_in_Num(DTC,DTC_list_F0ToF5,elcount(DTC_list_F0ToF5)); 
+  Res_DID = ( TempPos != -1)?(Res_DID+1):(TempPos|0xF1F0);//检测该DTC是否在返回中，不在则位置+1，在则直接返回原位置
+  if(Res_DID>0xF1F5)
+    Res_DID = 0xF1F0;
+  ReLen = DataGet_ByDTC(DTC,11,10,5,DataGet);
+  Cover_Arry(Res_DID,DTC,DataGet,ReLen);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(2,0);
+  _Save_Arry_FixData();
+  _Power_Down();
+  testWaitForTimeout(3000);
+  _Power_Up();
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(1,0);
+    testWaitForTimeout(100);
+  }
+  _Compara_FixDataSave_Change(0,0);
+}
+
+
+void FixDataSave_6(dword ID,byte Session)  /*14清除冻结帧数据测试*/
+{
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  int i;
+  dword DTC = 0xE20986;
+
+  testWaitForTimeout(1000);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  DTC_Cover_For_FixDataSave(DTC,1);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  for(i=0xF0;i<=0xF5;i++)
+  {
+    Data_Send[2] = i;
+    _Send_Diag(3,ID,Data_Send);
+    _Check_FixDataSave(0,0);
+    testWaitForTimeout(100);
+  }
+}
+
+void FixDataSave_7(dword ID,byte Session)  /*遍历所有信号*/
+{
+  byte Data_Send[3] = {0x22,0xF1,0xF0};
+  int i,j,k,ReLen,Flage;
+  dword DTC_Ex;
+  byte Return_Data[200];
+  dword NextDID,RealPos;
+  
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
+  testGetCurrentTestCaseTitle(Fault_Data_Write,400);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    冻结帧测试时,异常响应: \n",Fault_Data_Write);
+  File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
+  
+  _Clear_DTC(phyreq_ID);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(3000);
+  DTC_Cover_For_FixDataSave(0,2);
+  NextDID = (FixDataSave_LastPos|0xF1F0)+1;
+  if(NextDID>0xF1F5)
+    NextDID = 0xF1F0;
+  for(i=0;i<FixDataSave_Count+1;i++)
+  {
+    for(j=0;j<FixDataSave[i].Error_Type_Count;j++)
+    {
+      Flage = 0;
+      DTC_Ex = FixDataSave[i].DTC[j];
+      _Save_Arry_FixData();
+      writeEx(-3,0,"/*------------------------------------*/");
+      writeEx(-3,0,"0x%03X %s : %s",FixDataSave[i].Node,FixDataSave[i].SigName[j],FixDataSave[i].Error_Type[j]);
+      ReLen = DataGet_ByDTC(DTC_Ex,FixDataSave[i].Error_FPS[j]+2,10,5,Return_Data); //故障帧数FixDataSave[i].Error_FPS[j]+2
+      testWaitForTimeout(500);
+      _85_Check_DTC(9,DTC_Ex);
+      for(k=0xF0;k<=0xF5;k++)
+      {
+        Data_Send[2] = k;
+        _Send_Diag(3,ID,Data_Send);
+        _Check_FixDataSave(1,0);
+        testWaitForTimeout(100);
+      }
+      Res_DID_Count = 0;Res_DID = NextDID;
+      Cover_Arry(NextDID,DTC_Ex,Return_Data,ReLen);
+      RealPos = _Check_Dword_in_Num(DTC_Ex,DTC_list_F0ToF5,elcount(DTC_list_F0ToF5));
+      if(RealPos == -1)
+        testStepfail("","DTC:0x%06X 未在冻结帧中查询到",DTC_Ex);
+      RealPos = (RealPos|0xF1F0);
+      Flage = _Compara_FixDataSave_Change(2,0);
+      testWaitForTimeout(1000);
+      if(RealPos != NextDID)
+      {
+        testStepFail("","新的DTC产生时，DID与预期不符，期望为0x%04X，实际为0x%04X",NextDID,RealPos);
+        NextDID = RealPos; //防止后续出现连续错误
+      }
+      else
+        testStepPass("","新的DTC产生时，读取的DID顺序往后覆盖");
+      
+      NextDID = (NextDID+1>0xF1F5)?0xF1F0:(NextDID+1);
+      if(Flage == -1)
+      {
+        char Str[200];
+        snprintf(Str,elCount(Str),"[ 信号: %s  故障类型: %s  ] \n",FixDataSave[i].SigName[j],FixDataSave[i].Error_Type[j]);
+        File_Write(Error_File,Error_FileName,Str,2);
+      }
+    }
+  }
+}
+
+void Fac_Config()
+{
+  _Set_Ready(0);
+  for(i=3;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  _SetSession(exsession);
+  _unlockECU();
+  _get_Arry("Angle_Calibration");
+  _Send_Diag(Arry_Len,phyreq_ID,Arry_Data);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(200);
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(200);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Set_11_Restoration(0);
+  _85_Check_DTC(1,Unconfigured);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  
+  Write_Config_ChangAn[3] = 0x01;
+  _SetSession(exsession);
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(200);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  _SetSession(defsession);
+  _Set_11_Restoration();
+  _85_Check_DTC(1,0);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *无助力*",60000);
+  
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(500);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  _SetSession(defsession);
+  for(i=3;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[4] = 0xFF;
+  Write_Config_ChangAn[5] = 0xFF;
+  _SetSession(exsession);
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(200);
+  _Set_11_Restoration(0);
+  _85_Check_DTC(1,Unconfigured);
+  _Send_Diag(3,phyreq_ID,Read_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Check_Response_Config(SendData,Write_Config_ChangAn);
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  
+}
+
+void Fac_Angle_Calibration()
+{
+  byte Angle_Data[5] = {0x31,0x01,0xFE,0xE0,0x02};
+  _Set_Ready(0);
+  for(i=3;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  Write_Config_ChangAn[3] = 0x01;
+  _SetSession(exsession);
+  _unlockECU();
+  testWaitForTimeout(200);
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(200);
+  _Set_11_Restoration(0);
+  
+  _SetSession(exsession);
+  _unlockECU();
+  _Send_Diag(5,phyreq_ID,Angle_Data);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _85_Check_DTC(1,Ang_NotCal);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  _SetSession(defsession);
+  _Set_11_Restoration();
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  
+  Angle_Data[4] = 0x01;
+  _SetSession(exsession);
+  _unlockECU();
+  _Send_Diag(5,phyreq_ID,Angle_Data);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(200);
+  _85_Check_DTC(1,0);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *无助力*",60000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(500);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  _SetSession(defsession);
+  _Set_11_Restoration();
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *无助力*",60000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+}
+
+void Fac_AngleAndConfig()
+{
+  byte Angle_Data[5] = {0x31,0x01,0xFE,0xE0,0x02};
+  dword DTC_Ex[2];
+  DTC_Ex[0] = Ang_NotCal;
+  DTC_Ex[1] = Unconfigured;
+  
+  _Set_Ready(0);
+  for(i=3;i<Config_Len;i++)
+    Write_Config_ChangAn[i] = 0;
+  _SetSession(exsession);
+  _unlockECU();
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Set_11_Restoration(0);
+  _SetSession(exsession);
+  _unlockECU();
+  _Send_Diag(5,phyreq_ID,Angle_Data);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(500);
+  _Check_DTC(1,DTC_Ex);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  _SetSession(defsession);
+  _Set_11_Restoration();
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(1000);
+  testWaitForTesterConfirmation("转动方向盘，此时应当 *有助力*",60000);
+  
+  _WriteEx_and_Report("","/*-------测试结束,进行恢复-------*/");
+  Angle_Data[4] = 0x01;
+  _get_Arry("Config_ALL");
+  for(i=0;i<3;i++)
+    Write_Config_ChangAn[i] = Arry_Data[i];
+  _SetSession(exsession);
+  _unlockECU();
+  _Send_Diag(5,phyreq_ID,Angle_Data);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  testWaitForTimeout(200);
+  _Send_Diag(Config_Len,phyreq_ID,Write_Config_ChangAn);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _Set_11_Restoration(0);
+}
+
+testcase Case_Config_Default_ChangAn()
+{
+  Init_ChangAn_Config(1);
+  Config_Default_ChangAn();
+  _End();
+}
+testcase Case_Config_ALL_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_ALL_ChangAn();
+  _End();
+}
+testcase Case_Config_DTC_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_DTC_ChangAn();
+  _End();
+}
+testcase Case_Config_Byte0_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_Byte0_ChangAn();
+  _End();
+}
+testcase Case_Config_Byte1_bit0_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_Byte1_bit0_ChangAn();
+  _End();
+}
+testcase Case_Config_STT_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_STT_ChangAn();
+  _End();
+}
+testcase Case_Config_DMS_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_DMS_ChangAn();
+  _End();
+}
+testcase Case_Config_WIR_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_WIR_ChangAn();
+  _End();
+}
+testcase Case_Config_APA_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_APA_ChangAn();
+  _End();
+}
+testcase Case_Config_IACC_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_IACC_ChangAn();
+  _End();
+}
+testcase Case_Config_LDW_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_LDW_ChangAn();
+  _End();
+}
+testcase Case_Config_ESS_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_ESS_ChangAn();
+  _End();
+}
+testcase Case_Config_Byte2_bit0_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_Byte2_bit0_ChangAn();
+  _End();
+}
+testcase Case_Config_TSC_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_TSC_ChangAn();
+  _End();
+}
+testcase Case_Config_APC_ChangAn()
+{
+  Init_ChangAn_Config();
+  Config_APC_ChangAn();
+  _End();
+}
+
+
+testcase Case_FixDataSave_1()/*烧录完程序后读取冻结帧默认值*/
+{
+  Init_Main_Def_ChangAn();
+  _Get_ChangAn_FixData();
+  FixDataSave_1(phyreq_ID,defsession);
+  End_CCAG();
+}
+testcase Case_FixDataSave_2()/*AD无效故障存储机制测试*/
+{
+  Init_Main_Def_ChangAn();
+  _Get_ChangAn_FixData();
+  FixDataSave_2(phyreq_ID,defsession);
+  End_CCAG();
+}
+testcase Case_FixDataSave_3()/*LDW无效故障存储机制测试*/
+{
+  Init_Main_Def_ChangAn();
+  _Get_ChangAn_FixData();
+  FixDataSave_3(phyreq_ID,defsession);
+  End_CCAG();
+}
+testcase Case_FixDataSave_4()/*主路轮速信号1无效故障存储机制测试*/
+{
+  Init_Main_Def_ChangAn();
+  _Get_ChangAn_FixData();
+  FixDataSave_4(phyreq_ID,defsession);
+  End_CCAG();
+}
+testcase Case_FixDataSave_5()/*重启,上下点火异常工况测试*/
+{
+  Init_Main_Def_ChangAn();
+  _Get_ChangAn_FixData();
+  FixDataSave_5(phyreq_ID,defsession);
+  End_CCAG();
+}
+testcase Case_FixDataSave_6()/*14清除冻结帧数据测试*/
+{
+  Init_Main_Def_ChangAn();
+  _Get_ChangAn_FixData();
+  FixDataSave_6(phyreq_ID,defsession);
+  End_CCAG();
+}
+testcase Case_FixDataSave_7()/*遍历所有信号*/
+{
+  Init_Main_Def_ChangAn();
+  _Get_ChangAn_FixData();
+  FixDataSave_7(phyreq_ID,defsession);
+  End_CCAG();
+}
+testcase Case_Fac_Config()/*工厂模式-配置字*/
+{
+  Init_ChangAn_Config();
+  Fac_Config();
+  _End();
+}
+testcase Case_Fac_Angle_Calibration()/*工厂模式-中位标定*/
+{
+  Init_ChangAn_Config();
+  Fac_Angle_Calibration();
+  _End();
+}
+testcase Case_Fac_AngleAndConfig()/*工厂模式-中位标定+配置字*/
+{
+  Init_ChangAn_Config();
+  Fac_AngleAndConfig();
+  _End();
+}
+testcase Case_FunDID_3001_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3001,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3002_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3002,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3003_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3003,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3004_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3004,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3005_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3005,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3006_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3006,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3007_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3007,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3008_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3008,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_3009_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x3009,phyreq_ID,defsession);
+  End_Main();
+}
+testcase Case_FunDID_300A_CCAG()/*功能DID*/
+{
+  Init_Main_Def();
+  FunDID_ReadAndSet(0x300A,phyreq_ID,defsession);
+  End_Main();
+}

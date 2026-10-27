@@ -1,0 +1,4208 @@
+/*@!Encoding:936*/
+includes
+{
+  #include "..\Library\Function.can"
+  #include "..\Library\TP_Function.cin"
+  
+}
+
+variables
+{
+  mstimer CAN_BUS_loader_H;
+  mstimer CAN_BUS_loader_L;
+  mstimer Time_Count;
+  mstimer Def_TimeCount;
+  qword count_Bus;
+  int Time_Flage =0;
+  int Time_Count_Time;
+  
+  byte NRC13 = 0x13;
+  byte NRC31 = 0x31;
+  byte NRC22 = 0x22;
+  byte NRC7E = 0x7E;
+  byte NRC7F = 0x7F;
+  byte NRC11 = 0x11;
+  byte NRC12 = 0x12;
+  byte NRC78 = 0x78;
+  byte NRC33 = 0x33;
+  byte NRC24 = 0x24;
+  byte NRC35 = 0x35;
+  byte NRC36 = 0x36;
+  byte NRC37 = 0x37;
+  byte NRC72 = 0x72;
+  char Temp_Log_Name[200];
+}
+on timer Time_Count
+{
+  testWaitForTimeout(Time_Count_Time);
+  Time_Flage =1;
+}
+
+_High_BUS_loader_H_2(byte type,dword Time)/*写DID*//*0:干扰报文优先级高于发送ID，1:干扰报文优先级低于发送ID*/
+{
+  diagSetTarget(Cdd_Name);
+  _get_Str_Traversal("DID_2E_Traversal");
+  _get_2E_DID(Traversal_DID[0]);
+  Time_Count_Time = 20*60*1000;
+  setTimer(Time_Count,Time_Count_Time);  
+  if(type==0 )
+    setTimer(CAN_BUS_loader_H,8);
+  else 
+    setTimer(CAN_BUS_loader_L,8);
+  testWaitForTimeout(10000);
+  do{
+    _SetSession(exsession);
+    _unlockECU();
+    Get_Seed_Flage = 1;
+    _Send_Diag(DID_2E_SendData_1_Len,phyreq_ID,DID_2E_SendData_1,Time);
+    _TestResult(SendData,phyreq_ID,"",DID_2E_SendData_1_Response);
+    if(DID_2E_SendData_1_Response == -1 && Support_Read_2E_DID == 1)
+    {
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID,Time);
+      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
+    }
+    else
+      _WriteEx_and_Report("","期望结果为非正响应,不检测写入数据");
+    testWaitForTimeout(100);
+    
+    _Send_Diag(DID_2E_SendData_2_Len,phyreq_ID,DID_2E_SendData_2,Time);
+    _TestResult(SendData,phyreq_ID,"",DID_2E_SendData_2_Response);
+    
+    if(DID_2E_SendData_2_Response == -1 && Support_Read_2E_DID == 1)
+    {
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID,Time);
+      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
+    }
+    else
+      _WriteEx_and_Report("","期望结果为非正响应,不检测写入数据");
+    testWaitForTimeout(100);
+  }while(Time_Flage==0);
+  if(type==0 )
+    cancelTimer(CAN_BUS_loader_H);
+  else 
+    cancelTimer(CAN_BUS_loader_L);
+  cancelTimer(Time_Count);
+}
+void _10_Phy_01(dword ID,byte Session)
+{
+  byte Temp_0[2]={0x10,0x01};
+  _Send_Diag(2,ID,Temp_0);
+  if((strncmp(ECU_project,"Chery",strlen("Chery")) == 0 )|| @AUTO::Config_Switch == 7)
+    _TestResult(SendData,ID,"",-1);
+  else
+    _Check_10_01(Resp_10_len[0],Temp_0[1],P2can_server,P2_can_server);
+  _Send_And_Check_NowSession(ID,defsession);
+}
+
+void _10_Phy_Def_02(dword ID,byte Session)
+{
+  byte Temp_0[2]={0x10,0x2};
+  int Fun_Pos;
+  Fun_Pos = _Check_Serve(0x10,0x02,4);
+  if(Fun_Pos != -1)
+  {
+    if(_Check_Fun_IDAndSess(0x10,0x02,ID,Session) == 1)
+    {
+      _Send_Diag_NoTime(2,ID,Temp_0);
+      _Check_10_01(Resp_10_len[1],Temp_0[1],P2can_server,P2_can_server);
+      _Send_And_Check_NowSession(ID,prosession);
+    }
+    else
+    {
+      _Send_Diag(2,ID,Temp_0);
+      _TestResult(SendData,ID,"",NRC7E);
+      _Send_And_Check_NowSession(ID,Session);
+    }
+  }
+  else
+    _WriteEx_and_Report("","02子功能不支持");
+}
+
+void _10_Phy_03(dword ID,byte Session) // S3server
+{
+  byte Temp_0[2]={0x10,0x3};
+  int Start_time;/*设定起始的会话维持时间*/
+  int End_time;/*设定结束的会话维持时间*/
+  int Count_time=50;/*会话维持时间每次累计加50ms*/
+  
+  byte SedReq[4];
+//  byte send_size = 3;
+  byte send_size = 2;
+  int S3server = 5000;
+  
+  Start_time = S3server - 200;
+  End_time = S3server + 200;
+//  SedReq[0] = 0x28;
+//  SedReq[1] = 0x00;
+//  SedReq[2] = 0x03;
+  SedReq[0] = 0x27;
+  SedReq[1] = RequestSeed_27;
+  
+  if(@AUTO::Config_Switch == 6 || (strncmp(ECU_project,"RC",strlen("RC")) == 0 )) // 瑞驰不用28测试
+  {
+    int serve_pos;
+    send_size = 4;
+    SedReq[0] = 0x31;
+    SedReq[1] = (Serve31_NRC_Case >> 16) & 0xFF;
+    SedReq[2] = (Serve31_NRC_Case >> 8) & 0xFF;
+    SedReq[3] = Serve31_NRC_Case & 0xFF;
+  }
+  _Send_Diag(2,ID,Temp_0);
+//  if((strncmp(ECU_project,"Chery",strlen("Chery")) == 0 )|| @AUTO::Config_Switch == 7)
+//    _TestResult(SendData,ID,"",-1);
+//  else
+  _Check_10_01(Resp_10_len[2],Temp_0[1],P2can_server,P2_can_server);
+  if(diagGetLastResponseCode(SendData)==-1)
+  {
+    testStepPass("","收到肯定响应");
+    _Send_And_Check_NowSession(ID,exsession);
+    _WriteEx_and_Report("","测试10 03的会话维持时间");
+    for(Start_time;Start_time<End_time;Start_time+=Count_time)
+    {
+      writeEx(-3,1,"当前测试时间：%dms",Start_time);
+      testWaitForTimeout(Start_time);
+      _Send_Diag(send_size,phyreq_ID,SedReq);
+      if(diagGetLastResponseCode(SendData)== 0x7f)
+        break;
+    }
+    if((S3server - 60 <= Start_time)  &&(Start_time <= S3server + 60))
+      testStepPass("","03会话维持时间在 5s ± 50ms 内，当前约为%d ms",Start_time);
+    else
+      testStepFail("","03会话维持时间不在 5s ± 50ms 内，当前约为%d ms",Start_time);
+    _Send_And_Check_NowSession(ID,defsession);
+  }
+  else
+    testStepFail("","10 03未收到响应或收到否定应答");
+}
+
+void _10_Phy_04(dword ID,byte Session)
+{
+  _Step_Serve_RSP(0x10,ID,Session);
+}
+
+void _10_Phy_08(dword ID,byte Session)/*NRC13*/
+{
+  byte Temp_0[2]={0x10,0x01};
+  dword Len;
+  Len = _Check_CANFD_Flage();
+  _WriteEx_and_Report("遍历","10 01服务长度");
+  for(i=1;i<=Len;i++)
+  {
+    if(i==2)
+    {
+      _WriteEx_and_Report("","当前长度已测试，跳过");
+      continue;
+    }
+    _Send_Diag(i,ID,Temp_0);
+    _TestResult(SendData,ID,"",NRC13);
+    testWaitForTimeout(50);
+  }
+  _Send_And_Check_NowSession(ID,Session);
+}
+
+void _10_Phy_09(dword ID,byte Session)/*NRC12*/
+{
+  byte Temp_0[2]={0x10,0x01};
+  dword i=0;
+  _WriteEx_and_Report("遍历","10服务子功能");
+  for(i=0;i<=0xff;i++)
+  {
+    if( (_Check_Serve(0x10,i,4)!= -1) )
+      continue;
+    if(i==0x60 && Factory_1060 == 1)
+    {
+      _WriteEx_and_Report("","工厂模式子功能，跳过");
+      continue;  
+    }
+    Temp_0[1] = i;
+    
+    if(_Check_Serve(0X10,i&0x7F,4)!= -1 && i >= 0x80 && _Check_Serve(0X10,i&0x7F,3) == 1)
+    {
+      continue;
+    }
+    else
+    {
+      _Send_Diag(2,ID,Temp_0);
+      _TestResult(SendData,ID,"",NRC12);
+    }
+    testWaitForTimeout(50);
+  }
+  _Send_And_Check_NowSession(ID,Session);
+}
+
+void  _10_Phy_Ex_02(dword ID,byte Session)/*10 02*/
+{
+  byte Temp_1[2]={0x10,0x2};
+  if(Pre_Programmed_1002 == 1)
+    _Pre_Programmed();
+  if((Pre_Programmed_1002 == 1) && (Pre_Programmed_UnlockECU == 0) && (_Check_Serve(0x10,0x02,5)==1))
+    _unlockECU();
+  else if((_Check_Serve(0x10,0x02,5)==1) && (Pre_Programmed_1002 == 0))
+    _unlockECU();
+  if(_Check_Fun_IDAndSess(0x10,0x02,ID,Session)==1)
+  {
+    _Send_Diag_NoTime(2,ID,Temp_1);
+    {
+      diagSetP2Extended(-1);
+      testWaitForDiagResponse(SendData,p2cmax);
+      if(diagGetLastResponseCode(SendData)==0x78)
+      {
+        if((Sub_1002_NRC78 == 1) && (DiagGetPrimitiveByte(SendData,1)==0x02))
+          testStepFail("","10 02收到NRC78反馈,该项目预期10 02不响应NRC78");
+        testWaitForDiagResponse(SendData,p2cmax*100);
+        testReportWriteDiagResponse(SendData);
+        _WriteEx_and_Report("","接收到NRC78响应,后续响应判断是否为正响应");
+        _TestResult(SendData,ID,"",-1); 
+        testWaitForTimeout(1000);
+        _Send_And_Check_NowSession(ID,prosession);
+      }
+    }
+  }
+  else
+  {
+    _Send_Diag(2,ID,Temp_1);
+    _TestResult(SendData,ID,"",NRC7E);
+    _Send_And_Check_NowSession(ID,Session);
+  }
+}
+
+void _10_Phy_Ex_03_GAC(dword ID,byte Session)/*NRC22*/
+{
+  byte Session_01[2] = {0x10,0x01};
+  byte Session_02[2] = {0x10,0x02};
+  byte Session_03[2] = {0x10,0x03};
+  
+  _Send_Diag(2,ID,Session_03);
+  _Check_10_01(Resp_10_len[2],Session_03[1],P2can_server,P2_can_server);
+  _Send_Diag(2,ID,Session_02);
+  _TestResult(SendData,ID,"",NRC22);
+  testWaitForTimeout(1000);
+  
+  _Send_Diag(2,ID,Session_03);
+  _Check_10_01(Resp_10_len[2],Session_03[1],P2can_server,P2_can_server);
+  _Pre_Programmed();
+  _Send_Diag(2,ID,Session_01);
+  _Check_10_01(Resp_10_len[0],Session_01[1],P2can_server,P2_can_server);
+  _Send_Diag(2,ID,Session_03);
+  _Check_10_01(Resp_10_len[2],Session_03[1],P2can_server,P2_can_server);
+  _Send_Diag(2,ID,Session_02);
+  _TestResult(SendData,ID,"",NRC22);
+  testWaitForTimeout(1000);
+  
+  _Send_Diag(2,ID,Session_03);
+  _Check_10_01(Resp_10_len[2],Session_03[1],P2can_server,P2_can_server);
+  _Pre_Programmed();
+  testWaitForTimeout(6000);
+  _Send_Diag(2,ID,Session_03);
+  _Check_10_01(Resp_10_len[2],Session_03[1],P2can_server,P2_can_server);
+  _Send_Diag(2,ID,Session_02);
+  _TestResult(SendData,ID,"",NRC22);
+  testWaitForTimeout(1000);
+  
+  _Send_Diag(2,ID,Session_03);
+  _Check_10_01(Resp_10_len[2],Session_03[1],P2can_server,P2_can_server);
+  _Pre_Programmed();
+  _Set_11_Restoration();
+  _Send_Diag(2,ID,Session_03);
+  _Check_10_01(Resp_10_len[2],Session_03[1],P2can_server,P2_can_server);
+  _Send_Diag(2,ID,Session_02);
+  _TestResult(SendData,ID,"",NRC22);
+  testWaitForTimeout(1000);
+}
+
+void _10_Phy_Pro_02(dword ID,byte Session)/*10 02*/
+{
+  byte Temp_0[2]={0x10,0x02};
+  int Flage;
+  
+  if(_Check_Serve(0x10,0x02,4)!= -1)
+  {
+    Flage = _Check_Fun_IDAndSess(0X10,0X02,ID,Session);
+    if(Flage==0)
+    {
+      _Send_Diag(2,ID,Temp_0);
+      _TestResult(SendData,ID,"",NRC7E);
+      _Send_And_Check_NowSession(ID,Session);
+    }
+    else if(Flage==1)
+    {
+      _Send_Diag_NoTime(2,ID,Temp_0);
+      {
+        diagSetP2Extended(-1);
+        testWaitForDiagResponse(SendData,p2cmax);
+        if(diagGetLastResponseCode(SendData)==0x78)
+          {
+            if((Sub_1002_NRC78 == 1) && (DiagGetPrimitiveByte(SendData,1)==0x02))
+              testStepFail("","10 02收到NRC78反馈,该项目预期10 02不响应NRC78");
+            testWaitForDiagResponse(SendData,p2cmax*100);
+            testReportWriteDiagResponse(SendData);
+            _WriteEx_and_Report("","接收到NRC78响应,后续响应判断是否为正响应");
+            _TestResult(SendData,ID,"",-1); 
+            testWaitForTimeout(1000);
+            _Send_And_Check_NowSession(ID,prosession);
+          }
+       }
+    }
+    else if(Flage==-1)
+    {
+      _Send_Diag(2,ID,Temp_0);
+      _TestResult(SendData,ID,"",0);
+      _Send_And_Check_NowSession(ID,Session);
+    }
+  }
+}
+void _10_Phy_Pro_03(dword ID,byte Session)/*10 03*/
+{
+  byte Temp_0[2]={0x10,0x03};
+  if(_Check_Fun_IDAndSess(0x10,0x03,ID,Session)==1)
+  {
+    _Send_Diag(2,ID,Temp_0);
+    _Check_10_01(Resp_10_len[2],Temp_0[1],P2can_server,P2_can_server);
+    _Send_And_Check_NowSession(ID,exsession);
+  }
+  else
+  {
+    _Send_Diag(2,ID,Temp_0);
+    _TestResult(SendData,ID,"",NRC7E);
+    _Send_And_Check_NowSession(ID,Session);
+  }
+}
+void _10_Serve_NRC(dword ID,byte session)/*NRC优先级*/
+{
+  int Serve_Pos,i,Fun_Pos;  //变量初始化
+  byte Send_Data[50];
+  
+  Serve_Pos = _Check_Serve(0x10,0,0); //查询服务所在结构体的位置
+  Send_Data[0] = 0x10;
+  Send_Data[1] = session;  // 获取当前的诊断会话模式
+  Fun_Pos = _Check_Serve(0x10,Send_Data[1],4); //查询子功能所在服务结构的位置
+  if(_Check_Fun_IDAndSess(0x10,session,ID,session) == 1)  //检查子功能是否支持当前的寻址方式和会话模式
+  {
+
+    _Set_NRC_Step(0x10,Send_Data[1],6,Send_Data);  //获取NRC列表，并根据优先级设置发送的数据Send_Data及其长度Fun_NRC_Send_Len
+    if(Fun_NRC_Count == 0)  //无NRC输入时，直接跳出函数结束当前测试
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<=Fun_NRC_Count;i++) //根据NRC列表逐步发送诊断请求数据
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,Fun_Pos,Send_Data);  //对上一步测试的NRC发送诊断请求数据进行恢复
+      }
+      if(i == Fun_NRC_Count) //当NRC测试完成后，发送一次正常诊断请求数据，验证是否正响应
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data); //发送诊断请求数据
+        _TestResult(SendData,ID,"",-1); //检查响应
+      }
+      
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);//发送诊断请求数据
+        _TestResult(SendData,ID,"",Fun_NRC[i]);//检查响应
+      }
+      testWaitForTimeout(200); //每一次发送和检查数据后等待200ms
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x10 0x%02X当前会话或寻址不支持",session); //打印不支持时的消息到Trace面板及Report报告中
+}
+
+void _11_Phy_Def_01(dword ID,byte Session)/*遍历子功能*/ 
+{
+  int i,Flage;
+  byte Send_Data[2];
+  Send_Data[0] = 0x11;
+  for(i=1;i<=0xFF;i++)
+  {
+    if(_Check_Serve(0x11,i,4)!= -1)  //查询所有支持的子功能并遍历
+    {
+      Send_Data[1] = i;
+//      writeEx(-3,1,"Send_Data = 0x11 %02x",Send_Data[1]);
+      Flage = _Check_Fun_IDAndSess(0x11,i,ID,Session);
+      if(Flage == -1) //寻址不支持
+      {
+        _Send_Diag(2,ID,Send_Data);
+        _TestResult(SendData,ID,"",0);
+        _Send_And_Check_NowSession(ID,Session);
+      }
+      else if(Flage == 0)//会话不支持
+      {
+        _Send_Diag(2,ID,Send_Data);
+        _TestResult(SendData,ID,"",NRC7F);
+        _Send_And_Check_NowSession(ID,Session);
+      }
+      else if(Flage == 1)//均支持
+      {
+        if(_Check_Serve(0x11,i,5) == 1)
+        {
+          _Send_Diag(2,ID,Send_Data);
+          _TestResult(SendData,ID,"",NRC33);
+          testWaitForTimeout(500);
+          _WriteEx_and_Report("","通过安全访问");
+          _SetSession(exsession);
+          _unlockECU();
+        }
+        _Send_Diag(2,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+        testWaitForTimeout(2000);
+        _Send_And_Check_NowSession(ID,defsession);
+        _SetSession(Session);
+        testWaitForTimeout(1000);
+      }
+    }
+  }  
+}
+
+void _11_Phy_Def_02(dword ID,byte Session)/*肯定响应抑制位*/ 
+{
+  int i,Flage;
+  byte Send_Data[2];
+  Send_Data[0] = 0x11;
+  for(i=1;i<=0xFF;i++)
+  {
+    if(_Check_Serve(0x11,i,4)!= -1)  //查询所有支持的子功能并遍历
+    {
+      Send_Data[1] = i|0x80;
+      Flage = _Check_Fun_IDAndSess(0x11,i,ID,Session);
+      if(Flage == 1)//均支持
+      {
+        if(_Check_Serve(0x11,i,3)==1)
+        {
+          if(_Check_Serve(0x11,i,5) == 1)
+          {
+            _Send_Diag(2,ID,Send_Data);
+            _TestResult(SendData,ID,"",NRC33);
+            testWaitForTimeout(500);
+            _WriteEx_and_Report("","通过安全访问");
+            _SetSession(exsession);
+            _unlockECU();
+          }
+          _Send_Diag(2,ID,Send_Data);
+          _TestResult(SendData,ID,"",0);
+          testWaitForTimeout(2000);
+          _Send_And_Check_NowSession(ID,defsession);
+          _SetSession(Session);
+          testWaitForTimeout(1000);
+        }
+        else
+          _WriteEx_and_Report("","0x%02X该子功能不支持肯定响应抑制位",i);
+      }
+      else
+        _WriteEx_and_Report("","0x%02X该子功能在该会话或寻址方式下不支持",i);
+    }
+  } 
+}
+
+void _11_Phy_Def_04(dword ID,byte Session)/*NRC13*/ 
+{
+  byte Send_Data[2],i;
+  byte Len;
+  int Serve_Pos,flage;
+  Serve_Pos = _Check_Serve(0X11,0,0);
+  Send_Data[0] = 0x11;
+  Send_Data[1] = Serve_Data[Serve_Pos].Serve_Fun[0];
+  Len = _Check_CANFD_Flage();
+  flage = -1;
+  for(i=0;i<Serve_Data[Serve_Pos].Serve_Fun_Count;i++)
+  {
+    if(_Check_Fun_IDAndSess(0x11,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1) //当前寻址及会话下支持
+    {
+      flage = i;
+      break;
+    }
+  }
+  if(flage != -1) 
+  {
+    if(Serve_Data[Serve_Pos].Security_Access[flage]==1) //是否需要安全访问
+      _unlockECU();
+    for(i=1;i<=Len;i++)
+    {
+      if(i==Serve_Data[Serve_Pos].Serve_Fun_Len[flage])
+        continue;
+      _Send_Diag(i,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC13);
+      testWaitForTimeout(50);
+    }
+  }
+  else
+  {
+    _WriteEx_and_Report("","当前寻址及会话下无支持的子功能");
+    for(i=1;i<=Len;i++)
+    {
+      _Send_Diag(i,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC7F);
+      testWaitForTimeout(50);
+    }
+  }
+}
+
+void _11_Phy_Def_05(dword ID,byte Session)/*NRC12*/ 
+{
+  byte Send_Data[2];
+  int Serve_Pos,flage,i;
+  Serve_Pos = _Check_Serve(0X11,0,0);
+  Send_Data[0] = 0x11;
+  flage = -1;
+  for(i=0;i<Serve_Data[Serve_Pos].Serve_Fun_Count;i++)
+  {
+    if(_Check_Fun_IDAndSess(0x11,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1) //当前寻址及会话下支持
+    {
+      flage = i;
+      break;
+    }
+  }
+  if(flage != -1)//存在子功能在当前服务及会话下支持
+  {
+    if(Serve_Data[Serve_Pos].Security_Access[flage] == 1)
+      _unlockECU();
+    /*遍历11服务所有不支持的子功能*/
+    for(i=0;i<=0xFF;i++)
+    {
+      if((_Check_Serve(0x11,i,4) != -1) || (_Check_Serve(0x11,i&0x7F,4) != -1))
+        continue;
+      Send_Data[1] = i;
+      _Send_Diag(Serve_Data[Serve_Pos].Serve_Fun_Len[flage],ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC12);
+      testWaitForTimeout(50);
+      writeEx(-3,0,"--");
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前寻址及会话下无支持的子功能");
+}
+
+void _11_Serve_NRC(dword ID,byte session)/*NRC优先级*/
+{
+  int Serve_Pos,i;
+  byte Send_Data[50];
+  
+  Serve_Pos = _Check_Serve(0x11,0,0);
+  if(_Check_Serve_IDAndSess(0x11,ID,session) == 1)
+  {
+    Send_Data[0] = 0x11;
+    _Set_NRC_Step(0x11,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<=Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+      
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x11 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Fun[0]);
+}
+
+void _22_Serve_01(dword ID,dword Session) /*22 XX XX*/
+{
+  byte Temp_0[3];
+  byte K,N;
+  int Serv_Pos,Addres;
+  char Tem_Str[300];
+  int Flage_Save ;
+  K = 0;
+  Temp_0[0] = 0x22;
+  Serv_Pos = _Check_Serve(0x22,0,0);
+  if(ID == phyreq_ID)
+    Addres = 1;
+  else if(ID == funreq_ID)
+    Addres = 2 ;
+  if((Serve_Data[Serv_Pos].Serve_Addres[0] & Addres) != 0)  //寻址支持
+  {
+    if((Serve_Data[Serv_Pos].Serve_Session[0] & Session_BIN) != 0) //会话支持
+    {
+      snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
+      testGetCurrentTestCaseTitle(Fault_Data_Write,400);
+      snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    遍历22DID数据时,异常响应: \n",Fault_Data_Write);
+      File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
+      _get_Str_Traversal("DID_22_Traversal");
+      for(K=0;K<Traversal_Count;K++)
+      {
+        _get_DID(Traversal_DID[K]);
+        snprintf(Tem_Str,elCount(Tem_Str),"预期结果: ");
+        Temp_0[1] = DID_byte1;
+        Temp_0[2] = DID_byte2;
+        if(Analysis == 1)
+        {
+          snprintf(Tem_Str,elCount(Tem_Str),"%s 62 %02X %02X",Tem_Str,DID_byte1,DID_byte2);
+          if(Len_Input == DID_len_Ex)
+          {
+            for(N=0;N<DID_len_Ex-3;N++)
+              snprintf(Tem_Str,elCount(Tem_Str),"%s %02X",Tem_Str,DID_Data[N]);
+          }
+          else //存在未使用字节填充位
+          {
+            for(N=0;N<Len_Input;N++)
+              snprintf(Tem_Str,elCount(Tem_Str),"%s %02X",Tem_Str,DID_Data[N]);
+            for(N=Len_Input;N<DID_len_Ex - 3;N++)
+              snprintf(Tem_Str,elCount(Tem_Str),"%s %02X",Tem_Str,filler );
+          }
+          _WriteEx_and_Report(Traversal_DID[K],Tem_Str);    
+        }
+        else
+        {
+          snprintf(Tem_Str,elCount(Tem_Str),"预期结果 %s",DID_Data_str);
+          _WriteEx_and_Report(Traversal_DID[K],Tem_Str);
+        }
+        Flage_Save = _Check_22DID(ID,Temp_0,Session);
+        if(Flage_Save == -1)
+        {
+          char Str[50];
+          snprintf(Str,elCount(Str),"[  %s  ] \n",Traversal_DID[K]);
+          File_Write(Error_File,Error_FileName,Str,2);
+        }
+      }
+    }
+    else
+       _WriteEx_and_Report("","当前服务会话不支持");
+  }
+  else
+    _WriteEx_and_Report("","当前服务寻址不支持");
+}
+
+void _22_Serve_02(dword ID,dword Session) /*NRC13*/
+{
+  byte Temp_0[3]={0x22,0xF1,0x89}; 
+  byte i;
+  int Len;
+  int Return_Va,Serve_Pos;
+  Return_Va = _Check_Serve_IDAndSess(0x22,ID,Session);
+  if(Return_Va == 1)
+  {
+    _get_Str_Traversal("DID_22_Traversal");
+    _get_DID(Traversal_DID[0]);
+    Temp_0[1] = DID_byte1;
+    Temp_0[2] = DID_byte2;
+    Len = _Check_CANFD_Flage();
+    for(i=1;i<=Len;i++)
+    {
+      writeEx(-3,1,"当前长度为: %d",i);
+      if((i%2==1)&&(i!=1)&&i<=(DID_22_Support*2+1))
+      {
+        _WriteEx_and_Report("","当前长度支持，跳过检测");
+        testWaitForTimeout(200);
+        continue;
+      }
+      _Send_Diag(i,ID,Temp_0);
+      if(Session != 2 && (i >= 3) && @AUTO::Config_Switch == 2)
+        _TestResult(SendData,ID,"",NRC31);
+      else
+        _TestResult(SendData,ID,"",NRC13);
+      testWaitForTimeout(200);
+    }
+  }
+  else if(Return_Va == -1)
+    _WriteEx_and_Report("","当前寻址不支持该服务");
+  else if(Return_Va == 0)
+    _WriteEx_and_Report("","当前会话不支持该服务");
+}
+
+void _22_Serve_03(dword ID,dword Session) /*NRC31*/
+{
+  byte Send_Data[3]={0x22,0xF1,0x80}; 
+  dword byte1,byte2,Fun_Send;
+  int Return_Va,Flage_Save;
+  
+  Return_Va = _Check_Serve_IDAndSess(0x22,ID,Session);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
+  testGetCurrentTestCaseTitle(Fault_Data_Write,400);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    遍历22服务NRC31时,异常响应: \n",Fault_Data_Write);
+  File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
+  
+  if(Return_Va == 1)
+  {
+    if(Ergodic_22H==0)
+    {
+      for(byte1=0;byte1<=0xFF;byte1++)
+      {
+        Send_Data[1]=byte1;
+        for(byte2=0;byte2<=0xFF;byte2++)
+        {
+          Send_Data[2]=byte2;
+          Fun_Send = (byte1 << 8) ^ byte2;
+          if(_Check_Serve(0x22,Fun_Send,4) != -1 ) 
+          {
+            _WriteEx_and_Report("","该子功能支持，跳过检测");
+            continue;
+          }
+          else
+          {
+            _Send_Diag(3,ID,Send_Data);
+            Flage_Save = _TestResult(SendData,ID,"",NRC31);
+            testWaitForTimeout(50);
+            if(Flage_Save == -1)
+            {
+              char Str[30];
+              snprintf(Str,elCount(Str),"[  0x%02X 0x%02X  ] \n",byte1,byte2);
+              File_Write(Error_File,Error_FileName,Str,2);
+            }
+          }
+        }
+      } 
+    }
+    if(Ergodic_22H != 0)
+    {
+      Send_Data[1] = Ergodic_22H;
+      for(byte2=0;byte2<=0xff;byte2++)
+      {
+        Send_Data[2]=byte2;
+        Fun_Send = (Ergodic_22H << 8) ^ byte2;
+        if(_Check_Serve(0x22,Fun_Send,4) != -1 || (byte2 >= 0xF0 && byte2 <=0xF6))
+        {
+          _WriteEx_and_Report("","该子功能支持，跳过检测");
+          testWaitForTimeout(100);
+          continue;
+        }
+        else
+        {
+          _Send_Diag(3,ID,Send_Data);
+          Flage_Save = _TestResult(SendData,ID,"",NRC31);
+          testWaitForTimeout(50);
+          if(Flage_Save == -1)
+          {
+            char Str[30];
+            snprintf(Str,elCount(Str),"[  0x%02X 0x%02X  ] \n",byte1,byte2);
+            File_Write(Error_File,Error_FileName,Str,2);
+          }
+        }
+      }
+    }
+  }
+  else if(Return_Va == -1)
+    _WriteEx_and_Report("","当前寻址不支持该服务");
+  else if(Return_Va == 0)
+    _WriteEx_and_Report("","当前会话不支持该服务");
+}
+
+void _22_Serve_NRC(dword ID,dword Session)/*NRC优先级*/
+{
+  int Serve_Pos,i;
+  byte Send_Data[50];
+  
+  Serve_Pos = _Check_Serve(0x22,0,0);
+  if(_Check_Serve_IDAndSess(0x22,ID,Session) == 1)
+  {
+    Send_Data[0] = 0x22;
+    Send_Data[1] = Serve_Data[Serve_Pos].Serve_Fun[0] >> 8;
+    Send_Data[2] = Serve_Data[Serve_Pos].Serve_Fun[0] & 0xFF;
+    _Set_NRC_Step(0x22,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<=Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+      
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        if(Session != 2 && (Fun_NRC_Send_Len > Serve_Data[Serve_Pos].Serve_Fun_Len[0]) && NRC13_total == 2 && @AUTO::Config_Switch == 2)
+        {
+          _WriteEx_and_Report("","该会话不支持Totoal 13");
+          _TestResult(SendData,ID,"",NRC31);
+        }
+        else
+          _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+}
+
+void _Serve22_06(dword ID,byte Session)/*一次性读多个DID支持的DID*/
+{
+  DID_Read_Some(ID,Session,"DID_Read_Plural");
+}
+void _Serve22_07(dword ID,byte Session)/*一次性读多个相同DID支持的DID*/
+{
+  DID_Read_Some(ID,Session,"DID_Read_Plural_Same");
+}
+void _Serve22_08(dword ID,byte Session)/*一次性读多个DID部分支持*/
+{
+  DID_Read_Some(ID,Session,"DID_Read_Plural_Some_NotSupport");
+}
+void _Serve22_09(dword ID,byte Session)/*其他*/
+{
+  int i;
+  if(DID_22_Support >1)
+  {
+    _Get_ReadPlural();
+    if(Plural_DID_Count == 0)
+    {
+      _WriteEx_and_Report("","无其余测试情况输入");
+      return;
+    }
+    for(i=0;i<Plural_DID_Count;i++)
+    {
+      writeEx(-3,0,"开始测试:   %s   ",Plural_DID[i]);
+      DID_Read_Some(ID,Session,Plural_DID[i]);
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前项目仅支持一次读取一组DID");
+}
+
+void _2E_Serve_01(dword ID,dword Session)/*NRC7F>NRC13*/
+{
+  int Serve_Pos,Addres;
+  byte Send_Data[10];
+  Send_Data[0] = 0x2E;
+  Serve_Pos = _Check_Serve(0x2E,0,0);
+  if(ID == phyreq_ID)
+    Addres = 1;
+  else if(ID == funreq_ID)
+    Addres = 2 ;
+  if(Serve_Pos >= 0)
+  {
+    if((Serve_Data[Serve_Pos].Serve_Addres[0] & Addres) != 0)  //寻址支持
+    {
+      if((Serve_Data[Serve_Pos].Serve_Session[0] & Session_BIN) != 0) //会话支持
+      {
+        _get_2E_DID("DID2E_Rx_NRC33");
+        _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+        _TestResult(SendData,ID,"",NRC33);
+      }
+      else
+      {
+        _get_2E_DID("DID2E_Rx_NRC33");
+        _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+        _TestResult(SendData,ID,"",NRC7F);
+      }
+    }
+    else
+    {
+      _get_2E_DID("DID2E_Rx_NRC33");
+      _WriteEx_and_Report("","该寻址方式当前不支持该服务");
+      _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+      _TestResult(SendData,ID,"",0);
+    }
+  }
+  else
+  {
+    _WriteEx_and_Report("","该项目当前不支持该服务");
+    _Send_Diag(3,ID,Send_Data);
+    _TestResult(SendData,ID,"",NRC11);
+  }
+}
+
+void _2E_Serve_02(dword ID,dword Session)/*遍历 2E XX XX*/
+{
+  int m;
+  int Flage_1,Pass_Flage;
+  byte DID[2];
+  int App_Status;
+  
+  App_Status = -1;
+  _get_Str_Traversal("DID_2E_Traversal");
+  for(m=0;m<Traversal_Count;m++)
+  {
+    if(m>0)
+    {
+      _SetSession(defsession);
+      testWaitForTimeout(500);
+      _SetSession(Session);
+      testWaitForTimeout(200);
+      if(Session == prosession)
+        testWaitForTimeout(800);
+    }
+    Pass_Flage = 0;
+    _get_2E_DID(Traversal_DID[m]);
+    DID[0] =  DID_2E_SendData_1[1];
+    DID[1] =  DID_2E_SendData_1[2];
+    if(Session == prosession)
+    {
+      if(@AUTO::Config_Switch == 5 || (strncmp(ECU_project,"SRM",strlen("SRM")) == 0 ))//鑫源特殊情况
+      {
+        if(App_Status ==  -1)
+          App_Status = Check_APPValid();
+        if(DID[0] == 0xF1 && (DID[1] == 0x98 || DID[1] == 0x99) && App_Status == 0)
+        {
+          writeEx(-3,1," /*-------- 鑫源F198和F199需要回APP测试，需手动刷写正常流程后测试该用例! --------*/");
+          writeEx(-3,1," /*-------- 纯BT下仅验证写入后正响应 --------*/");
+          Pass_Flage = 1;
+          Flage_1 = _Check_2EH_Support(DID,ID,Session,1);
+          if(Flage_1 ==1)
+          {
+            _unlockECU();
+            testWaitForTimeout(500);
+            _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+            _TestResult(SendData,ID,"",DID_2E_SendData_1_Response);
+          }
+          else if(Flage_1 == 0)
+          {
+            _WriteEx_and_Report(Traversal_DID[i],"当前会话下不支持该DID");
+      //      _unlockECU();
+            _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+            _TestResult(SendData,ID,"",0x7F); 
+          }
+          else
+          { 
+            _WriteEx_and_Report(Traversal_DID[i],"当前寻址下不支持该DID");
+          }
+          testWaitForTimeout(100);
+        }
+      }
+    }
+    if(Pass_Flage == 0)
+    {
+      Flage_1 = _Check_2EH_Support(DID,ID,Session,1);
+      if(Flage_1 ==1)
+      {
+        _Check_DID_2E(ID,Session,m);
+      }
+      else if(Flage_1 == 0)
+      {
+        _WriteEx_and_Report(Traversal_DID[i],"当前会话下不支持该DID");
+  //      _unlockECU();
+        _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+        _TestResult(SendData,ID,"",0x7F); 
+      }
+      else
+      { 
+        _WriteEx_and_Report(Traversal_DID[i],"当前寻址下不支持该DID");
+      }
+      testWaitForTimeout(100);
+    }
+  }
+}
+
+void _2E_Serve_03(dword ID,byte Session)/*NRC31*/
+{
+  byte Temp_0[3];
+  byte Temp_1[2];
+  int byte1;           /*2E服务的第一个字节*/
+  int byte2;           /*2E服务的第二个字节*/
+  int Serv_Pos,Addres;
+  int Pass_Flage,Flage_Save;
+  Temp_0[0] = 0x2E;
+  Serv_Pos = _Check_Serve(0x2E,0,0);
+  if(ID == phyreq_ID)
+    Addres = 1;
+  else if(ID == funreq_ID)
+    Addres = 2 ;
+  
+  Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
+  if(Pass_Flage != 1)
+  {
+    _WriteEx_and_Report("","当前服务在会话或寻址方式下不支持,跳过测试");
+    return;
+  }
+  
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
+  testGetCurrentTestCaseTitle(Fault_Data_Write,400);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    遍历2E服务NRC31时,异常响应: \n",Fault_Data_Write);
+  File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
+  
+  if((Serve_Data[Serv_Pos].Serve_Addres[0] & Addres) != 0)  //寻址支持
+  {
+    Temp_0[0] = 0x2E;
+    _get_2E_DID("DID2E_Rx_NRC33");
+    Len = DID_2E_SendData_1_Len;
+    _unlockECU();
+    /*遍历所有不支持的DID*/
+    if(Ergodic_2EH == 0)
+    {
+      for(byte1 = 0xF0; byte1 <= 0xF1; byte1++)
+      {
+        Temp_0[1] = byte1;
+        Temp_1[0] = byte1;
+        for(byte2 = 0; byte2 <= 0xFF; byte2++)
+        {
+          Temp_0[2] = byte2;
+          Temp_1[1] = byte2;
+          if(_Check_2EH_Support(Temp_1,ID,Session,0)==1 || (byte1 == 0xF1 &&(byte2 >= 0xF0 && byte2 <=0xFA)))
+            _WriteEx_and_Report("","该DID支持,跳过");
+          else
+          {
+            _Send_Diag(Len,ID,Temp_0);
+            Flage_Save = _TestResult(SendData,ID,"",NRC31);
+            if(Flage_Save == -1)
+            {
+              char Str[30];
+              snprintf(Str,elCount(Str),"[  0x%02X 0x%02X  ] \n",byte1,byte2);
+              File_Write(Error_File,Error_FileName,Str,2);
+            }
+          }
+          testWaitForTimeout(50);
+        }
+      }
+    }
+    else
+    {
+      Temp_0[1] = Ergodic_2EH;
+      Temp_1[0] = Ergodic_2EH;
+      for(byte2=0;byte2<=0xFF;byte2++)
+      {
+        Temp_0[2] = byte2;
+        Temp_1[1] = byte2;
+        if(_Check_2EH_Support(Temp_1,ID,Session,0)==1 || (byte2 >= 0xF0 && byte2 <=0xFA))
+          _WriteEx_and_Report("","该DID支持,跳过");
+        else
+        {
+          _Send_Diag(Len,ID,Temp_0);
+          Flage_Save = _TestResult(SendData,ID,"",NRC31);
+          if(Flage_Save == -1)
+          {
+            char Str[30];
+            snprintf(Str,elCount(Str),"[  0x%02X 0x%02X  ] \n",byte1,byte2);
+            File_Write(Error_File,Error_FileName,Str,2);
+          }
+        }
+        testWaitForTimeout(50);
+      }
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前服务寻址不支持");
+}
+
+void _2E_Serve_04(dword ID,dword Session)/*NRC13*/
+{
+  byte Data[400];
+  int Len;
+  int Pass_Flage;
+  
+  Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
+  if(Pass_Flage != 1)
+  {
+    _WriteEx_and_Report("","当前服务在会话或寻址方式下不支持,跳过测试");
+    return;
+  }
+  _get_2E_DID("DID2E_Rx_NRC33");
+  _unlockECU();
+  for(i=0;i<DID_2E_SendData_1_Len;i++)
+    Data[i] = DID_2E_SendData_1[i];
+  if(DID_2E_SendData_1_Len<=7)
+    Len = 7;
+  else
+    Len = DID_2E_SendData_1_Len+1;
+  for(i=1;i<=Len;i++)
+  {
+    if(i==DID_2E_SendData_1_Len) 
+      continue;
+    _Send_Diag(i,ID,Data);
+    _TestResult(SendData,ID,"",NRC13);
+    testWaitForTimeout(50);
+  }
+}
+
+void _2E_Serve_05(dword ID,dword Session)/*NRC33*/
+{
+   byte Data[500];
+  byte Data2[500];
+  int i=0,j=0,Len=0,Len2=0,flage;
+  int Pass_Flage;
+  
+  Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
+  if(Pass_Flage != 1)
+  {
+    _WriteEx_and_Report("","当前服务在会话或寻址方式下不支持,跳过测试");
+    return;
+  }
+  
+  flage=0;
+  _get_Str_Traversal("DID_2E_Traversal");
+  if(Session == 2 &&((_Check_Serve(0x10,0x02,5)==1) || (Pre_Programmed_1002==1)))
+  {
+    _WriteEx_and_Report("","该项目进入10 02时Ecu已解锁，无法测试2E服务编程模式NRC33");
+    return;
+  }
+
+  for(i=0;i<Traversal_Count;i++)
+  {
+    _get_2E_DID(Traversal_DID[i]);
+    if(i>0)
+      _SetSession(Session);
+    if(Support_Read_2E_DID == 1)
+    {
+      _Send_Diag(Read_2E_DID_Len,ID,Read_2E_DID);
+      _TestResult(SendData,ID,"",-1);
+      if(diagGetLastResponseCode(SendData)==-1)
+      {
+        Len = DiagGetRespPrimitiveSize(SendData);
+        for(j=0;j<Len;j++)
+          Data[j] = DiagGetRespPrimitiveByte(SendData,j);
+      }
+      else
+        testStepFail("22读取数据","未收到正响应");
+      _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+      _TestResult(SendData,ID,"",NRC33);
+      _Send_Diag(Read_2E_DID_Len,ID,Read_2E_DID);
+      _TestResult(SendData,ID,"",-1);
+      if(diagGetLastResponseCode(SendData)==-1)
+      {
+        Len2 = DiagGetRespPrimitiveSize(SendData);
+        for(j=0;j<Len2;j++)
+          Data2[j] = DiagGetRespPrimitiveByte(SendData,j);
+      }
+      else
+        testStepFail("22读取数据","未收到正响应");
+      if(Len!=Len2 )
+        testStepFail(Traversal_DID[i],"两次接收到的数据长度不一致,第一次长度为%d,第二次长度为%d",Len,Len2);
+      else
+      {
+        for(j=0;j<Len;j++)
+        {
+          if(Data[j]!=Data2[j])
+            flage=1;
+        }
+        if(flage==1)
+          testStepFail(Traversal_DID[i],"两次返回的数据不一致");
+        else
+          testStepPass(Traversal_DID[i],"两次返回的数据一致");
+      }
+    }
+    else
+    {
+      _WriteEx_and_Report(Traversal_DID[i],"不支持读取,仅验证返回NRC33");
+      _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+      _TestResult(SendData,ID,"",NRC33);
+    }
+  }
+}
+
+void _2E_Serve_06(dword ID,byte Session)/*NRC优先级*/
+{
+  int Serve_Pos,i;
+  byte Send_Data[50];
+  int Pass_Flage;
+  
+  Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
+  if(Pass_Flage != 1)
+  {
+    _WriteEx_and_Report("","当前服务在会话或寻址方式下不支持,跳过测试");
+    return;
+  }
+  _get_2E_DID("DID2E_Rx_NRC33");
+  Serve_Pos = _Check_Serve(0x2E,0,0);
+  if(_Check_Serve_IDAndSess(0x2E,ID,Session) == 1)
+  {
+    Send_Data[0] = 0x2E;
+    _Set_NRC_Step(0x2E,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<Fun_NRC_Count;i++) 
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+      
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+
+      if(i == Fun_NRC_Count)
+        _TestResult(SendData,ID,"",-1);
+      if(Session != 2 && (Fun_NRC_Send_Len > Serve_Data[Serve_Pos].Serve_Fun_Len[0]) && NRC13_total == 2 && @AUTO::Config_Switch == 2)
+      {
+        _WriteEx_and_Report("","该会话不支持Totoal 13");
+        _TestResult(SendData,ID,"",NRC31);
+      }
+      else
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      testWaitForTimeout(100);
+    }
+  }
+}
+
+void _3E_Serve_01(dword ID)/*3E 00*/
+{
+  byte Temp[2] = {0x3E,0x00};
+  byte Temp_ID;
+  if(ID == phyreq_ID)
+    Temp_ID = 1;
+  else if(ID == funreq_ID)
+    Temp_ID = 2;
+  _Send_Diag(2,ID,Temp);
+  /*寻址方式不支持*/
+  if(_Check_Serve(0x2E,0,1) & Temp_ID == 0)
+    _TestResult(SendData,ID,"",NRC12);
+  else
+    _TestResult(SendData,ID,"",-1);
+}
+
+void _3E_Serve_02(dword ID)/*3E 80*/
+{
+  byte Temp[2] = {0x3E,0x80};
+  byte Temp_ID;
+  
+  /*bit0表示物理寻址、bit1表示功能寻址*/
+  if(ID == phyreq_ID)
+    Temp_ID = 1;
+  else if(ID == funreq_ID)
+    Temp_ID = 2;
+  _Send_Diag(2,ID,Temp);
+  /*寻址方式不支持*/
+  if(_Check_Serve(0x2E,0,1) & Temp_ID == 0)
+    _TestResult(SendData,ID,"",NRC12);
+  else
+    _TestResult(SendData,ID,"",0);
+}
+
+void _3E_Serve_04(dword ID)/*NRC13*/
+{
+  byte Tem[2] = {0x3E,0x00};
+  int Len;
+  Len = _Check_CANFD_Flage();
+  for(i=1;i<=Len;i++)
+  {
+    if(i==0x02)
+    {
+      _WriteEx_and_Report("","报文长度正确，跳过测试");
+      continue;
+    }
+    _Send_Diag(i,ID,Tem);
+    _TestResult(SendData,ID,"",NRC13);
+    testWaitForTimeout(50);
+  }
+}
+void _3E_Serve_05(dword ID)/*NRC12*/
+{
+  byte Tem[2] = {0x3E,0x00};
+  int i,Serve_Pos,Fun_Pos;
+  Serve_Pos = _Check_Serve(0x3E,0,0);
+  for(i=1;i<=0xFF;i++)
+  {
+    if(i == 0x80) continue;
+    Tem[1]=i;
+    Fun_Pos = _Check_Serve(0x3E,0,4);
+    if(i==Serve_Data[Serve_Pos].Serve_Fun[Fun_Pos])
+    if((Fun_Pos == 1) || (Serve_Data[Serve_Pos].RSP[Fun_Pos] == 1))
+    {
+      _WriteEx_and_Report("","子功能正确，跳过测试");
+      continue;
+    }
+    _Send_Diag(2,ID,Tem);
+    _TestResult(SendData,ID,"",NRC12);
+    testWaitForTimeout(50);
+  }
+}
+void _3E_Serve_NRC(dword ID,byte session)/*NRC优先级*/
+{
+  int Serve_Pos,i;
+  byte Send_Data[50];
+  
+  Serve_Pos = _Check_Serve(0x3E,0,0);
+  if(_Check_Serve_IDAndSess(0x3E,ID,session) == 1)
+  {
+    Send_Data[0] = 0x3E;
+    _Set_NRC_Step(0x3E,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<Fun_NRC_Count;i++)
+    {
+      if(Fun_NRC[i] == NRC12 && session == 2 )
+        continue;
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+      
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      if(i == Fun_NRC_Count )
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x3E 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Fun[0]);
+}
+_Not_Support_Fun(dword ID,dword session)  //不支持的服务
+{
+  int i;
+  byte data_[1]={0x01};
+  if((strncmp(ECU_project,"BYD",strlen("BYD")) == 0 || @AUTO::Config_Switch == 1)) //BYD存在双备份问题，无法停留在BT
+  {
+    for(i=0;i<=0xFF;i++)
+    {
+      if(i==0x10 || i==0x11 || i==0x22 || i==0x27 || i==0x2E || i==0x31 || i==0x34 || i==0x36 || i==0x37 || i==0x3e || i==0x28 ||  i==0x85  ||  i==0x14 ||  i==0x19)
+        if(_Check_Serve(i,0,0)!=-1) 
+          continue;
+      data_[0] = i;
+      _Send_Diag_NoTime(1,ID,data_);
+      _get_NRC11(ID);
+      testWaitForTimeout(200);
+    }
+  }
+  else
+  {
+    for(i=0;i<=0xFF;i++)
+    {
+      if(i==0x10 || i==0x11 || i==0x22 || i==0x27 || i==0x2E || i==0x31 || i==0x34 || i==0x36 || i==0x37 || i==0x3e || i==0x28 ||  i==0x85)
+      {
+        if(_Check_Serve(i,0,0) != -1) 
+          continue;
+        if(i == 0x31)
+          continue;
+      }
+      data_[0] = i;
+      _Send_Diag_NoTime(1,ID,data_);
+      _get_NRC11(ID);
+      testWaitForTimeout(200);
+    }
+  }
+}
+
+void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*遍历NRC22条件*/
+{
+  int Serve_Pos,i;
+  int Fun_Count;
+  char Temp_Str[200];
+  char Temp_Str_[200];
+  int Clear_Config_Flage,SWhere;
+  if(Serv_ != 0x31)
+    Serve_Pos = _Check_Serve(Serv_,0,0);
+  snprintf(Temp_Str,elCount(Temp_Str),"");
+  snprintf(Temp_Str_,elCount(Temp_Str_),"");
+  snprintf(Temp_Str,elCount(Temp_Str),"     开始测试%02X服务",Serv_);
+  if(Serv_ != 0x31)
+  {
+    if(Serve_Pos != -1)
+    {
+      Fun_Count = Serve_Data[Serve_Pos].Serve_Fun_Count;
+      Clear_Config_Flage = 0;
+      if(Serv_ == 0x22)  //22服务特殊处理,仅验证一个
+        Fun_Count = 1;
+      else if(Serv_ == 0x2E)
+      {
+        _get_Str_Traversal("DID_2E_Traversal");
+        Fun_Count = Traversal_Count;
+        if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+        {
+          for(i=0;i<Traversal_Count;i++)
+          {
+            if((strncmp(Traversal_DID[i],"DID2E_F1A1",strlen(Traversal_DID[i])) == 0 && strlen(Traversal_DID[i]) == strlen("DID2E_F1A1")) || (strncmp(Traversal_DID[i],"DID2E_2100",strlen(Traversal_DID[i])) == 0 && strlen(Traversal_DID[i]) == strlen("DID2E_2100")))
+            {
+              SWhere = i;
+              Clear_Config_Flage = 1;
+              break;
+            }
+          }
+          if(Clear_Config_Flage == 1)
+          {
+            byte Data_Send[11] = {0x2E,0xF1,0xA1,0,0,0,0,0,0,0,0x55};
+            _unlockECU();
+            _Send_Diag(11,phyreq_ID,Data_Send);
+            _TestResult(SendData,ID,"",-1);
+            _SetSession(Session);
+          }
+        }  
+      }
+      for(i=0;i<Fun_Count;i++)
+      {
+        snprintf(Temp_Str,elCount(Temp_Str),"     开始测试%02X服务%02X子功能,NRC22条件",Serv_,Serve_Data[Serve_Pos].Serve_Fun[i]);
+        if(Serv_ == 0x14)
+          snprintf(Temp_Str,elCount(Temp_Str),"     开始测试%02X服务,NRC22条件",Serv_);
+        if(_Check_Fun_IDAndSess(Serv_,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1)
+        {
+          _WriteEx_and_Report("","------------------------------------------------------");
+          _WriteEx_and_Report("",Temp_Str);
+          _WriteEx_and_Report("","------------------------------------------------------");
+          _NRC22_Test_Loop(Serv_,i,ID,Session,Type);
+        }
+        else
+        {
+          snprintf(Temp_Str_,elCount(Temp_Str_),"0x%02X 0x%02X",Serv_,Serve_Data[Serve_Pos].Serve_Fun[i]);
+          _WriteEx_and_Report(Temp_Str_,"当前寻址或会话下不支持该子功能");
+        }
+      }
+      if(Clear_Config_Flage == 1)
+      {
+        _unlockECU();
+        _get_2E_DID(Traversal_DID[SWhere]);
+        _Send_Diag(DID_2E_SendData_1_Len,phyreq_ID,DID_2E_SendData_1);
+        _TestResult(SendData,ID,"",-1);
+      }
+    }
+  }
+  else if(Serv_ == 0x31)
+  {
+    byte Send_Data[50];
+    char comment[50];
+    snprintf(comment,elCount(comment),"未在Struct中查询到31服务 NRC 检测例程：31");
+    snprintf(comment,elCount(comment),"%s %02X",comment,(Serve31_NRC_Case >> 16) & 0xFF);
+    snprintf(comment,elCount(comment),"%s %02X",comment,(Serve31_NRC_Case >> 8) & 0xFF);
+    snprintf(comment,elCount(comment),"%s %02X",comment,Serve31_NRC_Case & 0xFF);
+    for(i=0;i<Serve_31_Hex_Count;i++)
+    {
+      _Get_31_ServeData(i,Send_Data,2,0);
+      
+      if((Send_Data[2] == ((Serve31_NRC_Case >> 8) & 0xFF)) && (Send_Data[3] == (Serve31_NRC_Case & 0xFF)))
+      {
+          Serve_Pos = i;
+          break;
+      }
+    }
+    if(i == Serve_31_Hex_Count)
+    {
+      writeEx(-3,1,comment);
+      testStepFail("",comment);
+      return;
+    }
+    snprintf(Temp_Str,elCount(Temp_Str),"     开始测试%02X服务%02X%02X例程,NRC22条件",Serv_,Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
+    {
+      _WriteEx_and_Report("","------------------------------------------------------");
+      _WriteEx_and_Report("",Temp_Str);
+      _WriteEx_and_Report("","------------------------------------------------------");
+      _NRC22_Test_Loop(Serv_,i,ID,Session,Type);
+    }
+  }
+}
+void _85_Serve_01(dword ID,byte session)/*NRC7F*/
+{
+  byte Send_Data[2] = {0x85,0x03};
+  if(_Check_Serve_IDAndSess_(0X85,ID,session) != -1)
+  {
+    if(session == defsession)
+    {
+      _Send_Diag(7,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC7F);
+    }
+    else
+      _WriteEx_and_Report("","当前测试为默认会话");
+  }
+}
+void _85_Serve_02(dword ID,byte session)/*85 01/02*/
+{
+  byte Send_Data[2] = {0x85,0x01};
+  int Status = -1;
+  Status = _Check_Serve_IDAndSess(0X85,ID,session);
+  if( Status != -1)
+  {
+    Send_Data[1] = 0x01;
+    _Send_Diag(2,ID,Send_Data);
+    if(Status == 1)
+      _TestResult(SendData,ID,"",-1);
+    else
+      _TestResult(SendData,ID,"",NRC7F);
+    
+    Send_Data[1] = 0x02;
+    _Send_Diag(2,ID,Send_Data);
+    if(Status == 1)
+      _TestResult(SendData,ID,"",-1);
+    else
+      _TestResult(SendData,ID,"",NRC7F);
+  }
+}
+void _85_Serve_03(dword ID,byte session)/*85 81/82*/
+{
+  byte Send_Data[2] = {0x85,0x01};
+  byte Addres;
+  int Status = -1;
+  Status = _Check_Serve_IDAndSess(0X85,ID,session);
+  if(Status != -1)
+  {
+    if(_Check_Serve(0x85,0,3)==0)
+      _WriteEx_and_Report("","当前服务不支持肯定响应抑制位");
+    else
+    {
+      Send_Data[1] = 0x81;
+      _Send_Diag(2,ID,Send_Data);
+      if(Status == 0 && ID != funreq_ID)
+        _TestResult(SendData,ID,"",NRC7F);
+      else
+       _TestResult(SendData,ID,"",0);
+      Send_Data[1] = 0x82;
+      _Send_Diag(2,ID,Send_Data);
+      if(Status == 0 && ID != funreq_ID)
+        _TestResult(SendData,ID,"",NRC7F);
+      else
+       _TestResult(SendData,ID,"",0);
+    }
+  }
+}
+
+void _85_Serve_05(dword ID,byte session)/*NRC13*/
+{
+  byte Send_Data[2];
+  int Len,Serve_Pos;
+  int i;
+  int Status = -1;
+  Status = _Check_Serve_IDAndSess(0X85,ID,session);
+  Send_Data[0]= 0x85;
+  Serve_Pos = _Check_Serve(0x85,0,0);
+  Send_Data[1]= Serve_Data[Serve_Pos].Serve_Fun[0];
+  Len = _Check_CANFD_Flage();
+  if(Status== 1)
+  {
+    for(i=1;i<=Len;i++)
+    {
+      if(i==Serve_Data[Serve_Pos].Serve_Fun_Len[0])
+        continue;
+      _Send_Diag(i,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC13);
+      testWaitForTimeout(50);
+    }
+  }
+}
+
+void _85_Serve_06(dword ID,byte session)/*NRC12*/
+{
+  byte Send_Data[2] = {0x85,0x03};
+  int i;
+  int Status = -1;
+  Status = _Check_Serve_IDAndSess(0X85,ID,session);
+  if(Status != -1)
+  {
+    for(i=0;i<=0xff;i++)
+    {
+      Send_Data[1] = i;
+//      if((_Check_Serve(0x85,i,4)!= -1) || (_Check_Serve(0x85,i&0x7F,4)!= -1))
+      if(_Check_Serve(0x85,i,4)!= -1)
+        continue;
+      _Send_Diag(2,ID,Send_Data);
+      if(Status == 0)
+        _TestResult(SendData,ID,"",NRC7F);
+      else if(ID == funreq_ID || (_Check_Serve(0x85,i&0x7F,4)!= -1))
+        _TestResult(SendData,ID,"",0);
+      else
+        _TestResult(SendData,ID,"",NRC12);
+    }
+  }
+}
+
+void _85_Serve_NRC(dword ID,byte session)/*NRC优先级*/
+{
+  int Serve_Pos,i,Fun_Pos;
+  byte Send_Data[10];
+  Send_Data[0] = 0x85;
+  Serve_Pos = _Check_Serve(0x85,0,0);
+  if(_Check_Serve_IDAndSess(0x85,ID,session) == 1)
+  {
+
+    _Set_NRC_Step(0x85,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<=Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+      
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x85 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Fun[0]);
+}
+
+void _28_Serve_01(dword ID,byte session)/*NRC7F>13*/
+{
+  byte Send_Data[3] = {0x28,0x00,0x03};
+  int i,Serve_Pos,j;
+  Serve_Pos = _Check_Serve(0x28,0,0);
+  if(_Check_Serve_IDAndSess_(0x28,ID,session) != -1)
+  {
+    for(i=0;i<Serve_Data[Serve_Pos].Serve_Fun_Count;i++)
+    {
+      Send_Data[1] = Serve_Data[Serve_Pos].Serve_Fun[i];
+      for(j=0;j<Serve_Data[Serve_Pos].Serve_Para_Count[i];j++)
+      {
+        Send_Data[2] = Serve_Data[Serve_Pos].Serve_Para[i][j];
+        _Send_Diag(4,ID,Send_Data);
+        _TestResult(SendData,ID,"",NRC7F);
+      }
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下支持相关子功能,跳过测试");
+}
+void _28_Serve_02(dword ID,byte session)/*子功能及肯定响应抑制位*/
+{
+  byte Send_Data[20];
+  int i,n,flage,len,Poss;
+  byte Size_Para;
+  if(_Check_Serve_IDAndSess(0X28,ID,session) == 1)
+  {
+    _Step_Serve_Fun(0X28,ID,session);
+  }
+}
+void _28_Serve_03(dword ID,byte session)/*NRC13*/
+{
+  byte Send_Data[3] = {0x28,0x03,0x03};
+  int Len;
+  int i;
+  Len = _Check_CANFD_Flage();
+  if(_Check_Serve_IDAndSess(0x28,ID,session) == 1)
+  {
+    for(i=1;i<=Len;i++)
+    {
+      if(i==0x03)
+        continue;
+      _Send_Diag(i,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC13);
+      testwaitfortimeout(200);
+    }
+  }
+}
+void _28_Serve_04(dword ID,byte session)/*NRC12*/
+{
+  byte Send_Data[3] = {0x28,0x03,0x03};
+  int i,Fun_Poss,Serve_Poss;
+  if(_Check_Serve_IDAndSess(0x28,ID,session) == 1)
+  {
+    Serve_Poss = _Check_Serve(0x28,0,0);
+    Send_Data[2] = Serve_Data[Serve_Poss].Serve_Para[0][0];
+    for(i=0;i<=0xff;i++)
+    {
+      Send_Data[1] = i;
+      if((_Check_Serve(0x28,i,4)!= -1) || (_Check_Serve(0x28,i&0x7F,4)!= -1))
+        continue;
+      _Send_Diag(3,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC12);
+      testwaitfortimeout(200);
+    }
+  }
+}
+void _28_Serve_05(dword ID,byte session)/*NRC31*/
+{
+  byte Send_Data[3] = {0x28,0x03,0x03};
+  int i,Serve_Poss;
+  if(_Check_Serve_IDAndSess(0x28,ID,session) == 1)
+  {
+    Serve_Poss = _Check_Serve(0x28,0,0);
+    Send_Data[1] = Serve_Data[Serve_Poss].Serve_Fun[0];
+    for(i=0;i<=0xff;i++)
+    {
+      Send_Data[2] = i;
+      if(_Check_Para(Serve_Poss,0,Send_Data,3)!= -1)
+        continue;
+      _Send_Diag(3,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC31);
+      testwaitfortimeout(200);
+    }
+  }
+}
+
+void _28_Serve_NRC(dword ID,byte session)/*NRC优先级*/
+{
+  int Serve_Pos,i;
+  byte Send_Data[50];
+  
+  Serve_Pos = _Check_Serve(0x28,0,0);
+  if(_Check_Serve_IDAndSess(0x28,ID,session) == 1)
+  {
+    Send_Data[0] = 0x28;
+    _Set_NRC_Step(0x28,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<=Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+      
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x28 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Fun[0]);
+}
+
+void _34_Serve_01(dword ID,byte session)/*NRC7F*/
+{
+  byte Send_Data[10] = {0x34,0x00,0x44,0x80,0x03,0x00,0x00,0x00,0x01,0x00};
+  _Send_Diag(0x0A,ID,Send_Data);
+  _TestResult(SendData,ID,"",NRC7F);  //默认会话
+}
+void _34_Serve_02(dword ID,byte session)/*NRC22/24*/
+{
+  int Serve_Poss;
+  byte Send_Data[20];
+  if(_Check_Serve_IDAndSess(0x34,ID,session) != -1)
+  {
+    Serve_Poss = _Check_Serve(0x34,0,0);
+    if(@AUTO::Config_Switch == 12)
+      _Get_Serve_INI(Send_Data,0x34,Serve_Poss,4);
+    else
+      _Get_Serve_INI(Send_Data,0x34,Serve_Poss,0);
+    if(Serve_Data[Serve_Poss].Security_Access[0] == 1)
+      _unlockECU();
+    _Send_Diag(BT_34_Len,ID,Send_Data);
+//    _TestResult(SendData,ID,"",Serve_Data[Serve_Poss].Serve_NRC[0][Serve_Data[Serve_Poss].Serve_NRC_Count[0]-1]);
+    if(@AUTO::Config_Switch == 4)
+      _TestResult(SendData,ID,"",NRC24);
+    else
+      _TestResult(SendData,ID,"",NRC22);
+  }
+}
+void _34_Serve_03(dword ID,byte session)/*NRC13*/
+{
+  int Serve_Poss;
+  byte Send_Data[20];
+  if(_Check_Serve_IDAndSess(0x34,ID,session) != -1)
+  {
+    Serve_Poss = _Check_Serve(0x34,0,0);
+    Send_Data[0] = 0X34;
+    _Get_Serve_INI(Send_Data,0x34,Serve_Poss,0);
+    if(Serve_Data[Serve_Poss].Security_Access[0] == 1)
+      _unlockECU();
+    for(i=1;i<=64;i++)
+    {
+      if(i==BT_34_Len)
+        continue;
+      _Send_Diag(i,ID,Send_Data);
+      if(i<=3)
+        _TestResult(SendData,ID,"",_Get_NRC_Input(0x31,0x13,0x34,0));
+      else
+        _TestResult(SendData,ID,"",NRC13);
+      testWaitForTimeout(200);
+    }
+  }
+}
+void _34_Serve_04(dword ID,byte session)/*NRC33*/
+{
+  int Serve_Poss;
+  byte Send_Data[20];
+  if(_Check_Serve_IDAndSess(0x34,ID,session) != -1)
+  {
+    Serve_Poss = _Check_Serve(0x34,0,0);
+    if(Serve_Data[Serve_Poss].Security_Access[0] == 0)
+    {
+      _WriteEx_and_Report("","无需安全访问");
+      return;
+    }
+    Send_Data[0] = 0X34;
+    _Get_Serve_INI(Send_Data,0x34,Serve_Poss,0);
+    _Send_Diag(BT_34_Len,ID,Send_Data);
+    _TestResult(SendData,ID,"",NRC33);
+  }
+}
+void _34_Serve_05(dword ID,byte session)/*NRC31*/
+{
+  int Serve_Poss;
+  byte Send_Data[50];
+  if(_Check_Serve_IDAndSess(0x34,ID,session) != -1)
+  {
+    Serve_Poss = _Check_Serve(0x34,0,0);
+    Send_Data[0] = 0X34;
+    _Get_Serve_INI(Send_Data,0x34,Serve_Poss,0);
+    testWaitForTimeout(1000);
+    if(Serve_Data[Serve_Poss].Security_Access[0] == 1)
+      _unlockECU();
+    _Send_Diag(BT_34_Len,ID,Send_Data);
+    _TestResult(SendData,ID,"",NRC22);
+//    _Get_Serve_INI(Send_Data,0x34,Serve_Poss,0);
+    if(Serve_Data[Serve_Poss].Serve_Para_Len[0][0]>=1)
+    {
+      Send_Data[1] = Serve_Data[Serve_Poss].Serve_Para[0][0]+1;
+      _Send_Diag(BT_34_Len,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC31);
+      
+      Send_Data[1] = Serve_Data[Serve_Poss].Serve_Para[0][0];
+      Send_Data[2] = Serve_Data[Serve_Poss].Serve_Para[0][1]-1;
+      _Send_Diag(BT_34_Len,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC31);
+
+      Send_Data[2] = Serve_Data[Serve_Poss].Serve_Para[0][1];
+      _Get_Serve_INI(Send_Data,0x34,Serve_Poss,1);
+      _Send_Diag(BT_34_Len,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC31);
+
+      _Get_Serve_INI(Send_Data,0x34,Serve_Poss,2);
+      _Send_Diag(BT_34_Len,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC31);
+      
+    }
+  }
+}
+void _34_Serve_06(dword ID,byte session)/*驱动地址NRC优先级*/
+{
+  int Serve_Pos,i,j;
+  byte Send_Data[50];
+  Send_Data[0] = 0x34;
+  NRC_For34_FlashDrv = 1;
+  Serve_Pos = _Check_Serve(0x34,0,0);
+  Send_Data[1] = Serve_Data[Serve_Pos].Serve_Para[0][0];
+  Send_Data[2] = Serve_Data[Serve_Pos].Serve_Para[0][1];
+  _Get_Serve_INI(Send_Data,0x34,Serve_Pos,7);
+  if(_Check_Serve_IDAndSess(0x34,ID,session) == 1)
+  {
+    _Set_NRC_Step(0x34,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+        if(Fun_NRC[i-1] == 0x31 && NRC31_total ==1)
+          _Get_Serve_INI(Send_Data,0x34,Serve_Pos,4);
+      }
+
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x34 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Para[0][0]);
+  
+  NRC_For34_FlashDrv = 0;
+}
+
+void _34_Serve_07(dword ID,byte session)/*APP地址NRC优先级*/
+{
+  int Serve_Pos,i,j;
+  byte Send_Data[50];
+  int Skip_Recover = 0;
+  Send_Data[0] = 0x34;
+
+  Serve_Pos = _Check_Serve(0x34,0,0);
+  Send_Data[1] = Serve_Data[Serve_Pos].Serve_Para[0][0];
+  Send_Data[2] = Serve_Data[Serve_Pos].Serve_Para[0][1];
+//  _Get_Serve_INI(Send_Data,0x34,Serve_Pos,3);
+  if(_Check_Serve_IDAndSess(0x34,ID,session) == 1)
+  {
+    _Set_NRC_Step(0x34,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0 && Skip_Recover == 0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);      
+      }
+      Skip_Recover = 0;
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      if(i > 0 && Fun_NRC[i] == 0x31 && NRC31_total ==1 && NRC34_31Count < 2)
+      { 
+        _Recover_NRC_Step(Fun_NRC[i],Serve_Pos,0,Send_Data);
+        Skip_Recover = 1;
+        i--;
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x34 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Para[0][0]);
+}
+
+void _34_Serve_06_GAC(dword ID,byte session)/*驱动地址NRC优先级*/
+{
+  int Serve_Pos,i,j;
+  byte Send_Data[50];
+  Send_Data[0] = 0x34;
+  NRC_For34_FlashDrv = 1;
+  Serve_Pos = _Check_Serve(0x34,0,0);
+  Send_Data[1] = Serve_Data[Serve_Pos].Serve_Para[0][0];
+  Send_Data[2] = Serve_Data[Serve_Pos].Serve_Para[0][1];
+  _Get_Serve_INI(Send_Data,0x34,Serve_Pos,7);
+  if(_Check_Serve_IDAndSess(0x34,ID,session) == 1)
+  {
+    Send_Data[0] = 0x34;Send_Data[1] = 0x01;Send_Data[2] = 0x44;
+    for(i=3;i<=0x0C;i++)
+      Send_Data[i] = 0xFF;
+    _Send_Diag(2,ID,Send_Data);
+    _TestResult(SendData,ID,"",0x33);
+    _unlockECU();
+    Send_Data[2] = 0x43;
+    _Send_Diag(0x0A,ID,Send_Data);
+    _TestResult(SendData,ID,"",0x13);
+    _Send_Diag(0x0C,ID,Send_Data);
+    _TestResult(SendData,ID,"",0x31);
+    Send_Data[1] = 0;
+    Send_Data[2] = 0x44;
+    _Send_Diag(0x0C,ID,Send_Data);
+    _TestResult(SendData,ID,"",0x13);
+    _Get_Serve_INI(Send_Data,0x34,Serve_Pos,5);
+    _Send_Diag(0x0B,ID,Send_Data);
+    _TestResult(SendData,ID,"",0x31);
+    _Get_Serve_INI(Send_Data,0x34,Serve_Pos,6);
+    _Send_Diag(0x0B,ID,Send_Data);
+    _TestResult(SendData,ID,"",0x31);
+    _Get_Serve_NRC31(Send_Data[0],1,Send_Data);
+    _Send_Diag(0x0B,ID,Send_Data);
+    _TestResult(SendData,ID,"",0x22);
+  }
+  else
+    _WriteEx_and_Report("","0x34 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Para[0][0]);
+  
+  NRC_For34_FlashDrv = 0;
+}
+
+
+
+void _36_Serve_01(dword ID,byte session)/*NRC7F*/
+{
+  byte Send_Data[100];
+  int Serve_Poss;
+  Send_Data[0] = 0X36;
+  if(_Check_Serve_IDAndSess(0x36,ID,session)!= 1)
+  {
+    Serve_Poss = _Check_Serve(0x36,0,0);
+    testWaitForTimeout(500);
+    _Send_Diag(Serve_Data[Serve_Poss].Serve_Fun_Len[0],ID,Send_Data);
+    _TestResult(SendData,ID,"",NRC7F);  //功能寻址不支持流控帧,可能存在无流控帧现象
+  }
+}
+void _36_Serve_03(dword ID,byte session)/*NRC13*/
+{
+  byte Send_Data[100];
+  int Serve_Poss,i;
+  _Clear_SendData(Send_Data);
+  Send_Data[0] = 0X36;
+  if(_Check_Serve_IDAndSess(0x36,ID,session)!= -1)
+  {
+    Serve_Poss = _Check_Serve(0x36,0,0);
+    if(Serve_Data[Serve_Poss].Security_Access[0] == 1)
+      _unlockECU();
+    for(i=1;i<=2;i++)
+    {
+      if(i==Serve_Data[Serve_Poss].Serve_Fun_Len[0])
+        continue;
+      _Send_Diag(i,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC13);
+    }
+  }
+}
+void _36_Serve_NRC(dword ID,byte session)/*NRC优先级*/
+{
+  int Serve_Pos,i,j;
+  byte Send_Data[50];
+  Send_Data[0] = 0x36;
+  Send_Data[1] = 0x01;
+  for(i=1;i<0x0C;i++)
+  {
+    j = i%10;
+    if(i >= 5) j = (i+1)%10;
+      Send_Data[i+1] = j*16 + j;
+  }
+  Send_Data[0x0C] = 0;
+  Serve_Pos = _Check_Serve(0x36,0,0);
+  if(_Check_Serve_IDAndSess(0x36,ID,session) == 1)
+  {
+
+    _Set_NRC_Step(0x36,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    for(i=0;i<Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      if(Fun_NRC[i] == 0x22 || Fun_NRC[i] == 0x24) Fun_NRC_Send_Len = 0x0c;
+      if( i > 0 && (Fun_NRC[i - 1] == 0x22 || Fun_NRC[i - 1] == 0x24)) break;
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x36 0x%02X当前会话或寻址不支持",Serve_Data[Serve_Pos].Serve_Fun[0]);
+}
+
+void _37_Serve_01(dword ID,byte session)/*NRC7F*/
+{
+  byte Send_Data[50];
+  int Serve_Poss;
+  Send_Data[0] = 0X37;
+  if(_Check_Serve_IDAndSess(0x37,ID,session)!= 1)
+  {
+    Serve_Poss = _Check_Serve(0x37,0,0);
+    testWaitForTimeout(500);
+    _Send_Diag(Serve_Data[Serve_Poss].Serve_Fun_Len[0],ID,Send_Data);
+    _TestResult(SendData,ID,"",NRC7F);  //功能寻址不支持流控帧,可能存在无流控帧现象
+  }
+}
+void _37_Serve_03(dword ID,byte session)/*NRC13*/
+{
+  byte Send_Data[50];
+  int Serve_Poss,i;
+  Send_Data[0] = 0X37;
+  if(_Check_Serve_IDAndSess(0x37,ID,session)!= -1)
+  {
+    Serve_Poss = _Check_Serve(0x37,0,0);
+    if(Serve_Data[Serve_Poss].Security_Access[0] == 1)
+      _unlockECU();
+    for(i=1;i<=64;i++)
+    {
+      if(i==Serve_Data[Serve_Poss].Serve_Fun_Len[0])
+        continue;
+      _Send_Diag(i,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC13);
+    }
+  }
+}
+void _37_Serve_04(dword ID,byte session)/*NRC22/24*/
+{
+  byte Send_Data[50];
+  int Serve_Poss;
+  Send_Data[0] = 0X37;
+  if(_Check_Serve_IDAndSess(0x37,ID,session)!= -1)
+  {
+    Serve_Poss = _Check_Serve(0x37,0,0);
+    if(Serve_Data[Serve_Poss].Security_Access[0] == 1)
+      _unlockECU();
+    testWaitForTimeout(500);
+    _Send_Diag(Serve_Data[Serve_Poss].Serve_Fun_Len[0],ID,Send_Data);
+//    if(@AUTO::Config_Switch == 2 || (strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0))
+//      _TestResult(SendData,ID,"",NRC22);
+//    else
+      _TestResult(SendData,ID,"",NRC24);
+  }
+}
+
+void _37_Serve_NRC(dword ID,byte session)/*NRC优先级*/
+{
+  int Serve_Pos,i,j;
+  byte Send_Data[50];
+  int NRC33_Flage;
+  Send_Data[0] = 0x37;
+  NRC33_Flage = 0;
+  Serve_Pos = _Check_Serve(0x37,0,0);
+  if(_Check_Serve_IDAndSess(0x37,ID,session) == 1)
+  {
+    _Set_NRC_Step(0x37,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+    for(i=0;i<Fun_NRC_Count;i++)
+    {
+      if(Fun_NRC[i] == 0x33)
+      {
+        NRC33_Flage = 1;
+        break;
+      }
+    }
+    if(Fun_NRC_Count == 0)
+    {
+      _WriteEx_and_Report("","未输入NRC，跳过测试");
+      return;
+    }
+    if(NRC33_Flage == 0)
+      _unlockECU();
+    for(i=0;i<=Fun_NRC_Count;i++)
+    {
+      if(i<Fun_NRC_Count)
+        _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+      {
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+      }
+      
+      if( i > 0 && (Fun_NRC[i - 1] == 0x22 || Fun_NRC[i - 1] == 0x24)) break;
+      
+      if(i == Fun_NRC_Count)
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",-1);
+      }
+      else
+      {
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+      }
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","0x37 当前会话或寻址不支持");
+}
+
+void _31_Serve_01(dword ID,byte session)/*NRC7F*/
+{
+  byte Send_Data[50];
+  int i,j;
+  for(i=0;i<Serve_31_Hex_Count;i++)
+  {
+    for(j=0;j<Serve_31_Hex[i].Control_Type_Count;j++)
+    {
+      _Get_31_ServeData(i,Send_Data,2,j);
+      _Send_Diag(Len_31H,ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC7F);
+    }
+  }
+}
+void _31_Serve_02(dword ID,byte session)/*Response*/
+{
+  byte Send_Data[50];
+  int i,j,RxLen;
+  int Sup_,Count;
+  Count = 0;
+  if(_Check_Serve_IDAndSess_(0x27,ID,session) == 1)
+    
+  testWaitForTimeout(1000);
+  for(i=0;i<Serve_31_Hex_Count;i++)
+  {
+    for(j=0;j<Serve_31_Hex[i].Control_Type_Count;j++)
+    {
+      Sup_ = _Check_31Serve_IDAndSess(i,j,ID,session);
+      if(Sup_ == 1) // 寻址和会话都支持
+      {
+        if(Count == 0)
+        {
+          if(Serve_31_Hex[i].Security_Access[j] == 1)
+            _unlockECU();
+        }
+        Count++;
+        if(session == 2) //编程会话
+        {
+          _Get_31_ServeData(i,Send_Data,2,j);
+          _Send_Diag(Len_31H,ID,Send_Data);
+          if((strncmp(ECU_project,"Chery",strlen("Chery")) == 0 )|| @AUTO::Config_Switch == 7)
+          {
+            if(Send_Data[1] != 0x01)
+              _TestResult(SendData,ID,"",NRC24);
+            else
+              _TestResult(SendData,ID,"",NRC22);
+          }
+          else
+            _TestResult(SendData,ID,"",NRC22);
+        }
+        else if(session == 3) //扩展会话
+        {
+          _Get_31_ServeData(i,Send_Data,2,j);
+          _Send_Diag(Len_31H,ID,Send_Data);
+          _TestResult(SendData,ID,"",-1);
+          if(diagGetLastResponseCode(SendData)==-1)
+          {
+            RxLen = DiagGetRespPrimitiveSize(SendData);
+            if(RxLen != Serve_31_Hex[i].Control_Type_RxLen[j])
+              testStepFail("","31 %02X %02X %02X 当前响应长度异常，期望为 %d，实际为 %d",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],
+                                                                                          Serve_31_Hex[i].Routine[1],Serve_31_Hex[i].Control_Type_RxLen[j],RxLen);
+          }
+        }
+      }
+      else if(Sup_ == 0) //寻址支持，但会话不支持
+      {
+        _Get_31_ServeData(i,Send_Data,2,j);
+        _Send_Diag(Len_31H,ID,Send_Data);
+        _TestResult(SendData,ID,"",NRC7F);
+      }
+    }
+  }
+}
+void _31_Serve_03(dword ID,byte session)/*NRC13*/
+{
+  byte Send_Data[50];
+  int i,j,k;
+  int Count;
+  Count = 0;
+  
+  for(i=0;i<Serve_31_Hex_Count;i++)
+  {
+    for(j=0;j<Serve_31_Hex[i].Control_Type_Count;j++)
+    {
+      _Get_31_ServeData(i,Send_Data,2,j);
+      for(k=1;k<=64;k++)
+      {
+        if((Serve_31_Hex[i].Serve_Session[j] & Session_BIN )!= 0)
+        {
+          if(Count == 0)
+          {
+            if(Serve_31_Hex[i].Security_Access[j] == 1)
+              _unlockECU();
+          }
+          Count++;
+          if(k==Len_31H)
+            continue;
+//          if((Send_Data[1] == 0x01 && Send_Data[2] == 0xFF && Send_Data[3] == 0x00) && (k>=4 && k<=9))
+//            continue;
+          _Send_Diag(k,ID,Send_Data);
+          if((Send_Data[1] == 0x01 && Send_Data[2] == 0xFF && Send_Data[3] == 0x00) && (k>=4 && k<=9))
+          {
+            if((Send_Data[1] == 0x01 && Send_Data[2] == 0xFF && Send_Data[3] == 0x00) && (k==4 || k==8))
+              continue;
+            else
+            {
+              if(@AUTO::Config_Switch == 12)
+                _TestResult(SendData,ID,"",NRC13);
+              else
+                _Check_ResCode(SendData,ID,NRC13,NRC31);
+            }
+          }
+          else
+            _TestResult(SendData,ID,"",NRC13);//NRC31优先级常高于total_13
+          testWaitForTimeout(100);
+        }
+        else
+        {
+          _WriteEx_and_Report("","该例程不支持该会话");
+          break;
+        }
+      }
+    }
+  }
+}
+void _31_Serve_04(dword ID,byte session)/*NRC12*/
+{
+  byte Send_Data[50];
+  int i,j,k,Flage;
+  int Count;
+  Count = 0;
+  for(k=0;k<Serve_31_Hex_Count;k++)
+  {
+    _Get_31_ServeData(k,Send_Data,2,0);
+    for(i=0;i<=0XFF;i++)
+    {
+      if((Serve_31_Hex[k].Serve_Session[0] & Session_BIN) != 0)
+      {
+        if(Count == 0)
+        {
+          if(Serve_31_Hex[k].Security_Access[0] == 1)
+            _unlockECU();
+        }
+        Count++;
+        Flage = 0;
+        for(j=0;j<Serve_31_Hex[k].Control_Type_Count;j++)
+        {
+          if(i==Serve_31_Hex[k].Control_Type[j])
+            Flage = 1;
+        }
+        if(Flage == 1)
+          continue;
+        Send_Data[1] = i;
+        _Send_Diag(Len_31H,ID,Send_Data);
+        _TestResult(SendData,ID,"",NRC12);
+        testWaitForTimeout(200);
+      }
+      else
+      {
+        _WriteEx_and_Report("","该例程不支持该会话");
+        break;
+      }
+    }
+  }   
+}
+void _31_Serve_05(dword ID,byte session)/*NRC33*/
+{
+  byte Send_Data[50];
+  int i,j;
+  word Temp_RID;
+  int Sup_;
+  for(i=0;i<Serve_31_Hex_Count;i++)
+  {
+    for(j=0;j<Serve_31_Hex[i].Control_Type_Count;j++)
+    {
+      Temp_RID = Serve_31_Hex[i].Routine[0] << 8 | Serve_31_Hex[i].Routine[1];
+      Sup_ = _Check_31Serve_IDAndSess(i,j,ID,session);
+      if(Sup_ != 1)
+        continue;
+      if(_Check_Serve(Serve_31_Hex[i].Control_Type[j],Temp_RID,11) == 1)
+      {
+        writeEx(-3,1,"测试NRC33: 31 %02X %02X %02X ",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
+        _Get_31_ServeData(i,Send_Data,2,j);
+        _Send_Diag(Len_31H,ID,Send_Data);
+        _TestResult(SendData,ID,"",NRC33);
+      }
+      else
+      {
+        writeEx(-3,1,"31 %02X %02X %02X 不支持NRC33 ",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
+      }
+    }
+  }
+}
+void _31_Serve_06(dword ID,byte session)/*NRC优先级*/
+{
+  byte Send_Data[50];
+  word NRC_RID;
+  char comment[100];
+  int i,j,Serve_Pos;
+  dword Serve31_NRC_Case_Pro = 0x01FF00;
+  dword NRC_Case;
+  if( session == prosession)
+    NRC_Case = Serve31_NRC_Case_Pro;
+  else
+    NRC_Case = Serve31_NRC_Case;
+  snprintf(comment,elCount(comment),"未在Struct中查询到31服务 NRC 检测例程：31");
+  snprintf(comment,elCount(comment),"%s %02X",comment,(NRC_Case >> 16) & 0xFF);
+  snprintf(comment,elCount(comment),"%s %02X",comment,(NRC_Case >> 8) & 0xFF);
+  snprintf(comment,elCount(comment),"%s %02X",comment,NRC_Case & 0xFF);
+  writeEx(-3,1,"NRC_Case = 31%06X", NRC_Case);
+   
+  for(i=0;i<Serve_31_Hex_Count;i++)
+  {
+    _Get_31_ServeData(i,Send_Data,2,0);
+    if((Send_Data[1] == ((NRC_Case >> 16) & 0xFF)) && (Send_Data[2] == ((NRC_Case >> 8) & 0xFF)) && (Send_Data[3] == (NRC_Case & 0xFF)))
+    {
+      Serve_Pos = i;
+      break;
+    }
+  }
+  if(i == Serve_31_Hex_Count)
+  {
+    writeEx(-3,1,comment);
+    testStepFail("",comment);
+    return;
+  }
+  if(_Check_31Serve_IDAndSess(Serve_Pos,0,ID,session) != 1)
+  {
+     _WriteEx_and_Report("","/*-------------- 该例程在当前会话不支持，不测试NRC优先级 --------------*/");
+    return;
+  }
+  NRC_RID = NRC_Case & 0xFFFF;
+  _Set_NRC_Step(Send_Data[1],NRC_RID,8,Send_Data);
+  for(i=0;i<Fun_NRC_Count;i++)
+  {
+    if(i<Fun_NRC_Count)
+      _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+    else _WriteEx_and_Report("","/*---------------- 测试无NRC -----------------*/",Fun_NRC[i]);
+//    if(Fun_NRC[i] == 0x31 && NRC31_Count == 1)
+//    {
+//      _Get_31_ServeData(Serve_Pos,Send_Data,2,0);
+//      Send_Data[Serve_31_Hex[Serve_Pos].Control_Type_TxLen] = 0xFF;
+//      Send_Data[Serve_31_Hex[Serve_Pos].Control_Type_TxLen + 1] = 0xFF;
+//      Send_Data[Serve_31_Hex[Serve_Pos].Control_Type_TxLen + 2] = 0xFF;
+//      Send_Data[Serve_31_Hex[Serve_Pos].Control_Type_TxLen + 3] = 0xFF;
+//    }
+    if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+    {
+      _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+    }
+
+    if(i == Fun_NRC_Count)
+    {
+      _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+      _TestResult(SendData,ID,"",-1);
+    }
+    else
+    {
+      if(Fun_NRC[i] == 0x31 && NRC31_total == 2 && NRC31_Count == 1 && NRC_Case == Serve31_NRC_Case_Pro)
+      {
+        byte TempSave[50];
+        int Da;
+        for(Da = 0; Da<elcount(Send_Data);Da++)
+          TempSave[Da] = Send_Data[Da];
+        _Get_Invalid_Data(Serve_Pos,TempSave,3);
+        _Send_Diag(Fun_NRC_Send_Len,ID,TempSave);
+        _TestResult(SendData,ID,"",0x31);
+        _Get_Invalid_Data(Serve_Pos,TempSave,4);
+        _Send_Diag(Fun_NRC_Send_Len,ID,TempSave);
+        _TestResult(SendData,ID,"",0x31);
+      }
+      _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+      _TestResult(SendData,ID,"",Fun_NRC[i]);
+    }
+    testWaitForTimeout(100);
+  }
+}
+void _31_Serve_06_01(dword ID,byte session)/*GAC-NRC优先级*/
+{
+  byte Send_31Data[100];
+  int i;
+  Send_31Data[0] = 0x31;Send_31Data[1] = 0x02;Send_31Data[2] = 0xFF;
+  _Send_Diag(3,ID,Send_31Data);
+  _TestResult(SendData,ID,"",0x33);
+  _unlockECU();
+  _Send_Diag(3,ID,Send_31Data);
+  _TestResult(SendData,ID,"",0x13);
+  Send_31Data[0] = 0x31;Send_31Data[1] = 0x00;Send_31Data[2] = 0x02;Send_31Data[3] = 0x03;Send_31Data[4] = 0x55;
+  _Send_Diag(5,ID,Send_31Data);
+  _TestResult(SendData,ID,"",0x31);
+  Send_31Data[0] = 0x31;Send_31Data[1] = 0x00;Send_31Data[2] = 0xFF;Send_31Data[3] = 0x00;
+  Send_31Data[4] = 0x44;
+  for(i=5;i<=0xD;i++)
+    Send_31Data[i] = 0xFF;
+  _Send_Diag(0xB,ID,Send_31Data);
+  _TestResult(SendData,ID,"",0x12);
+  Send_31Data[1] = 0x01;
+  _Send_Diag(0xB,ID,Send_31Data);
+  _TestResult(SendData,ID,"",0x13);
+  _Send_Diag(0xD,ID,Send_31Data);
+  _TestResult(SendData,ID,"",0x31);
+}
+
+void _31_Serve_08(dword ID,byte Session)/*NRC31*/
+{
+  byte Tem[4] = {0x31,0x01,0X00,0X00};
+  byte Tem1[5] = {0x31,0x01,0XFE,0XE0,0X00};
+  word byte1,byte2;
+  int Flage_Save,RID_Pos;
+  diagStartTesterPresent(Cdd_Name);
+  
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
+  testGetCurrentTestCaseTitle(Fault_Data_Write,400);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    遍历31服务NRC31时,异常响应: \n",Fault_Data_Write);
+  File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
+  if(_Check_Serve31H_(ID,Session) == 0)
+  {
+    _WriteEx_and_Report("","当前会话不支持");
+    return;
+  }
+  _unlockECU();
+  if((strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))|| @AUTO::Config_Switch == 2)
+  {
+    for(byte1=0;byte1<=0XFF;byte1++)
+    {
+      Tem1[4] =byte1;
+      if(byte1 == 0X01 || byte1 ==0X02)
+        continue;
+      else
+      {
+        _Send_Diag(5,ID,Tem1);
+        Flage_Save = _TestResult(SendData,ID,"",NRC31);
+        if(Flage_Save == -1)
+        {
+          char Str[50];
+          snprintf(Str,elCount(Str),"[0x31 0x01 0x%02X 0x%02X ] \n",byte1,byte2);
+          File_Write(Error_File,Error_FileName,Str,2);
+        }
+      }
+    }
+  }
+  else
+  {
+    for(byte1=0;byte1<=0XFF;byte1++)
+    {
+      Tem[2] =byte1;
+      for(byte2=0;byte2<=0XFF;byte2++)
+      {
+        Tem[3] =byte2;
+        RID_Pos = _Check_SendData_In_31H(Tem);
+        if(@AUTO::Config_Switch != 12)
+        {
+          if( RID_Pos !=-1)
+            continue;
+          else
+          {
+            _Send_Diag(4,ID,Tem);
+            Flage_Save = _TestResult(SendData,ID,"",NRC31);
+            if(Flage_Save == -1)
+            {
+              char Str[50];
+              snprintf(Str,elCount(Str),"[0x31 0x01 0x%02X 0x%02X ] \n",byte1,byte2);
+              File_Write(Error_File,Error_FileName,Str,2);
+            }
+          }
+        }
+        else
+        {
+          if(RID_Pos != -1 && _Check_31Serve_IDAndSess(RID_Pos,0,ID,Session) == 1)
+            continue;
+          _Send_Diag(4,ID,Tem);
+          Flage_Save = _TestResult(SendData,ID,"",NRC31);
+          if(Flage_Save == -1)
+          {
+            char Str[50];
+            snprintf(Str,elCount(Str),"[0x31 0x01 0x%02X 0x%02X ] \n",byte1,byte2);
+            File_Write(Error_File,Error_FileName,Str,2);
+          }
+        }
+      }
+    }
+  }
+  _WriteEx_and_Report("",Fault_Data_Report);
+  write(Fault_Data_Write);
+}
+void _27_Serve_01(dword ID,byte session)/*NRC7F*/
+{
+  byte Send_Data[50];
+  int Serve_Poss,i,n;
+  Send_Data[0] = 0X27;
+  if(_Check_Serve_IDAndSess(0x27,ID,session)!= 1)
+  {
+    Serve_Poss = _Check_Serve(0x27,0,0);
+    for(i=0;i<Serve_Data[Serve_Poss].Serve_Fun_Count;i++)
+    {
+      Send_Data[1] = Serve_Data[Serve_Poss].Serve_Fun[i];
+      _Send_Diag(Serve_Data[Serve_Poss].Serve_Fun_Len[i],ID,Send_Data);
+      _TestResult(SendData,ID,"",NRC7F);  
+      testWaitForTimeout(500);
+    }
+  }
+}
+
+void _27_Serve_02(dword ID,byte session)/*NRC13*/
+{
+  byte Send_Data[50];
+  int Serve_Poss,i,n;
+  Send_Data[0] = 0X27;
+  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+  {
+    Serve_Poss = _Check_Serve(0x27,0,0);
+    for(i=0;i<Serve_Data[Serve_Poss].Serve_Fun_Count;i++)
+    {
+      Send_Data[1] = Serve_Data[Serve_Poss].Serve_Fun[i];
+      if(i==1)
+        _get_seed(ID);
+      testWaitForTimeout(100);
+      for(n=1;n<=64;n++)
+      {
+        if(n==Serve_Data[Serve_Poss].Serve_Fun_Len[i])
+          continue;
+        _Send_Diag(n,ID,Send_Data);
+        _TestResult(SendData,ID,"",NRC13);  
+        testWaitForTimeout(200);
+      } 
+    }
+  }
+}
+void _27_Serve_03(dword ID,byte session)/*NRC12*/
+{
+  byte Send_Data[50];
+  int Serve_Poss,i,n;
+  Send_Data[0] = 0X27;
+  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+  {
+    Serve_Poss = _Check_Serve(0x27,0,0);
+    for(i=0;i<=0xFF;i++)
+    {
+      Send_Data[1] = i;
+      for(n=0;n<Serve_Data[Serve_Poss].Serve_Fun_Count;n++)
+      {
+        if(i==Serve_Data[Serve_Poss].Serve_Fun[n])
+          break;
+      } 
+      if(n>=Serve_Data[Serve_Poss].Serve_Fun_Count)
+      {
+        _Send_Diag(2,ID,Send_Data);
+        _TestResult(SendData,ID,"",NRC12);  
+        testWaitForTimeout(200);
+      }
+    }
+  }
+}
+void _27_Serve_04(dword ID,byte session)/*NRC24*/
+{
+  byte Send_Data[50];
+  int Serve_Poss,i,n;
+  Send_Data[0] = 0X27;
+  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+  {
+    Serve_Poss = _Check_Serve(0x27,0,0);
+    Send_Data[1] = Serve_Data[Serve_Poss].Serve_Fun[1];
+    _Send_Diag(Serve_Data[Serve_Poss].Serve_Fun_Len[1],ID,Send_Data);
+    _TestResult(SendData,ID,"",NRC24);  
+  }
+}
+void _27_Serve_05(dword ID,byte session)/*NRC优先级*/
+{
+   byte Send_Data[100];
+  int Serve_Pos;
+  
+  Serve_Pos = _Check_Serve(0x27,0,0);
+  
+  _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+  testWaitForTimeout(10000);
+  _SetSession(session);
+  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+  _SetSession(session);
+  testWaitForTimeout(1000);
+  
+  if(_Check_Serve_IDAndSess(0x27,ID,session) == 1)
+  {
+    Send_Data[0] = 0x27;
+    if(Request_Error_Count == 1)
+    {
+      _WriteEx_and_Report("","连续请求种子会导致错误计数器累加，故验证请求种子优先级");
+      _Set_NRC_Step(0x27,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
+      if(Fun_NRC_Count == 0)
+      {
+        _WriteEx_and_Report("","未输入NRC，跳过测试");
+        return;
+      }
+      for(i=0;i<=Fun_NRC_Count;i++)
+      {
+       
+        if(i<Fun_NRC_Count)
+          _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+        if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+        {
+          _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
+        }
+        if(session == exsession && @AUTO::Config_Switch == 2 && NRC13_Count == 1 && Fun_NRC[i] == 0x13)
+          continue;
+        if(i == Fun_NRC_Count)
+        {
+          _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+          _TestResult(SendData,ID,"",-1);
+        }
+        else
+        {
+          _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+          _TestResult(SendData,ID,"",Fun_NRC[i]);
+        }
+        testWaitForTimeout(100);
+      }
+      _SetSession(session);
+      _Send_Key(SendKey_Len,ID,0,0);
+      _TestResult(SendData,ID,"",NRC24);
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    }
+    else
+    {
+      _WriteEx_and_Report("","连续请求种子无影响，故验证发送秘钥优先级");
+      _Set_NRC_Step(0x27,Serve_Data[Serve_Pos].Serve_Fun[1],6,Send_Data);
+      if(Fun_NRC_Count == 0)
+      {
+        _WriteEx_and_Report("","未输入NRC，跳过测试");
+        return;
+      }
+      for(i=0;i<Fun_NRC_Count;i++)
+      {
+        
+        if(i<Fun_NRC_Count)
+          _WriteEx_and_Report("","/*-------------- 测试NRC = 0x%X --------------*/",Fun_NRC[i]);
+        if(i>0) //第一次反馈最高优先级不做处理,其余依次恢复
+        {
+          _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,1,Send_Data);
+          if(Fun_NRC[i-1] == 0x24)
+            _get_seed(ID);
+        }
+        if(session == exsession && @AUTO::Config_Switch == 2 && NRC13_Count == 1 && Fun_NRC[i] == NRC13)
+          continue;
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
+        _TestResult(SendData,ID,"",Fun_NRC[i]);
+        testWaitForTimeout(100);
+      }
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    }
+  }
+}
+//
+//void _27_Serve_06_2(dword ID,byte session)/*下电对错误计数影响测试2*/
+//{
+//  dword seed;
+//  int Error_pose;
+//  
+//  Error_pose = 1;
+//  Error_Count_Power = 1;
+//  diagStartTesterPresent(Cdd_Name);
+//  testWaitForTimeout(1000);
+//  
+//  _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+//  testWaitForTimeout(10000);
+//  _SetSession(session);
+//  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//  _TestResult(SendData,ID,"",-1);
+//  testWaitForTimeout(1000);
+//  _SetSession(session);
+//  testWaitForTimeout(1000);
+//  
+//  for(Error_pose = 1;Error_pose <= Error_Count; Error_pose++)
+//  {
+//    _WriteEx_and_Report("","/*----------测试错误计数为: %x 时下电对错误计数的影响--------*/",Error_pose);
+//    Error_Count_Power = 1;
+//    _Set_Error_Count(ID,Error_pose,session);
+//    Error_Count_Power = 0;
+//    
+//    seed = _get_seed(ID);
+//    _TestResult(SendData,ID,"",NRC37);
+//    
+//    if(Error_pose == Error_Count)
+//    {
+//      testWaitForTimeout(Error_Count_Delay*0.7);
+//      if(Error_Count_Delay_Reset == 1)
+//      {
+//        seed = _get_seed(ID);
+//        _TestResult(SendData,ID,"",NRC37);
+//        testWaitForTimeout(Error_Count_Delay*0.3+1000);
+//      }
+//    }
+//    else
+//      testWaitForTimeout(Error_Count_Delay+1000);
+//    
+//    if(Error_Count_Change == 0)
+//    {
+//      _Check_Error_Count(ID,0);
+//      seed = _get_seed(ID);
+//      _TestResult(SendData,ID,"",NRC37);
+//    }
+//    else
+//    {
+//      seed = _get_seed(ID);
+//      _TestResult(SendData,ID,"",-1);
+//      if(Request_Error_Count == 0)
+//      {
+//        _Send_Key(SendKey_Len,ID,0,1);
+//        _TestResult(SendData,ID,"",NRC36);
+//      }
+//    }
+//    testWaitForTimeout(Error_Count_Delay+3000);
+//    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//    _TestResult(SendData,ID,"",-1);
+//    _SetSession(session);
+//  } 
+//}
+//void _27_Serve_07_2(dword ID,byte session)/*重启对错误计数影响测试*/
+//{
+//  dword seed;
+//  byte Temp[2] ={0x11,0x01};
+//  int Serve_Pos;
+//  int Error_pose;
+//  Error_pose = 1;
+//  Error_Count_Reset = 1;
+//  diagStartTesterPresent(Cdd_Name);
+//  Serve_Pos = _Check_Serve(0x11,0,0);
+//  Temp[1] = Serve_Data[Serve_Pos].Serve_Fun[0];
+//  if( Serve_Data[Serve_Pos].Security_Access[0]==1)
+//    _WriteEx_and_Report("","11复位需要安全访问条件，此条用例不适用");
+//  else
+//  {
+//    _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+//    testWaitForTimeout(10000);
+//    _SetSession(session);
+//    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//    _TestResult(SendData,ID,"",-1);
+//    testWaitForTimeout(1000);
+//    _SetSession(session);
+//    testWaitForTimeout(1000);
+//    
+//    for(Error_pose = 1;Error_pose <= Error_Count; Error_pose++)
+//    {
+//      _WriteEx_and_Report("","测试错误计数为: %x 时下电对错误计数的影响",Error_pose);
+//      Error_Count_Reset = 1;
+//      _Set_Error_Count(ID,Error_pose,session);
+//      Error_Count_Reset = 0;
+//      
+//      seed = _get_seed(ID);
+//      _TestResult(SendData,ID,"",NRC37);
+//      
+//      if(Error_pose == Error_Count)
+//      {
+//        testWaitForTimeout(Error_Count_Delay*0.7+1000);
+//        if(Error_Count_Delay_Reset == 1)
+//        {
+//          seed = _get_seed(ID);
+//          _TestResult(SendData,ID,"",NRC37);
+//          testWaitForTimeout(Error_Count_Delay*0.3+1000);
+//        }
+//      }
+//      else
+//        testWaitForTimeout(Error_Count_Delay+1000);
+//      
+//      if(Error_Count_Change == 0)
+//      {
+//        _Check_Error_Count(ID,0);
+//        seed = _get_seed(ID);
+//        _TestResult(SendData,ID,"",NRC37);
+//      }
+//      else
+//      {
+//        seed = _get_seed(ID);
+//        _TestResult(SendData,ID,"",-1);
+//        if(Request_Error_Count == 1)
+//        {
+//          seed = _get_seed(ID);
+//          _TestResult(SendData,ID,"",NRC36);
+//          seed = _get_seed(ID);
+//          _TestResult(SendData,ID,"",NRC37);
+//        }
+//      }
+//      testWaitForTimeout(Error_Count_Delay+3000);
+//      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//      _TestResult(SendData,ID,"",-1);
+//      testWaitForTimeout(1000);
+//      _SetSession(session);
+//      testWaitForTimeout(1000);
+//    }
+//  }
+//}
+void _27_Serve_08(dword ID,byte session)/*不正确报文对错误计数影响测试*/
+{
+  byte Temp[2]={0x27,0x01};
+  byte Temp_1[6]={0x27,0x01,0x11,0x11,0x11,0x11};
+  byte i;
+  
+  
+  _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+  testWaitForTimeout(10000);
+  _SetSession(session);
+  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+  _SetSession(session);
+  testWaitForTimeout(1000);
+  
+  Temp[1] = RequestSeed_27;
+  _Send_Diag(1,ID,Temp);
+  _TestResult(SendData,ID,"",NRC13);
+  Temp_1[1] = Temp[1] + 0x01;
+  _Send_Diag(SendKey_Len+1,ID,Temp_1);
+  _TestResult(SendData,ID,"",NRC13);
+  
+  Temp[1] = RequestSeed_27+0x02;
+  if(RequestSeed_27==0x07)
+    Temp[1] = 0x01;
+  Temp_1[1] = Temp[1] + 0x01;
+  _Send_Diag(2,ID,Temp);
+  _TestResult(SendData,ID,"",NRC12);
+  _Send_Diag(SendKey_Len,ID,Temp_1);
+  _TestResult(SendData,ID,"",NRC12);
+  
+  for(i=1;i<Error_Count;i++)
+  {
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+    Get_Seed_Flage = 1;
+  }
+  diagStartTesterPresent(Cdd_Name);
+  testWaitForTimeout(Error_Count_Delay*1.1+1000);
+  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+  if(diagGetLastResponseCode(SendData)==-1)
+    testStepPass("","收到正响应");
+  else
+  {
+    testStepFail("","未收到正响应");
+    testWaitForTimeout(10000);
+  }
+}
+void _27_Serve_09(dword ID,byte session)/*解锁情况下再次请求种子*/
+{ 
+  byte Temp[2] = {0x27,0x01};
+  int i,flage;
+  qword seed;
+  flage = 0;
+  
+  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+  {
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    _TestResult(SendData,ID,"",-1);
+    seed = _get_seed(ID);
+    for(i=2;i<DiagGetRespPrimitiveSize(SendData);i++)
+    {
+      if(DiagGetRespPrimitiveByte(SendData,i) != 0)
+        flage = 1;
+    }
+    if(flage == 0)
+      testStepPass("","通过安全访问后，再次请求种子则种子返回全0");
+    else
+      testStepFail("","通过安全访问后，再次请求种子存在非0值");
+    _Send_Key(SendKey_Len,ID,seed,0);
+    _TestResult(SendData,ID,"",NRC24);
+    
+    testWaitForTimeout(Error_Count_Delay*1.1);
+    _SetSession(session);
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    _TestResult(SendData,ID,"",-1);
+  }
+}
+void _27_Serve_10(dword ID,byte session)/*满延时错误计数器变化测试*/
+{
+  int i;
+  dword seed;
+  diagStartTesterPresent(Cdd_Name);
+  
+  _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+  testWaitForTimeout(10000);
+  _SetSession(session);
+  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+  _SetSession(session);
+  testWaitForTimeout(1000);
+    
+  _Check_Error_Count(ID,0);
+  seed = _get_seed(ID);
+  _TestResult(SendData,ID,"",NRC37);
+  testWaitForTimeout(Error_Count_Delay+3000);
+  if(Error_Count_Change==1)
+  {
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+    _TestResult(SendData,ID,"",NRC36);
+    seed = _get_seed(ID);
+    _TestResult(SendData,ID,"",NRC37);
+    _Send_Key(SendKey_Len,ID,seed,1);
+    _TestResult(SendData,ID,"",NRC24);
+  }
+  else if(Error_Count_Change==0)
+  {
+    _Check_Error_Count(ID,0);
+    seed = _get_seed(ID);
+    _TestResult(SendData,ID,"",NRC37);
+    _Send_Key(SendKey_Len,ID,seed,1);
+    _TestResult(SendData,ID,"",NRC24);
+  }
+  if((strncmp(ECU_project,"Seres",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Seres"))|| @AUTO::Config_Switch == 10)
+  {
+    testWaitForTimeout(100000);
+  }
+  testWaitForTimeout(Error_Count_Delay+3000);
+  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+  _TestResult(SendData,ID,"",-1);
+}
+//void _27_Serve_11(dword ID,byte session)/*会话切换对10s延时的影响测试*/
+//{
+//  byte Send_Data[50];
+//  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+//  {
+//    _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+//    testWaitForTimeout(10000);
+//    _SetSession(session);
+//    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//    _TestResult(SendData,ID,"",-1);
+//    testWaitForTimeout(1000);
+//    _SetSession(session);
+//    testWaitForTimeout(1000);
+//  
+//    _Check_Error_Count(ID,0);
+//    diagStartTesterPresent(Cdd_Name);
+//    testWaitForTimeout(Error_Count_Delay*0.4);
+//    _SetSession(defsession);
+//    _SetSession(session);
+//    testWaitForTimeout(Error_Count_Delay*0.7);
+//    _get_seed(ID);
+//    if(Error_Count_Delay_Reset == 1)
+//    {
+//      _TestResult(SendData,ID,"",0x37);
+//      testWaitForTimeout(Error_Count_Delay*0.4);
+//      _get_seed(ID);
+//      _TestResult(SendData,ID,"",-1);
+//    }
+//    else
+//      _TestResult(SendData,ID,"",-1);
+//    
+//    _SetSession(defsession);
+//    _SetSession(session);
+//    testWaitForTimeout(Error_Count_Delay*1.2);
+//    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//    _TestResult(SendData,ID,"",-1);
+//    diagStopTesterPresent(Cdd_Name);
+//  }
+//}
+//void _27_Serve_12(dword ID,byte session)/*断电对10s延时的影响测试*/
+//{
+//  byte Send_Data[50];
+//  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+//  {
+//    
+//    _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+//    testWaitForTimeout(10000);
+//    _SetSession(session);
+//    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//    _TestResult(SendData,ID,"",-1);
+//    testWaitForTimeout(1000);
+//    _SetSession(session);
+//    testWaitForTimeout(1000);
+//  
+//    _Check_Error_Count(ID,0);
+//    diagStartTesterPresent(Cdd_Name);
+//    testWaitForTimeout(Error_Count_Delay*0.4);
+//    _K15_OFF();
+//    testWaitForTimeout(2000);
+//    _K15_ON();
+//    testWaitForTimeout(1000);
+//    _SetSession(session);
+//    testWaitForTimeout(Error_Count_Delay*0.7);
+//    _get_seed(ID);
+//    if(Error_Count_Delay_Reset == 1)
+//      _TestResult(SendData,ID,"",0x37);
+//    else
+//      _TestResult(SendData,ID,"",-1);
+//    
+//    testWaitForTimeout(Error_Count_Delay*1.1);
+//    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+//    _TestResult(SendData,ID,"",-1);
+//    diagStopTesterPresent(Cdd_Name);
+//  }
+//}
+void _27_Serve_13(dword ID,byte session)/*检测安全访问解锁状态*/
+{
+  byte Send_Data[50],Pro[2] = {0x10,0x02};
+  qword Seed,Seed1;
+  int i,n,len,flage;
+  flage = 0;
+  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+  {
+    if(session == exsession)
+      len=4;
+    else 
+      len = 3;
+    for(n=1;n<len;n++)
+    {
+      if(n != 1)
+        _SetSession(session);
+      Seed = _get_seed(ID);
+      _Send_Key(SendKey_Len,ID,Seed,0);
+      _TestResult(SendData,ID,"",-1);
+      if(n==2 && session ==exsession)
+      {
+        if(Pre_Programmed_1002 == 1)
+          UpdateCheck(phyreq_ID,-1);
+        _Send_Diag(2,phyreq_ID,Pro);
+      }
+      else
+      {
+        if(n==1)
+          _SetSession(defsession);
+        _SetSession(session);
+      }
+      Seed1 = _get_seed(ID);
+      _Send_Key(SendKey_Len,ID,Seed1,0);
+      _TestResult(SendData,ID,"",-1);
+      if(AES_128 == 0)
+      {
+        if(Seed == Seed1)
+          testStepFail("","两次请求返回的种子一致");
+        else
+          testStepPass("","两次请求返回的种子不同");
+      }
+      else
+      {
+        for(i=0;i<16;i++)
+        {
+          if(Seed_Count_List_AES128[0][i] != Seed_Count_List_AES128[1][i])
+          {
+            flage = 1;
+            break;
+          }
+        }
+        if(flage == 0)
+          testStepFail("","两次请求返回的种子一致");
+        else
+          testStepPass("","两次请求返回的种子不同");
+      }
+      _Clear_Seed();
+    }
+  }
+}
+void _27_Serve_14(dword ID,byte session)/*连续请求种子*/
+{
+  word seed;
+  int Count;
+  diagStartTesterPresent(Cdd_Name);
+  if(Request_Error_Count==1)
+  {
+    if(ReqSeed_Count == 1)
+    {
+      for(i=1;i<Error_Count;i++)
+      {
+        _get_seed(ID);
+        _TestResult(SendData,ID,"",-1);
+        Get_Seed_Flage = 1;
+      }
+      _Check_Repeat(Error_Count);
+      _get_seed(ID);
+      _TestResult(SendData,ID,"",NRC36);
+      _get_seed(ID);
+      _TestResult(SendData,ID,"",NRC37);
+      testWaitForTimeout(Error_Count_Delay*1.1);
+      for(i=1;i<Error_Count;i++)
+      {
+        _get_seed(ID);
+        _TestResult(SendData,ID,"",-1);
+        Get_Seed_Flage = 1;
+      }
+      _Check_Repeat(Error_Count);
+      _get_seed(ID);
+      _TestResult(SendData,ID,"",NRC36);
+      testWaitForTimeout(Error_Count_Delay*1.1);
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+      _TestResult(SendData,ID,"",-1);
+    }
+    else
+    {
+      for(i=1;i<Error_Count+2;i++)
+      {
+        _get_seed(ID);
+        _TestResult(SendData,ID,"",-1);
+        Get_Seed_Flage = 1;
+      }
+      _Check_Repeat(Error_Count);
+      _get_seed(ID);
+      _TestResult(SendData,ID,"",NRC37);
+      if(Error_Count_Change==1)
+      {
+        testWaitForTimeout(Error_Count_Delay+3000);
+        for(i=0;i<2;i++)
+        {
+          _get_seed(ID);
+          _TestResult(SendData,ID,"",-1);
+        }
+        _get_seed(ID);
+        _TestResult(SendData,ID,"",NRC37);
+      }
+      else if(Error_Count_Change==0)
+      {
+       for(i=1;i<Error_Count+2;i++)
+        {
+          _get_seed(ID);
+          _TestResult(SendData,ID,"",-1);
+        }
+        _Check_Repeat(Count-1);
+        _get_seed(ID);
+        _TestResult(SendData,ID,"",NRC37);
+      }
+      testWaitForTimeout(Error_Count_Delay+3000);
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+      _TestResult(SendData,ID,"",-1);
+    }
+  }
+  else if(Request_Error_Count==0)
+  {
+    for(i=0;i<=Error_Count+3;i++)
+    {
+      _get_seed(ID);
+      _TestResult(SendData,ID,"",-1);
+      Get_Seed_Flage = 1;
+    }
+    _Check_Error_Count(ID,0);
+    testWaitForTimeout(Error_Count_Delay+3000);
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    _TestResult(SendData,ID,"",-1);
+  }
+}
+void _27_Serve_15(dword ID,byte session)/*10s延时时间测试*/
+{
+  byte Send_Data[50];
+  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
+  {
+    double starttime;
+    double endtime;
+    double Change_Time;
+    double CountTime;
+    int i;
+    i=0;
+ 
+    _WriteEx_and_Report("","/*----------测试前，错误计数清0--------*/");
+    testWaitForTimeout(10000);
+    _SetSession(session);
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    _TestResult(SendData,ID,"",-1);
+    testWaitForTimeout(1000);
+    _SetSession(session);
+    testWaitForTimeout(1000);
+    
+    do{
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+      i++;
+    }while((diagGetLastResponseCode(SendData)!=NRC36) && i<=Error_Count+10);
+    Get_Seed_Flage = 1;
+    starttime=(double)timeNow()/100;
+    
+    do
+    {
+      _get_seed(ID);
+      CountTime = (double)timeNow()/100;
+    }while((diagGetLastResponseCode(SendData)!=-1) && (CountTime - starttime)<=15000); 
+    endtime=(double)timeNow()/100;
+    Change_Time = endtime-starttime;
+    if((CountTime - starttime)>=15000)
+      _WriteEx_and_Report("","长时间未收到正响应,提前终止防止卡死");
+    writeEx(-3,0," 当前从NRC36到正常响应种子时间为 %.2f ms ",Change_Time);
+    if(Error_Count_Delay - Error_Count_Delay_Tolerance<=Change_Time && Change_Time<=Error_Count_Delay + Error_Count_Delay_Tolerance)
+      testStepPass("","当前从NRC36到正常响应种子时间为 %.2f ms",Change_Time);
+    else
+      testStepFail("","当前从NRC36到正常响应种子时间为 %.2f ms",Change_Time);
+    testWaitForTimeout(Error_Count_Delay+3000);
+    _SetSession(exsession);
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+  }
+}
+_27_Serve_16(dword ID,byte Session)  /*连续重复请求种子验证重复率*/
+{
+  qword i;
+  diagStartTesterPresent(Cdd_Name);
+  _Set_Ready(0);
+  testWaitForTimeout(2000);
+  if(Request_Error_Count == 0 && Request_Seed_Consistency == 0)
+  {
+    if(AES_128 != 0)      //AES-128算法要求请求种子具备随机性
+    {
+      for(i=0;i<Request_Seed_Count;i++)
+      {
+        _get_seed(ID);
+        Get_Seed_Flage = 1;
+        testWaitForTimeout(200);
+        writeEx(-3,0,"当前测试次数 %d 次",i+1);
+        if(i%100==0 && i!=0)
+        {
+          _K15_OFF();
+          testWaitForTimeout(1000);
+          _K15_ON();
+          _SetSession(Session);
+        }
+        testWaitForTimeout(200);
+      }
+    }
+    else
+    {
+      for(i=0;i<Request_Seed_Count;i++)
+      {
+        writeEx(-3,0,"当前测试次数 %d 次",i+1);
+        _get_seed(ID);
+        Get_Seed_Flage = 1;
+        if(i==(word)random(Request_Seed_Count))
+        {
+          _K15_OFF();
+          testWaitForTimeout(1000);
+          _K15_ON();
+          _SetSession(exsession);
+        }
+        testWaitForTimeout(200);
+      }
+    }
+    testWaitForTimeout(2000);
+    _Check_Repeat(Request_Seed_Count,1);
+  }
+  else
+    _WriteEx_and_Report("","连续请求种子错误计数器累加或种子一致,跳过测试");
+}
+
+_27_Serve_17(dword ID,byte Session)  /*支持的子功能测试*/
+{
+  int ServePos,i,Flage_Add;
+  byte Send_Data[20];
+  
+  ServePos = _Check_Serve(0x27,0,0);
+  Send_Data[0] = 0x27;
+  diagStartTesterPresent(Cdd_Name);
+  for(i=0;i<Serve_Data[ServePos].Serve_Fun_Count;i++)
+  {
+    Send_Data[1] = Serve_Data[ServePos].Serve_Fun[i];
+    Flage_Add = _Check_Fun_IDAndSess(0x27,Send_Data[1],ID,Session);
+    _Send_Diag(Serve_Data[ServePos].Serve_Fun_Len[i],ID,Send_Data);
+    if(Flage_Add == 1)
+    {
+      if(Serve_Data[ServePos].Serve_Fun_Len[i] == 2)  //使用长度进行判断,仅当长度为2时确认发送为请求种子
+        _TestResult(SendData,ID,"",-1);
+      else
+        _TestResult(SendData,ID,"",0x35);
+    }
+    else
+      _TestResult(SendData,ID,"",0x7E);
+    
+    _WriteEx_and_Report("","此处对肯定响应抑制位进行测试");
+    if(Serve_Data[ServePos].RSP[i] == 1)
+    {
+      _Send_Diag(Serve_Data[ServePos].Serve_Fun_Len[i],ID,Send_Data);
+      if(Serve_Data[ServePos].Serve_Fun_Len[i] == 2)  //使用长度进行判断,仅当长度为2时确认发送为请求种子
+        _TestResult(SendData,ID,"",-1);
+      else
+        _TestResult(SendData,ID,"",0x35);
+    }
+    else
+      _TestResult(SendData,ID,"",0x12);
+  }
+  
+  _WriteEx_and_Report("","/*----------测试后，错误计数清0--------*/");
+  testWaitForTimeout(Error_Count_Delay*1.1);
+  _SetSession(prosession);
+  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+  _TestResult(SendData,ID,"",-1);
+  testWaitForTimeout(1000);
+}
+
+_27_Serve_18(dword ID,byte Session)  /*解锁后计数器清零*/
+{
+  int i;
+  dword seed;
+  
+  diagStartTesterPresent(Cdd_Name);
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    for(i=1;i<5;i++)
+    {
+      if(i == 1)
+        _WriteEx_and_Report("","错误计数器累加,正常解锁");
+      else if(i == 2)
+      {
+        _WriteEx_and_Report("","会话切换");
+        _SetSession(defsession);
+        testWaitForTimeout(1000);
+        _SetSession(Session);
+        testWaitForTimeout(1000);
+      }
+      else if(i == 3)
+      {
+        _WriteEx_and_Report("","11复位");
+        _Set_11_Restoration(0);
+        _SetSession(Session);
+        testWaitForTimeout(1000);
+      }
+      else if(i == 4)
+      {
+        _WriteEx_and_Report("","正常上下电");
+        _K15_OFF();
+        _K30_OFF();
+        testWaitForTimeout(2000);
+        _K30_ON();
+        _K15_ON();
+        testWaitForTimeout(2000);
+        _SetSession(Session);
+        testWaitForTimeout(1000);
+      }
+      _Check_Error_Count(ID,1);
+      if(i<4)
+        _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+      else
+      {
+        _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+        _TestResult(SendData,ID,"",NRC36);
+        seed = _get_seed(ID);
+        _TestResult(SendData,ID,"",NRC37);
+        _Send_Key(SendKey_Len,ID,seed,1);
+        _TestResult(SendData,ID,"",NRC24);
+        testWaitForTimeout(Error_Count_Delay*1.1);
+        _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+      }
+      testWaitForTimeout(500);
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+_27_Serve_19(dword ID,byte Session)  /*已解锁状态-上下电/11复位*/
+{
+  int i;
+  
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    for(i=0;i<Serve_11_Unlock_Count;i++)
+    {
+      _WriteEx_and_Report("","当前测试次数 %d",i+1);
+      _SetSession(Session);
+      testWaitForTimeout(1000);
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+      _TestResult(SendData,ID,"",-1);
+      {
+        _K15_OFF();
+        _K30_OFF();
+        testWaitForTimeout(2000);
+        _K30_ON();
+        _K15_ON();
+        testWaitForTimeout(2000);
+      }
+      _SetSession(Session);
+      testWaitForTimeout(1000);
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+      _TestResult(SendData,ID,"",-1);
+      _Set_11_Restoration(0);
+      _SetSession(Session);
+      testWaitForTimeout(1000);
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+      _TestResult(SendData,ID,"",-1);
+    }
+    _Check_Repeat(Serve_11_Unlock_Count,1);
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+
+_27_Serve_20(dword ID,byte Session)  /*已解锁状态-会话切换*/
+{
+  byte Send_Data[2] = {0x10,0x02};
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    _Check_Error_Count(ID,1);
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    _TestResult(SendData,ID,"",-1);
+    _SetSession(defsession);
+    _SetSession(Session);
+    _Check_Error_Count(ID,1);
+    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    _TestResult(SendData,ID,"",-1);
+    if(Session == prosession)
+    {
+      _Send_Diag(2,ID,Send_Data);
+      _TestResult(SendData,ID,"",-1);
+      testWaitForTimeout(1000);
+      _Check_Error_Count(ID,1);
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
+    }
+    _SetSession(defsession);
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+_27_Serve_21(dword ID,byte Session)  /*未解锁状态-11复位*/
+{
+  byte Send_Data[2] = {0x10,0x02};
+  int ServePos,i,j,Max_Count,Res11;
+  dword Seed;
+  byte Send_11[2];
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
+      _WriteEx_and_Report("","进入编程会话需要安全访问,与用例需求不符，跳过测试");
+    else
+    {
+      ServePos = _Check_Serve(0x11,0,0);
+      if(Serve_Data[ServePos].Security_Access[0] != 1)
+      {
+        Max_Count = 1;
+        if(Serve_Data[ServePos].RSP[0]==1)
+          Max_Count = 2;
+        Send_11[0] = 0x11;
+        Send_11[1] = Serve_Data[ServePos].Serve_Fun[0];
+        diagStartTesterPresent(Cdd_Name);
+        for(j=0;j<Max_Count;j++)
+        {
+          if(j==0)
+          {
+            Res11 = -1;
+            Send_11[1] = Serve_Data[ServePos].Serve_Fun[0];
+          }
+          else
+          {
+            _SetSession(Session);
+            Res11 = 0;
+            Send_11[1] = (Serve_Data[ServePos].Serve_Fun[0]|0x80);
+            _WriteEx_and_Report("","测试11复位肯定响应抑制位");
+          }
+          if(Restoration_Error_Count == 1)//复位或重启会重置计数器
+            _Check_Error_Count(ID,0);
+          else
+          {
+            for(i=0;i<Error_Count-1;i++)
+            {
+              _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+              _TestResult(SendData,ID,"",0x35);
+      			  _Send_Diag(2,phyreq_ID,Send_11);
+      			  _TestResult(SendData,phyreq_ID,"",Res11);
+      			  testWaitForTimeout(2000); /*11复位后增加延时时间防止后续出错*/
+              _SetSession(Session);
+              testWaitForTimeout(2000);
+            }
+            _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+            _TestResult(SendData,ID,"",0x36);
+          }
+          Seed = _get_seed(ID);
+          _TestResult(SendData,ID,"",0x37);
+          testWaitForTimeout(Error_Count_Delay*0.5);
+          _Send_Diag(2,phyreq_ID,Send_11);
+          _TestResult(SendData,phyreq_ID,"",Res11);
+          testWaitForTimeout(2000);
+          _SetSession(Session);
+          testWaitForTimeout(1000);
+          Seed = _get_seed(ID);
+          _TestResult(SendData,ID,"",0x37);
+          _Send_Key(SendKey_Len,ID,Seed,1);
+          _TestResult(SendData,ID,"",0x24);
+          testWaitForTimeout(Error_Count_Delay*0.6-1000);
+          if(Error_Count_Delay_Reset == 1) //复位需要重新启动延时时间 
+          {
+            Seed = _get_seed(ID);
+            _TestResult(SendData,ID,"",0x37);
+            _Send_Key(SendKey_Len,ID,Seed,1);
+            _TestResult(SendData,ID,"",0x24);
+            testWaitForTimeout(Error_Count_Delay*0.5);
+          }
+          Seed = _get_seed(ID);
+          _TestResult(SendData,ID,"",-1);
+          _Send_Key(SendKey_Len,ID,Seed,0);
+          _TestResult(SendData,ID,"",-1);
+        }
+      }
+      else
+        _WriteEx_and_Report("","11服务需要安全访问与用例需求不符,跳过测试");
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+_27_Serve_22(dword ID,byte Session)  /*未解锁状态-上下电*/
+{
+  int i;
+  dword Seed;
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
+      _WriteEx_and_Report("","进入编程会话需要安全访问,与用例需求不符，跳过测试");
+    else
+    {
+      diagStartTesterPresent(Cdd_Name);
+      if(Restoration_Error_Count == 1)//复位或重启会重置计数器
+        _Check_Error_Count(ID,0);
+      else
+      {
+        for(i=0;i<Error_Count-1;i++)
+        {
+          _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+          _TestResult(SendData,ID,"",0x35);
+          _K15_OFF();
+          testWaitForTimeout(2000);
+          _K15_ON();
+          testWaitForTimeout(2000);
+          _SetSession(Session);
+          testWaitForTimeout(2000);
+        }
+        _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+        _TestResult(SendData,ID,"",0x36);
+      }
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",0x37);
+      testWaitForTimeout(Error_Count_Delay*0.5);
+      _K15_OFF();
+      testWaitForTimeout(2000);
+      _K15_ON();
+      testWaitForTimeout(2000);
+      _SetSession(Session);
+      testWaitForTimeout(1000);
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",0x37);
+      _Send_Key(SendKey_Len,ID,Seed,1);
+      _TestResult(SendData,ID,"",0x24);
+      testWaitForTimeout(Error_Count_Delay*0.6-1000);
+      if(Error_Count_Delay_Reset == 1) //复位需要重新启动延时时间 
+      {
+        Seed = _get_seed(ID);
+        _TestResult(SendData,ID,"",0x37);
+        _Send_Key(SendKey_Len,ID,Seed,1);
+        _TestResult(SendData,ID,"",0x24);
+        testWaitForTimeout(Error_Count_Delay*0.5);
+      }
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",-1);
+      _Send_Key(SendKey_Len,ID,Seed,0);
+      _TestResult(SendData,ID,"",-1);
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+_27_Serve_23(dword ID,byte Session)  /*未解锁状态-会话切换*/
+{
+  int i;
+  dword Seed;
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
+      _WriteEx_and_Report("","进入编程会话需要安全访问,与用例需求不符，跳过测试");
+    else
+    {
+      diagStartTesterPresent(Cdd_Name);
+      for(i=0;i<Error_Count-1;i++)
+      {
+        _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+        _TestResult(SendData,ID,"",0x35);
+        _SetSession(Session);
+        testWaitForTimeout(2000);
+      }
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+      _TestResult(SendData,ID,"",0x36);
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",0x37);
+      testWaitForTimeout(Error_Count_Delay*0.5);
+      _SetSession(Session);
+      testWaitForTimeout(1000);
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",0x37);
+      _Send_Key(SendKey_Len,ID,Seed,1);
+      _TestResult(SendData,ID,"",0x24);
+      testWaitForTimeout(Error_Count_Delay*0.6-1000);
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",-1);
+      _Send_Key(SendKey_Len,ID,Seed,0);
+      _TestResult(SendData,ID,"",-1);
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+_27_Serve_23_01(dword ID,byte Session)  /*未解锁状态-会话切换*/
+{
+  int i;
+  dword Seed;
+  byte Session_02[2] = {0x10,0x02};
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
+      _WriteEx_and_Report("","进入编程会话需要安全访问,与用例需求不符，跳过测试");
+    else
+    {
+      diagStartTesterPresent(Cdd_Name);
+      for(i=0;i<Error_Count-1;i++)
+      {
+        _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+        _TestResult(SendData,ID,"",0x35);
+        _Send_Diag(2,ID,Session_02);
+        _TestResult(SendData,ID,"",-1);
+        testWaitForTimeout(1000);
+      }
+      _Send_Key(SendKey_Len,ID,_get_seed(ID),1);
+      _TestResult(SendData,ID,"",0x36);
+      testWaitForTimeout(Error_Count_Delay*0.5);
+      _Send_Diag(2,ID,Session_02);
+      _TestResult(SendData,ID,"",-1);
+      testWaitForTimeout(1000);
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",0x37);
+      _Send_Key(SendKey_Len,ID,Seed,1);
+      _TestResult(SendData,ID,"",0x24);
+      testWaitForTimeout(Error_Count_Delay*0.6-1000);
+      Seed = _get_seed(ID);
+      _TestResult(SendData,ID,"",-1);
+      _Send_Key(SendKey_Len,ID,Seed,0);
+      _TestResult(SendData,ID,"",-1);
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+_27_Serve_24(dword ID,byte Session)  /*长度不正确的正确秘钥*/
+{
+  int ServePos,i;
+  dword Seed;
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    for(i=3;i<=SendKey_Len+1;i++)
+    {
+      if(i == SendKey_Len)
+        continue;
+      _Send_Key_(i,ID,_get_seed(ID),-1);
+      _TestResult(SendData,ID,"",NRC13);
+      testWaitForTimeout(100);
+    }
+    
+    for(i=2;i<=4;i++)
+    {
+      _SetSession(exsession);
+      _Send_Key_(i*(SendKey_Len-2)+2,ID,_get_seed(ID),-1);
+      _TestResult(SendData,ID,"",NRC13);
+      testWaitForTimeout(100);
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+_27_Serve_25(dword ID,byte Session)  /*子功能错误的正确秘钥*/
+{
+  int ServePos,i,j;
+  dword Seed;
+  if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
+  {
+    ServePos = _Check_Serve(0x27,0,0);
+    for(i=0;i<=0xFF;i++)
+    {
+      if(_Check_Serve(0x27,i,4) != -1)
+        continue;
+      _Send_Key_(SendKey_Len,ID,_get_seed(ID),i);
+      _TestResult(SendData,ID,"",NRC12);
+      testWaitForTimeout(20);
+    }
+  }
+  else
+    _WriteEx_and_Report("","当前会话下不支持相关子功能,跳过测试(支持的子功能测试中已验证子功能返回情况)");
+}
+
+
+
+on timer CAN_BUS_loader_H
+{
+  int k;
+  message * mg1;
+  qword ID;
+  if((phyreq_ID-0x100)<0)
+    ID = 0x001;
+  else
+    ID = (phyreq_ID-0x100);
+  mg1.id  = ID;
+  mg1.dlc = 8;
+  for(k=0;k<count_Bus;k++)
+    output(mg1);
+  testWaitForTimeout(100);
+  if(canGetBusLoad(1)>BUS_loader_H)
+    count_Bus--;
+  else if(canGetBusLoad(1)<BUS_loader_L)
+    count_Bus++;
+  setTimer(CAN_BUS_loader_H,200);
+}
+on timer CAN_BUS_loader_L
+{
+  int k;
+  message * mg2;
+  qword ID;
+  if((phyreq_ID+0x100)>0x7FF)
+    ID = 0X7FF;
+  else
+    ID = phyreq_ID+0x100;
+  mg2.id  = ID;
+  mg2.dlc = 8;
+  for(k=0;k<count_Bus;k++)
+    output(mg2);
+  testWaitForTimeout(100);
+  if(canGetBusLoad(1)>BUS_loader_H)
+    count_Bus--;
+  else if(canGetBusLoad(1)<BUS_loader_L)
+    count_Bus++;
+  setTimer(CAN_BUS_loader_L,200);
+}
+
+on timer Def_TimeCount
+{
+  Time_Count_Time++;
+  setTimer(Def_TimeCount,2000);
+}
+
+void Other_GAC_01() /*在引导程序的默认会话下休眠验证-300s内无诊断报文请求*/
+{
+  byte Send_Data_3E[2] = {0x3E,0x00};
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(300000);//等待300s
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",0);
+}
+void Other_GAC_02() /*在引导程序的默认会话下休眠验证-300s内无诊断报文请求*/
+{
+  byte Send_Data_3E[2] = {0x3E,0x00};
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(301000);//等待301s
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",0);
+}
+void Other_GAC_03() /*在引导程序的默认会话下休眠验证-300s内无诊断报文请求*/
+{
+  byte Send_Data_3E[2] = {0x3E,0x00};
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(298000);//等待298s
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+}
+void Other_GAC_04() /*在引导程序的默认会话下休眠验证-300s内无诊断报文请求*/
+{
+  byte Send_Data_3E[2] = {0x3E,0x00};
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(100000);//等待100s
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+}
+void Other_GAC_05() /*在引导程序的默认会话下休眠验证-300s内有诊断报文请求*/
+{
+  message *Msg;
+  byte Send_Data_3E[2] = {0x3E,0x00};
+  
+  Msg.dlc = 8;
+  Msg.id = phyreq_ID;
+  Msg.byte(0) = 0x02;Msg.byte(1) = 0x3E;Msg.byte(2) = 0x00;
+  for(i=3;i<8;i++)
+    Msg.byte(i) = 0x55;
+  
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  
+  Time_Count_Time = 0;
+  setTimer(Def_TimeCount,2000);
+  do
+  {
+    output(Msg);
+    testWaitForTimeout(1000);
+  }while(Time_Count_Time<150);
+  cancelTimer(Def_TimeCount);
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",0);
+}
+void Other_GAC_06() /*在引导程序的默认会话下休眠验证-300s内有诊断报文请求*/
+{
+  byte Send_Data_3E[2] = {0x3E,0x00};
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(280000);//等待280s
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  _SetSession(defsession);
+  testWaitForTimeout(21000);//等待21s
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",0);
+}
+void Other_GAC_07() /*在引导程序的默认会话下休眠验证-300s内有诊断报文请求*/
+{
+  message *Msg;
+  byte Send_Data_3E[2] = {0x3E,0x00};
+  
+  Msg.dlc = 8;
+  Msg.id = phyreq_ID;
+  Msg.byte(0) = 0x02;Msg.byte(1) = 0x3E;Msg.byte(2) = 0x00;
+  for(i=3;i<8;i++)
+    Msg.byte(i) = 0x55;
+  
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  
+  Time_Count_Time = 0;
+  setTimer(Def_TimeCount,2000);
+  do
+  {
+    output(Msg);
+    testWaitForTimeout(1000);
+    if(Time_Count_Time == 140)
+    {
+      _SetSession(exsession);
+      _SetSession(defsession);
+    }
+  }while(Time_Count_Time<150);
+  cancelTimer(Def_TimeCount);
+  testWaitForTimeout(2000);
+  _Send_Diag(2,phyreq_ID,Send_Data_3E);
+  _TestResult(SendData,phyreq_ID,"",-1);
+}
+void Other_GAC_08() /*1101响应后时间测试*/
+{
+  byte Send_Data_11[2] = {0x11,0x01};
+  message *Msg;
+  message *SendMsg;
+  double Start_Time,End_Time,Change_Time,Count_Time;
+  int Response;
+  Response = 0;
+  SendMsg.dlc = 8;SendMsg.can = 1;
+  SendMsg.FDF = 0;SendMsg.id = phyreq_ID;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x10;SendMsg.byte(2) = 0x03;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  
+  _Send_Diag(2,phyreq_ID,Send_Data_11);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Start_Time=(double)timeNow()/100;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(Response_ID,p2cmax))
+    {
+      testGetWaitEventMsgData(Msg);Response  = 1;
+    }
+    Count_Time = (double)timeNow()/100;
+  }while(Response == 0 && (Count_Time-Start_Time<=5000));
+  End_Time = (double)timeNow()/100;
+  Change_Time = End_Time - Start_Time;
+  if(Change_Time > 500)
+    testStepFail("","测试时间已超过最大值500ms，当前为 %.2f ms",Change_Time);
+  else
+    testStepPass("","当前响应时间为 %.2f ms",Change_Time);
+  
+  if(Response == 1 && Msg.byte(1) == 0x50)
+    testStepPass("","收到正响应");
+  else
+    testStepFail("","诊断命令未收到正响应");
+}
+void Other_GAC_09() /*1101响应后时间测试*/
+{
+  byte Send_Data_11[2] = {0x11,0x01};
+  double Start_Time,End_Time,Change_Time,Count_Time;
+  int Response;
+  message *Msg;
+  message *SendMsg;
+  Response = 0;
+  SendMsg.dlc = 8;SendMsg.can = 1;
+  SendMsg.FDF = 0;SendMsg.id = phyreq_ID;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x11;SendMsg.byte(2) = 0x01;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  
+  _Send_Diag(2,phyreq_ID,Send_Data_11);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Start_Time=(double)timeNow()/100;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(Response_ID,p2cmax))
+    {
+      Response  = 1;testGetWaitEventMsgData(Msg);
+    }
+    Count_Time = (double)timeNow()/100;
+  }while(Response == 0 && (Count_Time-Start_Time<=5000));
+  End_Time = (double)timeNow()/100;
+  Change_Time = End_Time - Start_Time;
+  if(Change_Time > 500)
+    testStepFail("","测试时间已超过最大值500ms，当前为 %.2f ms",Change_Time);
+  else
+    testStepPass("","当前响应时间为 %.2f ms",Change_Time);
+  
+  if(Response == 1 && Msg.byte(1) == 0x51)
+    testStepPass("","收到正响应");
+  else
+    testStepFail("","诊断命令未收到正响应");
+}
+void Other_GAC_10() /*1101响应后时间测试*/
+{
+  byte Send_Data_11[2] = {0x11,0x01};
+  byte Send_Data_10[2] = {0x10,0x03};
+  double Start_Time,End_Time,Change_Time,Count_Time;
+  int Response;
+  message *Msg;
+  message *SendMsg;
+  Response = 0;
+  SendMsg.dlc = 8;SendMsg.can = 1;
+  SendMsg.FDF = 0;SendMsg.id = phyreq_ID;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x10;SendMsg.byte(2) = 0x03;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  
+  BUS_loader_H = 80;
+  BUS_loader_L = 70;
+  count_Bus = 600;
+  setTimer(CAN_BUS_loader_L,8);
+  testWaitForTimeout(10000);
+  _Send_Diag(2,phyreq_ID,Send_Data_11);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Start_Time=(double)timeNow()/100;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(Response_ID,p2cmax))
+    {
+      Response  = 1;testGetWaitEventMsgData(Msg);
+    }
+    Count_Time = (double)timeNow()/100;
+  }while(Response == 0 && (Count_Time-Start_Time<=5000));
+  End_Time = (double)timeNow()/100;
+  Change_Time = End_Time - Start_Time;
+  if(Change_Time > 500)
+    testStepFail("","测试时间已超过最大值500ms，当前为 %.2f ms",Change_Time);
+  else
+    testStepPass("","当前响应时间为 %.2f ms",Change_Time);
+  
+  if(Response == 1 && Msg.byte(1) == 0x50)
+    testStepPass("","收到正响应");
+  else
+    testStepFail("","诊断命令未收到正响应");
+  
+  cancelTimer(CAN_BUS_loader_L);
+  BUS_loader_H = 95;
+  BUS_loader_L = 90;
+  count_Bus = 0;
+}
+void Other_GAC_11() /*1002响应后时间测试*/
+{
+  byte Send_Data_10[2] = {0x10,0x02};
+  double Start_Time,End_Time,Change_Time,Count_Time;
+  int Response;
+  message *Msg;
+  message *SendMsg;
+  Response = 0;
+  SendMsg.dlc = 8;SendMsg.can = 1;
+  SendMsg.FDF = 0;SendMsg.id = phyreq_ID;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x27;SendMsg.byte(2) = RequestSeed_27;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  
+  _Send_Diag(2,phyreq_ID,Send_Data_10);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Start_Time=(double)timeNow()/100;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(Response_ID,p2cmax))
+    {
+      Response  = 1;testGetWaitEventMsgData(Msg);
+    }
+    Count_Time = (double)timeNow()/100;
+  }while(Response == 0 && (Count_Time-Start_Time<=5000));
+  End_Time = (double)timeNow()/100;
+  Change_Time = End_Time - Start_Time;
+  if(Change_Time > 500)
+    testStepFail("","测试时间已超过最大值500ms，当前为 %.2f ms",Change_Time);
+  else
+    testStepPass("","当前响应时间为 %.2f ms",Change_Time);
+  
+  if(Response == 1 && Msg.byte(1) == 0x67)
+    testStepPass("","收到正响应");
+  else
+    testStepFail("","诊断命令未收到正响应");
+}
+void Other_GAC_12() /*1002响应后时间测试*/
+{
+  byte Send_Data_10[2] = {0x10,0x02};
+  double Start_Time,End_Time,Change_Time,Count_Time;
+  int Response;
+  message *Msg;
+  message *SendMsg;
+  Response = 0;
+  SendMsg.dlc = 8;SendMsg.can = 1;
+  SendMsg.FDF = 0;SendMsg.id = phyreq_ID;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x11;SendMsg.byte(2) = 0x01;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  
+  _Send_Diag(2,phyreq_ID,Send_Data_10);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Start_Time=(double)timeNow()/100;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(Response_ID,p2cmax))
+    {
+      Response  = 1;testGetWaitEventMsgData(Msg);
+    }
+    Count_Time = (double)timeNow()/100;
+  }while(Response == 0 && (Count_Time-Start_Time<=5000));
+  End_Time = (double)timeNow()/100;
+  Change_Time = End_Time - Start_Time;
+  if(Change_Time > 500)
+    testStepFail("","测试时间已超过最大值500ms，当前为 %.2f ms",Change_Time);
+  else
+    testStepPass("","当前响应时间为 %.2f ms",Change_Time);
+  
+  if(Response == 1 && Msg.byte(1) == 0x51)
+    testStepPass("","收到正响应");
+  else
+    testStepFail("","诊断命令未收到正响应");
+}
+void Other_GAC_13() /*1002响应后时间测试*/
+{
+  byte Send_Data_27[2] = {0x27,0x11};
+  byte Send_Data_10[2] = {0x10,0x02};
+  double Start_Time,End_Time,Change_Time,Count_Time;
+  int Response;
+  message *Msg;
+  message *SendMsg;
+  Response = 0;
+  SendMsg.dlc = 8;SendMsg.can = 1;
+  SendMsg.FDF = 0;SendMsg.id = phyreq_ID;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x27;SendMsg.byte(2) = RequestSeed_27;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  
+  BUS_loader_H = 80;
+  BUS_loader_L = 70;
+  count_Bus = 600;
+  setTimer(CAN_BUS_loader_L,8);
+  testWaitForTimeout(10000);
+  _SetSession(exsession);
+  testWaitForTimeout(1000);
+  _Send_Diag(2,phyreq_ID,Send_Data_10);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Start_Time=(double)timeNow()/100;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(Response_ID,p2cmax))
+    {
+      Response  = 1;testGetWaitEventMsgData(Msg);
+    }
+    Count_Time = (double)timeNow()/100;
+  }while(Response == 0 && (Count_Time-Start_Time<=5000));
+  End_Time = (double)timeNow()/100;
+  Change_Time = End_Time - Start_Time;
+  if(Change_Time > 500)
+    testStepFail("","测试时间已超过最大值500ms，当前为 %.2f ms",Change_Time);
+  else
+    testStepPass("","当前响应时间为 %.2f ms",Change_Time);
+  
+  if(Response == 1 && Msg.byte(1) == 0x67)
+    testStepPass("","收到正响应");
+  else
+    testStepFail("","诊断命令未收到正响应");
+  
+  cancelTimer(CAN_BUS_loader_L);
+  BUS_loader_H = 95;
+  BUS_loader_L = 90;
+  count_Bus = 0;
+}
+
+
+

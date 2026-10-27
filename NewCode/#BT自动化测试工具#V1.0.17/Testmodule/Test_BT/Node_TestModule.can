@@ -1,0 +1,170 @@
+/*@!Encoding:936*/
+variables
+{
+  dword LHB_State;
+  message can2.*Relaymsg = {dlc=8}; 
+}
+
+on start
+{
+  writeClear(1);
+}
+on sysvar sysvar::Test::Burn_Board_Type
+{
+  if(@Test::Burn_Board_Type == 2)
+  {
+    RelaySome();
+  }
+}
+on sysvar sysvar::Test::Clear_PathInput
+{
+  if(@sysvar::Test::Clear_PathInput == 1)
+  {
+    sysSetVariableString(sysvar::Test::openhex,"");
+    sysSetVariableString(sysvar::Test::openhex1,"");
+    sysSetVariableString(sysvar::Test::openhex2,"");
+    
+    sysSetVariableString(sysvar::AUTO::openFile_SBT,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF1,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF2,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF3,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF4,"");
+    
+    sysSetVariableString(sysvar::AUTO::openFile_Flash,"");
+    sysSetVariableString(sysvar::AUTO::openFile_Bin1,"");
+    sysSetVariableString(sysvar::AUTO::openFile_Bin2,"");
+    
+    sysSetVariableString(sysvar::AUTO::RSA1,"");
+    sysSetVariableString(sysvar::AUTO::CBF1,"");
+    
+    writeEx(-3,0,"清除文件输入");
+  }
+}
+on sysvar sysvar::AUTO::Clear_Software1
+{
+  if(@sysvar::AUTO::Clear_Software1 == 1)
+  {
+    sysSetVariableString(sysvar::AUTO::SoftWare1_1,"");
+    sysSetVariableString(sysvar::AUTO::SoftWare1_2,"");
+    sysSetVariableString(sysvar::AUTO::SoftWare1_3,"");
+    
+    sysSetVariableString(sysvar::AUTO::openFile_SBT,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF1,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF2,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF3,"");
+    sysSetVariableString(sysvar::AUTO::openFile_VBF4,"");
+    
+    sysSetVariableString(sysvar::AUTO::openFile_Flash,"");
+    sysSetVariableString(sysvar::AUTO::openFile_Bin1,"");
+    sysSetVariableString(sysvar::AUTO::openFile_Bin2,"");
+    
+    sysSetVariableString(sysvar::AUTO::RSA1,"");
+    sysSetVariableString(sysvar::AUTO::CBF1,"");
+    writeEx(-3,0,"清除软件1输入");
+  }
+}
+on sysvar sysvar::AUTO::Clear_Software2
+{
+  if(@sysvar::AUTO::Clear_Software2 == 1)
+  {
+    sysSetVariableString(sysvar::AUTO::SoftWare2_1,"");
+    sysSetVariableString(sysvar::AUTO::SoftWare2_2,"");
+    sysSetVariableString(sysvar::AUTO::SoftWare2_3,"");
+    
+    sysSetVariableString(sysvar::AUTO::openFile2_SBT,"");
+    sysSetVariableString(sysvar::AUTO::openFile2_VBF1,"");
+    sysSetVariableString(sysvar::AUTO::openFile2_VBF2,"");
+    sysSetVariableString(sysvar::AUTO::openFile2_VBF3,"");
+    sysSetVariableString(sysvar::AUTO::openFile2_VBF4,"");
+    
+    sysSetVariableString(sysvar::AUTO::openFile2_Flash,"");
+    sysSetVariableString(sysvar::AUTO::openFile2_Bin1,"");
+    sysSetVariableString(sysvar::AUTO::openFile2_Bin2,"");
+    
+    sysSetVariableString(sysvar::AUTO::RSA2,"");
+    sysSetVariableString(sysvar::AUTO::CBF2,"");
+    writeEx(-3,0,"清除软件2输入");
+  }
+}
+on sysvar sysvar::AUTO::Config_SGMW_SlectALL
+{
+  int Config;
+  Config = 1;
+  @sysvar::AUTO::Config_SGMW_F195 = Config;
+  @sysvar::AUTO::Config_SGMW_F194 = Config;
+  @sysvar::AUTO::Config_SGMW_F193 = Config;
+  @sysvar::AUTO::Config_SGMW_F192 = Config;
+  @sysvar::AUTO::Config_SGMW_F191 = Config;
+  @sysvar::AUTO::Config_SGMW_F190 = Config;
+  @sysvar::AUTO::Config_SGMW_F188 = Config;
+  @sysvar::AUTO::Config_SGMW_F186 = Config;
+  @sysvar::AUTO::Config_SGMW_F184 = Config;
+  @sysvar::AUTO::Config_SGMW_F18C = Config;
+  @sysvar::AUTO::Config_SGMW_F18B = Config;
+  @sysvar::AUTO::Config_SGMW_F18A = Config;
+  @sysvar::AUTO::Config_SGMW_F17A = Config;
+  @sysvar::AUTO::Config_SGMW_F1CB = Config;
+  @sysvar::AUTO::Config_SGMW_F1C1 = Config;
+  @sysvar::AUTO::Config_SGMW_F1B9 = Config;
+  @sysvar::AUTO::Config_SGMW_F1B2 = Config;
+}
+
+on sysvar sysvar::AUTO::Config_SGMW_ClearALL
+{
+  int Config;
+  Config = 0;
+  @sysvar::AUTO::Config_SGMW_F195 = Config;
+  @sysvar::AUTO::Config_SGMW_F194 = Config;
+  @sysvar::AUTO::Config_SGMW_F193 = Config;
+  @sysvar::AUTO::Config_SGMW_F192 = Config;
+  @sysvar::AUTO::Config_SGMW_F191 = Config;
+  @sysvar::AUTO::Config_SGMW_F190 = Config;
+  @sysvar::AUTO::Config_SGMW_F188 = Config;
+  @sysvar::AUTO::Config_SGMW_F186 = Config;
+  @sysvar::AUTO::Config_SGMW_F184 = Config;
+  @sysvar::AUTO::Config_SGMW_F18C = Config;
+  @sysvar::AUTO::Config_SGMW_F18B = Config;
+  @sysvar::AUTO::Config_SGMW_F18A = Config;
+  @sysvar::AUTO::Config_SGMW_F17A = Config;
+  @sysvar::AUTO::Config_SGMW_F1CB = Config;
+  @sysvar::AUTO::Config_SGMW_F1C1 = Config;
+  @sysvar::AUTO::Config_SGMW_F1B9 = Config;
+  @sysvar::AUTO::Config_SGMW_F1B2 = Config;
+}
+
+
+/*****************新老化板******************/
+//RelayON(端口X) ：端口X 黑色接口-黄色接口
+//RelayOFF(端口X)：端口X 黑色接口-绿色接口
+void RelayON(byte Ctr_state)
+{
+  Relaymsg.id=0x101;
+  switch(Ctr_state)
+  {//置为0
+    case 1:LHB_State &=0xFE;break;
+    case 2:LHB_State &=0xFD;break;
+    case 3:LHB_State &=0xFB;break;
+    case 4:LHB_State &=0xF7;break;
+  }
+  Relaymsg.byte(0) = LHB_State;
+  output(Relaymsg);
+}
+void RelayOFF(byte Ctr_state)
+{ 
+  Relaymsg.id=0x101;
+  switch(Ctr_state)
+  {//置为1
+    case 1:LHB_State |=1;break;
+    case 2:LHB_State |=2;break;
+    case 3:LHB_State |=4;break;
+    case 4:LHB_State |=8;break;
+  }
+  Relaymsg.byte(0) = LHB_State;
+  output(Relaymsg);
+}
+void RelaySome()
+{
+  Relaymsg.id=0x101;
+  Relaymsg.byte(0) = 0x03;
+  output(Relaymsg);
+}

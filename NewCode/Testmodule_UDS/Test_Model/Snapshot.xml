@@ -1,0 +1,114 @@
+﻿<testmodule title="快照" version="1.0">
+  <variants>
+    <variant name="All"/>
+    <variant name="快照测试_通用部分"/>
+    <variant name="BYD"/>
+    <variant name="Geely_1.0"/>
+    <variant name="Geely_3.0"/>
+    <variant name="长安"/>
+    <variant name="五菱"/>
+    <variant name="奇瑞"/>
+    <variant name="瑞驰"/>
+    <variant name="广汽"/>
+  </variants>
+
+    <testgroup title="快照测试_通用部分" variants="快照测试_通用部分 All">
+      <capltestcase name="test" title="验证" />
+      <capltestcase name="Case_19_04_Geely_Read" title="吉利3.0快照读取" />
+    </testgroup>
+
+    <testgroup title="BYD" variants="BYD All">
+    </testgroup>
+
+    <testgroup title="Geely_1.0" variants="Geely_1.0 All">
+    </testgroup>
+
+    <testgroup title="Geely_3.0" variants="Geely_3.0 All">
+        <capltestcase name="Case_19_04_20_ALL_Geely" title="快照号0x20_全局快照更新及存储机制测试" />
+        <capltestcase name="Case_19_04_21_ALL_Geely" title="快照号0x21_全局快照更新及存储机制测试" />
+        <capltestcase name="Case_19_04_03_Geely" title="故障码全局快照默认填充值测试" />
+        <capltestcase name="Case_19_04_04_Geely" title="故障码全局快照先正常后丢失的填充值测试" />
+        <capltestcase name="Case_19_04_05_Geely" title="故障码全局快照先正常后无效的填充值测试" />
+        <capltestcase name="Case_19_04_06_Geely" title="故障码全局快照_330C(Torque)填充值测试" />
+        <capltestcase name="Case_19_04_07_Geely" title="故障码全局快照_D905(ReductionFactor)填充值测试" />
+        <capltestcase name="Case_19_04_08_Geely" title="故障码全局快照_D906(Angle)填充值测试" />
+        <capltestcase name="Case_19_04_09_Geely" title="故障码全局快照(Global_Real_Time)填充值测试" />
+        <capltestcase name="Case_19_04_10_Geely" title="故障码全局快照(TotalDistance)填充值测试" />
+        <capltestcase name="Case_19_04_11_Geely_" title="故障码全局快照(Main ECU VoltageSupply)填充值测试" />
+        <capltestcase name="Case_19_04_11_Geely" title="故障码全局快照(CarSpd)填充值测试" />
+        <capltestcase name="Case_19_04_12_Geely" title="故障码全局快照(LocalTime)填充值测试" />
+        <capltestcase name="Case_19_04_13_Geely" title="故障码全局快照(Ready_State)填充值测试" />
+        <capltestcase name="Case_19_04_14_Geely" title="故障码全局快照(Power_Lev)填充值测试" />
+        <capltestcase name="Case_19_04_15_Geely" title="故障码全局快照_21AD(Motor_Torque)填充值测试" />
+        <capltestcase name="Case_19_04_16_Geely" title="故障码全局快照_D111(ECU Power Supply Voltage)填充值测试" />
+        <capltestcase name="Case_19_04_17_Geely" title="故障码全局快照_D117(ECU Internal Temperature)填充值测试" />
+        <capltestcase name="Case_19_04_18_Geely" title="故障码全局快照_D11C(Motor Temperature)填充值测试" />
+    </testgroup>
+
+    <testgroup title="长安" variants="长安 All">
+      <capltestcase name="Case_Snapshot_CCAG_01"   title="UDS19_快照初始值确认" />
+      <capltestcase name="Case_Snapshot_CCAG_02"   title="UDS19_全局快照更新及存储机制测试" />
+      <capltestcase name="Case_Snapshot_CCAG_03"   title="UDS19_总线信号丢失时的填充值测试" />
+      <capltestcase name="Case_Snapshot_CCAG_04"   title="UDS19_总线信号无效时的填充值测试" />
+      <capltestcase name="Case_Snapshot_CCAG_05"   title="UDS19_3001(电源电压)" />
+      <capltestcase name="Case_Snapshot_CCAG_06"   title="UDS19_3002(方向盘角度)" />
+      <capltestcase name="Case_Snapshot_CCAG_07"   title="UDS19_3003(方向盘转速)" />
+      <capltestcase name="Case_Snapshot_CCAG_08"   title="UDS19_3004(ECU温度)" />
+      <capltestcase name="Case_Snapshot_CCAG_09"   title="UDS19_3005(手力矩)" />
+      <capltestcase name="Case_Snapshot_CCAG_10"   title="UDS19_3006(系统状态)" />
+      <capltestcase name="Case_Snapshot_CCAG_11"   title="UDS19_3007(电机力矩)" />
+      <capltestcase name="Case_Snapshot_CCAG_12"   title="UDS19_3008(车速)" />
+      <capltestcase name="Case_Snapshot_CCAG_13"   title="UDS19_3009(发动机状态)" />
+      <capltestcase name="Case_Snapshot_CCAG_14"   title="UDS19_300A(本地时间)" />
+      <capltestcase name="Case_Snapshot_CCAG_15"   title="UDS19_300B(总里程)" />
+      <capltestcase name="Case_Snapshot_CCAG_16"   title="UDS19_300C(档位)" />
+    </testgroup>
+
+    <testgroup title="五菱" variants="五菱 All">
+      <capltestcase name="Case_19_Snapshot_Change"   title="UDS19_故障码全局快照更新及存储机制" />
+      <capltestcase name="Case_19_04_3"   title="UDS19_所有故障码快照记录及更新一致性测试" />
+      <capltestcase name="Case_19_04_4"   title="UDS19_快照在总线信号丢失时的填充值测试" />
+      <capltestcase name="Case_19_04_5"   title="UDS19_快照在总线信号先正常后丢失的填充值测试" />
+      <capltestcase name="Case_19_04_6"   title="UDS19_快照在总线信号无效时填充值测试" />
+      <capltestcase name="Case_19_04_7"   title="UDS19_快照在总线信号先正常后无效时的填充值测试" />
+      <capltestcase name="Case_19_04_8"   title="UDS19_特殊策略_总线丢失当前循环填充值测试" />
+      <capltestcase name="Case_19_04_9"   title="UDS19_特殊策略_总线丢失跨循环填充值测试" />
+      <capltestcase name="Case_19_04_10"   title="UDS19_特殊策略_总线先正常后丢失当前循环填充值测试" />
+      <capltestcase name="Case_19_04_11"   title="UDS19_特殊策略_总线先正常后丢失跨循环填充值测试" />
+      <capltestcase name="Case_19_04_12"   title="UDS19_特殊策略_总线无效当前循环填充值测试" />
+      <capltestcase name="Case_19_04_13"   title="UDS19_特殊策略_总线无效跨循环填充值测试" />
+      <capltestcase name="Case_19_04_14"   title="UDS19_特殊策略_总线先正常后无效当前循环填充值测试" />
+      <capltestcase name="Case_19_04_15"   title="UDS19_特殊策略_总线先正常后无效跨循环填充值测试" />
+      <capltestcase name="Case_19_04_16"   title="UDS19_时间快照在总线信号不合理时的填充值测试" />
+      <capltestcase name="Case_19_04_17"   title="UDS19_ECU同时可存储DTC的最大数量" />
+    </testgroup>
+
+    <testgroup title="奇瑞" variants="奇瑞 All">
+    </testgroup>
+
+    <testgroup title="瑞驰" variants="瑞驰 All">
+      <capltestcase name="Case_Snapshot_RC_01"   title="UDS19_故障码全局快照更新及存储机制测试" />
+      <capltestcase name="Case_Snapshot_RC_02"   title="UDS19_故障码全局快照(车速、里程)丢失与无效的填充值测试" />
+      <capltestcase name="Case_Snapshot_RC_03"   title="UDS19_故障码全局快照(车速、里程)先正常后丢失的填充值测试" />
+      <capltestcase name="Case_Snapshot_RC_04"   title="UDS19_故障码全局快照(车速、里程)先正常后无效的填充值测试" />
+      <capltestcase name="Case_Snapshot_RC_05"   title="UDS19_故障码全局快照(主辅车速策略)填充值测试" />
+      <capltestcase name="Case_Snapshot_RC_06"   title="UDS19_快照与22服务读出的值对比测试" />
+    </testgroup>
+
+    <testgroup title="广汽" variants="广汽 All">
+      <capltestcase name="Case_Snapshot_GAC_01"   title="UDS19_快照更新机制测试" />
+      <capltestcase name="Case_Snapshot_GAC_02"   title="UDS19_全局快照更新及存储机制测试" />
+      <capltestcase name="Case_Snapshot_GAC_03"   title="UDS19_总线信号丢失时的填充值测试" />
+      <capltestcase name="Case_Snapshot_GAC_05"   title="UDS19_总线信号无效时的填充值测试" />
+      <capltestcase name="Case_Snapshot_GAC_06"   title="UDS19_总线信号丢失时的填充值测试_丢失后值为0" />
+      <capltestcase name="Case_Snapshot_GAC_07"   title="UDS19_1000(系统电源电压)" />
+      <capltestcase name="Case_Snapshot_GAC_08"   title="UDS19_1103(方向盘角度)" />
+      <capltestcase name="Case_Snapshot_GAC_09"   title="UDS19_1104(方向盘角速度)" />
+      <capltestcase name="Case_Snapshot_GAC_10"   title="UDS19_1105(方向盘手力矩)" />
+      <capltestcase name="Case_Snapshot_GAC_11"   title="UDS19_1400(车速)" />
+      <capltestcase name="Case_Snapshot_GAC_12"   title="UDS19_1401(发动机转速)" />
+      <capltestcase name="Case_Snapshot_GAC_13"   title="UDS19_1410(本地时间)" />
+      <capltestcase name="Case_Snapshot_GAC_14"   title="UDS19_2400(马达输出力矩)" />
+    </testgroup>
+
+</testmodule>

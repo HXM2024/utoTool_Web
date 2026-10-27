@@ -1,0 +1,3019 @@
+/*@!Encoding:936*/
+includes
+{
+  #include "BOOT_EM2E_AUTO.can"
+}
+
+variables
+{
+  
+}
+
+//工具验证
+testcase ToolTest()
+{
+  char filename[100];
+  int result,i,fileHandle;
+  BYTE DataTemp[2000];
+  word inx ;
+  dword StartDataAdd,DataLenth;
+  MainInit();
+  sysGetVariableString(sysvar::AUTO::CBF1,filename,elCount(filename));
+  CBFFile_ReadAndSave(filename);
+  
+//  writeclear(1);
+//  result = fileGetBinaryBlock (DataTemp, elCount(DataTemp),fileHandle);
+//  for(i=0;i<2000;i++)
+//    writeEx(-3,0,"DataTemp[%d] = 0x%02X",i,DataTemp[i]);
+  
+}
+
+//工具验证
+testcase Read_Bin_Test()
+{
+  char filename[400];
+  MainInit();
+  sysGetVariableString(sysvar::AUTO::openFile_Bin1,filename,elCount(filename));
+  BinFile_ReadAndSaveOutPut(filename,BlockBin_Num,1);
+  
+}
+testcase ID_Check()
+{
+  message *Msg;
+  dword ID;
+  Msg.dlc = 8;
+  Msg.byte(0) = 0x02;
+  Msg.byte(1) = 0x10;
+  Msg.byte(2) = 0x01;
+  for(ID = 0x700;ID <= 0x7FF;ID++)
+  {
+    Msg.id = ID;
+    output(Msg);
+    testWaitForTimeout(70);
+  }
+}
+//安全算法测试
+testcase Security_Test()
+{
+
+  MainInit();
+  enterExtend(funID,0,Resp_1003);
+  enterProg(phyID,0,Resp_1002);
+    Security_access();
+  
+//  Security_access_AES_CMAC();
+  
+  Deinit();
+  
+}
+//KL30上电测试
+testcase K30ON_Test()
+{
+
+  MainInit();
+  _K30_ON();
+  Deinit();
+}
+//KL30下电测试
+testcase K30OFF_Test()
+{
+
+  MainInit();
+  _K30_OFF();
+  Deinit();
+}
+//KL15上电测试
+testcase K15ON_Test()
+{
+
+  MainInit();
+  _K15_ON();
+  Deinit();
+}
+//KL15下电测试
+testcase K15OFF_Test()
+{
+
+  MainInit();
+  _K15_OFF();
+  Deinit();
+}
+//APP有效性检测
+testcase APPValid_Test()
+{
+  
+  MainInit();
+  Check_AppValid();
+  Deinit();
+}
+//正常刷写流程
+testcase Normal_Test()
+{
+  MainInit();
+  MainTest_f();
+  Deinit();
+}
+//SOS刷写流程
+testcase SOS_Test()
+{
+  MainInit();
+  SOS_Flage = 1;
+  MainTest_f();
+  Deinit();
+}
+//使APP无效 进入BT
+testcase APPtoBT()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Check_AppValid();
+  Deinit();
+}
+testcase Alternate_DownLoad()
+{
+  char comment[70];
+  int Download_Time;
+  char SoftWare1_Now[400];
+  char SoftWareBefor1_Now[400];
+  char SoftWareBefor2_Now[400];
+  char SoftWareBefor3_Now[400];
+  Download_Time = 0;
+  
+      sysGetVariableString(sysvar::Test::openhex,SoftWareBefor1_Now,elCount(SoftWareBefor1_Now));
+      sysGetVariableString(sysvar::Test::openhex1,SoftWareBefor2_Now,elCount(SoftWareBefor2_Now));
+      sysGetVariableString(sysvar::Test::openhex2,SoftWareBefor3_Now,elCount(SoftWareBefor3_Now));
+  
+  while(@Test::Loop_Test_Switch && Download_Time < @sysvar::AUTO::Alternate_Count)
+  {
+    writeEx(-3,1,"---------------------测试第%d次交替刷写---------------------",++Download_Time);
+    snprintf(comment,elCount(comment),"测试第%d次交替刷写",Download_Time);
+    testCaseComment(comment);
+    Alternate_DownLoad_Flage = 1;
+    {
+      sysGetVariableString(sysvar::AUTO::SoftWare1_1,SoftWare1_Now,elCount(SoftWare1_Now));
+      sysSetVariableString(sysvar::Test::openhex,SoftWare1_Now);
+      sysGetVariableString(sysvar::AUTO::SoftWare1_2,SoftWare1_Now,elCount(SoftWare1_Now));
+      sysSetVariableString(sysvar::Test::openhex1,SoftWare1_Now);
+      sysGetVariableString(sysvar::AUTO::SoftWare1_3,SoftWare1_Now,elCount(SoftWare1_Now));
+      sysSetVariableString(sysvar::Test::openhex2,SoftWare1_Now);
+    }
+    MainInit();
+    MainTest_f();
+    Deinit();
+    
+    Alternate_DownLoad_Flage = 2;
+    {
+      sysGetVariableString(sysvar::AUTO::SoftWare2_1,SoftWare1_Now,elCount(SoftWare1_Now));
+      sysSetVariableString(sysvar::Test::openhex,SoftWare1_Now);
+      sysGetVariableString(sysvar::AUTO::SoftWare2_2,SoftWare1_Now,elCount(SoftWare1_Now));
+      sysSetVariableString(sysvar::Test::openhex1,SoftWare1_Now);
+      sysGetVariableString(sysvar::AUTO::SoftWare2_3,SoftWare1_Now,elCount(SoftWare1_Now));
+      sysSetVariableString(sysvar::Test::openhex2,SoftWare1_Now);
+    }
+    MainInit();
+    MainTest_f();
+    Deinit();
+  }
+  sysSetVariableString(sysvar::Test::openhex,SoftWareBefor1_Now);
+  sysSetVariableString(sysvar::Test::openhex1,SoftWareBefor2_Now);
+  sysSetVariableString(sysvar::Test::openhex2,SoftWareBefor3_Now);
+}
+//正常刷写1000次
+testcase Normal_Test_1000()
+{
+  char comment[70];
+  dword hexaddr[3][2];
+  dword Save_Change_CompilePro,Save_Change_ReadPro;
+  
+  Download_Count = 0;
+  Save_Change_CompilePro = 0;
+  Save_Change_ReadPro = 0;
+  while(@Test::Loop_Test_Switch && Download_Count < 1000)
+  {
+    writeEx(-3,1,"---------------------测试第%d次正常刷写---------------------",++Download_Count);
+    snprintf(comment,elCount(comment),"测试第%d次正常刷写",Download_Count);
+    testCaseComment(comment);
+    MainInit();
+    MainTest_f();
+    Deinit();
+    
+    if(@AUTO::Config_Switch==12)
+    {
+      if(Download_Count>1)
+      {
+        if(Change_CompilePro - Save_Change_CompilePro != 1)
+          testStepFail("","编程尝试次数增量错误，当前增量为%d",Change_CompilePro - Save_Change_CompilePro);
+        else
+          testStepPass("","编程尝试次数步增值为1");
+        if(Change_ReadPro - Save_Change_ReadPro != 1)
+          testStepFail("","编程次数增量错误，当前增量为%d",Change_ReadPro - Save_Change_ReadPro);
+        else
+          testStepPass("","编程次数步增值为1");
+      }
+      Save_Change_CompilePro = Change_CompilePro;
+      Save_Change_ReadPro = Change_ReadPro;
+    }
+  }
+  writeEx(-3,1,"---------------------正常刷写1000次测试完成---------------------");
+  
+}
+
+testcase Normal_Test_Cycle()
+{
+  char comment[70];
+  dword hexaddr[3][2];
+  dword Save_Change_CompilePro,Save_Change_ReadPro;
+  
+  Download_Count = 0;
+  Save_Change_CompilePro = 0;
+  Save_Change_ReadPro = 0;
+  while(@Test::Loop_Test_Switch)
+  {
+    writeEx(-3,1,"---------------------测试第%d次正常刷写---------------------",++Download_Count);
+    snprintf(comment,elCount(comment),"测试第%d次正常刷写",Download_Count);
+    testCaseComment(comment);
+    MainInit();
+    MainTest_f();
+    Deinit();
+    
+    if(@AUTO::Config_Switch==12)
+    {
+      if(Download_Count>1)
+      {
+        if(Change_CompilePro - Save_Change_CompilePro != 1)
+          testStepFail("","编程尝试次数增量错误，当前增量为%d",Change_CompilePro - Save_Change_CompilePro);
+        else
+          testStepPass("","编程尝试次数步增值为1");
+        if(Change_ReadPro - Save_Change_ReadPro != 1)
+          testStepFail("","编程次数增量错误，当前增量为%d",Change_ReadPro - Save_Change_ReadPro);
+        else
+          testStepPass("","编程次数步增值为1");
+      }
+      Save_Change_CompilePro = Change_CompilePro;
+      Save_Change_ReadPro = Change_ReadPro;
+    }
+  }
+  writeEx(-3,1,"---------------------停止刷写,共测试%d次刷写---------------------",Download_Count);
+}
+
+/*上下电压力测试*/
+testcase Power_Down_Up_Cycle()
+{
+  char comment[70];
+  int Download_Time;
+  dword hexaddr[3][2];
+  byte j,k;
+  int app_status;
+  j = 0;
+  k = 0;
+  app_status = 1;
+  Download_Time = 0;
+  MainInit();
+//  MainTest_f();
+  Deinit();
+//  Check_Tx(TxMessage_Pass);
+  Check_AppValid();
+  while(@Test::Loop_Test_Switch && (Download_Time < @Test::Loop_Power_Times) )
+  {
+    writeEx(-3,1,"/*---------------------测试第%d次上下电---------------------*/",++Download_Time);
+    snprintf(comment,elCount(comment),"第%d次上下电",Download_Time);
+    testCaseComment(comment);
+    
+    _K15_OFF();
+    testWaitForTimeout(3000);
+    _K15_ON();
+    testWaitForTimeout(1000);
+    
+    app_status = Check_AppValid();
+//    if(app_status == 1)
+//      snprintf(comment,elCount(comment),"：APP有效");
+//    else
+//      snprintf(comment,elCount(comment),"：APP无效");
+//    writeEx(-3,1,comment);
+
+  }
+  writeEx(-3,1,"/*---------------------停止刷写---------------------*/");
+  
+}
+/*验证是否在APP中擦除APP有效位1——进入BT后上下电*/
+testcase BT_AppValid1()
+{
+  char comment[70];
+  MainInit();
+  Loop_Add_Times = 0;
+  Loop_Add_Time =0;
+  @Faultinsert::TC_BT_AppValid = 1;
+  /*判断当前是否APP有效*/
+  curAppValid = Check_AppValid();
+  Restart_Time = 1;
+  curAppValid = 1;
+  Resp_1003 = -1;
+  while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
+  {
+    writeEx(-3,1,"/*---------------------第%d次测试,等待时间为：%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"第%d次测试,等待时间为：%dms",Loop_Add_Times,Loop_Add_Time);
+    testCaseComment(comment);
+    
+    if(Loop_Add_Times > 0)
+      @Faultinsert::TC_Miss_GetFc = 1;
+    
+    Pre_Programme_For_AppValidTest();
+    if(Loop_Add_Time > 0)
+    {
+      testWaitForTimeout(Loop_Add_Time);
+      writeEx(-3,1,"等待：%dms",Loop_Add_Time);
+    }
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+    writeEx(-3,1,"等待：2s");
+    @Faultinsert::TC_Miss_GetFc = 0;
+    Check_APPValid2();
+    
+    Loop_Add_Time +=5; 
+    testWaitForTimeout(100);
+    if(@AUTO::APP_Invalid == 1)
+      break;
+  }
+  @Faultinsert::TC_Miss_GetFc = 0;
+  @Faultinsert::TC_BT_AppValid = 0;
+  writeEx(-3,1,"/*---------------------停止测试---------------------*/");
+  
+}
+/*验证是否在BT中擦除APP有效位2——刷写完数据校验后上下电*/
+testcase BT_AppValid2()
+{
+  char comment[70];
+  MainInit();
+  Loop_Add_Times = 0;
+  Loop_Add_Time =0;
+  
+  while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
+  {
+    writeEx(-3,1,"/*---------------------第%d次测试,等待时间为：%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"第%d次测试,等待时间为：%dms",Loop_Add_Times,Loop_Add_Time);
+    testCaseComment(comment);
+    
+//    @Faultinsert::TC_BT_AppValid = 0;
+//    MainTest_f();
+//    Deinit();
+//    MainInit();
+    
+    @Faultinsert::TC_BT_AppValid = 1;
+    MainTest_f();
+    Deinit();
+    Resp_Init();
+   
+    Loop_Add_Time +=5; 
+    if(@AUTO::APP_Invalid == 1)
+      break;
+  }
+  @Faultinsert::TC_BT_AppValid = 0;
+  writeEx(-3,1,"/*---------------------停止测试---------------------*/");
+}
+/*验证是否在BT中擦除APP有效位3——进入BT后错误密钥后上下电*/
+testcase BT_AppValid3()
+{
+  char comment[70];
+  MainInit();
+  Loop_Add_Times = 0;
+  Loop_Add_Time =0;
+  @Faultinsert::TC_BT_AppValid = 1;
+  @Faultinsert::TC_Error_27Key = 0;
+  @Faultinsert::TC_Error_27 = 0;
+  /*判断当前是否APP有效*/
+  curAppValid = Check_AppValid();
+  while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
+  {
+    writeEx(-3,1,"/*---------------------第%d次测试,等待时间为：%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"第%d次测试,等待时间为：%dms",Loop_Add_Times,Loop_Add_Time);
+    testCaseComment(comment);
+    
+    Pre_Programme_For_AppValidTest();
+    if(Loop_Add_Times % 2 == 0)
+    {
+      @Faultinsert::TC_Error_27Key = 1;
+      @Faultinsert::TC_Error_27 = 1;
+    }
+    
+    if(@AUTO::Security_Switch == 2)
+    {
+      Security_access_AES_CMAC();
+    }
+    else
+      Security_access();
+    if(Loop_Add_Time > 0)
+    {
+      testWaitForTimeout(Loop_Add_Time);
+      writeEx(-3,1,"等待：%dms",Loop_Add_Time);
+    }
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+    writeEx(-3,1,"等待：2s");
+    
+    Check_APPValid2();
+    
+    @Faultinsert::TC_Miss_GetFc = 0;
+    @Faultinsert::TC_Error_27Key = 0;
+    @Faultinsert::TC_Error_27 = 0;
+    Loop_Add_Time +=5; 
+    testWaitForTimeout(100);
+    
+    if(@AUTO::APP_Invalid == 1)
+      break;
+  }
+  @Faultinsert::TC_Miss_GetFc = 0;
+  @Faultinsert::TC_BT_AppValid = 0;
+  @Faultinsert::TC_Error_27 = 0;
+  @Faultinsert::TC_Error_27Key = 0;
+  writeEx(-3,1,"/*---------------------停止测试---------------------*/");
+  
+}
+
+/*验证是否在BT中擦除APP有效位4——进入BT后11复位上下电*/
+testcase BT_AppValid4()
+{
+  char comment[70];
+  MainInit();
+  Loop_Add_Times = 0;
+  Loop_Add_Time =0;
+  Restart_Time = 1;
+  @Faultinsert::TC_BT_AppValid = 1;
+  /*判断当前是否APP有效*/
+  curAppValid = Check_AppValid();
+  while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
+  {
+    writeEx(-3,1,"/*---------------------第%d次测试,等待时间为：%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"第%d次测试,等待时间为：%dms",Loop_Add_Times,Loop_Add_Time);
+    testCaseComment(comment);
+    
+
+    Pre_Programme_For_AppValidTest();
+    testWaitForTimeout(1000);
+    if(Loop_Add_Times > 0)
+      @Faultinsert::TC_Miss_GetFc = 1;
+    _Startreset(phyID,0x01,-1);
+    if(Loop_Add_Time > 0)
+    {
+      testWaitForTimeout(Loop_Add_Time);
+      writeEx(-3,1,"等待：%dms",Loop_Add_Time);
+    }
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+    writeEx(-3,1,"等待：2s");
+    @Faultinsert::TC_Miss_GetFc = 0;
+    Check_APPValid2();
+    
+
+    Loop_Add_Time +=5; 
+    testWaitForTimeout(100);
+    if(@AUTO::APP_Invalid == 1)
+      break;
+  }
+  @Faultinsert::TC_Miss_GetFc = 0;
+  @Faultinsert::TC_BT_AppValid = 0;
+  writeEx(-3,1,"/*---------------------停止测试---------------------*/");
+  
+}
+
+/*-----------------------------------------------------------------------------------------------------------*/
+/*APP无效-过低压刷写-6V*/
+testcase APPInvalid_Volt_1()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 1; //低压
+  MainTest_f();
+  @Faultinsert::TC_ErrorVolt = 0;
+  Check_Tx(TxMessage_Fail);
+  Resp_Init();
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP无效-低压刷写(低压-0.1)V*/
+testcase APPInvalid_Volt_2()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 2; //低压-0.1
+  MainTest_f();
+  @Faultinsert::TC_ErrorVolt = 0;
+  Check_Tx(TxMessage_Fail);
+  Resp_Init();
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP无效-低压刷写(低压+0.1)V*/
+testcase APPInvalid_Volt_3()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 12; //低压+0.1
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP无效-正常电压刷写*/
+testcase APPInvalid_Volt_4()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Resp_Init();
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP无效-高压刷写(高压-0.1)V*/
+testcase APPInvalid_Volt_5()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 13; //高压-0.1
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP无效-高压刷写(高压+0.1)*/
+testcase APPInvalid_Volt_6()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 3;//高压+0.1
+  MainTest_f();
+  @Faultinsert::TC_ErrorVolt = 0;
+  Check_Tx(TxMessage_Fail);
+  Resp_Init();
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP无效-过高压刷写-18V*/
+testcase APPInvalid_Volt_7()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 4;//18V
+  MainTest_f();
+  @Faultinsert::TC_ErrorVolt = 0;
+  Check_Tx(TxMessage_Fail);
+  Resp_Init();
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP有效-过低压刷写*/
+testcase APPValid_Volt_1()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 5;//6V
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 0;
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP有效-低压边界值刷写*/
+testcase APPValid_Volt_2()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorLowVolt_App = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorLowVolt_App = 0;
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP有效-低压边界值刷写*/
+testcase APPValid_Volt_3()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 12; //低压+0.1
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP有效-正常电压刷写*/
+testcase APPValid_Volt_4()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP有效-高电压边界值刷写*/
+testcase APPValid_Volt_5()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 13; //高压-0.1
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP有效-高电压边界值刷写*/
+testcase APPValid_Volt_6()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorHighVolt_App = 1;
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorHighVolt_App = 0;
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP有效-过高压刷写*/
+testcase APPValid_Volt_7()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 4;//18V
+  MainTest_f();
+  Resp_Init();
+  @Faultinsert::TC_ErrorVolt = 0;
+  @Prog_power::K30Volt = Normal_Volt;
+  testWaitForTimeout(Volt_Time);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP传输时低压*/
+testcase APP_36_LowVolt()
+{
+  MainInit();
+  @Faultinsert::TC_LowVolt_36_A=1;
+  MainTest_f();
+  @Faultinsert::TC_LowVolt_36_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP传输时高压*/
+testcase APP_36_HighVolt()
+{
+  MainInit();
+  @Faultinsert::TC_HighVolt_36_A=1;
+  MainTest_f();
+  @Faultinsert::TC_HighVolt_36_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*ECU响应NRC78后马上发2帧功能寻址的3E80*/
+testcase Handshake_After_NRC78()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_after_NRC78 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_after_NRC78 = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00擦除过程中功能寻址握手*/
+testcase Handshake_FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_FF00 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_FF00 = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*0301时 功能握手*/
+testcase Handshake_0301()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_0301 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_0301 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*0205时 功能握手*/
+testcase Handshake_0205()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_0205 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_0205 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*驱动 0202校验过程中功能寻址握手*/
+testcase Handshake_0202F()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_0202F = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_0202F = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 0202校验过程中功能寻址握手*/
+testcase Handshake_0202A()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_0202A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_0202A = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*2E写数据过程中功能寻址握手*/
+testcase Handshake_2E()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_2E = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_2E = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36过程中握手*/
+testcase Handshake_36A()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_36_A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_36_A = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF01依赖性检测时功能握手*/
+testcase Handshake_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_FF01 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_FF01 = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*DA04有效检测时功能握手*/
+testcase Handshake_DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Handshake_in_DA04 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Handshake_in_DA04 = 0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 34请求下载长度错误*/
+testcase APP_34_ErrorLength()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorLength_App=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorLength_App=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP 34请求下载地址错误*/
+testcase APP_34_ErrorAddr()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorAddr_App=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorAddr_App=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP 34请求下载地址大小错误*/
+testcase APP_34_ErrorAddrSize()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorAddrSize_App=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorAddrSize_App=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP 34请求下载数据格式标识错误*/
+testcase APP_34_ErrorDataID()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorDataFormatId_App=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorDataFormatId_App=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP 34请求下载地址长度格式标识错误*/
+testcase APP_34_ErrorAddrLenID()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorAddrAndLenId_App=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorAddrAndLenId_App=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 34重复请求下载数据*/
+testcase APP_34_Repeat()
+{
+  MainInit();
+  @Faultinsert::TC_Re_34_A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Re_34_A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36数据下载完成后继续发送36数据块*/
+testcase APP_36_Continue()
+{
+  MainInit();
+  @Faultinsert::TC_Continue_36_A=1;
+  MainTest_f();
+  @Faultinsert::TC_Continue_36_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36未传输完直接34请求*/
+testcase APP_36_34()
+{
+  MainInit();
+  @Faultinsert::TC_34_in_36_A = 1;
+  MainTest_f();
+  @Faultinsert::TC_34_in_36_A = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36数据未传输完直接37退出*/
+testcase APP_36_Exit()
+{
+  MainInit();
+  @Faultinsert::TC_Exit_in_36_A=1;
+  MainTest_f();
+  @Faultinsert::TC_Exit_in_36_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36传输数据错误*/
+testcase APP_36_Error()
+{
+  MainInit();
+  @Faultinsert::TC_Error_36_A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Error_36_A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*App传输数据块小于34请求响应中最大参数*/
+testcase APP_36_Less()
+{
+  MainInit();
+  @Faultinsert::TC_BlockSize=1;
+  @Test::Block_Size = Blocksize_36 - 0x01;
+  MainTest_f();
+  @Faultinsert::TC_BlockSize=0;
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*App传输数据块大于34请求响应中最大参数*/
+testcase APP_36_More()
+{
+  MainInit();
+  @Faultinsert::TC_BlockSize=1;
+  @Test::Block_Size = Blocksize_36 + 0x01; //DataLengthmax_34
+  MainTest_f();
+  @Faultinsert::TC_BlockSize=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 3601后3601*/
+testcase APP_3601_3601()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorBlockNum_A=1;
+  @Test::Block_Num = 0x01;
+  @Test::Block_Loc = 0x02;
+  MainTest_f();
+  @Faultinsert::TC_ErrorBlockNum_A=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 3601后3603*/
+testcase APP_3601_3603()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorBlockNum_A=1;
+  @Test::Block_Num = 0x03;
+  @Test::Block_Loc = 0x02;
+  GAC_3601_03 = 1;
+  MainTest_f();
+  GAC_3601_03 = 0;
+  @Faultinsert::TC_ErrorBlockNum_A=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 3602后3601*/
+testcase APP_3602_3601()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorBlockNum_A=1;
+  @Test::Block_Num = 0x01;
+  @Test::Block_Loc = 0x03;
+  GAC_3602_01 = 1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorBlockNum_A=0;
+  GAC_3602_01 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 首次数据块传输36 00*/
+testcase APP_3600()
+{
+  MainInit();
+  @Faultinsert::TC_FirstBlockNum_A=1;
+  @Test::FirstBlock_Num = 0x00;
+  MainTest_f();
+  @Faultinsert::TC_FirstBlockNum_A=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 首次数据块传输36 02*/
+testcase APP_3602()
+{
+  MainInit();
+  @Faultinsert::TC_FirstBlockNum_A=1;
+  @Test::FirstBlock_Num = 0x02;
+  MainTest_f();
+  @Faultinsert::TC_FirstBlockNum_A=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 连续5次传输同一数据块*/
+testcase APP_36_Repeat()
+{
+  MainInit();
+  @Faultinsert::TC_Re_BlockNum_A=1;
+  @Test::Block_Num = 0x01;
+  @Test::Re_BlockTime = ReBlocknum_max;
+  MainTest_f();
+  @Faultinsert::TC_Re_BlockNum_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 连续6次传输同一数据块*/
+testcase APP_36_RepeatOver()
+{
+  MainInit();
+  @Faultinsert::TC_Re_BlockNum_A=1;
+  @Test::Block_Num = 0x01;
+  @Test::Re_BlockTime = ReBlocknum_max + 1;
+  MainTest_f();
+  @Faultinsert::TC_Re_BlockNum_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36传输完后发送31 01 FF 01兼容性检查*/
+testcase APP_36_Complete_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_FF01_After_36A = 1;
+  MainTest_f();
+  @Faultinsert::TC_FF01_After_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP 36未传输完后发送31 01 FF 01兼容性检查*/
+testcase APP_36_Incomplete_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_FF01_in_36A = 1;
+  MainTest_f();
+  @Faultinsert::TC_FF01_in_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP 36时 3601传输错误数据*/
+testcase APP_3601_Error()
+{
+  MainInit();
+  @Faultinsert::TC_Error_3601 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Error_3601 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36后发送0205*/
+testcase APP_36_0205()
+{
+  MainInit();
+  @Faultinsert::TC_36A_0205 = 1;
+  MainTest_f();
+  @Faultinsert::TC_36A_0205 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Geely3.0 APP 0212时第一次发送错误的签名，第二次发送正确的签名*/
+testcase APP_0202_FirstError()
+{
+  MainInit();
+  @Faultinsert::TC_FirstError_0202A = 1;
+  MainTest_f();
+  @Faultinsert::TC_FirstError_0202A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 APP 重复请求0212*/
+testcase APP_0202_Repeat()
+{
+  MainInit();
+  @Faultinsert::TC_Re_0202A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Re_0202A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 37请求退出报文数据过长*/
+testcase APP_37_ErrorLen()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorLength_37_A=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorLength_37_A=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 0202校验时CRC校验错误*/
+testcase APP_0202_Error()
+{
+  MainInit();
+  @Faultinsert::TC_Error_0202_A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Error_0202_A = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 34请求服务的报文长度错误*/
+testcase Flash_34_ErrorLength()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorLength_Flash=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorLength_Flash=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Flash 34请求数据内存大小错误*/
+testcase Flash_34_ErrorAddrSize()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorAddrSize_Flash=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorAddrSize_Flash=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Flash 34请求地址错误*/
+testcase Flash_34_ErrorAddr()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorAddr_Flash=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorAddr_Flash=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Flash 34请求下载的数据格式标识错误*/
+testcase Flash_34_ErrorDataID()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorDataFormatId_Flash=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorDataFormatId_Flash=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Flash 34请求下载的地址长度格式标识错误*/
+testcase Flash_34_ErrorAddrLenID()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorAddrAndLenId_Flash=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorAddrAndLenId_Flash=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Flash 3601后3601*/
+testcase Flash_3601_3601()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorBlockNum_F = 1;
+  @Test::Block_Num = 0x01;
+  @Test::Block_Loc = 0x02;
+  MainTest_f();
+  @Faultinsert::TC_ErrorBlockNum_F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 3601后3603*/
+testcase Flash_3601_3603()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorBlockNum_F = 1;
+  @Test::Block_Num = 0x03;
+  @Test::Block_Loc = 0x02;
+  MainTest_f();
+  @Faultinsert::TC_ErrorBlockNum_F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 3602后3601*/
+testcase Flash_3602_3601()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorBlockNum_F = 1;
+  @Test::Block_Num = 0x01;
+  @Test::Block_Loc = 0x03;
+  MainTest_f();
+  @Faultinsert::TC_ErrorBlockNum_F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 首次传输36 00*/
+testcase Flash_3600()
+{
+  MainInit();
+  @Faultinsert::TC_FirstBlockNum_F = 1;
+  @Test::FirstBlock_Num = 0x00;
+  MainTest_f();
+  @Faultinsert::TC_FirstBlockNum_F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 重复传输同一数据块*/
+testcase Flash_36_Repeat()
+{
+  MainInit();
+  @Faultinsert::TC_Re_BlockNum_F = 1;
+  @Test::Block_Num = 0x01;
+  @Test::Re_BlockTime = ReBlocknum_max;
+  MainTest_f();
+  @Faultinsert::TC_Re_BlockNum_F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 重复传输同一数据块超过最大限制*/
+testcase Flash_36_ReOver()
+{
+  MainInit();
+  @Faultinsert::TC_Re_BlockNum_F = 1;
+  @Test::Block_Num = 0x01;
+  @Test::Re_BlockTime = ReBlocknum_max + 1;
+  MainTest_f();
+  @Faultinsert::TC_Re_BlockNum_F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 36传输数据错误*/
+testcase Flash_36_Error()
+{
+  MainInit();
+  @Faultinsert::TC_Error_36_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Error_36_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Flash 36数据下载完后继续发送一个36数据块*/
+testcase Flash_36_Continue()
+{
+  MainInit();
+  @Faultinsert::TC_Continue_36_F=1;
+  @Test::Block_Num = 0x01;
+  MainTest_f();
+  @Faultinsert::TC_Continue_36_F=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Flash 36未传输完直接退出*/
+testcase Flash_36_Exit()
+{
+  MainInit();
+  @Faultinsert::TC_Exit_in_36_F = 1;
+  MainTest_f();
+  @Faultinsert::TC_Exit_in_36_F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Flash 36传输完发送31 01 FF 01兼容性检查*/
+testcase Flash_36_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_FF01_After_36F = 1;
+  MainTest_f();
+  @Faultinsert::TC_FF01_After_36F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Geely3.0 SBT37后直接发送0205*/
+testcase Flash_37_0205()
+{
+  MainInit();
+  @Faultinsert::TC_SBT37_0205 = 1;
+  MainTest_f();
+  @Faultinsert::TC_SBT37_0205 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*驱动校验0202错误*/
+testcase Flash_0202_Error()
+{
+  MainInit();
+  @Faultinsert::TC_Error_0202_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Error_0202_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 SBT0212时第一次发送错误的签名，第二次发送正确的签名*/
+testcase Flash_0202_FirstError()
+{
+  MainInit();
+  @Faultinsert::TC_FirstError_0202F = 1;
+  MainTest_f();
+  @Faultinsert::TC_FirstError_0202F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 SBT0212后读F1A2*/
+testcase Flash_0202_ReadF1A2()
+{
+  MainInit();
+  @Faultinsert::TC_ReadAfter_0202F = 1;
+  @AUTO::ReadIdentify = 0xF1A2;
+  MainTest_f();
+  @Faultinsert::TC_ReadAfter_0202F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 SBT0212后读F186*/
+testcase Flash_0202_ReadF186()
+{
+  MainInit();
+  @Faultinsert::TC_ReadAfter_0202F = 1;
+  @AUTO::ReadIdentify = 0xF186;
+  MainTest_f();
+  @Faultinsert::TC_ReadAfter_0202F = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00后11复位*/
+testcase Restart_FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_FF00=1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_FF00=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF01后11复位*/
+testcase Restart_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_FF01=1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_FF01=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*驱动校验0202后11复位*/
+testcase Restart_0202F()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_0202F=1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_0202F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP校验0202后11复位*/
+testcase Restart_0202A()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_0202A=1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_0202A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*2E写数据后11复位*/
+testcase Restart_2E()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_2E = 1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_2E = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*APP 36传输数据后11复位*/
+testcase Restart_36A()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_36_A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_36_A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*更新条件检测后11复位*/
+testcase Restart_0203()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_0203 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_0203 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*DA04检测后11复位*/
+testcase Restart_DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_DA04 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_DA04 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*0301后 11复位*/
+testcase Restart_0301()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_0301 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_0301 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*0205后 11复位*/
+testcase Restart_0205()
+{
+  MainInit();
+  @Faultinsert::TC_Restart_after_0205 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Restart_after_0205 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00后切换默认会话模式*/
+testcase DefSession_FF00()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_FF00=1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_FF00=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*驱动校验0202后切换默认会话模式*/
+testcase DefSession_0202F()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_0202F=1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_0202F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP 36传输后切换默认会话模式*/
+testcase DefSession_36A()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_36_A=1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_36_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP校验0202后切换默认会话模式*/
+testcase DefSession_0202A()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_0202A=1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_0202A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*2E写数据后切换默认会话模式*/
+testcase DefSession_2E()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_2E = 1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_2E = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*FF01切换默认会话模式*/
+testcase DefSession_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_FF01 = 1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_FF01 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*0301后切换默认会话模式*/
+testcase DefSession_0301()
+{
+  MainInit(); 
+  @Faultinsert::TC_DefaultSession_after_0301 = 1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_0301 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*0205后切换默认会话模式*/
+testcase DefSession_0205()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_0205 = 1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_0205 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*1003后延时超过5S*/
+testcase Wait_1003()
+{
+  MainInit();
+  @Faultinsert::TC_Wait_1003 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Wait_1003 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*更新条件检测后延时超过5S*/
+testcase Wait_0203()
+{
+  MainInit();
+  @Faultinsert::TC_Wait_0203 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Wait_0203 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*更新条件检测后10 02进入编程会话*/
+testcase Pro_0203()
+{
+  MainInit();
+  @Faultinsert::TC_Pro_0203 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Pro_0203 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 更新条件查询0203*/
+testcase Miss_0203()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_0203=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_0203=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*步骤缺失 10 02*/
+testcase Miss_1002()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_1002=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_1002=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 10 03*/
+testcase Miss_1003()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_1003 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_1003 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*步骤缺失 整个预编程阶段*/
+testcase Miss_Pre()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_Pre = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_Pre = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*步骤缺失 第一次安全访问*/
+testcase Miss_27_1()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_27_1 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_27_1 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*步骤缺失 第二次安全访问*/
+testcase Miss_27_2()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_27_2=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_27_2=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*步骤缺失 22读数据*/
+testcase Miss_22()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_22 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_22 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 2E写数据*/
+testcase Miss_2E()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_2E=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_2E=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 Flash 34请求下载*/
+testcase Miss_34F()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_34_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_34_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 Flash 36数据传输*/
+testcase Miss_36F()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_36_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_36_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 Flash 37退出传输*/
+testcase Miss_37F()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_37_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_37_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 Flash下载流程34、36、37*/
+testcase Miss_34_36_37F()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_34_F=1;
+  @Faultinsert::TC_Miss_36_F=1;
+  @Faultinsert::TC_Miss_37_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_34_F=0;
+  @Faultinsert::TC_Miss_36_F=0;
+  @Faultinsert::TC_Miss_37_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 Flash所有下载流程34、36、37、0202*/
+testcase Miss_Flash()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_34_F=1;
+  @Faultinsert::TC_Miss_36_F=1;
+  @Faultinsert::TC_Miss_37_F=1;
+  @Faultinsert::TC_Miss_0202_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_34_F=0;
+  @Faultinsert::TC_Miss_36_F=0;
+  @Faultinsert::TC_Miss_37_F=0;
+  @Faultinsert::TC_Miss_0202_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 Flash校验0202*/
+testcase Miss_0202F()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_0202_F=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_0202_F=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 FF00擦除*/
+testcase Miss_FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF00=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF00=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失31 03 FF 00擦除*/
+testcase Miss_03FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF00_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF00_03=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失31 02 FF 00擦除*/
+testcase Miss_02FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF00_02=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF00_02=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 31 01 FF 00和31 03 FF 00擦除*/
+testcase Miss_01_03FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF00=1;
+  @Faultinsert::TC_Miss_FF00_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF00=0;
+  @Faultinsert::TC_Miss_FF00_03=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 31 01 FF 00和31 03 FF 00和31 02 FF 00擦除*/
+testcase Miss_01_02_03FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF00=1;
+  @Faultinsert::TC_Miss_FF00_02=1;
+  @Faultinsert::TC_Miss_FF00_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF00=0;
+  @Faultinsert::TC_Miss_FF00_02=0;
+  @Faultinsert::TC_Miss_FF00_03=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 Flash 0202校验和整个APP下载*/
+testcase Miss_0202F_App()
+{
+  MainInit();
+  @Faultinsert::TC_37F_FF01=1;
+  MainTest_f();
+  @Faultinsert::TC_37F_FF01=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 APP 34请求下载*/
+testcase Miss_34A()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_34_A=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_34_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 APP 36数据传输*/
+testcase Miss_36A()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_36_A=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_36_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 APP 37数据传输*/
+testcase Miss_37A()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_37_A=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_37_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 APP 34、36数据传输*/
+testcase Miss_34_36A()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_34_A=1;
+  @Faultinsert::TC_Miss_36_A=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_34_A=0;
+  @Faultinsert::TC_Miss_36_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 APP 34、36数据传输*/
+testcase Miss_34_36_37A()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_34_A = 1;
+  @Faultinsert::TC_Miss_36_A = 1;
+  @Faultinsert::TC_Miss_37_A = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_34_A = 0;
+  @Faultinsert::TC_Miss_36_A = 0;
+  @Faultinsert::TC_Miss_37_A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 App校验0202*/
+testcase Miss_0202A()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_0202_A=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_0202_A=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*步骤缺失 FF01*/
+testcase Miss_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF01=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF01=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 03 FF 01*/
+testcase Miss_03FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF01_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF01_03=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 01 FF 01和31 03 FF 01*/
+testcase Miss_01_03FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF01=1;
+  @Faultinsert::TC_Miss_FF01_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF01=0;
+  @Faultinsert::TC_Miss_FF01_03=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 02 FF 01*/
+testcase Miss_02FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF01_02=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF01_02=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 01 FF 01、31 03 FF 01、31 02 FF 01*/
+testcase Miss_01_02_03FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_FF01=1;
+  @Faultinsert::TC_Miss_FF01_02=1;
+  @Faultinsert::TC_Miss_FF01_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_FF01=0;
+  @Faultinsert::TC_Miss_FF01_02=0;
+  @Faultinsert::TC_Miss_FF01_03=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 01 DA 04*/
+testcase Miss_DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_DA04=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_DA04=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 03 DA 04*/
+testcase Miss_03DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_DA04_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_DA04_03=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 01 DA 04 和 31 03 DA 04*/
+testcase Miss_01_03DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_DA04=1;
+  @Faultinsert::TC_Miss_DA04_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_DA04=0;
+  @Faultinsert::TC_Miss_DA04_03=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 02 DA 04*/
+testcase Miss_02DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_DA04_02=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_DA04_02=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*奇瑞 步骤缺失 31 01 DA 04 和 31 03 DA 04*/
+testcase Miss_01_02_03DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_DA04=1;
+  @Faultinsert::TC_Miss_DA04_02=1;
+  @Faultinsert::TC_Miss_DA04_03=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_DA04=0;
+  @Faultinsert::TC_Miss_DA04_02=0;
+  @Faultinsert::TC_Miss_DA04_03=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 步骤缺失 31 01 03 01*/
+testcase Miss_0301()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_0301 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_0301 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 步骤缺失 31 01 02 05*/
+testcase Miss_0205()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_0205 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_0205 = 0;
+  Resp_Init();
+  TxMessage_Pass = 0;
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  TxMessage_Pass = 1;
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 步骤缺失 SBT0212校验和0301*/
+testcase Miss_0202F_0301()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_0202_F = 1;
+  @Faultinsert::TC_Miss_0301 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_0202_F = 0;
+  @Faultinsert::TC_Miss_0301 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*步骤缺失 ECU 11复位*/
+testcase Miss_11()
+{
+  MainInit();
+  @Faultinsert::TC_Miss_11=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_11=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*奇瑞 31 01 FF 00后31 01 FF 00*/
+testcase Re_FF00()
+{
+  MainInit();
+  @Faultinsert::TC_Re_FF00=1;
+  MainTest_f();
+  @Faultinsert::TC_Re_FF00=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*奇瑞 31 01 FF 01后31 01 FF 01*/
+testcase Re_FF01()
+{
+  MainInit();
+  @Faultinsert::TC_Re_FF01=1;
+  MainTest_f();
+  @Faultinsert::TC_Re_FF01=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Geely3.0 重复请求 0301 激活SBL*/
+testcase Repeat_0301()
+{
+  MainInit();
+  @Faultinsert::TC_Re_0301 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Re_0301 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*22 读取不支持的DID*/
+testcase Error_22_DID()
+{
+  MainInit();
+  @Faultinsert::TC_Error_22_DID=1;
+  MainTest_f();
+  @Faultinsert::TC_Error_22_DID=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*安全访问 密钥错误*/
+testcase Error_27()
+{
+  MainInit();
+  @Faultinsert::TC_Error_27=1;
+  MainTest_f();
+  @Faultinsert::TC_Error_27=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*2E F184写入无效数据*/
+testcase Error_2EF184()
+{
+  MainInit();
+  @Faultinsert::TC_ErrorData_2E=1;
+  MainTest_f();
+  @Faultinsert::TC_ErrorData_2E=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*奇瑞 31 01 DA04的CRC值错误*/
+testcase Error_DA04()
+{
+  MainInit();
+  @Faultinsert::TC_Error_DA04=1;
+  MainTest_f();
+  @Faultinsert::TC_Error_DA04=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*Geely3.0 0301发送错误数据*/
+testcase Error_0301()
+{
+  MainInit();
+  @Faultinsert::TC_Error_0301 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Error_0301 = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 数据长度错误*/
+testcase FF00_Length()
+{
+  MainInit();
+  @Faultinsert::TC_Error_FF00_Length = 1;
+  MainTest_f();
+  @Faultinsert::TC_Error_FF00_Length = 0;
+  Resp_Init();
+  Check_Tx(TxMessage_Pass);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 擦除内存地址错误*/
+testcase FF00_Addr()
+{
+  MainInit();
+  @Faultinsert::TC_Error_FF00_Addr = 1;
+  MainTest_f();
+  @Faultinsert::TC_Error_FF00_Addr = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 擦除内存大小错误*/
+testcase FF00_AddrSize()
+{
+  MainInit();
+  @Faultinsert::TC_Error_FF00_Size = 1;
+  MainTest_f();
+  @Faultinsert::TC_Error_FF00_Size = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 某个地址未进行擦除，但在后续下载数据时请求34下载*/
+testcase FF00_Part()
+{
+  MainInit();
+  @Faultinsert::TC_FF00_Part = 1;
+  MainTest_f();
+  @Faultinsert::TC_FF00_Part = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 驱动下载完成前 擦除*/
+testcase FF00_Before_36F()
+{
+  MainInit();
+  @Faultinsert::TC_34F_FF00 = 1;
+  MainTest_f();
+  @Faultinsert::TC_34F_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 擦除FBT*/
+testcase FF00_FBT()
+{
+  MainInit();
+  @Faultinsert::TC_Error_FF00_Addr=1;
+  @Faultinsert::TC_ErrorAddr_FBT=1;
+  MainTest_f();
+  @Faultinsert::TC_Error_FF00_Addr=0;
+  @Faultinsert::TC_ErrorAddr_FBT=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 擦除SBT*/
+testcase FF00_SBT()
+{
+  MainInit();
+  @Faultinsert::TC_Error_FF00_Addr=1;
+  @Faultinsert::TC_ErrorAddr_SBT=1;
+  MainTest_f();
+  @Faultinsert::TC_Error_FF00_Addr=0;
+  @Faultinsert::TC_ErrorAddr_SBT=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 肯定响应前下总电*/
+testcase FF00_K30OFF()
+{
+  MainInit();
+  @Faultinsert::TC_FF00_K30_OFF=1;
+  MainTest_f();
+  @Faultinsert::TC_FF00_K30_OFF=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF00 擦除后直接DA04依赖性检测*/
+testcase FF00_DA04()
+{
+  MainInit();
+  @Faultinsert::TC_FF00_DA04=1;
+  MainTest_f();
+  @Faultinsert::TC_FF00_DA04=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 FF00重复请求*/
+testcase FF00_Repeat()
+{
+  MainInit();
+  @Faultinsert::TC_Re_FF00 = 1;
+  MainTest_f();
+  @Faultinsert::TC_Re_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 FF00擦除后读22 F1 AA*/
+testcase FF00_ReadF1AA()
+{
+  MainInit();
+  @Faultinsert::TC_ReadAfter_FF00 = 1;
+  @AUTO::ReadIdentify = 0xF1AA;
+  MainTest_f();
+  @Faultinsert::TC_ReadAfter_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*Geely3.0 FF00擦除后直接0205*/
+testcase FF00_0205()
+{
+  MainInit();
+  @Faultinsert::TC_FF00_0205 = 1;
+  MainTest_f();
+  @Faultinsert::TC_FF00_0205 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*FF 01依赖性检查过程中缺少某个地址段*/
+testcase FF01_Part()
+{
+  MainInit();
+  @Faultinsert::TC_FF01_Part=1;
+  MainTest_f();
+  @Faultinsert::TC_FF01_Part=0;
+  Resp_Init();
+  Check_Tx(TxMessage_Fail);
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*长安特殊用例：FF00后发送1001，然后刷写不执行2E*/
+testcase CA_Test_1()
+{
+  MainInit();
+  @Faultinsert::TC_DefaultSession_after_FF00=1;
+  MainTest_f();
+  @Faultinsert::TC_DefaultSession_after_FF00=0;
+  Resp_Init();
+  @Faultinsert::TC_Miss_2E=1;
+  MainTest_f();
+  @Faultinsert::TC_Miss_2E=0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*可靠性测试：内存擦除前切断电源测试*/
+testcase Powerdown_Before_FF00()
+{
+  MainInit();
+  TC_PowerDown_Before_FF00 = 1;
+  MainTest_f();
+  TC_PowerDown_Before_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);  
+}
+/*可靠性测试：内存擦除中切断电源测试*/
+testcase Powerdown_In_FF00()
+{
+  MainInit();
+  TC_PowerDown_In_FF00 = 1;
+  MainTest_f();
+  TC_PowerDown_In_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass); 
+}
+/*可靠性测试：内存擦除后切断电源测试*/
+testcase Powerdown_After_FF00()
+{
+  MainInit();
+  TC_PowerDown_After_FF00= 1;
+  MainTest_f();
+  TC_PowerDown_After_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass); 
+}
+/*可靠性测试：数据块传输完切断电源测试*/
+testcase Powerdown_After_36A()
+{
+  MainInit();
+  TC_PowerDown_After_36A = 1;
+  MainTest_f();
+  TC_PowerDown_After_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：数据块传输中切断电源测试*/
+testcase Powerdown_In_36A()
+{
+  MainInit();
+  TC_PowerDown_In_36A = 1;
+  MainTest_f();
+  TC_PowerDown_In_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：0202检查前切断电源测试*/
+testcase Powerdown_Before_0202A()
+{
+  MainInit();
+  TC_PowerDown_Before_0202A = 1;
+  MainTest_f();
+  TC_PowerDown_Before_0202A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：FF01有效性检查前切断电源测试*/
+testcase Powerdown_Before_FF01()
+{
+  MainInit();
+  TC_PowerDown_Before_FF01 = 1;
+  MainTest_f();
+  TC_PowerDown_Before_FF01 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：FF01有效性检查后切断电源测试*/
+testcase Powerdown_After_FF01()
+{
+  MainInit();
+  TC_PowerDown_After_FF01 = 1;
+  MainTest_f();
+  TC_PowerDown_After_FF01 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：内存擦除前下点火*/
+testcase K15_Before_FF00()
+{
+  MainInit();
+  TC_K15_Before_FF00 = 1;
+  MainTest_f();
+  TC_K15_Before_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：内存擦除后下点火*/
+testcase K15_After_FF00()
+{
+  MainInit();
+  TC_K15_After_FF00 = 1;
+  MainTest_f();
+  TC_K15_After_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：数据块传输完下点火*/
+testcase K15_After_36A()
+{
+  MainInit();
+  TC_K15_After_36A = 1;
+  MainTest_f();
+  TC_K15_After_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：数据块传输中下点火*/
+testcase K15_In_36A()
+{
+  MainInit();
+  TC_K15_In_36A = 1;
+  MainTest_f();
+  TC_K15_In_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：0202检查前下点火*/
+testcase K15_Before_0202A()
+{
+  MainInit();
+  TC_K15_Before_0202A = 1;
+  MainTest_f();
+  TC_K15_Before_0202A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：FF01有效性检查前下点火*/
+testcase K15_Before_FF01()
+{
+  MainInit();
+  TC_K15_Before_FF01 = 1;
+  MainTest_f();
+  TC_K15_Before_FF01 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：FF01有效性检查后下点火*/
+testcase K15_After_FF01()
+{
+  MainInit();
+  TC_K15_After_FF01 = 1;
+  MainTest_f();
+  TC_K15_After_FF01 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：内存擦除前BusOff*/
+testcase BusOff_Before_FF00()
+{
+  MainInit();
+  TC_BusOff_Before_FF00 = 1;
+  MainTest_f();
+  TC_BusOff_Before_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：内存擦除后BusOff*/
+testcase BusOff_After_FF00()
+{
+  MainInit();
+  TC_BusOff_After_FF00 = 1;
+  MainTest_f();
+  TC_BusOff_After_FF00 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：数据块传输完BusOff*/
+testcase BusOff_After_36A()
+{
+  MainInit();
+  TC_BusOff_After_36A = 1;
+  MainTest_f();
+  TC_BusOff_After_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：数据块传输中BusOff*/
+testcase BusOff_In_36A()
+{
+  MainInit();
+  TC_BusOff_In_36A = 1;
+  MainTest_f();
+  TC_BusOff_In_36A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：0202检查前BusOff*/
+testcase BusOff_Before_0202A()
+{
+  MainInit();
+  TC_BusOff_Before_0202A = 1;
+  MainTest_f();
+  TC_BusOff_Before_0202A = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：FF01有效性检查前BusOff*/
+testcase BusOff_Before_FF01()
+{
+  MainInit();
+  TC_BusOff_Before_FF01 = 1;
+  MainTest_f();
+  TC_BusOff_Before_FF01 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*可靠性测试：FF01有效性检查后BusOff*/
+testcase BusOff_After_FF01()
+{
+  MainInit();
+  TC_BusOff_After_FF01 = 1;
+  MainTest_f();
+  TC_BusOff_After_FF01 = 0;
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+  Check_Tx(TxMessage_Pass);
+}
+/*纯BT状态下读取22 F1 86*/
+testcase BT_F186()
+{
+  MainInit();
+  @AUTO::APP_Valid = 1;
+  MainTest_f();
+  ReadIdentify(phyID,0xF186,Resp_22);
+  Resp_Init();
+  MainTest_f();
+  Deinit();
+}
+/*APP进BT后发送10 01*/
+testcase APP_BT_1001()
+{
+  MainInit();
+  MainTest_f();
+  Resp_Init();
+  enterProg(phyID,0,Resp_1002);
+  testWaitForTimeout(1000);
+  enterDefault(phyID,0,Resp_1001);
+  Deinit();
+}
+
+testcase Case_BT_Manager_01()/*无编程请求 APP有效*/
+{
+  MainInit();
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 0) //无效
+  {
+    MainTest_f();
+    Resp_Init();
+  }
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  Resp_85 = 0x7F;
+  DTC_Control(phyID,0,0x01,Resp_85);
+  Deinit();
+}
+testcase Case_BT_Manager_02()/*有编程请求*/
+{
+  int i,Response;
+  message 0x00 msg;
+  message *SendMsg;
+  
+  MainInit();
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  i = 0;Response = 0;SendMsg.id = phyID;
+  SendMsg.dlc = 8;SendMsg.can = 1;SendMsg.FDF = 0;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x10;SendMsg.byte(2) = 0x02;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(revID,10))
+    {
+      testGetWaitEventMsgData(msg);
+      if(msg.byte(1) == 0x50 && msg.byte(2) == 0x02)
+      {
+        Response = 1;break;
+      }
+    }
+    if(i == 50)
+      _K15_ON();
+    i++;
+  }while( Response == 0 && i<300);
+  if(i >= 300)
+    testStepFail("","测试次数达到最大前，未收到正响应");
+  if(Response == 1)
+    testStepPass("","成功进入编程会话");
+  testWaitForTimeout(2000);
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  Deinit();
+}
+testcase Case_BT_Manager_03()/*无编程请求 APP无效*/
+{
+  MainInit();
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 1) //有效
+  {
+    @AUTO::APP_Valid = 1;
+    MainTest_f();
+    Check_AppValid();
+  }
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  Resp_37_a = 0x7F;
+  _Send37(phyID,Resp_37_a);
+  Deinit();
+}
+testcase Case_BT_Manager_04()/*默认会话发送1101复位后有编程请求*/
+{
+  int i,Response;
+  message 0x00 msg;
+  message *SendMsg;
+  diagRequest ABS_ESP.hardReset_Reset req11;
+  
+  DiagSetPrimitiveByte(req11,1,0x01); 
+  MainInit();
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 0) //无效
+  {
+    MainTest_f();
+    Resp_Init();
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+  }
+  
+  _diagSendMsg(phyID,req11);
+  _get_FC(req11,phyID,"",-1);
+  i = 0;Response = 0;SendMsg.id = phyID;
+  SendMsg.dlc = 8;SendMsg.can = 1;SendMsg.FDF = 0;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x10;SendMsg.byte(2) = 0x02;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(revID,10))
+    {
+      testGetWaitEventMsgData(msg);
+      if(msg.byte(1) == 0x50 && msg.byte(2) == 0x02)
+      {
+        Response = 1;break;
+      }
+    }
+    i++;
+  }while( Response == 0 && i<500);
+  if(i >= 500)
+    testStepFail("","测试次数达到最大前，未收到正响应");
+  if(Response == 1)
+    testStepPass("","成功进入编程会话");
+  testWaitForTimeout(2000);
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  Deinit();
+}
+
+testcase Case_BT_Manager_05()/*默认会话发送1101复位响应后断电*/
+{
+  diagRequest ABS_ESP.hardReset_Reset req11;
+  
+  DiagSetPrimitiveByte(req11,1,0x01); 
+  MainInit();
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 0) //无效
+  {
+    MainTest_f();
+    Resp_Init();
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+  }
+  
+  _diagSendMsg(phyID,req11);
+  _get_FC(req11,phyID,"",-1);
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  Resp_1002 = -1;
+  enterProg(phyID,0,Resp_1002);
+  testWaitForTimeout(2000);
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  Deinit();
+}
+
+testcase Case_BT_Manager_06()/*扩展会话发送编程请求后断电*/
+{
+  MainInit();
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 0) //无效
+  {
+    MainTest_f();
+    Resp_Init();
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+  }
+  Resp_1003 = -1;
+  enterExtend(phyID,0,Resp_1003);
+  Resp_1002 = -1;
+  enterProg(phyID,0,Resp_1002);
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  Resp_1002 = -1;
+  enterProg(phyID,0,Resp_1002);
+  testWaitForTimeout(2000);
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  
+  Deinit();
+}
+
+testcase Case_BT_Manager_07()/*默认会话发送1101复位后有编程请求*/
+{
+  diagRequest ABS_ESP.hardReset_Reset req11;
+  message *SendMsg;
+  int i,Response;
+  message 0x00 msg;
+  
+  MainInit();
+  DiagSetPrimitiveByte(req11,1,0x01); 
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 1) //有效
+  {
+    @AUTO::APP_Valid = 1;
+    MainTest_f();
+    Check_AppValid();
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+  }
+  
+  _diagSendMsg(phyID,req11);
+  _get_FC(req11,phyID,"",-1);
+  i = 0;Response = 0;SendMsg.id = phyID;
+  SendMsg.dlc = 8;SendMsg.can = 1;SendMsg.FDF = 0;
+  SendMsg.byte(0) = 0x02;SendMsg.byte(1) = 0x10;SendMsg.byte(2) = 0x02;SendMsg.byte(3) = 0x55;
+  SendMsg.byte(4) = 0x55;SendMsg.byte(5) = 0x55;SendMsg.byte(6) = 0x55;SendMsg.byte(7) = 0x55;
+  do
+  {
+    output(SendMsg);
+    if(testWaitForMessage(revID,10))
+    {
+      testGetWaitEventMsgData(msg);
+      if(msg.byte(1) == 0x50 && msg.byte(2) == 0x02)
+      {
+        Response = 1;break;
+      }
+    }
+    i++;
+  }while( Response == 0 && i<200);
+  if(i >= 200)
+    testStepFail("","测试次数达到最大前，未收到正响应");
+  if(Response == 1)
+    testStepPass("","能够正常进入编程会话");
+  
+  testWaitForTimeout(2000);
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  
+  Deinit();
+}
+testcase Case_BT_Manager_08()/*默认会话发送1101复位响应后断电*/
+{
+  diagRequest ABS_ESP.hardReset_Reset req11;
+  
+  MainInit();
+  DiagSetPrimitiveByte(req11,1,0x01); 
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 1) //有效
+  {
+    @AUTO::APP_Valid = 1;
+    MainTest_f();
+    Check_AppValid();
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+  }
+  
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  _diagSendMsg(phyID,req11);
+  _get_FC(req11,phyID,"",-1);
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  Resp_1002 = -1;
+  enterProg(phyID,0,Resp_1002);
+  testWaitForTimeout(2000);
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  Deinit();
+}
+testcase Case_BT_Manager_09()/*扩展会话发送编程请求后断电*/
+{
+  MainInit();
+  /*判断当前是否APP有效*/
+  if(Check_AppValid() == 1) //有效
+  {
+    @AUTO::APP_Valid = 1;
+    MainTest_f();
+    Check_AppValid();
+    _K15_OFF();
+    testWaitForTimeout(2000);
+    _K15_ON();
+    testWaitForTimeout(2000);
+  }
+  Resp_1003 = -1;
+  enterExtend(phyID,0,Resp_1003);
+  Resp_1002 = -1;
+  enterProg(phyID,0,Resp_1002);
+  _K15_OFF();
+  testWaitForTimeout(2000);
+  _K15_ON();
+  testWaitForTimeout(2000);
+  enterProg(phyID,0,Resp_1002);
+  testWaitForTimeout(2000);
+  Resp_1001 = -1;
+  enterDefault(phyID,0,Resp_1001);
+  Deinit();
+}

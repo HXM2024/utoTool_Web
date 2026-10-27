@@ -1,0 +1,340 @@
+ /*@!Encoding:936*/
+includes
+{
+  
+}
+
+variables
+{
+  msTimer out,out1;
+  const long kBUFFER_SIZE = 100;
+  byte gReceiverCallbackBuffer[kBUFFER_SIZE];
+  char IDN[6]="*IDN?";
+  char SYST[14]="SYSTem:REMote";
+  char CLS[5]="*CLS";
+  char VOLTage[19]="VOLTage:RANGe high";  
+  char RST[5]="*RST";
+  char VOLT[20]="VOLT:LEV ";
+  char CURR[20]="CURR:LEV ";
+  char OUTPUT[8]="OUTPUT ";
+  char buffercp[100];
+  char buffercp15[100];
+  char VOLTcp30[100];
+  char CURRcp30[100];
+  char VOLTcp15[100];
+  char CURRcp15[100];
+  long aport;
+  int sendtype;
+   
+}
+on busOff 
+{
+  resetCan();
+  resetCanEx(this.can);
+}
+on start
+{
+  InitSerialPort(sysvar::Prog_power::K30Port);
+  InitSerialPort(sysvar::Prog_power::K15Port);
+}
+InitSerialPort(sysvarInt *port)
+{ 
+  // close serial port (port may have changed, former port shall not remain open)
+  Rs232Close(sysGetVariableInt(port));
+
+  // open the serial port (comes up with Windows defaults)
+  if(Rs232Open(sysGetVariableInt(port))==1)
+    writeLineEx(0,1, "port %d 成功打开.", sysGetVariableInt(port));    
+  else
+    writeLineEx(0,3,"port %d 打开失败.", sysGetVariableInt(port));       
+
+  // configure the serial port
+  // - just take the panel content
+  if(Rs232Configure(sysGetVariableInt(port),9600,8,1,0)==1)
+    writeLineEx(0,1, " port %d 成功初始化.", sysGetVariableInt(port));    
+  else
+    writeLineEx(0,3," port %d 初始化失败.", sysGetVariableInt(port));    
+  // port, handshake, xonLim, xoffLim, xonChar, xoffChar, writeTimeout
+  // without last timeout parameter: use default timeout
+  // for transmission of small amounts of data one may not need to use handshake ! 
+  // e.g. 33 for RTS/CTS as second parameter for large volumes of data, 0 for small volumes
+  if(Rs232SetHandshake(sysGetVariableInt(port), 0, 0, 0, 0, 0))
+    writeLineEx(0,1, "Handshake parameters for serial port %d successfully configured.", sysGetVariableInt(port));    
+  else
+    writeLineEx(0,3,"An error occurred during the serial port %d configuration of handshake parameters.", sysGetVariableInt(port));
+
+  // set buffer for reception (otherwise callback would not work)
+  if(Rs232Receive(sysGetVariableInt(port), gReceiverCallbackBuffer, kBUFFER_SIZE))
+    writeLineEx(0,1, "Receiver buffer for serial port %d successfully set.", sysGetVariableInt(port));    
+  else
+    writeLineEx(0,3,"An error occurred during setting the receiver buffer for serial port %d.", sysGetVariableInt(port));
+  
+  setTimer(out,10);setTimer(out1,10);sendtype=0;aport=sysGetVariableInt(port); 
+}
+on sysvar sysvar::Prog_power::Power_Switch
+{
+  @sysvar::Prog_power::K30 = 0;
+  @sysvar::Prog_power::K15 = 0;
+  InitSerialPort(sysvar::Prog_power::K30Port);
+  InitSerialPort(sysvar::Prog_power::K15Port);
+}
+on sysvar sysvar::Prog_power::K15Port
+{ //@sysvar::Prog_power::port=@this;
+  InitSerialPort(this);
+}
+on sysvar sysvar::Prog_power::K30Port
+{ 
+  //@sysvar::Prog_power::port=@this;
+  InitSerialPort(this);
+}
+on sysvar Prog_power::K30
+{ 
+  //@sysvar::Prog_power::port=@sysvar::Prog_power::K30Port;
+  snprintf(buffercp,elCount(buffercp),"%s%d",OUTPUT,@this);
+  snprintf(VOLTcp30,elCount(VOLTcp30),"%s%f",VOLT,@sysvar::Prog_power::K30Volt);
+  snprintf(CURRcp30,elCount(CURRcp30),"%s%f",CURR,@sysvar::Prog_power::K30Curr);
+  setTimer(out,1);sendtype=1;
+}
+on sysvar Prog_power::K15
+{
+  //@sysvar::Prog_power::port=@sysvar::Prog_power::K15Port;
+  snprintf(buffercp15,elCount(buffercp15),"%s%d",OUTPUT,@this);
+  snprintf(VOLTcp15,elCount(VOLTcp15),"%s%f",VOLT,@sysvar::Prog_power::K15Volt);
+  snprintf(CURRcp15,elCount(CURRcp15),"%s%f",CURR,@sysvar::Prog_power::K15Curr);
+  setTimer(out1,1);sendtype=1;
+}
+ON sysvar sysvar::Prog_power::K30Volt
+{ 
+  snprintf(VOLTcp30,elCount(VOLTcp30),"%s%f",VOLT,@sysvar::Prog_power::K30Volt);
+  SendData(sysvar::Prog_power::K30Port,VOLTcp30);
+}
+ON sysvar sysvar::Prog_power::K15Volt
+{ 
+  snprintf(VOLTcp15,elCount(VOLTcp15),"%s%f",VOLT,@sysvar::Prog_power::K15Volt);
+  SendData(sysvar::Prog_power::K15Port,VOLTcp15);
+}
+ON sysvar sysvar::Prog_power::K30Curr
+{ 
+  snprintf(CURRcp30,elCount(CURRcp30),"%s%f",CURR,@sysvar::Prog_power::K30Curr);
+  SendData(sysvar::Prog_power::K30Port,CURRcp30);
+}
+ON sysvar sysvar::Prog_power::K15Curr
+{ 
+  snprintf(CURRcp15,elCount(CURRcp15),"%s%f",CURR,@sysvar::Prog_power::K15Curr);
+  SendData(sysvar::Prog_power::K15Port,CURRcp15);
+}
+on sysvar sysvar::Prog_power::K30send
+{ 
+  IF(@THIS)
+   {long aDLC;
+    int i;
+    byte buffer[kBUFFER_SIZE];
+
+    sysgetVariableData(sysvar::Prog_power::SendData,buffer, aDLC);
+
+    buffer[aDLC]=0X0A;
+    if(0==Rs232Send(sysGetVariableInt(sysvar::Prog_power::K30Port), buffer, aDLC+1))
+    {
+      writeEx(0,3,"port %d 发送数据失败.", sysGetVariableInt(sysvar::Prog_power::K30Port));
+      return;
+    } else {/*writeEx(-3,0,"port %d 发送数据.");*/}
+   }  
+}
+on sysvar sysvar::Prog_power::K15send
+{ 
+  IF(@THIS)
+   {long aDLC;
+    int i;
+    byte buffer[kBUFFER_SIZE];
+
+    sysgetVariableData(sysvar::Prog_power::SendData,buffer, aDLC);
+
+    buffer[aDLC]=0X0A;
+    if(0==Rs232Send(sysGetVariableInt(sysvar::Prog_power::K30Port), buffer, aDLC+1))
+    {
+      writeEx(0,3,"port %d 发送数据失败.", sysGetVariableInt(sysvar::Prog_power::K15Port));
+      return;
+    } else {/*writeEx(-3,0,"port %d 发送数据.");*/}
+   }  
+}
+ SendData(sysvarInt *port,char str[])
+{ 
+  long aDLC;
+  int i;
+  byte buffer[kBUFFER_SIZE];
+  for(i=0;i<kBUFFER_SIZE;i++)
+     {buffer[i]=0;}
+  
+  aDLC=strlen(str);
+  for (i=0;i<aDLC;i++)
+	  buffer[i]=(byte)str[i];	
+ 
+  buffer[aDLC]=0X0A;
+  if( aDLC<=0 )
+    return;
+  if(@sysvar::Prog_power::Power_Switch == 1)
+    sysSetVariableData(sysvar::Prog_power::SendData,buffer,elCount(buffer));
+  if(0==Rs232Send(sysGetVariableInt(port), buffer, aDLC+1))
+    return;
+    /*writeEx(0,3,"port %d 发送数据失败.", sysGetVariableInt(port));
+  else 
+    writeEx(-3,0,"port %d 发送数据.", sysGetVariableInt(port));*/
+}
+SendData1(sysvarInt *port,char str[])
+{ 
+  long aDLC;
+  int i;
+  byte buffer[kBUFFER_SIZE];
+  for(i=0;i<kBUFFER_SIZE;i++)
+     {buffer[i]=0;}
+  
+  aDLC=strlen(str);
+  for (i=0;i<aDLC;i++)
+	  buffer[i]=(byte)str[i];	
+ 
+  buffer[aDLC]=0X0A;
+  if( aDLC<=0 )
+    return;
+
+  if(0==Rs232Send(sysGetVariableInt(port), buffer, aDLC+1))
+    return;
+   /* writeEx(0,3,"port %d 发送数据失败.", sysGetVariableInt(port));
+  else
+    writeEx(-3,0,"port %d 发送数据.", sysGetVariableInt(port));*/
+}
+
+on timer out 
+{ int ii;
+  setTimer(out,50);
+  if(@sysvar::Prog_power::Power_Switch == 1)
+  {  
+    if(sendtype==0)
+    { 
+      switch(ii)
+        {
+          case 0:SendData(sysvar::Prog_power::K30Port,IDN); ii++;break;
+          case 1:SendData(sysvar::Prog_power::K30Port,SYST);ii++;break;
+          case 2:SendData(sysvar::Prog_power::K30Port,CLS);ii++;break;
+          case 3:SendData(sysvar::Prog_power::K30Port,RST);ii++;break;
+          case 4:SendData(sysvar::Prog_power::K30Port,VOLTage);ii++;break;
+          default:cancelTimer(out);ii=0;break;
+        }
+     }
+    else 
+    { 
+      switch(ii)
+        {
+          case 0:SendData(sysvar::Prog_power::K30Port,VOLTcp30);ii++;break;
+          case 1:SendData(sysvar::Prog_power::K30Port,CURRcp30);ii++;break;
+          case 2:SendData(sysvar::Prog_power::K30Port,buffercp);ii++;break;
+
+          default:cancelTimer(out);ii=0;break;
+        }
+    }
+  }
+  else
+  {
+    if(sendtype==0)
+    { 
+      switch(ii)
+        {
+          case 0:SendData(sysvar::Prog_power::K30Port,IDN); ii++;break;
+          case 1:SendData(sysvar::Prog_power::K30Port,SYST);ii++;break;
+          case 2:SendData(sysvar::Prog_power::K30Port,CLS);ii++;break;
+          case 3:SendData(sysvar::Prog_power::K30Port,RST);ii++;break;
+          default:cancelTimer(out);ii=0;break;
+        }
+    }
+    else
+    { 
+      switch(ii)
+        {
+          case 0:SendData(sysvar::Prog_power::K30Port,VOLTcp30);ii++;break;
+          case 1:SendData(sysvar::Prog_power::K30Port,CURRcp30);ii++;break;
+          case 2:SendData(sysvar::Prog_power::K30Port,buffercp);ii++;break;
+          default:cancelTimer(out);ii=0;break;
+        }
+    }
+  }
+}
+on timer out1 
+{
+  int ii;
+  setTimer(out1,50);
+  if(@sysvar::Prog_power::Power_Switch == 1)
+  {
+    if(sendtype==0)
+    {
+      switch(ii)
+        {
+          case 0:SendData1(sysvar::Prog_power::K15Port,IDN); ii++;break;
+          case 1:SendData1(sysvar::Prog_power::K15Port,SYST);ii++;break;
+          case 2:SendData1(sysvar::Prog_power::K15Port,CLS);ii++;break;
+          case 3:SendData1(sysvar::Prog_power::K15Port,RST);ii++;break;
+          case 4:SendData1(sysvar::Prog_power::K15Port,VOLTage);ii++;break;
+          default:cancelTimer(out1);ii=0;break;
+        }
+    }
+    else
+    { 
+      switch(ii)
+        {
+          case 0:SendData1(sysvar::Prog_power::K15Port,VOLTcp15); ii++;break;
+          case 1:SendData1(sysvar::Prog_power::K15Port,CURRcp15);ii++;break;
+          case 2:SendData1(sysvar::Prog_power::K15Port,buffercp15);ii++;break;
+
+          default:cancelTimer(out1);ii=0;break;
+        }
+    }
+  }
+  else
+  {
+    if(sendtype==0)
+     { 
+      switch(ii)
+         {
+          case 0:SendData1(sysvar::Prog_power::K15Port,IDN); ii++;break;
+          case 1:SendData1(sysvar::Prog_power::K15Port,SYST);ii++;break;
+          case 2:SendData1(sysvar::Prog_power::K15Port,CLS);ii++;break;
+          case 3:SendData1(sysvar::Prog_power::K15Port,RST);ii++;break;
+          default:cancelTimer(out1);ii=0;break;
+        }
+      }
+      else 
+      { 
+        switch(ii)
+        {
+          case 0:SendData1(sysvar::Prog_power::K15Port,VOLTcp15); ii++;break;
+          case 1:SendData1(sysvar::Prog_power::K15Port,CURRcp15);ii++;break;
+          case 2:SendData1(sysvar::Prog_power::K15Port,buffercp15);ii++;break;
+
+          default:cancelTimer(out1);ii=0;break;
+        }
+      }
+  }
+}
+
+//RS232OnReceive( dword port, byte buffer[], dword number )
+//{
+//  //writeex(-3,0,"Receive");
+//  if(@sysvar::Prog_power::Power_Switch == 1)
+//    sysSetVariableData(sysvar::Prog_power::SendData,buffer,elCount(buffer));
+//}
+//RS232OnSend( dword port, byte buffer[], dword number )
+//{ char sttr[100];
+//  int i;
+//  for(i=0;i<100;i++)
+//    sttr[i]=0;
+//  for(i=0;i<elcount(buffer);i++)
+//  {
+//    if(buffer[i]!=0xA)
+//   sttr[i]=buffer[i];
+//    
+//  }
+//  writeex(-3,0,"%s",sttr);
+//}
+//on sysvar Prog_power::ClearDate
+//{ 
+//  byte data[1];
+//  sysSetVariableData(sysvar::Prog_power::SendData,data,0);
+//}

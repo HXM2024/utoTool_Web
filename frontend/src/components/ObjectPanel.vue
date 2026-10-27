@@ -141,6 +141,15 @@
         size="small"
         class="panel-search"
       />
+      <!-- 有刷模式：新增自定义 CCP 变量（结构体可在此按地址+长度拆分后逐条录入） -->
+      <el-button
+        v-if="store.canMotorMode === 'brushed'"
+        size="small"
+        class="panel-add-btn"
+        @click="openCcpNewDialog"
+      >
+        + 新增变量
+      </el-button>
       <div class="panel-scroll">
         <el-tree
           ref="a2lTreeRef"
@@ -259,50 +268,73 @@
       </template>
     </el-dialog>
 
-    <!-- 有刷模式：CCP 系统变量（类型 / 精度 / 偏移）指定（双击对象浏览器变量） -->
+    <!-- 有刷模式：CCP 系统变量全属性编辑（双击对象浏览器变量 / 工具栏「新增变量」） -->
     <el-dialog
       v-model="ccpTypeVisible"
-      :title="ccpTypeTarget ? `CCP 系统变量：${ccpTypeTarget}` : 'CCP 系统变量'"
-      width="440px"
+      :title="ccpEditIsNew ? '新增 CCP 系统变量' : `CCP 系统变量：${ccpTypeTarget}`"
+      width="520px"
       append-to-body
     >
       <div class="ccp-type-body">
         <div class="ccp-type-tip">
-          该变量在生成脚本中会发布为 sysvar::NsCcp::{{ ccpTypeTarget }}，请指定其类型与换算系数
+          该变量在生成脚本中会发布为 sysvar::NsCcp::{{ ccpNameValue || '<变量名>' }}；
+          结构体请用地址 + 长度手工拆分出各成员。
         </div>
-        <el-radio-group v-model="ccpTypeValue">
-          <el-radio-button label="int">int</el-radio-button>
-          <el-radio-button label="float">float</el-radio-button>
-          <el-radio-button label="int64">int64</el-radio-button>
-        </el-radio-group>
-        <div class="ccp-scale-row">
-          <span class="ccp-scale-label">精度</span>
-          <el-input-number
-            v-model="ccpPrecValue"
-            :step="0.01"
-            :controls="false"
-            size="small"
-            class="ccp-scale-input"
-          />
-          <span class="ccp-scale-label">偏移</span>
-          <el-input-number
-            v-model="ccpOffsetValue"
-            :step="0.01"
-            :controls="false"
-            size="small"
-            class="ccp-scale-input"
-          />
-        </div>
+        <el-form label-width="72px" size="small" class="ccp-edit-form">
+          <el-form-item label="变量名">
+            <el-input v-model="ccpNameValue" placeholder="符号名（生成 sysvar::NsCcp:: &lt;此名&gt;）" />
+          </el-form-item>
+          <el-form-item label="地址">
+            <el-input v-model="ccpAddrValue" placeholder="如 0x700034ae" />
+          </el-form-item>
+          <el-form-item label="长度">
+            <el-input-number
+              v-model="ccpSizeValue"
+              :min="1"
+              :max="CCP_MAX_SIZE"
+              :controls="false"
+              class="ccp-scale-input"
+            />
+            <span class="ccp-scale-label">字节（1–{{ CCP_MAX_SIZE }}）</span>
+          </el-form-item>
+          <el-form-item label="类型">
+            <el-radio-group v-model="ccpTypeValue">
+              <el-radio-button label="int">int</el-radio-button>
+              <el-radio-button label="float">float</el-radio-button>
+              <el-radio-button label="int64">int64</el-radio-button>
+            </el-radio-group>
+          </el-form-item>
+          <el-form-item label="换算">
+            <span class="ccp-scale-label">精度</span>
+            <el-input-number
+              v-model="ccpPrecValue"
+              :step="0.01"
+              :controls="false"
+              size="small"
+              class="ccp-scale-input"
+            />
+            <span class="ccp-scale-label">偏移</span>
+            <el-input-number
+              v-model="ccpOffsetValue"
+              :step="0.01"
+              :controls="false"
+              size="small"
+              class="ccp-scale-input"
+            />
+          </el-form-item>
+        </el-form>
         <div class="ccp-type-tip">
-          发布物理值 = 原始值 × 精度 + 偏移（默认 1 / 0）；精度或偏移带小数时类型自动用 float
+          发布物理值 = 原始值 × 精度 + 偏移（默认 1 / 0）；精度或偏移带小数时类型自动用 float。
+          地址 / 长度会覆盖 .mapxml 原值（配置优先），重新上传 .mapxml 不会冲掉这里的手工修正。
         </div>
-        <div v-if="ccpTypeDefault" class="ccp-type-tip">
-          未指定类型时按字节长度推断为 {{ ccpTypeDefault }}
+        <div v-if="ccpEditIsCustom" class="ccp-type-tip">
+          这是手工新增 / 拆分的变量，删除后即从对象浏览器移除。
         </div>
       </div>
       <template #footer>
         <el-button @click="ccpTypeVisible = false">取消</el-button>
-        <el-button @click="onCcpScaleClear">恢复默认</el-button>
+        <el-button v-if="ccpEditIsCustom" type="danger" plain @click="onCcpEditDelete">删除变量</el-button>
+        <el-button v-else @click="onCcpScaleClear">恢复默认</el-button>
         <el-button type="primary" @click="onCcpTypeConfirm">确定</el-button>
       </template>
     </el-dialog>
@@ -311,6 +343,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, type Ref } from 'vue'
+import { ElMessage } from 'element-plus'
 import { useModuleStore, DEFAULT_CCP_PRECISION, DEFAULT_CCP_OFFSET, type CcpVarType } from '@/stores/modules'
 import {
   Search,
@@ -906,6 +939,7 @@ const a2lTree = computed(() => {
           label: vv.name,
           type: 'a2l-measurement',
           name: vv.name,
+          addr: vv.type,
           size: vv.size,
           precision: vv.precision,
           offset: vv.offset,
@@ -928,6 +962,7 @@ const a2lTree = computed(() => {
           label: vv.name,
           type: 'a2l-characteristic',
           name: vv.name,
+          addr: vv.type,
           size: vv.size,
           precision: vv.precision,
           offset: vv.offset,
@@ -1017,9 +1052,18 @@ const filteredA2lTree = computed(() => {
 const ccpTypeVisible = ref(false)
 const ccpTypeTarget = ref('')
 const ccpTypeValue = ref<CcpVarType>('float')
-const ccpTypeDefault = ref<CcpVarType>('int')
 const ccpPrecValue = ref<number>(DEFAULT_CCP_PRECISION)
 const ccpOffsetValue = ref<number>(DEFAULT_CCP_OFFSET)
+// 新增 / 编辑弹窗的可编辑字段：变量名 / 地址 / 长度
+const ccpNameValue = ref('')
+const ccpAddrValue = ref('')
+const ccpSizeValue = ref<number>(2)
+const ccpEditIsNew = ref(false)
+const ccpEditIsCustom = ref(false)
+// 单个 CCP 符号的最大字节数：与后端 ns_ccp_capl.CCP_MAX_SYMBOL_SIZE 保持一致。
+// 超过此长度的符号后端会静默过滤（不进 vsysvar / 不进 gCcpTab），故这里就拦住。
+// 结构体需按成员拆成多条，每条长度 ≤ 此值。
+const CCP_MAX_SIZE = 4
 
 /** 按字节长度推断类型（与后端 ns_ccp_capl.ccp_var_type 保持一致） */
 function inferCcpType(size?: number): CcpVarType {
@@ -1038,34 +1082,97 @@ function resolveCcpScale(v: { name?: string; precision?: number; offset?: number
   }
 }
 
-/** 双击对象浏览器变量：指定 CCP 类型 + 精度/偏移（仅有刷模式的测量变量/标定参数节点） */
+/** 双击对象浏览器变量：编辑 CCP 全属性（仅有刷模式的测量变量/标定参数节点） */
 function onA2lNodeDblClick(data: any) {
   if (store.canMotorMode !== 'brushed') return
   if (!data || (data.type !== 'a2l-measurement' && data.type !== 'a2l-characteristic')) return
   const name = String(data.name || '').trim()
   if (!name) return
+  ccpEditIsNew.value = false
   ccpTypeTarget.value = name
-  ccpTypeDefault.value = inferCcpType(Number(data.size) || undefined)
-  ccpTypeValue.value = store.ccpVarTypes[name] || ccpTypeDefault.value
+  ccpNameValue.value = name
+  // 地址取覆盖表优先（用户改过的），否则 .mapxml 原值
+  const override = store.ccpVarOverrides[name]
+  ccpAddrValue.value = override?.addr ?? String(data.addr ?? '').trim()
+  ccpSizeValue.value = Number(override?.size ?? data.size) || 2
+  ccpTypeValue.value = store.ccpVarTypes[name] || inferCcpType(ccpSizeValue.value)
   const { precision, offset } = resolveCcpScale(data)
   ccpPrecValue.value = precision
   ccpOffsetValue.value = offset
+  ccpEditIsCustom.value = store.ccpCustomVars.some((c) => c.name === name)
+  ccpTypeVisible.value = true
+}
+
+/** 工具栏「新增变量」：空白表单，用于录入结构体拆分出的成员 */
+function openCcpNewDialog() {
+  if (store.canMotorMode !== 'brushed') return
+  ccpEditIsNew.value = true
+  ccpEditIsCustom.value = true
+  ccpTypeTarget.value = ''
+  ccpNameValue.value = ''
+  ccpAddrValue.value = ''
+  ccpSizeValue.value = 2
+  ccpTypeValue.value = 'int'
+  ccpPrecValue.value = DEFAULT_CCP_PRECISION
+  ccpOffsetValue.value = DEFAULT_CCP_OFFSET
   ccpTypeVisible.value = true
 }
 
 function onCcpTypeConfirm() {
-  store.setCcpVarType(ccpTypeTarget.value, ccpTypeValue.value)
-  store.setCcpVarScale(ccpTypeTarget.value, {
+  const name = String(ccpNameValue.value || '').trim()
+  const addr = String(ccpAddrValue.value || '').trim()
+  const size = Number(ccpSizeValue.value) || 0
+  if (!name) {
+    ElMessage.warning('请填写变量名')
+    return
+  }
+  if (!addr || size <= 0) {
+    ElMessage.warning('请填写地址与长度（字节）')
+    return
+  }
+  if (size > CCP_MAX_SIZE) {
+    ElMessage.warning(`单个变量长度不能超过 ${CCP_MAX_SIZE} 字节（后端采集限制）；结构体请按成员拆成多条`)
+    return
+  }
+  // 自定义变量（新增 / 拆分）走独立登记；.mapxml 符号只登记「覆盖属性」
+  if (ccpEditIsCustom.value) {
+    store.upsertCcpCustomVar({ name, type: addr, size, kind: 'measurement' })
+    store.setCcpVarOverride(name, { addr, size })
+  } else {
+    // 改名：先移除旧覆盖，避免残留旧名的地址
+    const oldName = ccpTypeTarget.value
+    if (oldName && oldName !== name) {
+      store.removeCcpVarOverride(oldName)
+      store.setCcpVarType(oldName, '')
+      store.setCcpVarScale(oldName, {})
+    }
+    store.setCcpVarOverride(name, { addr, size })
+  }
+  store.setCcpVarType(name, ccpTypeValue.value)
+  store.setCcpVarScale(name, {
     precision: ccpPrecValue.value,
     offset: ccpOffsetValue.value,
   })
   ccpTypeVisible.value = false
 }
 
-/** 恢复默认：类型按字节长度推断，精度/偏移回到 1 / 0 */
+/** 删除自定义变量（.mapxml 符号不可删，只能「恢复默认」） */
+function onCcpEditDelete() {
+  const name = String(ccpNameValue.value || '').trim()
+  if (!name) return
+  store.removeCcpCustomVar(name)
+  store.removeCcpVarOverride(name)
+  store.setCcpVarType(name, '')
+  store.setCcpVarScale(name, {})
+  ccpTypeVisible.value = false
+}
+
+/** 恢复默认：清除覆盖（地址/长度回退 .mapxml），精度/偏移回到 1 / 0 */
 function onCcpScaleClear() {
-  store.setCcpVarType(ccpTypeTarget.value, '')
-  store.setCcpVarScale(ccpTypeTarget.value, {})
+  const name = ccpTypeTarget.value
+  store.setCcpVarType(name, '')
+  store.setCcpVarScale(name, {})
+  store.removeCcpVarOverride(name)
   ccpTypeVisible.value = false
 }
 
@@ -1443,6 +1550,21 @@ function getNodeIcon(type: string) {
 .ccp-scale-input {
   flex: 1;
   min-width: 0;
+}
+
+/* 有刷模式：新增变量按钮（紧贴检索框下方） */
+.panel-add-btn {
+  width: 100%;
+  margin-bottom: 6px;
+}
+
+/* CCP 编辑弹窗：表单项紧凑排布（地址/长度/类型/换算同屏可见） */
+.ccp-edit-form :deep(.el-form-item) {
+  margin-bottom: 10px;
+}
+
+.ccp-edit-form :deep(.el-form-item__content) {
+  gap: 6px;
 }
 
 .testparam-help-row {

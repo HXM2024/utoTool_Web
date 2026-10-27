@@ -529,6 +529,7 @@ import {
   seqPortKey,
   resolveFrameNumbers,
   freezeFrameNumbers,
+  assignNewEdgeNumber,
   frameEdgeKey,
   frameLanes,
   frameSequenceId,
@@ -3226,8 +3227,11 @@ function createEdge(frameId: string, fromKey: string, toKey: string): boolean {
   }
   lastEdgeReject = null
   const eid = genId('edge')
-  // 新连线默认不写编号：由起始卡片顺序排号 / 继承左侧连线编号
+  // 编号只在「新建连线这一刻」按左/右分区规则算出并固化到 pair；
+  // 之后 resolveFrameNumbers 只对没有 pair 的存量连线兜底解析，绝不改写已有编号。
+  const nums = assignNewEdgeNumber(f, fromKey, toKey)
   const edge: FrameEdge = { id: eid, from: fromKey, to: toKey }
+  if (nums && nums.length) edge.pair = nums
   f.edges[eid] = edge
   emitChange()
   scheduleRecompute()
@@ -3259,7 +3263,10 @@ function batchConnect(frameId: string, key: string, side: 'in' | 'out'): boolean
       continue
     }
     const eid = genId('edge')
-    f.edges[eid] = { id: eid, from: fromKey, to: toKey }
+    const ne: FrameEdge = { id: eid, from: fromKey, to: toKey }
+    const nums = assignNewEdgeNumber(f, fromKey, toKey)
+    if (nums && nums.length) ne.pair = nums
+    f.edges[eid] = ne
     ok++
   }
   if (!ok) {

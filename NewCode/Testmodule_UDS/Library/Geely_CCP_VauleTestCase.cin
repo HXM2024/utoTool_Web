@@ -1,0 +1,387 @@
+/*@!Encoding:936*/
+includes
+{
+  
+}
+
+variables
+{
+  
+}
+
+_Init_CCP()
+{
+  _Init_CCP_();
+  _Start("\\Geely_CCP\\");
+  testWaitForTimeout(200);
+}
+
+_End_CCP()
+{
+  stopLogging();
+  testWaitForTimeout(1000);
+}
+
+/*用于清除DTC无效记录,并发送相关诊断进行判断*/
+void _Clear_CCP()
+{
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(CCP_Time);
+  _Check_E103_ALL_0();
+  _Check_DTC_InNow_NotInNowAndHis(9,0xE30055,0xE30056);
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(200);
+  _WriteEx_and_Report("","初始化步骤完成");
+}
+void _Clear_CCP_Config()
+{
+  dword Temp_CCP[2];
+  Temp_CCP[0] = 0xE30055;
+  Temp_CCP[1] = 0xE30056;
+  _Clear_DTC(phyreq_ID);
+  testWaitForTimeout(500);
+  _Set_Ready(0);
+  testWaitForTimeout(500);
+  _Set_Ready(Struct_Ready.Ready_Active);
+  testWaitForTimeout(5000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,Temp_CCP);
+  Sendccp(0);
+  testWaitForTimeout(CCP_Time-5000);
+  _Check_E103_ALL_0();
+  _Check_DTC_Res_NowOrHis(9,9,1,Temp_CCP);
+  _Set_Ready(0);
+  testWaitForTimeout(1000);
+  _WriteEx_and_Report("","初始化步骤完成");
+}
+
+testcase CCP1_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(1);
+  _End_CCP();
+}
+testcase CCP1_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(1);
+  _End_CCP();
+}
+testcase CCP3_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(3);
+  _End_CCP();
+}
+testcase CCP3_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(3);
+  _End_CCP();
+}
+testcase CCP13_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(13);
+  _End_CCP();
+}
+testcase CCP13_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(13);
+  _End_CCP();
+}
+testcase CCP16_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(16);
+  _End_CCP();
+}
+testcase CCP16_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(16);
+  _End_CCP();
+}
+testcase CCP17_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(17);
+  _End_CCP();
+}
+testcase CCP17_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(17);
+  _End_CCP();
+}
+testcase CCP50_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(50);
+  _End_CCP();
+}
+testcase CCP50_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(50);
+  _End_CCP();
+}
+testcase CCP57_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(57);
+  _End_CCP();
+}
+testcase CCP57_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(57);
+  _End_CCP();
+}
+testcase CCP58_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(58);
+  _End_CCP();
+}
+testcase CCP58_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(58);
+  _End_CCP();
+}
+testcase CCP62_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(62);
+  _End_CCP();
+}
+testcase CCP62_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(62);
+  _End_CCP();
+}
+testcase CCP142_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(142);
+  _End_CCP();
+}
+testcase CCP142_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(142);
+  _End_CCP();
+}
+testcase CCP150_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(150);
+  _End_CCP();
+}
+testcase CCP150_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(150);
+  _End_CCP();
+}
+testcase CCP316_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(316);
+  _End_CCP();
+}
+testcase CCP316_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(316);
+  _End_CCP();
+}
+testcase CCP317_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(317);
+  _End_CCP();
+}
+testcase CCP317_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(317);
+  _End_CCP();
+}
+testcase CCP494_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(494);
+  _End_CCP();
+}
+testcase CCP494_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(494);
+  _End_CCP();
+}
+testcase CCP540_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(540);
+  _End_CCP();
+}
+testcase CCP540_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(540);
+  _End_CCP();
+}
+testcase CCP547_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(547);
+  _End_CCP();
+}
+testcase CCP547_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(547);
+  _End_CCP();
+}
+testcase CCP565_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(565);
+  _End_CCP();
+}
+testcase CCP565_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(565);
+  _End_CCP();
+}
+testcase CCP566_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(566);
+  _End_CCP();
+}
+testcase CCP566_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(566);
+  _End_CCP();
+}
+testcase CCP615_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(615);
+  _End_CCP();
+}
+testcase CCP615_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(615);
+  _End_CCP();
+}
+testcase CCP639_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(639);
+  _End_CCP();
+}
+testcase CCP639_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(639);
+  _End_CCP();
+}
+testcase CCP640_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(640);
+  _End_CCP();
+}
+testcase CCP640_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(640);
+  _End_CCP();
+}
+testcase CCP695_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(695);
+  _End_CCP();
+}
+testcase CCP695_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(695);
+  _End_CCP();
+}
+testcase CCP773_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(773);
+  _End_CCP();
+}
+testcase CCP773_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(773);
+  _End_CCP();
+}
+testcase CCP784_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(784);
+  _End_CCP();
+}
+testcase CCP784_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(784);
+  _End_CCP();
+}
+testcase CCP798_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(798);
+  _End_CCP();
+}
+testcase CCP798_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(798);
+  _End_CCP();
+}
+
+testcase CCP829_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(829);
+  _End_CCP();
+}
+testcase CCP829_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(829);
+  _End_CCP();
+}
+
+testcase CCP831_ValidList()
+{
+  _Init_CCP_();
+  CCP_ValidList(831);
+  _End_CCP();
+}
+testcase CCP831_InValidList()
+{
+  _Init_CCP_();
+  CCP_InValidList(831);
+  _End_CCP();
+}

@@ -142,12 +142,16 @@ export const useModuleStore = defineStore('modules', () => {
   // ==================== 对象浏览器共享数据 ====================
   // 三个来源，按优先级取一路展示（高优先级有内容就整体替换，不合并、不续写）：
   //   独立上传文件 > CFG 解析 > 配置自带
-  // A2L 变量：独立上传的 .a2l
-  const objUploadA2lVars = ref<A2lVars>({ measurements: [], characteristics: [] })
   // A2L 变量：CFG 的 a2l_path 解析
   const objCfgA2lVars = ref<A2lVars>({ measurements: [], characteristics: [] })
   // A2L 变量：配置自带（加载配置时恢复的 CCP 符号表）
   const objConfigA2lVars = ref<A2lVars>({ measurements: [], characteristics: [] })
+  // 上传的 A2L / mapxml 按电机模式分别缓存：切换模式时各自保留，
+  // 切回来立即恢复原来的符号列表（原先切换会无条件清空，且无处恢复 —— 切回后对象浏览器永久空白）。
+  const objUploadA2lVarsByMode = ref<Record<CanMotorMode, A2lVars>>({
+    brushless: { measurements: [], characteristics: [] },
+    brushed: { measurements: [], characteristics: [] },
+  })
   // CFG 目录解析的 DBC 数据（{ columns, rows } 格式）
   const objCfgDbcRaw = ref<any>(null)
   // 上传的 DBC / Excel DBC 数据（{ columns, rows } 格式）
@@ -167,6 +171,23 @@ export const useModuleStore = defineStore('modules', () => {
   const ccpVarTypes = ref<Record<string, CcpVarType>>({})
   // 有刷模式：CCP 符号的精度/偏移 {符号名: {precision, offset}}，未指定时用默认 1 / 0
   const ccpVarScales = ref<Record<string, CcpVarScale>>({})
+  // 有刷模式：CCP 符号的地址/长度覆盖 {符号名: {addr, size}}。
+  // .mapxml 允许手工修正地址长度，结构体拆分出的子变量也登记在这里；配置优先于 .mapxml。
+  const ccpVarOverrides = ref<Record<string, { addr?: string; size?: number }>>({})
+  // 有刷模式：手工新增 / 结构体拆分出的自定义符号（.mapxml 里没有的）。
+  // 与 .mapxml 符号同库展示、同样可拖拽引用、同样参与生成。
+  const ccpCustomVars = ref<Array<A2lVar & { kind?: 'measurement' | 'characteristic' }>>([])
+  /** 当前电机模式对应的「独立上传」槽位：读写都落在本模式，切换模式不互相覆盖
+   *
+   *  无刷 = 上传的 .a2l，有刷 = 上传的 .mapxml。两模式各存一份，
+   *  来回切换时对象浏览器的符号列表原样恢复，不需要重新上传。
+   */
+  const objUploadA2lVars = computed<A2lVars>({
+    get: () => objUploadA2lVarsByMode.value[canMotorMode.value],
+    set: (next: A2lVars) => {
+      objUploadA2lVarsByMode.value[canMotorMode.value] = next
+    },
+  })
   // 继电器模块 / CAN 通道：Function、CAN、三包 模块各自一份（侧边栏配置，生成时随请求下发）
   const relayConfigs = ref<Record<RelayConfigModule, RelayConfig>>({
     function: { ...DEFAULT_RELAY_CONFIG },
@@ -174,11 +195,34 @@ export const useModuleStore = defineStore('modules', () => {
     sanbao: { ...DEFAULT_RELAY_CONFIG },
   })
 
-  /** 对象浏览器 A2L 变量：独立上传 > CFG 解析 > 配置自带，取最高优先级的一路（不合并） */
+  /** 对象浏览器 A2L 变量：独立上传 > CFG 解析 > 配置自带，取最高优先级的一路（不合并）
+   *
+   *  之后再叠加「CCP 覆盖」：地址/长度按 ccpVarOverrides 覆盖 .mapxml 原值，
+   *  自定义变量（ccpCustomVars）追加进来。这样对象浏览器显示、拖拽、生成三处
+   *  看到的是同一份数据，不会出现「改了地址但生成还用旧值」的错位。 */
   const objA2lVars = computed<A2lVars>(() => {
-    if (hasA2lVars(objUploadA2lVars.value)) return objUploadA2lVars.value
-    if (hasA2lVars(objCfgA2lVars.value)) return objCfgA2lVars.value
-    return objConfigA2lVars.value
+    // CFG 的 a2l_path 只在无刷模式解析（有刷改用 .mapxml），有刷模式不吃这一路，
+    // 否则「切到有刷但还没传 mapxml」会看到无刷的 A2L 变量（地址是数据类型串，生成必错）
+    const cfgVars = canMotorMode.value === 'brushless' ? objCfgA2lVars.value : null
+    const base = hasA2lVars(objUploadA2lVars.value)
+      ? objUploadA2lVars.value
+      : hasA2lVars(cfgVars)
+        ? (cfgVars as A2lVars)
+        : objConfigA2lVars.value
+    // 覆盖表 / 自定义变量属于有刷模式（mapxml 符号），无刷模式不叠加，避免串到 A2L 变量树上
+    const isBrushed = canMotorMode.value === 'brushed'
+    const ov = isBrushed ? ccpVarOverrides.value : {}
+    const custom = isBrushed ? ccpCustomVars.value : []
+    if (!Object.keys(ov).length && !custom.length) return base
+    const applyOv = (v: A2lVar): A2lVar => {
+      const o = ov[v.name]
+      if (!o) return v
+      return { ...v, type: o.addr ?? v.type, size: o.size ?? v.size }
+    }
+    return {
+      measurements: [...base.measurements.map(applyOv), ...custom.filter((c) => c.kind !== 'characteristic')],
+      characteristics: [...base.characteristics.map(applyOv), ...custom.filter((c) => c.kind === 'characteristic')],
+    }
   })
 
   /** 对象浏览器 DBC 数据：独立上传 > CFG 解析，取最高优先级的一路（不合并）
@@ -310,20 +354,16 @@ function normalizeA2lVars(list: any): A2lVar[] {
     objA2lQualifier.value = q || ''
   }
 
-  /** 切换 CAN 模块电机类型：两种模式解析的变量互斥，切换时清空对象浏览器；
-   *  有刷模式不使用 A2L 限定符，一并清空 */
+  /** 切换 CAN 模块电机类型
+   *
+   *  两种模式的 A2L / mapxml 各自保留（objUploadA2lVars 按模式分槽），切换只清模式专属设置，
+   *  不动任何符号数据 —— 原先无条件清空三路 A2L 且无处恢复，表现为「切走再切回，对象浏览器永久空白」。
+   */
   function setCanMotorMode(mode: CanMotorMode) {
     if (mode === canMotorMode.value) return
     canMotorMode.value = mode
-    // 三路 A2L 都清空（有刷模式用不上下拉的无刷 A2L 变量）
-    objUploadA2lVars.value = { measurements: [], characteristics: [] }
-    objCfgA2lVars.value = { measurements: [], characteristics: [] }
-    objConfigA2lVars.value = { measurements: [], characteristics: [] }
+    // 无刷不使用 A2L 限定符（有刷侧不适用，保留原值以便切回）
     if (mode === 'brushed') objA2lQualifier.value = ''
-    else {
-      ccpVarTypes.value = {}
-      ccpVarScales.value = {}
-    }
   }
 
   /** 设置某符号的 CCP 系统变量类型（空值清除，回退按字节长度推断） */
@@ -366,6 +406,92 @@ function normalizeA2lVars(list: any): A2lVar[] {
       if (norm) next[key] = norm
     }
     ccpVarScales.value = next
+  }
+
+  /** 设置某符号的 CCP 覆盖属性（地址 / 长度）。
+   *
+   *  用途：.mapxml 解析出的地址/长度允许手工修正，结构体拆分出的子变量也走这里登记。
+   *  覆盖表优先于 .mapxml 自带值 —— 重新上传 .mapxml 不会冲掉手工修正（配置优先）。
+   *  两项都给空串/0 时删除条目（回退 .mapxml 原值）。
+   */
+  function setCcpVarOverride(name: string, patch: { addr?: string; size?: number }) {
+    const key = String(name || '').trim()
+    if (!key) return
+    const cur = ccpVarOverrides.value[key] || {}
+    const addr = patch.addr !== undefined ? String(patch.addr || '').trim() : cur.addr
+    const size = patch.size !== undefined ? Number(patch.size) || 0 : cur.size
+    const next = { ...ccpVarOverrides.value }
+    if (!addr && !size) delete next[key]
+    else next[key] = { addr: addr || undefined, size: size || undefined }
+    ccpVarOverrides.value = next
+  }
+
+  /** 整表设置 CCP 覆盖属性（加载配置时回填） */
+  function setCcpVarOverrides(table: Record<string, { addr?: string; size?: number }> | null | undefined) {
+    const next: Record<string, { addr?: string; size?: number }> = {}
+    for (const [rawKey, rawVal] of Object.entries(table || {})) {
+      const key = String(rawKey || '').trim()
+      if (!key || !rawVal || typeof rawVal !== 'object') continue
+      const addr = String(rawVal.addr || '').trim()
+      const size = Number(rawVal.size) || 0
+      if (addr || size) next[key] = { addr: addr || undefined, size: size || undefined }
+    }
+    ccpVarOverrides.value = next
+  }
+
+  /** 设置某符号的原始名称映射（自定义变量用于生成时的符号名） */
+  function removeCcpVarOverride(name: string) {
+    const key = String(name || '').trim()
+    if (!key) return
+    const next = { ...ccpVarOverrides.value }
+    delete next[key]
+    ccpVarOverrides.value = next
+  }
+
+  /** 新增 / 更新一个自定义 CCP 符号（同名则覆盖）。地址与长度必须都有，否则忽略。 */
+  function upsertCcpCustomVar(v: A2lVar & { kind?: 'measurement' | 'characteristic' }) {
+    const name = String(v?.name || '').trim()
+    const addr = String(v?.type || '').trim()
+    const size = Number(v?.size) || 0
+    if (!name || !addr || size <= 0) return
+    const entry: A2lVar & { kind?: 'measurement' | 'characteristic' } = {
+      name,
+      type: addr,
+      size,
+      precision: v.precision,
+      offset: v.offset,
+      kind: v.kind === 'characteristic' ? 'characteristic' : 'measurement',
+    }
+    const next = ccpCustomVars.value.filter((x) => x.name !== name)
+    next.push(entry)
+    ccpCustomVars.value = next
+  }
+
+  /** 删除一个自定义 CCP 符号（.mapxml 符号不受影响，只能通过覆盖表改属性） */
+  function removeCcpCustomVar(name: string) {
+    const key = String(name || '').trim()
+    if (!key) return
+    ccpCustomVars.value = ccpCustomVars.value.filter((x) => x.name !== key)
+  }
+
+  /** 整表设置自定义符号（加载配置时回填） */
+  function setCcpCustomVars(list: Array<A2lVar & { kind?: 'measurement' | 'characteristic' }> | null | undefined) {
+    const next: Array<A2lVar & { kind?: 'measurement' | 'characteristic' }> = []
+    for (const v of list || []) {
+      const name = String(v?.name || '').trim()
+      const addr = String(v?.type || '').trim()
+      const size = Number(v?.size) || 0
+      if (!name || !addr || size <= 0) continue
+      next.push({
+        name,
+        type: addr,
+        size,
+        precision: v.precision,
+        offset: v.offset,
+        kind: v.kind === 'characteristic' ? 'characteristic' : 'measurement',
+      })
+    }
+    ccpCustomVars.value = next
   }
 
   /** 设置 Function / CAN / 三包 模块的继电器配置（部分更新，并落盘到后端） */
@@ -441,7 +567,19 @@ function normalizeA2lVars(list: any): A2lVar[] {
   function clearModuleUploads() {
     objUploadDbcRaw.value = null
     objUploadDbcEnvVars.value = []
-    objUploadA2lVars.value = { measurements: [], characteristics: [] }
+    clearUploadA2lVars()
+  }
+
+  /** 清空两种模式的「独立上传」A2L 槽位
+   *
+   *  上传路优先级最高，会在加载配置时遮住配置自带的 CCP 符号表，
+   *  所以加载配置 / 切模块时两种模式一起清（不只是当前模式）。
+   */
+  function clearUploadA2lVars() {
+    objUploadA2lVarsByMode.value = {
+      brushless: { measurements: [], characteristics: [] },
+      brushed: { measurements: [], characteristics: [] },
+    }
   }
 
   // ==================== 模块离开守卫（切换模块前询问是否保存） ====================
@@ -504,6 +642,8 @@ function normalizeA2lVars(list: any): A2lVar[] {
     canMotorMode,
     ccpVarTypes,
     ccpVarScales,
+    ccpVarOverrides,
+    ccpCustomVars,
     relayConfigs,
     objMergedDbcRaw,
     objHasDbc,
@@ -517,12 +657,19 @@ function normalizeA2lVars(list: any): A2lVar[] {
     setDtc,
     setCddDtc,
     setA2lVars,
+    clearUploadA2lVars,
     setA2lQualifier,
     setCanMotorMode,
     setCcpVarType,
     setCcpVarTypes,
     setCcpVarScale,
     setCcpVarScales,
+    setCcpVarOverride,
+    setCcpVarOverrides,
+    removeCcpVarOverride,
+    upsertCcpCustomVar,
+    removeCcpCustomVar,
+    setCcpCustomVars,
     setRelayConfig,
     loadRelayConfig,
     fetchConfigList,

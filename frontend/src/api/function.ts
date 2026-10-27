@@ -21,6 +21,8 @@ export const generateFunction = (
   relayModule?: number,
   canChannel?: number,
   envVarNames?: string[],
+  oem?: string,
+  securityAlgo?: string,
 ) => {
   return client.post('/function/generate', {
     config_name: configName,
@@ -28,6 +30,9 @@ export const generateFunction = (
     relay_module: relayModule,
     can_channel: canChannel,
     env_var_names: envVarNames,
+    // 主机厂 / 安全算法：取侧边栏当前选择，避免生成时读到配置里的旧值
+    oem,
+    security_algo: securityAlgo,
   })
 }
 

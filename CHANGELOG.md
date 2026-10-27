@@ -12,6 +12,875 @@
 
 ---
 
+## [1.0.37] - 2026-10-26
+
+**版本号**：`1.0.37`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.37.exe`（172,678,286 字节，SHA256 `ED2E2E85885AAE1F9F80FF2A3B8FE8BD5975A914983DE9F9D41D3483D77297A8`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.37",
+  "release_notes": "本版本更新：\n- CAN FD 报文默认置 BRS=1\n- CRC 算法统一为单一权威来源，并修复 CRC16_All / CRC16_Cutoff 循环变量\n- Creat CANoe 补全 Power.can 导入、测试模块总线限定 CAN1、主机厂随配置保存\n- 新增 SecurityAlgo 测试模块与面板 Unlock 按钮\n- Relay / Power_up 初始化改为定义处赋值，诊断 target 与 CDD qualifier 同源",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.37.exe"
+}
+```
+
+**发布状态**：已发布到共享盘（version 1.0.37）
+
+---
+
+### [1.0.37] - 2026-10-26
+
+**会话主题**：Creat CANoe 生成链路修复（CAN FD BRS、CRC 单一来源、Power.can、测试模块总线、SecurityAlgo Test Module、Relay 初始化、CDD qualifier 同源）
+
+**背景**：CAN FD 报文缺少 BRS 设置；`TESTDLL.cin` 的 CRC 算法与模板、JSON 三处副本不一致（`CRC16_All` / `CRC16_Cutoff` 循环变量写成 `index`）；`Power.can` 生成在 `Testmodule/Prog_power/` 目录，节点扫描只扫 `Nodes/` 导致未导入工程；主机厂卡片不随配置还原；Test Module 同时挂在 CAN1/CAN2；安全算法需要由面板按钮触发；`Relay.cin` 的 `channel` / `Relay` 依赖 `on preStart` 赋值不生效；安全算法 `target` 取值与 CDD qualifier 不同源。
+
+**变更内容**：
+
+1. **CAN FD 报文 BRS 置 1**：`dbc_excel_converter.build_dbc()` 对 FD 报文（`VFrameFormat` = 14/15）写入 `CANFD_BRS = 1`，仅 FD 报文生效，普通 CAN 报文不写该属性。
+2. **CRC 算法单一权威（方案 C）**：`backend/templates/crc_algorithms.py` 成为唯一来源，`TESTDLL` 与 `CanTestFunction` 由 `build_legacy_section()` / `build_check_section()` 派生拼装，并加入自动生成标记与 `assert_crc_consistent()` 一致性断言；`CRC16_All`、`CRC16_Cutoff` 的循环变量 `index` 统一改为 `byte_index`（`.py` 与 `configs/global/crc_algorithms.json` 同步）。
+3. **Power.can 导入**：`great_canoe_module` 的两条生成路径在 vsysvar 导入之后、`generate_nodes` 判断之外，按绝对路径 `Testmodule/Prog_power/Power.can` 导入 `Power` 节点（`add_power_node`），与节点 CAN 文件同等对待。
+4. **主机厂随配置保存（仅 Creat CANoe）**：`CreateCanoeView.vue` 保存时写入 `securityAlgo`，加载时回填；缺省时按新增的 `OEM_FIRST_ALGO` 表兜底，保证主机厂卡片与配置一致。Boot / UDS / 三包 的历史兼容后续处理。
+5. **测试模块总线限定 CAN1**：新增 `canoe_cfg_parser.restrict_node_buses(keep_bus="CAN1")`，通过 `SimulationSetup.Buses(i).Nodes(j).DetachBus(总线对象)` 解除多网络挂载（节点多网络在 CANoe 中表现为网关行为），两条生成路径接入，幂等。
+6. **SecurityAlgo 作为 CAPL Test Module**：新增 `build_security_algo_test_can()` / `generate_security_algo()`，生成 `Nodes/SecurityAlgo.can`（内含 17 套安全算法与 `MainTest`），复用 FrameTest 的 Test Module 分支；`_CAPL_TEST_MODULE_ENV` 泛化，`StartOnEnvVar = "<数据库>::EnvUnlockAlgo"`；DBC 新增环境变量 `EnvUnlockAlgo`；面板在车速输入框下方新增 `Unlock` 按钮并绑定该变量。未再合并进 `TESTDLL.cin`，EPSCheck 也不写关联语句。
+7. **Relay / Power_up 初始化改写**：删除 `POWER_UP_CAN` 中不生效的 `on preStart` 块；`channel_value` / `relay_value` 直接写入 `Relay.cin` 的 `const` 定义（`normalize_can_channel` + `relay_mode_value`）；`WhiteDTC` 改为声明时赋值 `dword WhiteDTC[N] = {...};`。
+8. **诊断 target 与 CDD qualifier 同源**：新增 `cfg_parser.resolve_cdd_qualifier(oem, cdd_path)`（主机厂标签优先，否则 CDD 文件基名），`_task_add_cdd_dll` 与 `config_generator` 共用，去掉凭空兜底的 `ABS_ESP`。
+
+**相关文件**：
+
+- `backend/core/canoe_config/dbc_excel_converter.py`
+- `backend/templates/crc_algorithms.py`
+- `configs/global/crc_algorithms.json`
+- `backend/templates/canoe_capl.py`
+- `backend/templates/capl.py`
+- `backend/templates/relay.py`
+- `backend/core/canoe_config/config_generator.py`
+- `backend/utils/canoe_cfg_parser.py`
+- `backend/utils/cfg_parser.py`
+- `backend/core/great_canoe_module.py`
+- `backend/api/great_canoe_routes.py`
+- `frontend/src/api/can.ts`
+- `frontend/src/views/CreateCanoeView.vue`
+
+**验证**：
+
+- `restrict_node_buses` 在 CANoe 实测：9 个节点 `attached=['CAN1']`，重复执行结果不变。
+- CRC 一致性断言 `assert_crc_consistent()` 通过，派生拼装后的函数集合与基线一致。
+- `SecurityAlgo.can`（17 套算法）与 `const channel/Relay` 尚未在 CANoe 实际编译验证。
+
+**遗留·已知**：
+
+- CDD 在节点导入之后才导入，生成 `SecurityAlgo.can` 时无法读回 `DiagDescriptions(1).Name`；若 CANoe 实际 `Name` 与 `EcuIdentifier` 不一致，需在 CDD 导入后读回并改写 `SecurityAlgo.can`。
+- 需在 CANoe 中确认：`SecurityAlgo` 出现在 Test Setup、`StartOnEnvVar` 生效、点击 `Unlock` 能触发解锁。
+- 打包版 `%APPDATA%\Excel2Case\configs\global\crc_algorithms.json` 需与新版本同步。
+
+---
+
+## [1.0.36] - 2026-10-26
+
+**版本号**：`1.0.36`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.36.exe`（172,673,330 字节，SHA256 `9DB3CCB44115145814BA5885096D221352230AAA6F163E7E95B47D55BA7F6853`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.36",
+  "release_notes": "本版本更新：\n- 主机厂与安全算法拆分为双滚轮选择，并完成 G1–G4 场景覆盖修复\n- 将 Excel2Case(New).py 的 UDS/BOOT Excel 转换逻辑完整移植到后端模块",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.36.exe"
+}
+```
+
+**发布状态**：已发布到共享盘（version 1.0.36）
+
+---
+
+### [1.0.36] - 2026-10-26
+
+**会话主题**：主机厂与安全算法拆分为双滚轮选择，并完成 G1–G4 场景覆盖修复
+
+**背景**：原侧边栏用单个滚轮承载 17 个「主机厂 + 安全算法」组合，选择一张卡会同时改写主机厂与算法。按需求改为两个相互独立的滚轮：主机厂与算法不再强制关联，可选择其它主机厂的算法，仅用背景色提示算法归属。拆分后审查发现 4 处端到端缺口并完成修复。
+
+**变更内容**：
+
+1. **双滚轮 UI**：`OemSelector` 拆为「主机厂」「安全算法」两个滚轮；算法滚轮展示全部 17 个算法，属于当前主机厂的算法填充背景色，其它保持白色；两个滚轮各自滚动/拖拽/点击，不再互相强制切换；长安 `ChangAn` 与 `CCAG` 通过标识区分。
+2. **G1 Function 生成使用实时选择**：`/api/function/generate` 新增 `oem` / `security_algo` 入参，生成时按「请求 > 配置 > 原值」覆盖本次使用的选择，避免改完算法未保存就生成时仍调用旧算法；仅影响本次生成，不回写配置。
+3. **G2 Function 的主机厂参与生成**：后端将本次生效的主机厂同步到 `func_steps.serviceObject`，默认算法回退与主机厂判断不再只依赖 Excel 解析出的旧值。
+4. **G3 Boot / UDS / 三包 持久化安全算法**：三个模块的保存、新建、自动保存与加载均带上 `securityAlgo`；UDS 后端 GET/PUT 同步透传该字段。
+5. **G4 默认算法表统一**：新增 `frontend/src/utils/securityAlgo.ts` 作为前端唯一来源，镜像后端 `capl.OEM_DEFAULT_ALGO`；`function_processor` / `excel_processor` 删除各自重复表，统一引用模板常量。默认值仅在配置缺少 `securityAlgo` 的加载场景兜底，不影响用户主动跨厂选择。统一后奇瑞默认 `Chery_CMAC`、吉利3.0 默认 `Geely30_CBC`。
+6. **兼容性**：历史仅 `oem` 的配置在 Function / CAN / Create CANoe / Boot / UDS / 三包 加载时按统一默认表补齐算法；`Function` 新建配置默认写入当前 `oem` / `securityAlgo`。
+
+**相关文件**：
+
+- `frontend/src/components/OemSelector.vue`
+- `frontend/src/components/GlobalSidebar.vue`
+- `frontend/src/utils/securityAlgo.ts`（新增）
+- `frontend/src/api/function.ts`
+- `frontend/src/views/FunctionView.vue`
+- `frontend/src/views/CANView.vue`
+- `frontend/src/views/CreateCanoeView.vue`
+- `frontend/src/views/BootView.vue`
+- `frontend/src/views/UDSView.vue`
+- `frontend/src/views/SanbaoView.vue`
+- `backend/api/function_routes.py`
+- `backend/api/uds_routes.py`
+- `backend/core/function_module.py`
+- `backend/processors/function_processor.py`
+- `backend/processors/excel_processor.py`
+- `backend/templates/capl.py`（默认算法表注释）
+- `tests/test_oem_default_algo.py`（新增）
+- `tests/test_function_generation_selection.py`（新增）
+- `tests/test_uds_config_passthrough.py`（新增）
+
+**验证**：
+
+- `node ./node_modules/vue-tsc/bin/vue-tsc.js --noEmit`：通过。
+- `python -m unittest discover -s tests -v`：**102 项全部通过**，含新增的前后端默认表一致性、Function 生成覆盖优先级/路由透传、UDS 字段透传测试。
+- 现有配置审计：Function 3/3、CAN 2/2 均完整保存 `oem` + `securityAlgo`；Create CANoe 15 个配置中 13 个仅 `oem`，由加载兜底覆盖；未发现 `oem` 与算法归属不匹配的配置。
+
+**说明**：Function 生成仍遵循「生成不自动保存」的既有行为，实时选择只用于本次生成；需要写回配置时请按“保存”。版本号已提升至 `1.0.36`。
+
+---
+
+### [1.0.36] - 2026-10-26
+
+**会话主题**：将 `NewCode/Excel2Case(New).py` 的 UDS/BOOT Excel 转换逻辑完整移植到后端模块
+
+**背景**：桌面版 `Excel2Case(New).py` 中的 `UDSExcelProcessor` / `BTExcelProcessor` 已迭代出 22/2E/FunDID/22_DIDs/EOL、31 特殊 NRC、1904 LocalTime、OEM/NRC22 配置等新逻辑，而后端处理器仍是旧版抽取结果，功能存在缺失。
+
+**变更内容**：
+
+1. **UDS 处理器完整移植**：`backend/processors/uds_processor.py` 全量同步 `UDSExcelProcessor`，覆盖 `Other / 服务 / 31H / 2E_H / 2E_DID / 22_DID / FunDID / 22_DIDs / DTC / 1904 / 1906 / NRC22Mapping / ChangAn / Geely / BYD / EOL流程` 全部处理分支。
+2. **BOOT 处理器完整移植**：`backend/processors/boot_processor.py` 全量同步 `BTExcelProcessor`，保留 31H、2E、22、多 DID 遍历等逻辑及 `Struct.can` 生成规则。
+3. **去 GUI 化适配**：移除 tkinter 依赖，`messagebox` 改为 `logger`；缺少必需工作表时统一抛 `RuntimeError`，由模块/API 返回错误；`_save_file` 改为非交互参数 `output_dir` / `generate_full_project`。
+4. **路径与模板适配**：`get_resource_path` 支持打包目录、处理器目录、项目根目录、`backend/resources` 多路径查找；新增 BOOT 模板资源 `#BT自动化测试工具#V1.0.17.zip`。
+5. **接口统一**：`BootModule.generate_output` 新增 `use_template`，`/api/boot/generate` 同步支持并返回 `template_extracted / template_dir / template_error`，与 UDS 模板模式对齐；统一导出 `UDSExcelProcessor`、`BTExcelProcessor`。
+6. **健壮性补充**：`process_Serve` 增加 `Var` 默认值，避免配置中无 0x31 服务时尾部引用未定义。
+
+**相关文件**：
+
+- `backend/processors/uds_processor.py`
+- `backend/processors/boot_processor.py`
+- `backend/core/boot_module.py`
+- `backend/api/boot_routes.py`
+- `backend/utils/uds_helpers.py`
+- `backend/processors/__init__.py`
+- `backend/__init__.py`
+- `backend/resources/#BT自动化测试工具#V1.0.17.zip`（新增模板资源）
+
+**验证**：
+
+- AST 比对：两个处理器相对源文件**无缺失/多余方法**，差异仅为 GUI→logger、路径适配、`_save_file` 非交互化与 `Var` 默认值。
+- 处理器层：UDS 夹具覆盖 31H、22_DID/FunDID/22_DIDs、2E_H/2E_DID、DTC、1904、1906、EOL；输出含 `DID_22_Traversal`、`DID_2E_Traversal`、`FunDID_`、`TestCase_EOL`、`ALL_DTC`；BOOT 正常生成 ini + `Struct.can`。
+- 模块层：`UDSModule.import_excel/generate_output`、`BootModule.import_excel/generate_output/use_template` 全部通过，模板目录结构正确。
+- API 层：`/api/uds/parse`、`/api/boot/parse` 均返回 HTTP 200 并回传 `struct`。
+- `NewCode` 目录未做任何修改。
+
+---
+
+## [1.0.35] - 2026-10-23
+
+**版本号**：`1.0.35`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.35.exe`（166,555,679 字节，SHA256 `8878BFE381B063FFEE4D5A142FDA72FF1DC32E592326DBC09E51BB473D39CA48`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.35",
+  "release_notes": "本版本更新：\n- 修复更新时卡住不启动安装程序（改为 VBS + WMI 检测，最长 8 秒必定拉起安装程序）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.35.exe"
+}
+```
+
+**发布状态**：已发布到共享盘（version 1.0.35）
+
+---
+
+### [1.0.35] - 2026-10-23
+
+**会话主题**：自更新启动安装器改为纯 VBS，去掉 tasklist 轮询
+
+**问题**：现场某台机器更新时黑窗一直关不掉。排查发现残留进程 `cmd.exe /c ...\Temp\#Excel2Case#Update\launch-installer.bat` 及其子进程 `find.exe /I "#Excel2Case#V1.0.00.exe"` 持续存活 37 分钟，父进程（主程序）早已退出。原因：批处理用 `tasklist | find` 轮询判断进程是否退出，该机器上 `find` 挂住不返回，循环走不到 60 次上限，于是黑窗永驻、安装器也永远不启动。
+
+**变更内容**（`frontend/electron/main.js` 的 `launchInstallerAfterExit`）：
+
+1. **不再生成批处理**，只生成一个 VBS 脚本，逻辑全部在 VBS 内完成。
+2. **去掉 `tasklist | find` 外部进程轮询**，改用 VBS 的 WMI 查询（`Win32_Process`）判断同名进程是否退出：固定等 3 秒给主进程退出时间，再做最多 10 次、每次 0.5 秒的检测（最多 5 秒），**无论是否检测成功，最坏 8 秒内一定启动安装程序**。WMI 不可用时（`Err.Number` 非 0）直接跳过检测进入启动。
+3. **VBS 以带 BOM 的 UTF-16LE 写入**，避免安装包路径含中文用户名时乱码；日志同样以 Unicode 写入，记事本打开中文正常。
+4. 保留 `wscript.exe //B`（无控制台、脚本出错不弹模态框）+ `detached` 启动方式，全程无黑窗；`//B` 也避免隐藏进程卡在错误对话框上。
+
+**验证**：
+- 按与代码一致的生成逻辑实测：常驻进程（`explorer.exe`）时日志 `10:11:47 开始等待主程序退出` → `10:11:56 启动安装程序`（约 9 秒，符合 3 秒固定 + 10×0.5 秒上限），随后安装程序被正常拉起，全程无窗口。
+- 日志文件为 UTF-16，中文正常显示。
+- `tsc --noEmit` 仅剩既有的 `http` 默认导出类型告警，本次改动无新增报错。
+
+**说明**：1.0.34 只是把旧批处理窗口隐藏，轮询逻辑仍是 `tasklist`；本版才真正去掉该依赖。已装 1.0.32～1.0.34 的机器需手动装一次本版，之后更新链路才用新逻辑。
+
+**遗留**：`frontend/package.json` 版本 1.0.34 → 1.0.35；`version.json` 的 `release_notes` / `setup_name` / SHA256 打包后回填。
+
+---
+
+## [1.0.34] - 2026-10-23
+
+**版本号**：`1.0.34`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.34.exe`（166,555,534 字节，SHA256 `1C26BF8DA942820FA6F6C54283FB101A89DD6BE108170D78A459F3C182D8E7A9`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.34",
+  "release_notes": "本版本更新：\n- 修复自更新时一直弹出命令行黑窗（改用 wscript 隐藏启动安装批处理）\n- 退出时结束后端进程树不再闪黑窗",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.34.exe"
+}
+```
+
+**发布状态**：已发布到共享盘（version 1.0.34）
+
+---
+
+### [1.0.34] - 2026-10-23
+
+**会话主题**：修复自更新时一直弹命令行黑窗
+
+**问题**：1.0.32 把自更新改成「批处理延时启动安装器」之后，现场反馈点更新会一直挂着一个命令行黑窗（标题栏显示 `find /I "#Excel2Case#V1.0.00.exe"`）。原因是 `spawn('cmd.exe', [...], { detached: true })` 在 Windows 上会为子进程新建独立控制台窗口，`windowsHide: true` 在 detached 下不生效，批处理等待程序退出的整个过程（最长 30 秒）都会挂着黑窗。
+
+**变更内容**（`frontend/electron/main.js`）：
+
+1. **改用 wscript + VBS 隐藏启动批处理**：新增 `launch-installer.vbs`，内容为 `WScript.Shell.Run """<bat>""", 0, False`（0 = 隐藏窗口），并由 `wscript.exe //B` 启动该 VBS。wscript 属 GUI 子系统程序，本身没有控制台，因此全程不出现黑窗；`//B` 让脚本出错时不弹模态错误框，避免隐藏进程卡在对话框上。
+2. **补建临时目录**：批处理写入前增加 `mkdirSync(dirname(batPath), { recursive: true })`，避免 `%TEMP%\#Excel2Case#Update` 不存在时写文件失败。
+3. **退出时结束后端进程树不再闪窗**：`killBackendProcessTree` 里的 `taskkill` 调用增加 `{ windowsHide: true }`。
+
+**验证**：
+- 用与代码完全一致的 VBS 生成逻辑实测：批处理隐藏执行，日志 `start 9:25:36 / end 9:25:38`，`ping` 延时轮询生效，wscript 执行完自动退出，全程无黑窗。
+- `tsc --noEmit` 仅剩既有的 `http` 默认导出类型告警，本次改动无新增报错。
+
+**遗留**：`frontend/package.json` 版本 1.0.33 → 1.0.34；`version.json` 的 `release_notes` / `setup_name` / SHA256 打包后回填。
+
+---
+
+## [1.0.33] - 2026-10-23
+
+**版本号**：`1.0.33`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.33.exe`（166,555,091 字节，SHA256 `589BD7086604F68FC7E5847091C898DA7F91A63DEF118353BD8BE4B0052D640E`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.33",
+  "release_notes": "本版本更新：\n- 修复工况连线编号被程序改写（改为仅新建连线时按规则生成，已有编号不再变动）\n- 函数库浏览器展示内置 Relay 函数（RelayON / RelayOFF / KL15 / KL30）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.33.exe"
+}
+```
+
+**发布状态**：已发布到共享盘（version 1.0.33）
+
+---
+
+### [1.0.33] - 2026-10-23
+
+**会话主题**：工况连线编号仅新建时生成 + 函数库浏览器展示内置 Relay 函数
+
+**问题**（本会话处理的 2 个独立问题）：
+
+1. **已保存配置的连线编号被程序篡改**：上一版把「主序列左/右接线口分区编号」规则直接写进渲染期解析 `resolveFrameNumbers`，对**所有未存编号的历史连线**重新算号，算出的结果与创建时不同；再经拖拽前的 `freezeFrameNumbers` 固化写回 `pair`，旧编号就被覆盖了。
+2. **函数库浏览器看不到 Relay 函数**：`RelayON` / `RelayOFF` 及 `_out*` 辅助函数由 `relay.py` 在生成 TestFunction.cin 时注入，不属于用户自定义函数，因此既不进函数库源码，也不在浏览器展示，用户无法直接拖拽调用。
+
+**变更内容**：
+
+1. **连线编号只在新建时生成，存量编号不再被改写**（`frontend/src/utils/functionGraph.ts`、`frontend/src/components/graph/CaseFrameCanvas.vue`、`backend/services/function_graph.py`）
+   - `resolveFrameNumbers`（前端）与 `_resolve_frame_numbers`（后端）完整回退为旧算法（起始卡出线全局递增 + 主序列右侧按左侧编号顺序配对），存量未编号连线的显示结果与改动前完全一致。
+   - 新增导出函数 `assignNewEdgeNumber(frame, fromKey, toKey)`：按新规则算号——连主序列左侧接口在左区填最小空位、右侧接口在右区填最小空位（两侧独立）、卡片互连继承源卡片入线编号、两端都无编号时取所在侧已用最大编号。
+   - `createEdge` / `batchConnect` 在**创建连线那一刻**调用 `assignNewEdgeNumber`，把结果固化进 `edge.pair`；此后解析、拖拽、保存都不会再重算这条线的编号。
+
+2. **函数库浏览器展示内置 Relay 函数**（`backend/templates/relay.py`、`backend/core/sanbao_module.py`、`frontend/src/components/FunctionLibrary.vue`）
+   - `relay.py` 新增 `relay_functions_source()`：复用 `_RELAY_FUNCTIONS_TEMPLATE`，把 `@CH@` / `@MODE@` / `@STATE@` / `@MSG@` 占位符替换为可读变量名（`can_channel` / `relay_mode` / `relay_state` / `relay_msg`），避免浏览器里暴露占位符；同时新增 `RELAY_FUNCTION_CATEGORY = 'Control'` 与 `RELAY_FUNCTION_DESCRIPTIONS`（每个函数的中文说明）。
+   - `sanbao_module.py` 新增 `_relay_common_functions()`（带缓存），解析上述源码后带 `builtin=True` 标记并入 `_builtin_common_functions()`；`POST /api/function/parse-functions` 因此多返回 6 个继电器函数（`RelayON`、`RelayOFF`、`_outIGon`、`_outIGoff`、`_outKL30ON`、`_outKL30OFF`），分类 `Control`，可正常拖拽到工况或步骤。
+   - 内置函数标签的 tooltip 改为通用描述「内置函数（生成时自动注入，如继电器控制、数组工具等）」。
+   - 只改展示层：继电器函数仍由 relay.py 注入 TestFunction.cin，不写入 `function_library`，不会被「保存」回写到用户函数库；冲突检测表 `builtin_function_signatures()` 也不受影响（用户自定义同名同参函数仍会正常提示冲突）。
+
+**验证**：
+- `npx vue-tsc --noEmit` 通过；`python -m py_compile` 通过。
+- 编号回归：LDW 真实分组 18 个工况、70 条用例数与改动前一致；场景实测——存量无编号连线按旧算法显示、新建左/右侧连线各填最小空位、手填 1/3 后新线填 2、存量编号不被改写。
+- 接口实测：`POST /api/function/parse-functions` 返回内置函数 29 个（原 23 + 继电器 6 个），`RelayON` / `RelayOFF` 均在列且 `builtin=true`、分类 `Control`。
+
+**遗留**：`frontend/package.json` 版本 1.0.32 → 1.0.33；`version.json` 的 `release_notes` / `setup_name` / SHA256 打包后回填。
+
+---
+
+## [1.0.32] - 2026-10-22
+
+**版本号**：`1.0.32`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.32.exe`（166,128,082 字节，SHA256 `59FD4FDB93E920DF8732FF8784D493DB7D3A00AB1E0BBDA1EB94D12492ED7E87`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.32",
+  "release_notes": "本版本更新：\n- 修复自更新卡在「检测到进程未关闭」反复弹窗（改为退出后再启动安装器）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.32.exe"
+}
+```
+
+
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.31 之后的 3 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.32）
+
+---
+
+### [1.0.32] - 2026-10-23
+
+**会话主题**：DBC 生成路径收敛为单一数据源 + 11Reset CRC/Counter 用例 + 网络故障组合用例解除有刷限制 + Counter 首帧判定 + CCP 多变量常驻监控
+
+**问题**（本会话处理的 6 个独立问题）：
+
+1. **同一套信号级用例维护了两份实现**：Web 版走 `_process_dbc_from_dict()`（前端嵌套字典），旧 Excel 导入路径走 `_create_message/_process_signal/_generate_*_signal_testcases`（DataFrame 行式表）。两份逻辑已经分叉——例如 `HighBusLoad` 的 `generated_content += template` 缩进错误（未勾选也会重复追加）、`max` 取值来源不同，且新增用例时必须两处都改。
+2. **CRC / Counter 缺少 11 重启用例工况**：只有 `_Attribute` 有 `_11Reset_` 版本，CRC / Counter 没有，复位后的校验覆盖缺失。
+3. **电压 × 网络故障组合用例被错误限制为「仅无刷」**：`DiagVoltage_Fall/Rise_NetworkFault` 在 `motor_mode == 'brushed'` 时既不生成也不注册 XML，实际它与电机模式无关。
+4. **计数器连续性检查无法表达「首帧期望值」**：`CheckCounter` 只能要求首帧从 0 开始，无法表达「恢复后首帧必须续接故障前最后一次实际值」或「完全不校验首帧」。
+5. **高负载 / BusOff 的 Counter 用例沿用 2 参重载**：无法传入帧数与首帧判定，且 `for` 循环 100 次调用 2 参版本完全没有帧数控制。
+6. **有刷模式常驻监控只覆盖一个变量**：`ccpMonitorStart()` 只按 `batteryVoltage` 单个符号启动 DAQ；`AssistVoltage_*` 里的 `SignalWaitCheck(torqueLimit, …)` 读的 sysvar 不在 DAQ 列表里，永远不会刷新。
+
+**变更内容**：
+
+1. **DBC 生成路径收敛为单一数据源**（`backend/processors/excel_processor.py`）
+   - `process_dbc_canmatrix()` 只认前端传入的 `ui_data['DBC Canmatrix']`；DataFrame（旧 Excel 行式表）兜底分支与临时适配器 `_dbc_sheet_to_dict()` 一并删除。
+   - 删除重复实现约 800 行：`_create_message` / `_add_Rxmessage_testcases` / `_add_Txmessage_testcases` / `_process_signal` / `_extract_signal_info` / `_add_dlc_lose_fault_record` / `_generate_Txsignal_testcases` / `_generate_Rxsignal_testcases`，及其独占依赖链 `_generate_*_from_param`、`_handle_*_signal`、`_add_factor|counter|crc|bool|Signalinvalid|Valueinvalid_testcase`，另清理早已无人引用的 `_build_message_row` / `_build_signal_row`。
+   - 修复误删：`_resolve_sig_test_values` / `_parse_invalid_value` / `_parse_test_value_list` / `_is_invalid_value` 被新路径共用，已按原实现恢复。
+   - 前端 Excel 导入本就会解析成嵌套字典回填，并由 `buildAutoSigTestParams()` 按 `data_type`（CRC / Counter / BLN 布尔 / ENU 列表 / UNM·SNM 遍历）与无效值自动生成测试参数卡片，派生能力未丢失。
+
+2. **CRC / Counter 新增 11Reset 工况**（`backend/templates/capl.py`、`backend/processors/excel_processor.py`）
+   - 新增 `testcase_11ResetTxMsg_CRC`（`{Msg}_ {Id}_11Reset_CRC`）与 `testcase_11ResetTxMsg_Counter`（`…_11Reset_Counter`）：复位流程 `Init → Ready_Off → 10 03 → unlock → 11 01 → testWaitForMessage(waittime)` 后，分别做 CRC 校验（首帧 + 100 帧循环）与计数器连续性检查。
+   - 两者默认生成、无需勾选，`waittime` 复用「其他配置 - 11ResetTime」（未填按 3000）。
+
+3. **网络故障组合用例解除有刷限制**（`backend/processors/excel_processor.py`）
+   - `_network_fault_cases` 去掉 `'' if motor_mode == 'brushed'` 条件；`DiagVoltage_Fall/Rise_NetworkFault` 的 XML 注册同步去掉 `if motor_mode != 'brushed'`，有刷 / 无刷均生成。
+
+4. **`CheckCounter` 增加首帧判定接口**（`backend/templates/can_test_function.py`、`backend/templates/capl.py`）
+   - 新增重载 `CheckCounter(MsgId, Sig, Max, Frames, CycleMs, FirstStart)` 与 `CheckCounter(Sig, Max, Frames, CycleMs, FirstStart)`；旧 5 参 / 2 参重载保留，其它调用不受影响。
+   - 首帧语义：`0` = 必须从 0 开始；`-1` = 不校验首帧、只校验第 2 帧起的 `+1` 递增；其它值 = 必须等于该期望值。
+   - 上电 `xxx_Counter` 固定传 `0`；高负载 `xxx_HighBusLoadCounter` 固定传 `-1`（该工况不判断初始值）；BusOff `xxx_BusOff_Counter` 在 `BusOff_ON()` 后实测 `lastCnt = getSignal(...)+1` 并传入；11Reset 由界面开关决定 `0` / `-1`。
+
+5. **《开关配置》新增 Counter 首帧滑块**（`frontend/src/views/CANView.vue`、`backend/core/can_module.py`）
+   - `CompoundSliderDef` 增加 `selects`（滑块两态映射字符串枚举），卡片布局改 3 列、标签与滑块同行。
+   - 新增 `11Reset-counter` / `Busoff-counter` 两个「0 / last」滑块（`counter11ResetStart` / `counterBusOffStart`）；高负载不提供开关（固定不校验首帧），上电固定 0。
+   - 默认值经 `COUNTER_START_DEFAULTS` 在 `onMounted`、配置回填、`resetData` 三处补齐；`can_module.get_other_key_map()` 登记三个 key。
+
+6. **CCP 常驻监控支持多变量**（`backend/templates/ns_ccp_capl.py`、`backend/processors/excel_processor.py`）
+   - 新增 `ccpMonitorStartByNames(char names[][64], long n)`：按符号名二维数组一次性把多个变量加入同一个 DAQ 列表并启动；找不到的符号跳过并告警，全部无效时返回 -1。
+   - 全局状态由 `char gCcpMonitorName[64]` 改为 `char gCcpMonitorNames[N][64]` + `gCcpMonitorCount`；`ccpMonitorStart()` 退化为转发封装（名单为空直接返回）。
+   - `build_ccp_module(monitor_name=...)` 支持逗号分隔的多个符号名；渲染时按 `max(count,1)` 保证空名单也是合法数组。
+   - 生成期收集 `batteryVoltage` 与 `torqueLimit` 两个符号（均须在可用采集表内、去重），解决 `AssistVoltage_*` 中 `SignalWaitCheck(torqueLimit,…)` 读不到刷新值的问题。
+
+**相关文件**：
+- `backend/processors/excel_processor.py`
+- `backend/templates/capl.py`
+- `backend/templates/can_test_function.py`
+- `backend/templates/ns_ccp_capl.py`
+- `backend/core/can_module.py`
+- `frontend/src/views/CANView.vue`
+
+**验证**：
+- `py_compile` 全通过；`vue-tsc --noEmit` 通过（VUE_EXIT=0）。
+- 模板渲染：11Reset CRC/Counter、高负载、BusOff 均无占位符残留；高负载渲染为 `CheckCounter(...,-1)`，BusOff 渲染为 `CheckCounter(...,lastCnt)`。
+- DBC 路径：前端提交嵌套字典时只走 `_process_dbc_from_dict()`；无数据时输出告警并跳过，不再回退行式表。
+- CCP：`monitor_name='Ubat,TrqLim'` 渲染出 `gCcpMonitorNames[2][64] = {"Ubat", "TrqLim"};`；空名单渲染出 `[1][64] = {""}` 且 `count = 0`，无 `gCcpMonitorName` 单数残留。
+- 后端重启后 `GET /api/health` 返回 `HTTP 200`。
+
+**遗留 / 已知**：
+- 若某一方向（全部 Rx 或全部 Tx）报文全部取消勾选，仍会生成 `word RxMessageId[0]={};` 这样的 0 长度数组，CANoe 编译会报错，暂未加空数组占位保护。
+- 旧版 Excel 行式表路径已删除，若仍有「导出 Excel 再导入生成」的历史用法，需改为在前端导入后由前端提交。
+
+---
+
+### [1.0.32] - 2026-10-22
+
+**会话主题**：有刷模式电压类用例补齐 CCP 常驻监控（含电源/点火循环后的会话失效处理）
+
+**问题**：
+
+1. **有刷模式电压类用例读不到刷新值**：`CommunicationVoltage_*`、`AssistVoltage_*`、`DiagVoltage_*` 等用例全程通过 `getxcp(Var)` / `SignalWaitCheck(Var,...)` 读 `sysvar::NsCcp::<符号名>` 的回馈电压。有刷模式下 `getxcp()` 只剩 `return @var`（`xcpConnect/xcpActivate/xcpSetPollingCycle` 已被 `_strip_xcp_calls` 整行删除），而该 sysvar 只有 CCP DAQ 在跑、`ccpPublishDaq()` 解帧后才会刷新 —— 用例从来没启动过采集，读数恒为旧值/0。
+2. **调压循环与等待判据全部失配**：`Battery_Voltage_GreaterSet/lessSet` 的 `while(1)` 逼近因读不到新值永远不收敛；`SignalWaitCheck`（`testWaitForSignalMatch`）判 fail；`testWaitForSysVar` 直接超时。
+3. **电源 / 点火循环后本地 CCP 状态未失效**：`K30oFF()`、`OperationCycle()` 断电或复位后，ECU 侧会话与 DAQ 都已不存在，但本地 `gCcpDaqOn / gCcpDaqIdx / ccpConnected` 仍停在「已连接、正在采集」——重启监控会早退、`ccpEnsureConnected()` 不再发 CONNECT，后续读值依旧读旧值。
+
+**变更内容**：
+
+1. **`backend/templates/test_function.py`**：`Init()` 末尾、`K30oN()` 末尾、`OperationCycle()` 末尾加 `/*CCP_MONITOR_START*/`；`K30oFF()` 开头（K30 断电前）、`OperationCycle()` 开头（点火循环前）加 `/*CCP_MONITOR_INVALIDATE*/`。用占位符而非直接写函数名，因为该模板无刷模式也在用，而 `CCP_Read.cin` 只有有刷才生成。
+2. **`backend/templates/ns_ccp_capl.py`**：`build_ccp_module(symbols, monitor_name="")` 新增监控符号参数，生成 `char gCcpMonitorName[64] = "<符号>";`；新增 `ccpMonitorStart()`（按符号名启动 DAQ，已在监控同一符号则直接返回）、`ccpMonitorStop()`、`ccpMonitorInvalidate()`（只清 `gCcpDaqOn / gCcpDaqIdx / ccpConnected` 三个本地标志，不发报文 —— 断电后 ECU 不应答，走 `ccpDaqStop()` 会白等 300ms 超时）。
+3. **`backend/processors/excel_processor.py`**：
+   - `_strip_xcp_calls` 之前先把 `getxcp()` 里的 `testWaitForSysVar(var, xcpGetPollingCycle(var)*2)` 改写为 `testWaitForTimeout(20)`（有刷没有 XCP 轮询）；
+   - 生成期按 `batteryVoltage` 解析 CCP 符号名（必须能在可用采集表里找到，否则置空），有刷有效时把 `START / INVALIDATE` 占位符替换为实际调用；无刷或符号无效时两者一律清空，避免未定义符号编译报错；
+   - 用例末尾注入 `ccpMonitorStop()`，用 `_CASE_END_STOP_LOG_RE` 只命中「用例最后一条 `stopLogging();`」（通信电压类用例中途也会 `stopLogging()` 再继续调压，全局 replace 会把监控提前停掉）；
+   - `BusOffTest.can` 为独立编译模块且同样 include `TestFunction.cin`，同步补 `#include "CCP_Read.cin"`。
+
+**验证**：
+
+- `build_ccp_module(...)` 输出断言：`gCcpMonitorName` / `ccpMonitorStart` / `ccpMonitorStop` / `ccpMonitorInvalidate` 及三个清零语句均存在；`monitor_name=""` 时生成空串。
+- 模板占位符统计 `START=3 / INVALIDATE=2`；有刷分支替换后正好注入 3 处启动 + 2 处失效、无残留占位符；无刷分支替换后模板中不含任何 `ccpMonitor` 标识符。
+- `python -m py_compile` 三个文件通过。实机需重新生成有刷产物后在 CANoe 编译，观察 Trace 中 DAQ 持续上传、`getxcp` 读数随调压收敛。
+
+**相关文件**：`backend/templates/test_function.py`、`backend/templates/ns_ccp_capl.py`、`backend/processors/excel_processor.py`
+
+---
+
+### [1.0.32] - 2026-10-22
+
+**会话主题**：修复自更新卡在「检测到进程未关闭」反复弹窗（改为退出后再启动安装器）
+
+**问题**：
+
+1. **自更新后安装器一直提示「程序正在运行，请先关闭」**：`startSelfUpdate` 下载完安装包后直接 `shell.openPath` 打开 NSIS 安装包，**本程序并未退出**。安装器按进程镜像名检测到 `#Excel2Case#V1.0.00.exe` 仍在运行（Electron 主进程 + PyInstaller 后端 exe 同名，共 2~3 个进程），故提示需先关闭程序。
+2. **用户点关闭后窗口反复弹出**：关闭主窗口只触发 `win.hide()` 最小化到托盘，进程不退；安装器再次检测仍判定「在运行」，于是反复弹同一个窗口，形成死循环。低内存机器上 Electron 渲染进程 + 后端 Python 进程退出更慢，更容易稳定复现。
+3. **托盘/菜单「退出」会把主进程自己杀掉**：`killBackendProcessTree` 内 `taskkill /T /F /IM "#Excel2Case#V1.0.00.exe"` 按镜像名杀，而后端 exe 与 Electron 主进程同名，导致主进程被强杀、quit 流程半途中断、收尾逻辑（含 `will-quit` 等待）执行不到，进程残留反而加重了上述检测误判。
+
+**变更内容**（`frontend/electron/main.js`）：
+
+1. **新增 `launchInstallerAfterExit()`**：不再直接打开安装包，改为在 `%TEMP%\#Excel2Case#Update\` 写一个临时批处理 `launch-installer.bat`，以 `detached` 方式脱离本进程启动；本进程随即 `app.quit()` 让位。批处理先按镜像名轮询等待本程序退出（最长约 30 秒），确认退出后才 `start "" "<安装包>"` 拉起安装器，从根上消除「安装器与本程序同时存在」。
+2. **`startSelfUpdate` 改走批处理启动**：`shell.openPath(dest)` → `launchInstallerAfterExit(dest)`；完成提示文案改为「点击确定后将自动关闭本程序并启动安装程序」。批处理写入失败时兜底退化为 `shell.openPath`，不中断更新。
+3. **移除 `killBackendProcessTree` 的 `/IM` 按名杀**：只保留按 PID 的 `taskkill /T /F /PID`，避免误杀同名的主进程；按 PID 树杀已能覆盖 PyInstaller onefile 的 bootloader + Python 子进程。
+4. **`win.on('close')` 更新时真正退出**：`isQuitting` 为 true 时不拦截关闭事件，让窗口真正关闭（原先无条件 `hide()` 到托盘）。
+
+**验证**：
+
+- 批处理两条分支均实测通过：目标进程不存在时立即启动安装器（不空等 30 秒）；进程存在时按秒轮询，达到 60 次上限后兜底启动。
+- 修正延时失效问题：`timeout /t 1` 在 `detached + stdio:'ignore'`（无控制台）下会报 `Input redirection is not supported` 并立即返回，等待形同虚设；改用 `ping -n 2 127.0.0.1 >nul`，实测每次延时约 1 秒生效。
+- `main.js` 通过 tsc 语法检查（无自身报错）；未改动后端、前端与打包配置。
+
+---
+
+## [1.0.31] - 2026-10-21
+
+**版本号**：`1.0.31`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.31.exe`（166,125,978 字节，SHA256 `9225DCB6AB94BB95FBF622C4E8EA2F16F3975A11BE99D9C5E9072FB8B796C96B`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.31",
+  "release_notes": "本版本更新：\n- 电压参数页块式布局重排 + 启用开关前移 + DBC 未勾选报文排除 + CAN/BusOff Test Module 收敛到 CAN1\n- CAN 配置页卡片可视化拖拽布局 + 对象映射表排序 + 有刷 CCP 用例收敛 + 生成产物保存/弹窗健壮性",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.31.exe"
+}
+```
+
+
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.30 之后的 2 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.31）
+
+---
+
+### [1.0.31] - 2026-10-21
+
+**会话主题**：电压参数页块式布局重排 + 启用开关前移 + DBC 未勾选报文排除 + CAN/BusOff Test Module 收敛到 CAN1
+
+**问题**（本会话处理的 4 个独立问题）：
+
+1. **通信电压参数页元素挤在一行**：欠压/过压、开始/停止通信时间混排，分组不直观；时间只能填上下限，无法表达「大于 / 小于」。
+2. **诊断 / 助力电压页布局不一致**：仍是「每组一行」的平铺结构，与通信电压页观感不统一；助力欠压/过压的启用开关混在行内，关闭后要滚回行首才能再打开。
+3. **三个电压的启用开关藏在页面里**：要禁用某组用例必须先进到对应页签才能取消。
+4. **DBC 表格未勾选的报文仍被生成**：`RxIdarray` / `TxIdarray` 无条件追加，未勾选报文照样进入 `RxMessageId` / `TxMessageId` / `RxMessageDATA`。
+5. **CAN / BusOff 两个 Test Module 同时挂在 CAN2**：`AddTestModule` 创建的模块默认同时归属 CAN1/CAN2 两条独立网络，而早期 `restrict_node_buses` 在这两个模块创建之前就执行了。
+
+**变更内容**：
+
+1. **三个电压参数页统一块式布局**（`frontend/src/views/CANView.vue`）
+   - 通信电压：两行两列 —— 第一行「欠压 / 过压」（各含电压 + 迟滞），第二行「开始通信时间 / 停止通信时间」（各含判定 + 上下限）。
+   - 诊断电压：两行两列 —— 第一行「正常电压 / 电压范围」，第二行「诊断开始时间 / 诊断恢复时间」。
+   - 助力电压：两行两列 —— 第一行「低压参数 / 欠压参数」，第二行「高压参数 / 过压参数」。
+   - 两行共用同一套 CSS Grid（`repeat(auto-fit, minmax(460px, 1fr))`）：列位固定、宽度自适应，上下行块左右对齐；块内容变化（判定切换显隐输入框）不再改变块尺寸与位置。
+   - 块标题统一 `min-width: 80px`，不同字数的标题也能让块内容左边界对齐；标签精简为「阈值 (V) / 迟滞 (V) / 时间 (ms) / 助力 / DTC」等，`label-width` 统一收到 76px。
+   - 助力欠压/过压块新增 `enableKey`（`isBlockOff()`）：关闭时块标题与输入项淡化、数值/DTC 输入禁用，启用开关本身保持可点。
+   - 删除已废弃的 `.volt-group` / `.volt-group-title` / `.volt-row` 样式与 `fieldsOfGroup()`。
+
+2. **通信电压时间判定改为下拉 + 自适应输入**（`frontend/src/views/CANView.vue`、`backend/processors/excel_processor.py`、`backend/templates/capl.py`、`backend/templates/test_function.py`）
+   - 开始/停止通信时间新增「小于 / 大于 / 介于」下拉：小于只显示上限框、大于只显示下限框、介于显示上下限。
+   - `init_cmp` / `stop_cmp` 三值枚举，兼容旧配置 `init_is_range` / `stop_is_range`（旧配置 `false` → 小于，并把原单值补到上限，语义不变），并反向同步供图表使用。
+   - CAPL 侧新增重载 `Check_Init_time(Min, Max, Mode)` / `Check_TxStop_time(Min, Max, Mode)`（Mode 0=小于 / 1=大于 / 2=介于），旧单/双参版本保留，其它用例继续走原重载。
+   - 正常电压前端不再提供输入，后端写死 12V（用例生成与图表同步）。
+
+3. **三个电压的启用开关前移到页签标签前**（`frontend/src/views/CANView.vue`）
+   - 通信 / 诊断 / 助力三个子页签改为 `#label` 插槽：`[小开关] 电压名`；开关外层 `@click.stop`，点开关只切启用状态、不切页签。
+   - 禁用时整条页签标签淡化（`.tab-label.is-off`）；`params-header` 中原有的启用/禁用开关移除。
+
+4. **DBC 未勾选报文不再进入消息数组**（`backend/processors/excel_processor.py`）
+   - `_process_dbc_from_dict()` 按 `lk`（DBC 表格勾选状态）过滤：未勾选报文不追加到 `RxIdarray` / `TxIdarray`，`RxMessageDATA_array` 随 `RxIdarray` 一起排除；旧配置缺 `lk` 字段时按已勾选处理。
+   - Excel 行数据路径的 `_add_Rxmessage_testcases()` / `_add_Txmessage_testcases()` 同步把 `Test == 'N'` 的提前返回移到 `append` 之前。
+
+5. **CAN / BusOff Test Module 统一收敛到 CAN1**（`backend/utils/canoe_cfg_parser.py`、`backend/api/can_routes.py`）
+   - 新增 `restrict_test_module_buses(module_names, keep_bus="CAN1")`（COM 线程任务 `_task_restrict_test_module_buses`），复用已验证的 `DetachBus(总线对象)` 逻辑，按模块名卸掉 CAN2、缺失则补挂 CAN1。
+   - 调用点放在 CAN 与 BusOff 两个模块**都创建完之后**（原先的节点级限制早于模块创建，覆盖不到）；返回 `processed` 只列真正变更，幂等重跑应为空。
+   - 失败仅记 warning，不阻断整体生成。
+
+**相关文件**：
+- `frontend/src/views/CANView.vue`
+- `backend/processors/excel_processor.py`
+- `backend/templates/capl.py`
+- `backend/templates/test_function.py`
+- `backend/utils/canoe_cfg_parser.py`
+- `backend/api/can_routes.py`
+
+**验证**：
+- `vue-tsc --noEmit` 通过（VUE_EXIT=0）；IDE 诊断无告警。
+- `py_compile` 通过（`excel_processor.py` / `canoe_cfg_parser.py` / `can_routes.py`）。
+- 通信电压用例渲染出 `Check_TxStop_time(...,Mode)` / `Check_Init_time(...,Mode)`，无残留占位符；`_time_cmp_args` 三种判定分支均符合预期。
+- 后端重启后 `GET /api/health` 返回 `{"code":200,"data":{"status":"ok"}}`。
+
+**遗留 / 已知**：
+- 若某方向（全部 Rx 或全部 Tx）报文全部取消勾选，会生成 `word RxMessageId[0]={};` 这类 0 长度数组，CANoe 编译会报错；暂未加空数组占位保护。
+
+---
+
+### [1.0.31] - 2026-10-20
+
+**会话主题**：CAN 配置页卡片可视化拖拽布局 + 对象映射表排序 + 有刷 CCP 用例收敛 + 生成产物保存/弹窗健壮性
+
+**问题**（本会话处理的 6 个独立问题）：
+
+1. **Other 页卡片布局无法调整**：卡片位置由 4 个独立 `v-for` 块 + 自动栅格决定，跨块无法换位，只能改代码数组顺序。
+2. **对象映射表无法按名称排序**：条目按「信号→DTC→报文→环境变量→A2L」分桶固定顺序展示，变量多时难以查找。
+3. **无多 DTC 时生成 CAPL 报错**：`TestFunction` 基座里残留 `void TestResult(dword DTC[], byte len)` / `void Result(dword DTC[], byte len)` 两条无函数体、无分号的孤立声明。
+4. **有刷模式 CCP 变量引用未转换**：DTC 检测对象名直接裸拼进 `SignalCheck(...)`，有刷工程里无此符号；且全文无任何 `ccpReadAll()` 调用，CCP 从未建立连接、sysvar 恒为 0。
+5. **同名 Test Module 覆盖保存弹窗阻塞**：`Remove(i)` 触发 CANoe 的 "This item will be permanently removed…" 人工确认框，卡住整条自动化流程。
+6. **生成时保存文件偶发 `[Errno 13] Permission denied`**：CANoe 重新编译 CAPL 期间短暂独占 `TestCase.can` / `DTC_Configuration.cin`，原 4×0.25s 重试不够，且半途失败会在工程目录留下半成品。
+
+**变更内容**：
+
+1. **Other 页卡片可视化拖拽重排**（`frontend/src/views/CANView.vue`）
+   - 按住卡片标题栏拖动即可换位；拖动中目标卡显示蓝色描边 + 左/右 4px 竖条标示插入点（落在空白处按阅读顺序就近插入）。
+   - 简单卡 / 开关配置 / Hex 卡 / 参数卡合并为 `grid` 分区，分组卡片（含 Config_Diag）为 `group` 分区，分区内任意互换；用 CSS `order` 参与栅格落位，不搬 DOM，输入框状态与焦点不受影响。
+   - 顺序持久化到 `Other.cardLayout`，并以 `localStorage['autotool.can.otherCardOrder']` 兜底；加载时归一化（丢弃未知/重复项、新增卡片按默认顺序补末尾）。
+   - 性能：`pointerdown` 时一次性缓存同区几何，`pointermove` 走 `requestAnimationFrame` 节流，`pointerup` 才提交顺序。
+   - 顶部提供「重置布局」按钮（仅在布局被改过时显示）；拖拽后用 `@click.capture` 吞掉补发的 click，未移动（<4px）仍保持原勾选行为。
+
+2. **对象映射表点击表头排序**（`frontend/src/components/graph/MappingManager.vue`）
+   - 「变量名 / 对象」表头可点击：升序 ▲ → 降序 ▼ → 换列重新升序；未排序列显示 ⇅。
+   - 排序在渲染列表 `allEntries` 上完成，行下标与界面一致，行选中 / 右键批量设为全局 / 删除等按下标的既有逻辑不受影响。
+   - 中文按拼音、数字按自然序（`Sig2` 在 `Sig10` 前）；切换排序时清空行选中态，避免误伤错行。
+
+3. **修复多 DTC 占位声明导致的 CAPL 语法错误**（`backend/templates/test_function.py`）
+   - 删除两条无函数体、无分号的孤立声明（数组版实现由 `process_dtc_sheet` 在文件末尾追加带体的 `TestResultMulti`）。
+   - 补充说明注释，避免后续再次误补占位。
+
+4. **有刷模式 DTC 检测对象走 CCP + 断言前刷新**（`backend/processors/excel_processor.py`、`backend/templates/capl.py`）
+   - DTC 检测对象的变量引用统一经 `_ccp_ref()`：命中符号表则转为 `sysvar::NsCcp::<符号名>`，否则原样（与 FactorTest 既有先例一致）。
+   - `TestResult` / `Result` 模板在 `Ready_On()` 后新增 `/*CCP_READ_ALL*/` 占位：有刷替换为 `ccpReadAll();`（未连接自动 CONNECT、读完释放），无刷替换为空，不残留占位符。
+   - `CCP_Read.cin` 的 include 位置调整到 `#include "TestFunction.cin"` 之前，先定义后引用。
+
+5. **同名 Test Module 覆盖不再触发 CANoe 确认框**（`backend/utils/canoe_cfg_parser.py`）
+   - 用「就地更新 `XmlTestModuleFile`」替代 `Remove/Delete/RemoveAt`：不删除 → 不弹窗，同时保留覆盖语义（同名模块指向最新 XML）、不累积重复模块。
+   - 属性只读的 CANoe 版本退化为沿用原模块并记 warning；同路径复用的兜底查找在同名命中后跳过。
+
+6. **生成产物保存健壮性**（`backend/processors/excel_processor.py`）
+   - 新增生成前预检 `_precheck_writable()`：写第一份文件前逐一探测目标可写性，有占用则**一份都不写**，一次列出全部被占用文件并提示关闭 CANoe / 停止测量。
+   - 单文件写入重试从 `4×0.25s` 提升到 `8×0.5s`（约 4s），覆盖 CANoe 重编译期间的瞬时独占。
+
+7. **有刷模式不再生成 NoXcp / NetworkFault 用例**（`backend/processors/excel_processor.py`）
+   - CCP 机制完善后，`batteryVoltage` 已可经 `sysvar::NsCcp::*` 读取，`process_volt_sheet` 统一调用带 `VoltVar` 形参的 `DiagVoltage_Fall/Rise`，不再走 `_NoXcp` 变体。
+   - `DiagVoltage_Fall_NetworkFault` / `DiagVoltage_Rise_NetworkFault` 在有刷模式不生成、也不注册进 XML（无刷行为不变）。
+   - 相关模板与 `DiagVoltage_*_NoXcp` 函数体**保留未删**，需要时可恢复。
+
+**相关文件**：
+- `frontend/src/views/CANView.vue`
+- `frontend/src/components/graph/MappingManager.vue`
+- `backend/templates/test_function.py`
+- `backend/templates/capl.py`
+- `backend/processors/excel_processor.py`
+- `backend/utils/canoe_cfg_parser.py`
+
+**验证**：
+- `vue-tsc --noEmit` 通过；`py_compile` 全量通过。
+- 多 DTC 声明：基座与替换后文本里「无函数体 `dword DTC[], byte len` 声明数 = 0」。
+- CCP：有刷渲染出 `ccpReadAll();` 与 `sysvar::NsCcp::*`，无刷渲染为空且无残留占位符；include 顺序正确。
+- 电压用例：有刷 `NetworkFault=0 / NoXcp=0`，无刷 `NetworkFault=2`，无残留占位符。
+- Test Module：同名可写场景 `Add=0` 且路径已更新；只读场景 `Add=0` 沿用旧路径；无同名 `Add=1`；同路径改名场景按路径复用。
+- 保存：前两次占用后重试成功（open 调用 3 次）；持续占用时一次列出全部被占用文件且未写入任何文件。
+
+---
+
+## [1.0.30] - 2026-10-21
+
+**版本号**：`1.0.30`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.30.exe`（166,143,770 字节，SHA256 `470D956BE3DDBFED94EEFB2B4994AE4871A6B10652202772609C98EF2E42D1B5`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.30",
+  "release_notes": "本版本更新：\n- CCP 系统变量编辑增强（全属性可编辑 / 手工新增 / 结构体拆分）+ 引用变量收集补全 + 电机模式切换不再丢失 A2L",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.30.exe"
+}
+```
+
+
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.30）
+
+---
+
+### [1.0.30] - 2026-10-21
+
+**会话主题**：CCP 系统变量编辑增强（全属性可编辑 / 手工新增 / 结构体拆分）+ 引用变量收集补全 + 电机模式切换不再丢失 A2L
+
+**问题**（本会话处理的 4 个独立问题）：
+
+1. **有刷模式的 CCP 符号只能看不能改**：地址/长度直接沿用 .mapxml 解析值，遇到结构体无法按「偏移 + 长度」手工拆成多个可引用变量；.mapxml 里没有的符号也无法补录。
+2. **配置保存的符号表不全**：`collectCcpSymbols` 的 `walkTp` 只遍历 `jsonDbcRaw` / `dbcRaw`，而实际保存与生成用的是 `buildDbcRawFromSignalRows()`（源于 `treeData`）→ FactorTest 等测试参数里引用的变量收集不到；同一处上一轮修过格式、却漏了数据来源。
+3. **手工修正的地址/长度、新增的自定义变量不随配置保存**：重载配置后修正丢失、拆出的成员消失。
+4. **切换电机类型丢失 A2L 对象加载**：`setCanMotorMode` 无条件清空三路 A2L，且没有任何重载入口；切回原模式后对象浏览器永久空白。更糟的是切配置时的静默自动保存会把**已清空的符号表**写回磁盘，导致「切配置回来也恢复不出」。
+
+**变更内容**：
+
+1. **CCP 符号全属性可编辑 + 手工新增**（`frontend/src/components/ObjectPanel.vue`、`frontend/src/stores/modules.ts`）
+   - 新增 `ccpVarOverrides`（`{name: {addr, size}}`）与 `ccpCustomVars`（手工新增 / 结构体拆分出的符号），`objA2lVars` 统一叠加覆盖值并追加自定义变量 —— 对象浏览器显示、拖拽、生成三处看到同一份数据。
+   - 双击符号打开编辑弹窗：变量名 / 地址 / 长度 / 类型（int、float、int64）/ 精度 / 偏移全部可改；单变量长度上限 `CCP_MAX_SIZE = 4`，与后端 `ns_ccp_capl.CCP_MAX_SYMBOL_SIZE` 对齐。
+   - A2L 视图新增「+ 新增变量」入口，仅在有刷模式显示；结构体可按「偏移 + 长度」逐条拆分录入，.mapxml 符号可「恢复默认」。
+   - A2L 检索框查询串含 `::` 时取最后一段，支持直接粘贴 `sysvar::NsCcp::xxx` 检索。
+
+2. **覆盖表 / 自定义变量贯通保存与回填**（`frontend/src/views/CANView.vue`）
+   - `collectConfigData` 新增 `ccp_var_overrides` / `ccp_custom_vars`；`collectCcpSymbols` 应用覆盖表并把自定义变量强制纳入，保证生成链路与界面一致。
+   - `applyConfigurationData` 在 `setA2lVars(..., 'config')` 之后回填覆盖表与自定义变量（`objA2lVars` 是 computed，顺序决定覆盖能否叠加）。
+
+3. **引用变量收集来源修正**（`frontend/src/views/CANView.vue`）
+   - `walkTp` 同时遍历 `treeData`（运行时树，含 `testParams[]`）与 `jsonDbcRaw` / `dbcRaw`（含 `tp` 对象），两种形态都覆盖。
+
+4. **电机模式切换按模式保留 A2L**（`frontend/src/stores/modules.ts`、`frontend/src/views/CANView.vue`）
+   - 上传的 A2L / mapxml 改为按模式分槽缓存（`objUploadA2lVarsByMode`），`objUploadA2lVars` 变为按当前模式读写的 computed，两模式互不覆盖。
+   - `setCanMotorMode` 不再清空任何符号数据（只清有刷不适用的 A2L 限定符）；`objA2lVars` 改为模式感知：CFG 的 `a2l_path` 只在无刷生效，覆盖表 / 自定义变量只在有刷叠加。
+   - 加载配置时清空「已上传 A2L / mapxml」（与清 `dbcRaw` 同一理由：上传路优先级最高，会遮住配置自带符号表）；`resetData` 同时清两模式槽位与配置自带符号表，避免新配置继承上一份工程。
+
+5. **清理**（`backend/api/can_routes.py`）
+   - 删除 `/generate` 中逐个打印 CCP 符号 `name / addr / size` 的临时诊断日志。
+
+**相关文件**：
+- `frontend/src/stores/modules.ts`
+- `frontend/src/components/ObjectPanel.vue`
+- `frontend/src/views/CANView.vue`
+- `backend/api/can_routes.py`
+
+**验证**：
+- `vue-tsc --noEmit` 通过；`py_compile backend/api/can_routes.py` 通过。
+- 模式切换：有刷 ⇄ 无刷来回切，对象浏览器符号列表原样恢复，无需重新上传。
+
+**遗留 / 已知**：
+- 已被旧版本覆盖成空 `ccp_var_symbols` 的配置无法自动复原，需重新上传一次 .mapxml 或重录符号；新版本保存后不再出现该问题。
+
+---
+
+## [1.0.29] - 2026-10-20
+
+**版本号**：`1.0.29`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.29.exe`（166,092,537 字节，SHA256 `AEC54563B7247CEC1F300DF6FF2F1F11FE11AFB0A2256EF04125283F095414EC`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.29",
+  "release_notes": "本版本更新：\n- 补全 Power.can 电源控制仿真节点的 CANoe 工程导入",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.29.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.28 之后的 2 条会话更新记录（见下）。
+
+**发布状态**：已发布到共享盘（version 1.0.29）
+
+---
+
+### [1.0.29] - 2026-10-20
+
+**会话主题**：补全 Power.can 电源控制仿真节点的 CANoe 工程导入
+
+**问题**：生成完整 CANoe 配置时，`Power.can`（电源控制仿真节点）从未被加入工程，导致 K30/K15 电源控制、继电器动作在工程里完全不可用。
+
+**根因**：**生成目录与导入扫描目录不一致**。
+- 生成位置：`Power.can` 落在 `Testmodule/Prog_power/`（`config_generator.py` 的 `dirs['test_power']`）。
+- 导入位置：节点导入只遍历 `Nodes/` 目录（`os.listdir(nodes_dir)`），而 `Nodes/` 里只有报文仿真节点与 `EPSCheck.can` / `FrameTest.can` / `FramePanel.can`。
+- 因此 `Power.can` 不是被条件跳过，而是**根本不在扫描范围内**，从未被 `add_node_simulation_to_config` 处理。
+
+同时排除干扰项：节点循环中的 `if node_name.upper() == 'EPS' ... continue` 只跳过 EPS 开头的节点，与 Power 无关；`Power_up.can`（XML Test Module 的 library）与 `ArrayFuncTest.cin`（被 include 的函数库）属于**有意不导入**，本次未改动。
+
+**变更内容**（`backend/core/great_canoe_module.py`）
+
+在两条生成路径的 vsysvar 导入之后，各补一段 `Power.can` 节点导入：
+- `generate_full_config`（Excel / DBC 直传路径）
+- `generate_full_config_from_tree`（树形图路径）
+
+```python
+                # 导入 Power.can 电源控制仿真节点
+                # 位于 Testmodule/Prog_power，不在 Nodes 扫描范围内，需单独导入；
+                # 依赖 Prog_power::* 系统变量，故放在 vsysvar 导入之后
+                power_can_path = os.path.join(output_dir, "Testmodule", "Prog_power", "Power.can")
+                if os.path.exists(power_can_path):
+                    power_node_result = add_node_simulation_to_config(power_can_path, "Power", channel=1)
+                    canoe_cfg_result["add_power_node"] = power_node_result
+```
+
+三点设计约束：
+1. **独立路径**：显式指向 `Testmodule/Prog_power/Power.can`，不依赖 `Nodes/` 扫描。
+2. **顺序依赖**：放在 `vsysvar` 导入**之后**——`Power.can` 使用 `Prog_power::K30/K15/K30Port/...` 系统变量，避免 CANoe 编译时符号未定义。
+3. **不受 `generate_nodes` 影响**：放在 `if generate_nodes:` 块**之外**，与 `Power.can` 无条件生成保持一致（电源控制与报文仿真开关是两件事）。
+
+结果键 `add_power_node` 与既有 `add_power_panel` / `add_vsysvar` / `add_power_test_te` 命名保持一致。
+
+**相关文件**：
+- `backend/core/great_canoe_module.py`
+
+**验证**：
+- `ast.parse` 语法检查通过；模块可正常导入。
+- 两条路径各新增 1 处 `add_power_node`；`add_node_simulation_to_config` 各 2 处（原有节点循环 + 新增 Power），确认未误改节点循环。
+- **未做真机实测**：需跑一次完整生成 + CANoe 打开，确认 `Power` 节点出现在 Simulation Setup 且可编译（重点验证 `Prog_power::*` 符号解析）。
+
+**遗留 / 已知**：
+- 节点名 `"Power"` 待确认：若 DBC 中存在名为 `Power` 的 ECU（senders），或多处 `.can` 重名，会导致 CANoe 节点重名，需改为更明确的名称（如 `PowerCtrl`）。生成一次看结果即可判断。
+- `Power.can` 的节点名、通道（`channel=1`）目前为固定值，未做参数化；如需挂到其它通道需另行扩展。
+
+---
+
+## [1.0.28] - 2026-10-19
+
+**版本号**：`1.0.28`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.28.exe`（166,092,228 字节，SHA256 `0CA92BA2EB330F2A2AB70D0B32ABFE3A28E2C8C7062DC56F23363C17A888DB26`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.28",
+  "release_notes": "本版本更新：\n- 配置远程推送/拉取升级为完整版本管理（不覆盖同名、时间戳版本+用户备注、按时间戳筛选历史版本回滚）\n- CANoe 创建流程新增《释放记录.txt》版本管理（首次按模板录入、后续追写变更/修复说明）\n- 远程配置存储结构优化：每套配置一个专属文件夹、每版本一个独立 JSON\n- 拉取界面改为树形图（根=最新配置，子=历史版本）\n- 修复配置子路由顺序导致的「配置 'versions' 不存在」404\n- 修复编辑引用卡片后关闭弹窗导致画布双击卡片打不开\n- SetSignalRate 目标值参数改为浮点，不再截断小数\n- 清理全局函数库中残留的内置函数旧实现，消除每次生成的冲突提示\n- 长安SDA2.0_LDW：0068/0069/0070 判定改为体现状态切换（先判 2 再等 0）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.28.exe"
+}
+```
+
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**说明**：本版本汇总 1.0.27 之后的 2 条会话更新记录（见下，按日期倒序）。
+
+**发布状态**：已发布到共享盘（version 1.0.28）
+
+---
+
+### [1.0.28] - 2026-10-20
+
+**会话主题**：配置远程版本管理（推送不覆盖/历史版本回滚）+ CANoe 释放记录版本管理 + 远程存储结构隔离化
+
+**问题**（本会话处理的 3 类需求）：
+
+1. **配置远程推送会覆盖服务端同名配置、无版本可回溯**：原 push 只是把选中项覆盖写入共享盘 `<Module>_configs.json`，同名配置被直接覆盖，且无备注、无法按版本回滚；pull 只能取「最新」，无法选择历史版本。
+2. **CANoe 创建流程没有版本管理**：`config_generator.py` 每次生成都硬编码写入固定模板的《释放记录.txt》（`release V1.0.00`、`Author 作者` 为占位、无历史累积），二次生成会覆盖，无法追溯变更说明/功能调整/问题修复。
+3. **远程配置存储结构无隔离**：所有配置混在一个 `<Module>_configs.json` 里，版本也集中在 `versions/index.json`，检索与回滚效率低、易相互干扰；另发现配置子路由注册顺序导致 `/configs/versions` 等被 `<name>` 动态路由抢占，前端报「配置 'versions' 不存在」。
+
+**变更内容**：
+
+1. **配置远程版本管理**（`backend/utils/network_storage.py`、`backend/services/config_service.py`、`backend/api/config_routes.py`）
+   - 推送改为**版本快照**：服务端已存在的同名配置**永不覆盖**；每次推送生成带时间戳的新版本（同秒冲突自动加序号后缀），并自动附加 `_meta`（时间戳/用户备注/操作人/来源主机/内容哈希）。
+   - **幂等**：内容 + 备注与远程最新版本一致时自动跳过，不产生重复版本。
+   - 拉取支持**按版本**：`GET /api/<module>/configs/versions` 查历史版本（支持 names/since/until 时间戳筛选），`POST /api/<module>/configs/pull-version` 按版本拉取，本地同名配置**直接覆盖**（写回前递归剥离 `_meta`、先备份本地）。
+   - 前端 `ConfigToolbar.vue`：推送弹窗新增**用户备注**输入；拉取弹窗支持按时间戳筛选并选择历史版本。
+
+2. **CANoe 释放记录版本管理**（`backend/utils/release_record.py`（新增）、`backend/core/canoe_config/config_generator.py`、`backend/core/great_canoe_module.py`、`backend/api/great_canoe_routes.py`、`frontend/src/views/CreateCanoeView.vue`）
+   - 新增 `release_record` 模块：**首次发布**严格复用历史模板格式（`Revision history`/`Date`/`Author`/`release V1.0.00`/`1、初次释放` + 功能清单）；**后续迭代**在文件末尾**追加**新版本块（含变更说明/功能调整/问题修复），序号连续递增（1→2→3）、版本号按 patch 位递增（V1.0.00→01→02），历史记录原样保留。
+   - `config_generator.generate_full_config` 替换原硬编码模板，新增 `release_version/release_author/change_note` 参数；路由与模块全链路透传；新增 `GET /api/great-canoe/suggest-version` 供前端预填下一版本号。
+   - 前端生成面板新增「版本发布信息」区（版本号/作者/变更说明）。
+
+3. **远程配置存储结构隔离化**（`backend/utils/network_storage.py`）
+   - 新结构：`configs/<Module>/remote_configs/<配置名>/{versions.json, latest.json, versions/<时间戳>.json}`——每套配置一个**专属文件夹**、每版本一个**独立 JSON**，版本间完全隔离；`latest.json` + 按版本号直取提升检索与回滚效率。
+   - 三级兼容回退（新结构 → 旧 `versions/index.json` → 扫描旧目录），旧数据无需迁移即可读取。
+   - 新增一次性整理脚本 `scripts/migrate_share_configs.py`：把共享盘旧结构 `<Module>_configs.json` 整理为专属文件夹新结构（支持 `--dry-run`/`--modules`/`--force`，幂等），**原文件与旧 versions 目录全部保留**；已对 CAN(21)/Function(12)/GreatCanoe(19) 共 52 套配置执行完成。
+
+4. **拉取界面改为树形图**（`frontend/src/components/ConfigToolbar.vue`）
+   - 合并「最新配置 / 历史版本」两个模式为单棵树：根节点=最新配置，展开=各历史版本；支持多选、展开/折叠全部、全选/清空，保留时间戳筛选。同一配置同时勾选根与子节点时以指定版本优先。
+
+5. **修复配置子路由顺序 404**（`backend/api/config_routes.py`）
+   - 将静态子路由 `GET /<module>/configs/remote`、`/configs/versions`、`/configs/op-logs` 移到动态路由 `GET /<module>/configs/<name>` **之前**注册，修复 `/configs/versions` 被当作配置名匹配而返回「配置 'versions' 不存在」的问题（导致历史版本拉取界面失败）。
+
+6. **操作审计日志**（`backend/utils/audit_log.py`（新增）、`backend/api/config_routes.py`）
+   - push/pull/版本操作落地为 JSONL 审计日志（`configs/_audit/config_ops.log`），含时间/模块/动作/配置项/版本/备注/操作人/结果/耗时/主机；提供 `GET /api/<module>/configs/op-logs` 查询。
+
+**相关文件**：
+- 后端：`backend/utils/network_storage.py`、`backend/utils/release_record.py`（新）、`backend/utils/audit_log.py`（新）、`backend/services/config_service.py`、`backend/api/config_routes.py`、`backend/api/great_canoe_routes.py`、`backend/core/canoe_config/config_generator.py`、`backend/core/great_canoe_module.py`
+- 前端：`frontend/src/components/ConfigToolbar.vue`、`frontend/src/views/CreateCanoeView.vue`、`frontend/src/api/config.ts`、`frontend/src/api/can.ts`
+- 脚本：`scripts/migrate_share_configs.py`（新）
+- 测试：`tests/test_config_version.py`（新增 40 项用例）
+
+**验证**：
+- 全量单元测试 **90 项全部通过**（含本次新增：释放记录 7、存储隔离 5、向后兼容、路由顺序回归 8、迁移 7 等）。
+- 端到端：CAN 与 Function 模块经真实 HTTP 接口验证推送生成版本、幂等跳过、按版本覆盖拉取、时间戳筛选、操作日志。
+- 迁移脚本 dry-run 与实跑一致；迁移后 `list_versions` 正确读出 CAN 21 / Function 12 / GreatCanoe 19 套配置及其全部版本；原 `<Module>_configs.json` 与旧 `versions/` 目录均未改动。
+- 前端 `vue-tsc` 类型检查与 `vite build` 均通过，无诊断错误。
+
+**遗留 / 已知**：
+- 迁移脚本本次只处理 CAN / Function / GreatCanoe 三个模块（按用户指定范围）；其它模块如需迁移可加 `--modules` 参数执行。
+- 释放记录本次仅写入 CANoe 配置输出目录下的《释放记录.txt》，未同步写入根 `CHANGELOG.md`（按用户指定范围）。
+- 旧结构 `versions/` 目录与 `<Module>_configs.json` 仍保留（兼容读取），可由后续版本决定是否清理。
+
+---
+
+### [1.0.28] - 2026-10-19
+
+**会话主题**：修复编辑引用卡片后双击失效 + SetSignalRate 目标值改浮点 + 函数库内置函数冲突提示 + LDW 状态切换判定
+
+**问题**（本会话处理的 4 个相关事项）：
+
+1. **编辑引用卡片后，回画布双击卡片打不开**：在卡片编辑页进入「编辑引用卡片」（子编辑态）后点右上角 X / Esc / 取消，弹窗实际关闭，但父组件 `editorVisible` 仍为 `true` —— 受控 `el-dialog` 的关闭只回抛 `update:model-value(false)`，子编辑态分支只退栈、未同步父组件，造成状态失配。回到画布双击卡片时 `openEditor` 误判「编辑器还开着」，进入错误守卫分支而无反应。
+2. **`SetSignalRate` 目标值被截断**：函数库模板里 `num` 声明为 `long`，调用形如 `SetSignalRate(Sig, -6.1, 4*-6.1)` 时目标值被截断为整数（`-24.4` → `-24`），丢失小数。
+3. **每次生成都提示「函数库与内置模板冲突」**：全局函数库 `Function_global_library.json` 里残留了 `RelayON` / `RelayOFF` / `TestBusLoad` / `CancelBusLoad` 的内置函数**旧实现**，与当前内置模板同名同参但实现不同，生成时被收集为冲突并弹窗——用户并未添加任何自定义函数。
+4. **LDW 用例缺少状态切换动作**：`FUNC_LDW_0068/0069/0070` 结果判定只用一条 `SignalCheck(x170_ConcussAvailabilityStatus, 0)`，只判终值，未体现需求要求的「操作前 2（故障不可用）→ 操作后 0（可用）」切换过程。
+
+**变更内容**：
+
+1. **修复编辑引用卡片后双击失效**（`frontend/src/components/graph/CardEditor.vue`）
+   - 给 `el-dialog` 加 `:before-close="beforeClose"`：子编辑态拦截关闭（不调用 `done()`）并退栈回父卡片，弹窗保持打开，从根上消除「弹窗已关但 `visible` 仍为 true」的失配。
+   - 新增 `onCancelClick`：底部「取消 / 返回组合卡片」按钮复用同一套语义（子编辑态返回父卡片，顶层才真正关闭）；`onVisibleChange` 回归单一职责（仅在真正关闭时同步父组件）。
+
+2. **`SetSignalRate` 目标值改浮点**（`backend/templates/func_test_function.py`、`backend/services/function_graph.py`）
+   - 函数声明 `SetSignalRate(signal* Sig, float step, long num)` → `(signal* Sig, float step, float num)`，并去掉冗余强转（`targetValue = (float)num;` → `targetValue = num;`）。
+   - `function_graph.py` 注释里的形参签名同步为 `float num`（仅注释，无逻辑变更）。
+   - 注意：仅对之后生成/回填 `TestFunction.cin` 的配置生效；已保存配置里固化的旧 `test_function` 不会自动更新。
+
+3. **清理函数库内置函数残留，消除冲突提示**（`configs/function/Function_global_library.json`）
+   - 从 `function_library`（源码视图）删除 `RelayON` / `RelayOFF` / `TestBusLoad` / `CancelBusLoad` 四个内置函数的旧实现整段（删后函数数 115 → 111，其余内容原样保留）。
+   - 这四个函数本就会由内置模板（`relay.py` + `FuncTestFunction`）生成到 `TestFunction.cin`，从库里删除不影响功能；删除后重跑冲突判定结果为 `[]`，不再弹窗。
+   - 备份：`configs/function/Function_global_library.json.bak-cleanbuiltin`。
+   - 仅处理本机该库文件；共享盘 / 其他机器如遇同样提示需同样处理。
+
+4. **LDW 0068/0069/0070 判定改为「体现 2→0 切换」**（`长安SDA2.0_LDW_测试用例_分组.json`）
+   - 新增结果卡 `card-check-switch`「检测信号状态切换」：先 `SignalCheck({{sig}}, {{oldVal}})` 断言操作前状态，再 `SignalWaitCheck({{sig}}, {{newVal}}, {{time}})` 限时等待切换到位。
+   - 把 0068/0069/0070 的结果节点（`node-f18-fail-unavail-r1/r2/r3`）从共用卡 `card-check-signals` 切换到 `card-check-switch`，传参 `sig=x170_ConcussAvailabilityStatus`、`oldVal=2`、`newVal=0`、`time=1000`。
+   - 生成结果：`SignalCheck(x170_ConcussAvailabilityStatus, 2);` → `SignalWaitCheck(x170_ConcussAvailabilityStatus, 0, 1000);`
+   - 未改动共用卡 `card-check-signals`，只影响这三条用例。
+   - 备份：`长安SDA2.0_LDW_测试用例_分组.json.bak-0068`、`.bak-0069-0070`。
+
+**相关文件**：
+- `frontend/src/components/graph/CardEditor.vue`
+- `backend/templates/func_test_function.py`、`backend/services/function_graph.py`
+- `configs/function/Function_global_library.json`
+- `长安SDA2.0_LDW_测试用例_分组.json`
+
+**验证**：
+- 前端 `vue-tsc --noEmit`：EXIT=0，无类型错误。
+- 后端 `py_compile`：`func_test_function.py` / `function_graph.py` / `function_routes.py` 全部通过。
+- `SetSignalRate` 实测：`SetSignalRate(Sig, 10, -5)` 生成正确，浮点目标值不再截断。
+- 函数库清理后重跑冲突判定：`CONFLICTS = []`。
+- LDW 分组：`validate_group_json.py` → `errors = 0`；用后端展开引擎实测 0068/0069/0070 三条均生成「Check(2) + WaitCheck(0,1000)」。
+
+**遗留**：
+- `frontend/package.json` 版本号仍为 `1.0.27`，打包前需 bump 到 `1.0.28`。
+- 本版本段的 `release_notes` / `setup_name` / SHA256 需在打包后回填。
+
+---
+
 ## [1.0.27] - 2026-10-16
 
 **版本号**：`1.0.27`（`frontend/package.json` 的 `version`）
@@ -236,9 +1105,6 @@
 
 4. **对象浏览器检索支持完整形式**（`frontend/src/components/ObjectPanel.vue`）
    - A2L 检索框：查询串含 `::` 时取最后一段作为变量名，可直接粘贴 `sysvar::NsCcp::udsOneBox_VehicleSpeed` 搜索（原先整体子串匹配，永远搜不到）。
-
-5. **诊断**（`backend/api/can_routes.py`）
-   - `/generate` 增加打印每个 CCP 符号 `name / addr / size` 的临时日志，用于区分「前端没收集到」与「收集到但地址为空」；定位完成后删除。
 
 **验证**：`py_compile`（`ns_ccp_capl.py` / `capl.py` / `excel_processor.py` / `can_routes.py`）全部通过；实机（LR920D V6V8 有刷工程）确认 DAQ 上传周期约 4ms，`sysvar::NsCcp::*` 能取到 ECU 原始值（如 `10 / 0.05625 → 178`），`_Signalfactor` 检测通过。
 

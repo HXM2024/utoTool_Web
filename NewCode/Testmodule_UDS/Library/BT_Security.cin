@@ -1,0 +1,375 @@
+/*@!Encoding:936*/
+
+includes
+{
+  
+}
+
+variables
+{
+  byte ECU_KeyBYD_BT[16] ={0x7d,0x0b,0xa5,0xb6,0xb5,0x7c,0x49,0x05,0x8d,0xf3,0xf9,0xad,0x2f,0x31,0x92,0xfb};    //BYD新
+  byte ECU_KeyBYD_BT_Old[16] = {0x64,0x1D,0xA0,0x0D,0x7F,0xB1,0x4B,0x51,0x8D,0xA4,0x2B,0xF4,0xEF,0x0C,0x24,0xF4};
+  word Mask_Geely[16] = {0x40,0x21,0x07,0x49,0x10,0xD0,0x27,0x15,0x2A,0x19,0x0F,0x1F,0xAC,0x3E,0xFD,0x75};
+  word Mask_Geely_BT[16] = {0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff,0xff};
+  word Mask_RC[16] = {0xEA,0xCA,0xEE,0x20,0x4C,0x42,0x35,0x8D,0x34,0x2A,0xEF,0xDE,0x5E,0xE5,0x92,0x4F};
+  word Mask_RC_BT[16] = {0x52,0x3E,0x0D,0x8A,0x9F,0x6C,0x1B,0x47,0x26,0x3A,0x8D,0x0F,0x5E,0x9B,0x1C,0x7A};
+  
+}
+
+void Security_access_BT()
+{
+  diagRequest * Reqseed_BT;
+  diagRequest * Sendkey_BT;
+  diagResize(Reqseed_BT,2);
+  diagResize(Sendkey_BT,SendKey_Len);
+  DiagSetPrimitiveByte(Reqseed_BT,0,0x27);
+  DiagSetPrimitiveByte(Sendkey_BT,0,0x27);
+  if(APP_BT_27_Flage == 0)
+  {
+    DiagSetPrimitiveByte(Reqseed_BT,1,RequestSeed_27);
+    DiagSetPrimitiveByte(Sendkey_BT,1,SendKey_27);
+  }
+  else
+  {
+    DiagSetPrimitiveByte(Reqseed_BT,1,BT_RequestSeed_27);
+    DiagSetPrimitiveByte(Sendkey_BT,1,BT_SendKey_27);
+  }
+  if(AES_128==0)
+  {
+    dword seed;
+    dword skey;
+    testCaseComment("请求解锁ECU");
+    diagSendRequest(Reqseed_BT);
+    diagSetP2Extended(-1);
+    testWaitForDiagRequestSent(Reqseed_BT,500);
+    testWaitForDiagResponse(Reqseed_BT,p2cmax);
+    if(diagGetLastResponseCode(Reqseed_BT)==0x78)
+      testWaitForDiagResponse(Reqseed_BT,p2cmax*100);
+    if(diagGetLastResponseCode(Reqseed_BT)==-1)
+    {
+      int Seed_Pos,Seed_Len,Key_Loop;
+      Seed_Len = DiagGetRespPrimitiveSize(Reqseed_BT);
+      seed = 0;skey = 0;
+      for(Seed_Pos = 2 ;Seed_Pos < Seed_Len;Seed_Pos++)
+        seed = seed | (DiagGetRespPrimitiveByte(Reqseed_BT,Seed_Pos) << ((Seed_Len -3 -(Seed_Pos-2))*8));
+      /*安全算法函数*/
+      testStep("种子","种子为0x%08X",seed);
+      _SecurityAccess_BT(seed,skey);
+      testStep("密钥","计算出密钥为0x%08X",skey);
+      DiagSetPrimitiveByte(Sendkey_BT,0,0x27);
+      for(Key_Loop = 2;Key_Loop < SendKey_Len;Key_Loop++)
+        DiagSetPrimitiveByte(Sendkey_BT,Key_Loop,(skey>>((SendKey_Len-1-Key_Loop)*8))&0xFF);
+      diagSendRequest(Sendkey_BT);
+      testWaitForDiagRequestSent(Sendkey_BT,50);
+      diagSetP2Extended(-1);
+      testWaitForDiagResponse(Sendkey_BT,p2cmax);
+      if(diagGetLastResponseCode(Sendkey_BT)==0x78)
+        testWaitForDiagResponse(Sendkey_BT,p2cmax*100);
+      /*判断是否解锁成功*/
+      if(diagGetLastResponseCode(Sendkey_BT)==-1)
+        testStepPass("BT下ECU解锁成功");
+      else
+        testStepFail("BT下ECU解锁失败");
+    }
+    else
+      testStepFail("BT下ECU解锁,获取种子失败");
+    testWaitForTimeout(500);
+  }
+  else if(AES_128==1)
+  {
+    testWaitForTimeout(500);    //排除10 03的反馈干扰,会影响到获取种子
+    testCaseComment("BT下请求解锁ECU");
+    _SendAndWriteReport_NoTime(Reqseed_BT,phyreq_ID);
+    _saveMsg(p2cmax);
+    _CheckCode(-1,4);
+    testWaitForTimeout(200);
+    diagResize(Sendkey_BT,SendKey_Len);
+    _padding2702_BT();
+    _SendAndWriteReport_NoTime(Sendkey_BT,phyreq_ID);
+    _saveMsg(p2cmax);
+    testWaitForTimeout(150);
+  }
+  else if(AES_128==2) /*AES_CBC*/
+  {
+    byte Data_F18C[3]={0x22,0xF1,0x8C};
+    int m;
+    testCaseComment("获取序列号");
+    _Send_Diag_And_Get_CF(3,phyreq_ID,Data_F18C);
+    if(diagGetLastResponseCode(SendData) == -1)
+    {
+      if(DiagGetRespPrimitiveSize(SendData) == 22)
+      {
+        for(m=0;m<16;m++)
+          Serial_number[m] = DiagGetRespPrimitiveByte(SendData,m+6);
+        /*序列号移位*/
+        LeftMove(Serial_number,3);
+//        for(m=0;m<16;m++)
+//          writeEx(-3,0,"----------移位后序列号-------0x%2x",Serial_number[m]);
+        /*用ECU KEY加密移位后的序列号 获取密钥KEY*/
+        AES128_CBC_encrypt_buffer(Secret_KEY,Serial_number,KEY_Len,ECU_KeyBYD_BT,Iv); 
+        
+        testWaitForTimeout(150);
+        testCaseComment("BT下请求解锁ECU");
+        _SendAndWriteReport(Reqseed_BT,phyreq_ID,500);
+        if(diagGetLastResponseCode(Reqseed_BT) == -1)
+        {
+          for(m=0;m<16;m++)
+            RA[m]=DiagGetRespPrimitiveByte(Reqseed_BT,m+2);
+          /*用密钥KEY解密RA 得到ra`*/
+          AES128_CBC_decrypt_buffer(ra,RA,KEY_Len,Secret_KEY,Iv);
+          /*ra逆向*/
+          reverseNum(ra,16);
+          testWaitForTimeout(100);
+          /*用密钥KEY加密r得到R*/
+          AES128_CBC_encrypt_buffer(R,ra,KEY_Len,Secret_KEY,Iv);
+          diagResize(Sendkey_BT,18);
+          for(m=0;m<16;m++)
+            DiagSetPrimitiveByte(Sendkey_BT,m+2,R[m]);
+          
+          _SendAndWriteReport(Sendkey_BT,phyreq_ID,50);
+//          diagSendRequest(Sendkey_BT);
+//          testWaitForDiagRequestSent(Sendkey_BT,50);
+//          testReportWriteDiagObject(Sendkey_BT);
+//          testWaitForDiagResponse(Sendkey_BT,1000);
+          testReportWriteDiagResponse(Sendkey_BT); 
+          if(diagGetLastResponseCode(Sendkey_BT)==-1)
+            testStepPass("BT下ECU解锁成功");
+          else
+            testStepFail("BT下ECU解锁失败");
+        }
+        else
+          testStepFail("","请求种子失败");
+      }
+      else
+        testStepFail("","返回序列号长度错误,导致秘钥Key不可信");
+    }
+    else
+      testStepFail("","未收到正确序列号,无法进行安全访问");
+  }
+}
+
+
+
+//安全算法函数
+//参数SaccSeed：请求种子
+//参数SaccKey：安全访问密钥
+void _SecurityAccess_BT(dword SaccSeed,dword& SaccKey)
+{
+  byte i;
+  i = 0;
+  if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
+  {
+    dword KeyK;
+    dword KeyResult;
+    KeyK=0X00000137;
+    KeyResult = ((((SaccSeed >> 1) ^ SaccSeed) <<3) ^ (SaccSeed >>2));
+    SaccKey = KeyResult ^ KeyK;
+  }
+  else if(strncmp(ECU_project,"ChangAn",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("ChangAn"))
+  {
+    dword seed;
+    dword key1;
+    dword key2;
+    seed = 0;
+    for(i=0;i<16;i++)
+      seed=seed|(SaccSeed>>(31-i*2)&(1<<i));
+    for(i=0;i<16;i++)
+      seed=seed|(SaccSeed<<(31-i*2)&(0X80000000>>i));
+    key1=SaccSeed^0X70F77302;
+    key2=seed^0X70F77302;
+    SaccKey=key1+key2;
+  }
+  else if(strncmp(ECU_project,"Geely1.0",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Geely1.0"))
+  {
+    byte i;
+    byte XorArray[4];
+    byte calData[4];
+    byte skeybyte[4];
+    qword Temp_Key;
+    XorArray[0]=0xC1;
+    XorArray[1]=0x1C;
+    XorArray[2]=0x12;
+    XorArray[3]=0x81;
+    calData[0]=0;
+    calData[1]=0;
+    calData[2]=0;
+    calData[3]=0;
+    Temp_Key = 0;
+    for (i = 0;i < 4;i++)
+    {
+      calData[i] = ((SaccSeed>>(24-8*i))&0xFF)^ XorArray[i];/*修改秘钥传入方式为MSB*/
+    }
+    skeybyte[0] = ((calData[2] & 0x03) << 6)|((calData[3]&0xFC)>>2);
+    skeybyte[1] = ((calData[3] & 0x03) << 6 )|(calData[0]&0x3F);
+    skeybyte[2] = (calData[0] & 0xFC)|((calData[1] & 0xC0) >> 6);
+    skeybyte[3] = (calData[1] & 0xFC)|(calData[2] & 0x03);
+    Temp_Key=skeybyte[0];
+    Temp_Key=(Temp_Key<<8)|skeybyte[1];
+    Temp_Key=(Temp_Key<<8)|skeybyte[2];
+    Temp_Key=(Temp_Key<<8)|skeybyte[3];
+    SaccKey = Temp_Key;
+  }
+  else if((strncmp(ECU_project,"SRM",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("SRM")))
+  {
+    byte Seed[4];
+    byte Skey[4];
+    byte Xor[4]={0xA1,0x59,0xD4,0x30};
+    byte Cal[4];
+    qword Temp_Key;
+    byte i;
+    Temp_Key = 0;
+    Seed[0]=SaccSeed>>24;
+    Seed[1]=SaccSeed>>16;
+    Seed[2]=SaccSeed>>8;
+    Seed[3]=SaccSeed; 
+    for(i=0;i<4;i++)
+    {
+      Cal[i]=Seed[i]^Xor[i];
+    }
+    Skey[0]=((Cal[3]&0xF5)>>2) | ((Cal[0]&0x0F)<<6);
+    Skey[1]=((Cal[2]&0x0F)<<4) | ((Cal[3]&0xC0)>>6);
+    Skey[2]=((Cal[1]&0xFC)) | ((Cal[0]&0x3D));
+    Skey[3]=((Cal[3]&0xE0)) | ((Cal[1]&0xF0)>>4);
+    Temp_Key=Skey[0];
+    Temp_Key=(Temp_Key<<8)|Skey[1];
+    Temp_Key=(Temp_Key<<8)|Skey[2];
+    Temp_Key=(Temp_Key<<8)|Skey[3];
+    SaccKey = Temp_Key;
+  }
+  else if(strncmp(ECU_project,"RC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("RC"))
+  {
+    byte i;
+    dword tmpSaccSeed;
+    dword mask = 0x5FD62190;//掩码5FD62190
+    tmpSaccSeed = SaccSeed;
+		for(i=0; i<32; i++)
+		{
+			if(tmpSaccSeed & 0x80000000)
+			{
+				tmpSaccSeed = tmpSaccSeed << 1;
+				tmpSaccSeed = tmpSaccSeed ^ mask;
+			}
+			else
+			{
+				tmpSaccSeed = tmpSaccSeed << 1;
+			}
+		}
+    SaccKey = tmpSaccSeed;
+  }
+  else if(strncmp(ECU_project,"Chery",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("Chery"))
+  {
+    byte Seed[2];
+    dword remainder;
+    byte n;
+    byte i;
+    Seed[0] = SaccSeed >> 8;
+    Seed[1] = SaccSeed & 0xFF; 
+    remainder =0xFFFE;
+    for (n = 0; n < 2; n++)
+    {
+      remainder ^= ((Seed[n]) << 8);
+      for (i = 0; i < 8; i++)
+      {
+        if (remainder & 0x8000)
+        {
+          if(remainder & 0x0080)
+          {
+            remainder = (remainder << 1) ^ 0x8408;
+          }
+          else
+          {
+            remainder = (remainder << 1) ^ 0x8025;
+          }
+        }
+        else
+        {
+          remainder = (remainder << 1);
+        }
+      }
+    }
+    remainder = remainder & 0xFFFF;
+    SaccKey = remainder;
+  }
+  else if(strncmp(ECU_project,"SGMW",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("SGMW"))
+  {
+    word uds_key_mul[32] = 
+    {
+      0x7678, 0x9130, 0xd753, 0x750f, 0x72cb, 0x55f7, 0x13da, 0x786b, 
+      0x372a, 0x4932, 0x0e7c, 0x3687, 0x3261, 0xa82c, 0x8935, 0xd00c, 
+      0x1995, 0x4311, 0xb854, 0x0d8d, 0x9863, 0x1a21, 0xf753, 0xd6d3,
+      0xb15d, 0x7f3d, 0x6821, 0x791c, 0x26c5, 0x2e37, 0x0e69, 0x64a0 
+    };
+    dword temp;
+  	word index;
+  	word mult1;
+  	word mult2;
+    dword NC_DEFAULT_SEED;
+    dword NC_UDS_KEYMASK;
+    NC_DEFAULT_SEED=0xA548FD85;
+    NC_UDS_KEYMASK=0x5C7D4EF3;
+    index = 0x5D39;
+  	if(SaccSeed == 0) 
+    {
+  		SaccSeed = NC_DEFAULT_SEED;
+  	}
+  	for(temp=0x80000000;temp!=0;temp>>=1)
+  	{
+  		if(temp & SaccSeed) 
+      {
+  			index = croshortright(index,1);
+  			if (temp & NC_UDS_KEYMASK) 
+        {
+  				index ^= 0x74c9;
+  			}
+  		}
+  	}
+  	mult1 = (uds_key_mul[(index >> 2) & ((1 << 5) - 1)] ^ index);
+  	mult2 = (uds_key_mul[(index >> 8) &((1 << 5) - 1)] ^ index);
+  	temp = (((dword) mult1) << 16) | ((dword) mult2);
+  	temp = mulu32(SaccSeed,temp);
+  	SaccKey = temp;
+  }
+  else if(strncmp(ECU_project,"DongFeng",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("DongFeng"))
+  {
+    byte Seed[4];
+    byte Skey[4];
+    byte Xor[4]={0xD1,0x31,0x54,0x07};
+    byte Cal[4];
+    qword Temp_Key;
+    byte i;
+    Seed[0]=(SaccSeed>>24)&0xFF;
+    Seed[1]=(SaccSeed>>16)&0xFF;
+    Seed[2]=(SaccSeed>>8)&0xFF;
+    Seed[3]=SaccSeed&0xFF;
+    Temp_Key = 0;
+    for(i=0;i<4;i++)
+      Cal[i]=Seed[i]^Xor[i];
+    
+    Skey[0]=((Cal[0]&0x0f)<<4)|(Cal[1]&0x0f);
+    Skey[1]=((Cal[1]&0xf0)>>4)|((Cal[2]&0x0f)<<4);
+    Skey[2]=((Cal[2]&0xf0)>>4)|(Cal[3]&0xf0);
+    Skey[3]=(Cal[3]&0x0f)|((Cal[0]&0xf0)>>4);
+    Temp_Key=Skey[0];
+    Temp_Key=(Temp_Key<<8)|Skey[1];
+    Temp_Key=(Temp_Key<<8)|Skey[2];
+    Temp_Key=(Temp_Key<<8)|Skey[3];
+    SaccKey = Temp_Key;
+  }
+  else if(strncmp(ECU_project,"GAC",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("GAC"))
+  {
+    qword Temp_Key;
+    Temp_Key = (SaccSeed + 0x19870424)|0x19870413 ;
+    SaccKey = Temp_Key;
+  }
+}
+void _padding2702_BT()
+{
+  word key_i;
+  if(AES_CMAC_27 == 0)  //吉利3.0掩码
+    _SecurityAccess_AES(Seed_AES,Mask_Geely_BT,corresKey);
+  else if(AES_CMAC_27 == 1)//瑞驰掩码
+    _SecurityAccess_AES(Seed_AES,Mask_RC_BT,corresKey);
+  
+  for(key_i = 0; key_i < 16; key_i++)
+    DiagSetPrimitiveByte(sendkey,key_i+2,corresKey[key_i]);
+}

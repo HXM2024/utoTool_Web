@@ -265,6 +265,7 @@ import { useResizableSize } from '@/composables/useResizableSize'
 import { generateBoot } from '@/api/boot'
 import { getConfig, saveConfig, openFolder } from '@/api/config'
 import { useModuleStore } from '@/stores/modules'
+import { defaultAlgoForOem } from '@/utils/securityAlgo'
 
 // ===================== 状态 =====================
 
@@ -394,6 +395,8 @@ function buildBootSaveData(): any | null {
     configData.value.uds_main_info = iniText
   }
   configData.value.oem = store.selectedOem
+  // 全局安全算法选择随配置保存；缺失时由加载兜底补默认值
+  configData.value.securityAlgo = store.selectedAlgo
   return configData.value
 }
 
@@ -454,6 +457,13 @@ async function loadConfigData(name: string, token: number = configChangeToken) {
     if (data?.oem) {
       store.setSelectedOem(data.oem)
     }
+    // 回填安全算法；历史配置只有 oem 时按该厂默认算法兜底
+    if (data?.securityAlgo) {
+      store.setSelectedAlgo(data.securityAlgo)
+    } else if (data?.oem) {
+      const fallback = defaultAlgoForOem(data.oem)
+      if (fallback) store.setSelectedAlgo(fallback)
+    }
     // 标记内存数据归属该配置，后续切换时据此安全自动保存
     loadedConfig.value = name
   } catch {
@@ -485,6 +495,7 @@ async function onCreate(name: string) {
   }
   const dataToSave = hasConfig ? defaultData : (configData.value || defaultData)
   dataToSave.oem = store.selectedOem
+  dataToSave.securityAlgo = store.selectedAlgo
   try {
     await saveConfig('boot', name, dataToSave)
     ElMessage.success(`配置 "${name}" 创建成功`)
@@ -599,7 +610,11 @@ async function saveParsedAsConfig() {
       },
     })
     const name = value.trim()
-    await saveConfig('boot', name, parseResult.value)
+    await saveConfig('boot', name, {
+      ...parseResult.value,
+      oem: store.selectedOem,
+      securityAlgo: store.selectedAlgo,
+    })
     ElMessage.success(`配置 "${name}" 保存成功`)
     currentConfigName.value = name
     loadedConfig.value = name

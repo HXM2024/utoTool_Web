@@ -1,0 +1,408 @@
+/*@!Encoding:936*/
+includes
+{
+  
+}
+variables
+{
+  char log_name[400] = " Logging";
+  int i = 0,x = 0;
+  int Res_NRC78;
+  
+  char testCaseTitle[400];
+  char order[400];
+  long Time[9];
+  char timeBuffer[200];
+
+  char Error_File[50] = ".\\Testmodule\\Testmodule_UDS\\";
+  char Error_FileName[50] = "异常数据记录.txt";
+  
+
+}
+
+
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,dword msgID)
+{
+  char comment[1000];
+  byte primitiveRaw[1000];
+  long size;
+  double Start_time,End_time,DiffTime;
+  int i,NRC78_Count;
+  
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  if(msgID==@sysvar::DID::phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else if(msgID==@sysvar::DID::funreq_ID)
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  
+  for(i=0;i<size;i++)
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  if(msgID==@sysvar::DID::phyreq_ID)
+    diagSendRequest(obj);
+  else if(msgID==@sysvar::DID::funreq_ID)
+    diagSendFunctional(obj);
+  testWaitForDiagRequestSent(obj,1500);
+  Start_time = (double)timeNow()/100;
+  testCaseComment(comment);
+  writeEx(-3,0,comment);
+  testReportWriteDiagObject(obj);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(obj,@sysvar::DID::WaitForRes);
+  if(diagGetLastResponseCode(obj)==0x78)
+  {
+    End_time = (double)timeNow()/100;
+    DiffTime = End_time - Start_time;
+    NRC78_Count = 0;  Res_NRC78 = 1;
+    _WriteEx_and_Report("","第一次收到NRC78响应时间: %.2f ms",DiffTime);
+    do{
+      if(_Check_Dword_in_Num(DiagGetPrimitiveByte(obj,0),NotNRC78_Serve,NotNRC78_Serve_Count)!= -1)
+        testStepFail("","当前 0x%02X 服务期望无NRC78返回,实际收到0x78",DiagGetPrimitiveByte(obj,0));
+      if(DiagGetRespPrimitiveByte(obj,1) != DiagGetPrimitiveByte(obj,0))
+        testStepFail("","NRC78响应时,服务不正确,期望为 0x%2X  实际为 0x%02X",DiagGetPrimitiveByte(obj,0),DiagGetRespPrimitiveByte(obj,1));
+      if(DiagGetRespPrimitiveSize(obj) != 3)
+        testStepFail("","NRC78响应时,长度不正确");
+      NRC78_Count++;
+      if(NRC78_Count>1)
+      {
+        Start_time = (double)timeNow()/100;  
+        DiffTime = Start_time - End_time;
+        if(DiffTime<0.3*P2_can_server)
+          testStepFail("","第 %d 次NRC78响应时间过短,期望大于 %d ms，当前响应时间为 %.2f ms",NRC78_Count,0.3*P2_can_server,DiffTime);
+        if(DiffTime>0.8*P2_can_server)
+          testStepFail("","第 %d 次NRC78响应时间过长,期望小于 %d ms，当前响应时间为 %.2f ms",NRC78_Count,0.8*P2_can_server,DiffTime);
+      }
+      testWaitForDiagResponse(obj,@sysvar::DID::WaitForRes*100);
+      End_time = (double)timeNow()/100;
+    }while(diagGetLastResponseCode(obj)==0x78);
+  }
+  if(diagGetLastResponseCode(obj)!=0)
+    testReportWriteDiagResponse(obj);
+}
+
+//发送请求等待响应，并将请求和响应写进报告。如果响应是多帧不要使用此函数，因为p2cmax时间可能不够
+_SendAndWriteReport(diagRequest* obj,dword msgID,dword time)
+{
+  char comment[70];
+  byte primitiveRaw[300];
+  long size;
+  double Start_time,End_time,DiffTime;
+  int i,NRC78_Count;
+  
+  size=DiagGetPrimitiveData(obj,primitiveRaw,elCount(primitiveRaw));
+  if(msgID==@sysvar::DID::phyreq_ID)
+    snprintf(comment,elCount(comment),"已发送物理寻址请求:[%02X]",size);
+  else
+    snprintf(comment,elCount(comment),"已发送功能寻址请求:[%02X]",size);
+  for(i=0;i<size;i++)
+    snprintf(comment,elCount(comment),"%s %02X",comment,primitiveRaw[i]);
+  if(msgID==@sysvar::DID::phyreq_ID)
+    diagSendRequest(obj);
+  else if(msgID==@sysvar::DID::funreq_ID)
+    diagSendFunctional(obj);
+  
+  testWaitForDiagRequestSent(obj,500);
+  Start_time = (double)timeNow()/100;
+  testCaseComment(comment);
+  writeEx(-3,0,comment);
+  testReportWriteDiagObject(obj);
+  diagSetP2Extended(-1);
+  testWaitForDiagResponse(obj,time);
+  if(diagGetLastResponseCode(obj)==0x78)
+  {
+    End_time = (double)timeNow()/100;
+    DiffTime = End_time - Start_time;
+    NRC78_Count = 0;  Res_NRC78 = 1;
+    _WriteEx_and_Report("","第一次收到NRC78响应时间: %.2f ms",DiffTime);
+    do{
+      if(_Check_Dword_in_Num(DiagGetPrimitiveByte(obj,0),NotNRC78_Serve,NotNRC78_Serve_Count)!= -1)
+        testStepFail("","当前 0x%02X 服务期望无NRC78返回,实际收到0x78",DiagGetPrimitiveByte(obj,0));
+      if(DiagGetRespPrimitiveByte(obj,1) != DiagGetPrimitiveByte(obj,0))
+        testStepFail("","NRC78响应时,服务不正确,期望为 0x%2X  实际为 0x%02X",DiagGetPrimitiveByte(obj,0),DiagGetRespPrimitiveByte(obj,1));
+      if(DiagGetRespPrimitiveSize(obj) != 3)
+        testStepFail("","NRC78响应时,长度不正确");
+      NRC78_Count++;
+      if(NRC78_Count>1)
+      {
+        Start_time = (double)timeNow()/100;  
+        DiffTime = Start_time - End_time;
+        if(DiffTime<0.3*P2_can_server)
+          testStepFail("","第 %d 次NRC78响应时间过短,期望大于 %d ms，当前响应时间为 %.2f ms",NRC78_Count,0.3*P2_can_server,DiffTime);
+        if(DiffTime>0.8*P2_can_server)
+          testStepFail("","第 %d 次NRC78响应时间过长,期望小于 %d ms，当前响应时间为 %.2f ms",NRC78_Count,0.8*P2_can_server,DiffTime);
+      }
+      testWaitForDiagResponse(obj,@sysvar::DID::WaitForRes*100);
+      End_time = (double)timeNow()/100;
+    }while(diagGetLastResponseCode(obj)==0x78);
+  }
+  if(diagGetLastResponseCode(obj)!=0)
+    testReportWriteDiagResponse(obj);
+}
+
+void creat_log(char function[])
+{
+  snprintf(timeBuffer,elCount(timeBuffer),"%s","");
+  getLocalTime(Time);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"__");
+  snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[5]+1900);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[4]+1);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[3]);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"_");
+  if(Time[2]<10)
+    snprintf(timeBuffer,400,"%s%02X",timeBuffer,Time[2]);
+  if(Time[2]>=10)
+    snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[2]);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  if(Time[1]<10)
+    snprintf(timeBuffer,400,"%s%02X",timeBuffer,Time[1]);
+  if(Time[1]>=10)
+    snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[1]);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  if(Time[0]<10)
+    snprintf(timeBuffer,400,"%s%02X",timeBuffer,Time[0]);
+  if(Time[0]>=10)
+    snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[0]);
+  x++;
+  if(x == 1)
+    State_Loop = 0;
+  if(x < 10){
+    order[0] = x+48;
+    order[1] = '.';
+  }
+  else if(x < 100){
+    order[0] = (x/10)+48;
+    order[1] = (x%10)+48;
+    order[2] = '.';
+  }
+  else if(x < 1000){
+    order[0] = (x/100)+48;
+    order[1] = (x/10%10)+48;
+    order[2] = (x%10)+48;
+    order[3] = '.';
+  }
+  testGetCurrentTestCaseTitle(testCaseTitle,400);
+  log_name[0] = 92;
+  strncat(log_name,function,399-strlen(log_name));
+  strncat(log_name,order,399-strlen(log_name));
+  strncat(log_name,testCaseTitle,399-strlen(log_name));
+  strncat(log_name,timeBuffer,399-strlen(log_name));
+  strncat(log_name,".asc",399-strlen(log_name));
+  setLogFileName(log_name);
+  for(i = 9; log_name[i] !='\0'; i++ )
+    log_name[i] = '\0';
+  if(x==1)
+  {
+    char Start_str[100];
+    char Start_str_[100];
+    snprintf(Start_str,elCount(Start_str),"开始测试时间");
+    snprintf(Start_str_,elCount(Start_str_),"开始测试时间");
+    snprintf(Start_str,elCount(Start_str),".\\Testreport\\UDS\\%s%s",Start_str,timeBuffer);
+    snprintf(Start_str_,elCount(Start_str_),"\n%s%s:\n",Start_str_,timeBuffer);
+    File_Write(Error_File,Error_FileName,Start_str_,2);
+//    snprintf(Start_str,elCount(Start_str),".\\Logging\\%s%s%s",function,Start_str,timeBuffer);
+    testReportFileName(Start_str);
+    if(Burn_in_Board == 2)
+    {_K30_ON();_K15_ON();}
+  }
+}
+void creat_log(char function[],char LoggingName[])
+{
+  snprintf(timeBuffer,elCount(timeBuffer),"%s","");
+  getLocalTime(Time);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"__");
+  snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[5]+1900);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[4]+1);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[3]);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"_");
+  if(Time[2]<10)
+    snprintf(timeBuffer,400,"%s%02X",timeBuffer,Time[2]);
+  if(Time[2]>=10)
+    snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[2]);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  if(Time[1]<10)
+    snprintf(timeBuffer,400,"%s%02X",timeBuffer,Time[1]);
+  if(Time[1]>=10)
+    snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[1]);
+  snprintf(timeBuffer,400,"%s%s",timeBuffer,"-");
+  if(Time[0]<10)
+    snprintf(timeBuffer,400,"%s%02X",timeBuffer,Time[0]);
+  if(Time[0]>=10)
+    snprintf(timeBuffer,400,"%s%d",timeBuffer,Time[0]);
+  x++;
+  if(x == 1)
+    State_Loop = 0;
+  
+  if(x < 10){
+    order[0] = x+48;
+    order[1] = '.';
+  }
+  else if(x < 100){
+    order[0] = (x/10)+48;
+    order[1] = (x%10)+48;
+    order[2] = '.';
+  }
+  else if(x < 1000){
+    order[0] = (x/100)+48;
+    order[1] = (x/10%10)+48;
+    order[2] = (x%10)+48;
+    order[3] = '.';
+  }
+  //testGetCurrentTestCaseTitle(testCaseTitle,200);
+  log_name[0] = 92;
+  strncat(log_name,function,399-strlen(log_name));
+  strncat(log_name,order,399-strlen(log_name));
+  strncat(log_name,LoggingName,399-strlen(log_name));
+  strncat(log_name,timeBuffer,399-strlen(log_name));
+  strncat(log_name,".asc",399-strlen(log_name));
+  setLogFileName(log_name);
+  for(i = 9; log_name[i] !='\0'; i++ )
+    log_name[i] = '\0';
+  if(x==1)
+  {
+    char Start_str[100];
+    char Start_str_[100];
+    snprintf(Start_str,elCount(Start_str),"开始测试时间");
+    snprintf(Start_str_,elCount(Start_str_),"开始测试时间");
+    snprintf(Start_str,elCount(Start_str),".\\Testreport\\UDS\\%s%s",Start_str,timeBuffer);
+    snprintf(Start_str_,elCount(Start_str_),"\n%s%s:\n",Start_str_,timeBuffer);
+    File_Write(Error_File,Error_FileName,Start_str_,2);
+//    snprintf(Start_str,elCount(Start_str),".\\Logging\\%s%s%s",function,Start_str,timeBuffer);
+    testReportFileName(Start_str);
+    if(Burn_in_Board == 2)
+    {_K30_ON();_K15_ON();}
+  }
+}
+
+
+
+File_Write(char file_path[],char file_name[],char StrValue[],int state)
+{
+  char buffer_write[20000];
+  long ret;
+  char FileNameStr[200];
+  
+  snprintf(FileNameStr,elCount(FileNameStr),"%s%s",file_path,file_name);
+//  setFilePath(file_path, 2);//不可以直接设置C根目录，2表明可以对这个目录下的文件可读可写
+  GlbHandlefile = openFileWrite (FileNameStr,state); //以ASCII打开，并且覆盖文件原有内容
+  if ( GlbHandlefile!=0 )
+  {
+    ret = filePutString(StrValue, strlen(StrValue), GlbHandlefile);    
+    if(ret)
+      fileClose (GlbHandlefile);
+  } 
+}
+
+
+void _Start()
+{
+  creat_log("\\UDS_Logging\\");
+  startLogging();
+}
+void _Start(char St[])
+{
+  creat_log(St);
+  startLogging();
+}
+
+
+void _End()
+{
+  stopLogging();
+  testWaitForTimeout(1000);
+}
+
+char HexToAsc(char data)
+{
+  int i;
+  char ASCII_0[26]={'A','B','C','D','E','F','G','H','I','J','K','L','M','N','O','P','Q','R','S','T','U','V','W','X','Y','Z'};
+  char ASCII_1[26]={'a','b','c','d','e','f','g','h','i','j','k','l','m','n','o','p','q','r','s','t','u','v','w','x','y','z'};
+  char ASCII_2[10]={'0','1','2','3','4','5','6','7','8','9'};
+  char ASCII_3[6]={':',';','<','=','>','?'};
+  char ASCII_4[15]={'!','"','#','$','%','&','`','(',')','*','+',',','-','.','/'};
+  char ASCII_5[3]={']','^','_'};
+  
+  if(data>=0x21 && data<=0x2f)
+  {
+    for(i=0;i<15;i++)
+    {
+      if(data == i+33) { data = ASCII_4[i];}
+    }
+  }  
+  else if(data>=0x30 && data<=0x39)
+  {
+    for(i=0;i<10;i++)
+    {
+      if(data == i+48) {data = ASCII_2[i];}
+    }
+  }
+  else if(data>=0x3a && data<=0x3f)
+  {
+    for(i=0;i<6;i++)
+    {
+      if(data == i+58){data = ASCII_3[i];}
+    }
+  }
+  else if(data>=0x41 && data<=0x5A)
+  {
+    for(i=0;i<26;i++)
+     {
+       if(data == i+65) {data = ASCII_0[i];}
+     }
+  }
+  else if(data>=0x5D && data<=0x5f)
+  {
+    for(i=0;i<3;i++)
+    {
+      if(data == i+93) { data = ASCII_5[i];}
+    }
+  }
+  else if(data>=0x61 && data<=0x7A)
+  {
+    for(i=0;i<26;i++)
+    {
+      if(data == i+97) {data = ASCII_1[i];}
+    }
+  }
+  else if(data == 0x20)
+    data = 0x20;
+  else if(data == 0x00)
+    data = 0x00;
+  else if(data == 0x5B)
+    data = '[';
+  else if(data == 0x7B)
+    data = '{';
+  else if(data == 0x7D)
+    data = '}';
+  return data;
+}
+
+int Check_information_(char Rev[],char Ex[],char str[])  //实测结果，预期结果，输出信息
+{
+  int Return_f;
+  Return_f = 0;
+  if(strncmp(Ex,Rev,strlen(Rev)) == 0 && strlen(Ex) == strlen(Rev))
+  {
+    writeEx(-3,0,"%s",str);
+    writeEx(-3,0,"/---------------Pass------------------/");
+    writeEx(-3,0,"        预期版本 = %s",Ex);
+    writeEx(-3,0,"        实测版本 = %s",Rev);
+    writeEx(-3,0,"/------------------------------------/");
+    testStepPass(str,"预期结果=%s \n 实际结果=%s",Ex,Rev);
+    Return_f = 1;
+  }
+  else
+  {
+    writeEx(-3,0,"%s",str);
+    writeEx(-3,0,"/--------------Error-----------------/");
+    writeEx(-3,0,"        预期版本 = %s",Ex);
+    writeEx(-3,0,"        实测版本 = %s",Rev);
+    writeEx(-3,0,"/------------------------------------/");
+    testStepFail(str,"预期结果=%s \n 实际结果=%s",Ex,Rev);
+    Return_f = -1;
+  } 
+  return Return_f;
+}

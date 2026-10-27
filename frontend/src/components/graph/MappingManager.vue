@@ -32,7 +32,7 @@
       </div>
       <div
         v-for="(e, i) in allEntries"
-        :key="i"
+        :key="keyOf(e)"
         class="mm-row"
         :class="{ 'drop-over': dropRow === i, 'mm-row-active': isRowSelected(i) }"
         @dragover.prevent="dropRow = i"
@@ -48,10 +48,20 @@
           size="small"
           placeholder="变量名"
           class="mm-col"
-          :ref="(el: any) => setAliasInputEl(i, el)"
+          :ref="(el: any) => setAliasInputEl(keyOf(e), el)"
+          @focus="beginEdit"
+          @blur="endEdit"
           @change="commit(allEntries)"
         />
-        <el-input v-model="e.name" size="small" placeholder="对象" class="mm-col" @change="commit(allEntries)" />
+        <el-input
+          v-model="e.name"
+          size="small"
+          placeholder="对象"
+          class="mm-col"
+          @focus="beginEdit"
+          @blur="endEdit"
+          @change="commit(allEntries)"
+        />
         <el-button size="small" :icon="Close" text class="mm-col-op" @click.stop="removeEntry(i)" />
       </div>
       <div v-if="!allEntries.length" class="mm-empty">暂无映射，拖入对象或点「新增变量」</div>
@@ -181,10 +191,42 @@ function sortMark(key: 'alias' | 'name'): string {
   return sortAsc.value ? '▲' : '▼'
 }
 
+// ===== 行稳定标识（v-for 的 key）=====
+// 用 WeakMap 给每条映射对象分配运行时 id：不写进对象、不会落库污染配置。
+// 若用数组下标作 key，排序开启时输入变量名会实时重排，Vue 按下标复用 DOM，
+// 焦点留在原 DOM 元素上、绑定的却已是另一条数据，后续输入就会写进别的变量。
+const entryIds = new WeakMap<MappingEntry, string>()
+let entryIdSeq = 0
+function keyOf(e: MappingEntry): string {
+  let id = entryIds.get(e)
+  if (!id) {
+    id = `map-${++entryIdSeq}`
+    entryIds.set(e, id)
+  }
+  return id
+}
+
+// ===== 编辑期冻结排序 =====
+/** 进入编辑时记下的显示顺序（行 id 列表）；非编辑态为 null，恢复实时排序 */
+const frozenIds = ref<string[] | null>(null)
+function beginEdit() {
+  frozenIds.value = allEntries.value.map((e) => keyOf(e))
+}
+function endEdit() {
+  frozenIds.value = null
+}
+
 const allEntries = computed<MappingEntry[]>(() => {
   const out: MappingEntry[] = []
   for (const k of kinds) {
     out.push(...props.mapping[bucketOf(k.value)])
+  }
+  // 编辑中：沿用进入编辑那一刻的顺序，避免「边输入边排序」把光标所在行挪走
+  const frozen = frozenIds.value
+  if (frozen) {
+    const pos = new Map(frozen.map((id, idx) => [id, idx]))
+    const rank = (e: MappingEntry) => (pos.has(keyOf(e)) ? pos.get(keyOf(e))! : Number.MAX_SAFE_INTEGER)
+    return [...out].sort((a, b) => rank(a) - rank(b))
   }
   return sortEntries(out)
 })
@@ -208,8 +250,10 @@ function commit(entries: MappingEntry[]) {
     envvars: [],
     a2l: [],
   }
+  // 直接复用对象引用（不再逐个浅拷贝）：这样 WeakMap 里的行 id 保持不变，
+  // v-for 的 key 稳定，提交后焦点不会因行被重建而丢失。
   for (const e of entries) {
-    next[bucketOf(e.kind)].push({ ...e })
+    next[bucketOf(e.kind)].push(e)
   }
   emit('update:mapping', next)
 }
@@ -273,7 +317,7 @@ function onAddBtnDrop(event: DragEvent) {
 
 /** 根据解析结果新增一条映射变量（去重：同 kind 同变量名已存在则跳过） */
 function addEntryFromParsed(parsed: { kind: MappingKind; name: string }) {
-  const entries = allEntries.value.map((e) => ({ ...e }))
+  const entries = [...allEntries.value]
   if (entries.some((e) => e.alias === parsed.name && e.kind === parsed.kind)) {
     ElMessage.info(`映射「${parsed.name}」已存在`)
     return
@@ -288,7 +332,7 @@ function onRowDrop(event: DragEvent, i: number) {
   dropRow.value = -1
   const parsed = parseDrop(event)
   if (!parsed) return
-  const entries = allEntries.value.map((e) => ({ ...e }))
+  const entries = [...allEntries.value]
   const target = entries[i]
   if (!target) return
   // 分类（kind）只用于列表分桶，不参与生成（生成按 alias → name 解析），改它会把整行挪到别的桶里
@@ -308,25 +352,27 @@ function onRowDragStart(event: DragEvent, entry: MappingEntry) {
   )
 }
 
-function addEntry() {
-  const entries = allEntries.value.map((e) => ({ ...e }))
-  entries.push({ alias: '', kind: 'signal', name: '', value: '' })
+async function addEntry() {
+  const entries = [...allEntries.value]
+  const created: MappingEntry = { alias: '', kind: 'signal', name: '', value: '' }
+  entries.push(created)
   commit(entries)
-  // 新增后自动聚焦新行的「变量名」，省掉一次点击（接着就能直接输入）；
-  // 开了排序时新行（变量名/对象都为空）不一定落在末尾，按排序后的位置定位
-  const shown = sortEntries(entries)
-  const idx = shown.findIndex((e) => !e.alias && !e.name)
-  focusAliasInput(idx >= 0 ? idx : shown.length - 1)
+  // 新增后自动聚焦新行的「变量名」，省掉一次点击（接着就能直接输入）。
+  // 按行 id 定位而不是行下标：排序开启时新行（变量名/对象都为空）落位会变，下标会错位。
+  await nextTick()
+  focusAliasInput(keyOf(created))
 }
 
-/** 变量名输入框实例（按行下标存）：新增行后用它自动聚焦 */
-const aliasInputEls: Record<number, any> = {}
-function setAliasInputEl(i: number, el: any) {
-  if (el) aliasInputEls[i] = el
+/** 变量名输入框实例（按行 id 存）：新增行后用它自动聚焦 */
+const aliasInputEls = new Map<string, any>()
+function setAliasInputEl(id: string, el: any) {
+  if (el) aliasInputEls.set(id, el)
+  else aliasInputEls.delete(id)
 }
-function focusAliasInput(i: number) {
+function focusAliasInput(id: string | null) {
+  if (!id) return
   nextTick(() => {
-    const inst = aliasInputEls[i]
+    const inst = aliasInputEls.get(id)
     const input = inst?.input || inst?.$el?.querySelector?.('input')
     if (input && typeof input.focus === 'function') {
       input.focus()
@@ -336,7 +382,7 @@ function focusAliasInput(i: number) {
 }
 
 function removeEntry(i: number) {
-  const entries = allEntries.value.map((e) => ({ ...e }))
+  const entries = [...allEntries.value]
   const removed = entries[i]
   entries.splice(i, 1)
   // 选中态里的下标跟着左移，避免删一行后选中错位

@@ -1,0 +1,2860 @@
+import os
+import tkinter as tk
+from tkinter import filedialog, messagebox, font
+import pandas as pd
+import ast
+from collections import Counter
+import re
+import random
+import cantools
+import zipfile          #20260612新增_UDS使用
+import sys              #20260612新增_UDS使用
+
+# import math
+# import subprocess
+# import casexml
+# from collections import defaultdict
+# import StringTxt
+# from openpyxl.styles import PatternFill 
+# from openpyxl import Workbook
+# from openpyxl.styles import Font, Alignment, PatternFill
+
+class Application():
+    def __init__(self):
+        self.root=tk.Tk()
+        self.root.iconphoto
+        self.root.title("Excel转换工具 v2.0")
+        self.root.geometry("500x180")
+        self.root.resizable(False, False)
+        self._create_gui()
+        self._draw_gradient_background()
+
+    def _create_gui(self):
+        """创建GUI组件"""
+        
+        self.canvas = tk.Canvas(self.root)
+        self.excel_label = tk.Label(self.root, text="Excel文件路径:", bg='#b2e0d3')
+        self.excel_text = tk.Text(self.root, height=1, width=15, wrap=tk.WORD,bg='#eaeaea')
+        self.select_btn = tk.Button(self.root, text="选择文件", command=self.select_file, bg='#b5b5b5')    
+        # self.CAN_btn = tk.Button(self.root, text="CAN",font=font.Font(size=20,weight="bold"), command=self.convert_file, bg='#0abab5', fg='white')
+        self.BT_btn = tk.Button(self.root, text="BOOT",font=font.Font(size=20,weight="bold"), command=self.convert_BT_file,bg='#0abab5', fg='white')
+        self.UDS_btn = tk.Button(self.root, text="UDS",font=font.Font(size=20,weight="bold"), command=self.convert_UDS_file, bg='#0abab5', fg='white')
+        # self.CANoe_btn = tk.Button(self.root, text="CANoe",font=font.Font(size=20,weight="bold"), bg='#007B00', fg='white')
+        # 在Application类的_create_gui方法中添加按钮
+        # self.template_btn = tk.Button(self.root, text="DBC-Template", command=self.process_dbc_file,bg='#70AD47',fg='white')
+        # self.template_btn.place(x=10, y=90, width=80, height=30)
+
+        # 布局设置
+        self.canvas.pack(fill='both', expand=True)
+        self.excel_label.place(x=10, y=20, width=90, height=50)
+        self.excel_text.place(x=100, y=20, width=300, height=50)
+        self.select_btn.place(x=400, y=20, width=70, height=50)
+        # self.CAN_btn.place(x=100, y=90, width=90, height=50)
+        # self.BT_btn.place(x=200, y=90, width=90, height=50)
+        # self.UDS_btn.place(x=300, y=90, width=90, height=50)
+        # self.CANoe_btn.place(x=400, y=80, width=90, height=70)
+        
+        self.BT_btn.place(x=130, y=90, width=100, height=50)
+        self.UDS_btn.place(x=270, y=90, width=100, height=50)
+
+    def _draw_gradient_background(self):
+        """绘制渐变背景"""
+        colors = self._generate_gradient('#0abab5', '#cff3f0', 10, 25)
+        square_size = 20
+        for row in range(10):
+            for col in range(25):
+                x1 = col * square_size
+                y1 = row * square_size
+                x2 = x1 + square_size
+                y2 = y1 + square_size
+                self.canvas.create_rectangle(x1, y1, x2, y2, 
+                    fill=colors[row][col], outline="")
+
+    def _generate_gradient(self, start_color, end_color, steps, rows):
+        """生成渐变颜色矩阵"""
+        start_rgb = [int(start_color[i:i+2], 16) for i in (1,3,5)]
+        end_rgb = [int(end_color[i:i+2], 16) for i in (1,3,5)]
+        rgb_steps = [(end - start)/steps for start, end in zip(start_rgb, end_rgb)]
+        
+        gradient = []
+        for i in range(steps + 1):
+            gradient_col = []
+            for row in range(rows + 1):
+                new_rgb = [
+                    int(start + i*step + random.uniform(1,step))
+                    if (row%2 == i%2) else 0xFF
+                    for start, step in zip(start_rgb, rgb_steps)
+                ]
+                gradient_col.append('#%02x%02x%02x' % tuple(new_rgb))
+            gradient.append(gradient_col)
+        return gradient
+
+    def select_file(self):
+        """选择Excel文件"""
+        file_path = filedialog.askopenfilename(filetypes=[("文件", "*.xlsx;*.dbc")])
+        if file_path:
+            self.excel_text.config(state=tk.NORMAL)
+            self.excel_text.delete(1.0, tk.END)
+            self.excel_text.insert(tk.END, file_path)
+            self.excel_text.config(state=tk.DISABLED)
+
+    # def convert_file(self):
+    #     """执行转换"""
+    #     excel_file = self.excel_text.get(1.0, tk.END).strip()
+    #     if not excel_file:
+    #         messagebox.showwarning("警告", "请先选择Excel文件")
+    #         return
+
+    #     try:
+    #         processor = ExcelProcessor(excel_file,self.root)
+    #         processor.process_configuration()
+    #         processor.process_dtc_sheet()
+    #         processor.process_volt_sheet()
+    #         processor.process_Other()
+    #         processor.process_Data_link_layer()
+    #         processor.process_dbc_canmatrix()
+    #         processor.process_testcase()
+    #         processor.generate_output_files()
+    #     finally:
+    #         messagebox.showinfo("转换结束", f"转换结束")
+    
+    def convert_UDS_file(self):
+        """执行转换"""
+        excel_file = self.excel_text.get(1.0, tk.END).strip()
+        if not excel_file:
+            messagebox.showwarning("警告", "请先选择Excel文件")
+            return
+
+        try:
+            processor = UDSExcelProcessor(excel_file,self.root)
+            processor.process_Other()
+            processor.process_Serve()
+            processor.process_DTC()
+            processor.process_1904()
+            processor.process_1906()
+            processor._save_file()
+        except Exception as e:
+            if not getattr(processor, '_error_shown', False):
+                processor._handle_global_error(e)
+        finally:
+            messagebox.showinfo("转换结束", f"转换结束")
+    def convert_BT_file(self):
+        """执行转换"""
+        excel_file = self.excel_text.get(1.0, tk.END).strip()
+        if not excel_file:
+            messagebox.showwarning("警告", "请先选择Excel文件")
+            return
+
+        try:
+            processor = BTExcelProcessor(excel_file,self.root)
+            processor.process_Other()
+            processor.process_Serve()
+            processor._save_file()
+        except Exception as e:
+            if not getattr(processor, '_error_shown', False):
+                processor._handle_global_error(e)
+        finally:
+            messagebox.showinfo("转换结束", f"转换结束")         
+
+class BTExcelProcessor():
+    def __init__(self,excel_file,master):
+        self.master=master
+        self.excel_file = excel_file
+        self.sheetnames = pd.ExcelFile(self.excel_file).sheet_names
+        self.Other = {}       
+        self.sheets = {}
+        self._current_sheet = ''
+        self._current_row = 0
+        self._error_shown = False
+
+        self.UDS_Main_info=''
+        self.Serve = {}
+        self.struct = '''
+/*@!Encoding:936*/
+includes
+{
+  
+}
+
+variables
+{
+  /*服务(新 ,参照配置表) * 结构体*/
+  struct Serve_Support
+  {
+    byte Serve;                            /*服务*/
+    dword Serve_Fun[50];                  /*服务支持的子功能*/ 
+    byte Serve_Fun_Count;                  /*服务支持的子功能个数*/
+    byte Serve_Fun_Len[50];               /*服务支持的子功能对应的正确长度*/ 
+    
+    byte Serve_Para[50][10];             /*每个子功能对应的参数*/ 
+    byte Serve_Para_Count[50];            /*每个子功能对应的参数个数*/ 
+    byte Serve_Para_Len[50][10];         /*子功能对应的每个参数的长度*/
+    
+    byte Serve_NRC[50][10];              /*NRC优先级(由高到低)*//*与子功能位置顺序对应*/
+    byte Serve_NRC_Count[50];             /*NRC个数*/
+    byte Serve_NRC22[50];                 /*NRC22条件*/
+    byte RSP[50];                         /*肯定响应抑制位 1:支持  0:不支持*//*与子功能位置顺序对应*/
+    byte Security_Access[50];             /*是否需要安全访问*//*与子功能位置顺序对应*/
+    byte Serve_Addres[50];                /*寻址方式*//*与子功能位置顺序对应*/
+    byte Serve_Session[50];               /*会话*//*与子功能位置顺序对应*/
+  };
+  struct Serve_Support Serve_Data[15];
+  dword Serve_Data_Count;
+  
+  
+  /*31服务(新 ,参照配置表) * 结构体*/
+  /*1字节服务 + 1字节例程控制类型 + 2字节例程DID + 例程控制选项   例如 ：长安角度置零请求31 01 FE E0 01*/
+  
+  struct Serve_31_Support
+  {   
+    byte Routine[2];                      /*例程DID/进程号(一个例程2个byte)*/
+    dword Routine_Len;                     /*例程对应的发送长度*/
+    char Interpretation[50];              /*例程释义*/
+    
+    byte Control_Type_Count;              /*对应例程下有几个控制类型(和例程位置对应)*/
+    byte Control_Type[10];                /*例程控制类型*//*和例程位置对应(一个例程多种控制类型(控制类型1byte))*/
+    dword Control_Type_TxLen[10];            /*根据控制类型,例程对应的发送长度*/
+    byte Control_Type_RxLen[10];          /*控制类型的响应长度*//*跟随控制类型*/
+    int Control_Type_Success[10];         /*跟随控制类型,成功对应的数据*/
+    int Control_Type_Failed[10];          /*跟随控制类型,失败对应的数据*/    
+    int Control_Type_Others[10];          /*跟随控制类型,其他对应的数据*/
+
+    
+    byte Control_Option_Count[10];        /*对应例程下有几个控制选项(和控制类型对应)*/
+    byte Control_Option[10][10];          /*例程控制选项*//*和控制类型对应(多种控制选项或没有控制选项 控制选项1byte)*/
+    
+    byte Security_Access[10];             /*是否需要安全访问(和控制类型对应)*/
+    byte Serve_Addres[10];                /*支持的寻址方式(和控制类型对应)*/
+    byte Serve_Session[10];               /*支持的会话(和控制类型对应)*/
+    byte Serve_NRC22[10];                 /*NRC22条件(和控制类型对应)*/
+    byte Serve_NRC[10];                   /*31服务下的NRC(和控制类型对应)*/
+    byte Serve_NRC_Count[10];             /*31服务下的NRC个数(和控制类型对应)*/
+    
+  };
+  struct Serve_31_Support Serve_31_Hex[10];
+  dword Serve_31_Hex_Count;
+  
+}
+
+void _Init_Struct()
+{
+  int i,n;
+  dword Poss,Serve_Para,Serve_Fun;
+  dword Rountine_Poss,Con_Poss;
+  writeEx(-3,1,"------------初始化结构体---------------");
+  
+'''
+
+    def _load_excel_sheets(self,name):
+        """统一加载所有Excel表"""
+        try:
+            return pd.read_excel(self.excel_file, sheet_name=name)
+        except Exception as e:
+            messagebox.showerror("Excel加载错误", f"读取Excel失败: {str(e),name}",parent=self.master)
+            return
+    def _handle_sheet_error(self, sheetname, excel_row, exc):
+        """iterrows 循环内出错: 弹窗显示 sheet + Excel行号 + 错误信息"""
+        import traceback
+        tb_text = traceback.format_exc()
+        err_msg = (
+            f"Sheet工作表: {sheetname}\n"
+            f"Excel行号: 第{excel_row}行\n"
+            f"错误类型: {type(exc).__name__}\n"
+            f"错误信息: {exc}\n"
+            f"\n详细堆栈:\n{tb_text}"
+        )
+        messagebox.showerror("Sheet处理错误", err_msg, parent=self.master)
+        self._error_shown = True
+        try:
+            log_path = os.path.join(os.path.dirname(self.excel_file), "Excel2Case_error.log")
+            with open(log_path, 'a', encoding='utf-8') as lf:
+                lf.write("\n" + "=" * 60 + "\n")
+                lf.write(f"Sheet: {sheetname}, Excel行: {excel_row}\n")
+                lf.write(tb_text)
+        except Exception:
+            pass
+        raise exc
+
+    def _handle_global_error(self, exc):
+        """全局兜底: 非 iterrows 内的错误, 显示当前 sheet + 行号(若有)"""
+        import traceback
+        tb_text = traceback.format_exc()
+        sheet_info = self._current_sheet if self._current_sheet else "未知(加载/保存阶段)"
+        row_info = f"第{self._current_row}行" if self._current_row else "未进入数据行"
+        err_msg = (
+            f"当前Sheet: {sheet_info}\n"
+            f"当前位置: {row_info}\n"
+            f"错误类型: {type(exc).__name__}\n"
+            f"错误信息: {exc}\n"
+            f"\n详细堆栈:\n{tb_text}"
+        )
+        messagebox.showerror("运行错误", err_msg, parent=self.master)
+        try:
+            log_path = os.path.join(os.path.dirname(self.excel_file), "Excel2Case_error.log")
+            with open(log_path, 'a', encoding='utf-8') as lf:
+                lf.write("\n" + "=" * 60 + "\n")
+                lf.write(f"[全局错误] Sheet: {sheet_info}, 行: {row_info}\n")
+                lf.write(tb_text)
+        except Exception:
+            pass
+        raise exc
+
+
+    def _save_file(self):
+        """统一保存文件"""
+        ini_file_path=os.path.dirname(self.excel_file)+"/BT_UDS_Main_info.ini"
+        struct_file_path=os.path.dirname(self.excel_file)+"/Struct.can"
+        try:
+            with open(ini_file_path, 'w', encoding='utf-8') as f:
+                f.write(self.UDS_Main_info)
+            with open(struct_file_path, 'w', encoding='gbk') as f:
+                f.write(self.struct+'\n}')                
+            # messagebox.showinfo("保存成功", f"文件已生成：{os.path.basename(file_path)}")
+        except Exception as e:
+            messagebox.showerror("保存失败", f"文件保存失败：{str(e)}",parent=self.master)
+        
+        
+    def process_Other(self):
+        """处理other配置表"""
+        sheetname='Other'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        self.Other = sheet.set_index('Symbol')['Value'].to_dict()    
+        columns=sheet.columns.tolist()
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[0]]):
+                    if _ ==0:
+                        self.UDS_Main_info+='#'+'******************************{group}******************************#\n'.format(group=row[columns[0]])
+                    else:
+                        self.UDS_Main_info+='\n\n#'+'******************************{group}******************************#\n'.format(group=row[columns[0]])
+                if pd.notna(row[columns[1]]):
+                    if pd.notna(row[columns[4]]):
+                        self.UDS_Main_info+="\n#{comment}\n".format(comment=row[columns[4]])  
+                    if 'ECU_project' in row[columns[1]]:
+                        self.UDS_Main_info+="[Project_Information]\n"
+                        self.UDS_Main_info+="{Var} = {Value}\n".format(Var=row[columns[1]],Value=str(row[columns[2]]).replace('\n',''))
+                        self.UDS_Main_info+="[{}]\n".format(row[columns[2]])
+                    else:
+                        self.UDS_Main_info+="{Var} = {Value}\n".format(Var=row[columns[1]],Value=row[columns[2]])
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+
+        
+    def process_31H(self):
+        """处理31H配置表"""
+        sheetname='31H'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+                #0          1       2           3           4           5           6           7                   8                   9                   10              11          12              13          14              15              16                17          
+        columns=["进程号","描述","例程控制类型","例程控制选项","发送长度","响应长度","安全访问","默认模式\n物理寻址","扩展模式\n物理寻址","默认模式\n功能寻址","扩展模式\n功能寻址","NRC优先级","NRC22的条件","例程状态成功","例程状态失败","例程状态其他","编程模式\n物理寻址","编程模式\n功能寻址"]
+
+        structCode=""
+        course_dict={}
+        current_process = None  
+        Current_RID = 0      
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[0]): # 进程号不为空
+                    current_process = str(row[0])             
+                    # 初始化该进程的字典结构
+                    if current_process not in course_dict:
+                        course_dict[current_process] = {
+                            "Pos":Current_RID,
+                            "例程控制类型": {}
+                        }
+                        Current_RID += 1 
+                # 处理例程控制类型和选项
+                routine_type = row[2] # 例程控制类型
+                routine_option = row[3] if pd.notna(row[3]) and row[3]!="/" else "" # 例程控制选项
+            
+                # 初始化该例程控制类型的字典结构
+                if routine_type not in course_dict[current_process]["例程控制类型"]:
+                    course_dict[current_process]["例程控制类型"][routine_type] = {
+                        "例程控制选项个数": 0,
+                        "例程控制选项列表": []
+                    }
+                if routine_option != "":  #20260122 处理未填写例程控制类型时，控制类型计数1
+                    # 添加选项并计数
+                    course_dict[current_process]["例程控制类型"][routine_type]["例程控制选项个数"] += 1
+                    course_dict[current_process]["例程控制类型"][routine_type]["例程控制选项列表"].append(routine_option)
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+                    
+
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                Addres=0
+                Session=0
+                if (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')) or (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[16]]) and (row[columns[16]]==1 or row[columns[16]]=='1')):
+                    Addres|=(1)   
+                if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')) or (pd.notna(row[columns[17]]) and (row[columns[17]]==1 or row[columns[17]]=='1')):
+                    Addres|=(1<<1)                                    
+                if (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                    Session|=(1<<2)		
+                if (pd.notna(row[columns[16]]) and (row[columns[16]]==1 or row[columns[16]]=='1')) or (pd.notna(row[columns[17]]) and (row[columns[17]]==1 or row[columns[17]]=='1')):
+                    Session|=(1<<1)					 
+                if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')):
+                    Session|=1 
+                    # Session=(1<<2)  
+                if pd.notna(row[columns[0]] ): 
+                    self.UDS_Main_info += '''
+    {} = {{0x31,{},0x{},0x{}{}}}'''.format(row[columns[1]],row[columns[2]],str(row[columns[0]])[2:],str(row[columns[0]])[:2],',{}'.format(row[columns[3]]) if pd.notna(row[columns[3]]) and row[columns[3]]!='/' else '')
+                    course=  str(row[columns[0]])
+                    _RID_31 = course.replace("0x" or "0X","")
+                    _RID_31 ='0000'[:4-len(_RID_31)] + _RID_31
+                    Control_Type_list={'Control_Type':[],
+                                       'Control_Option':[]}                                          
+                    structCode+='''
+               
+       /********************0x31 结构体*****************/     
+       Serve_31_Hex[{Poss}].Routine[0]               = 0x{Serve_Fun1};            
+       Serve_31_Hex[{Poss}].Routine[1]               = 0x{Serve_Fun2};                 
+       Serve_31_Hex[{Poss}].Control_Type_Count       = {Fun_Count};
+       '''.format(Serve_Fun1=_RID_31[:-2],Serve_Fun2=_RID_31[-2:], # 251208 修改读取方式，防止excel读取 0203 类型RID自动设为203，导致RID读取错误  #260130删除 Serve_31_Hex[].Routine_Len
+                 Poss=course_dict[course]['Pos'],Fun_Count= len(course_dict[course]['例程控制类型'])
+                ) 
+                # Control_Option_list=[ast.literal_eval(ii) for ii in str(row[columns[14]]).split('\n')]
+                    if pd.notna(row[columns[11]]) :
+                        NRC_list=ast.literal_eval(row[columns[11]])
+                        for _NRC,NRC in enumerate(NRC_list):
+                            structCode+='''
+       Serve_31_Hex[{Poss}].Serve_NRC[{index}]             = {NRCCode};'''.format(Poss=course_dict[course]['Pos'],index=_NRC,NRCCode="0x{:X}".format(NRC) )#[{structDIIndex}]            
+
+                if pd.notna(row[columns[2]]) and row[columns[2]] not in Control_Type_list['Control_Type']:
+                    Control_Type_list['Control_Type'].append(row[columns[2]])
+                    structCode+='''
+   
+       Serve_31_Hex[{Poss}].Control_Type[{structDIIndex}]          = {Control_Type};
+       Serve_31_Hex[{Poss}].Control_Type_TxLen[{structDIIndex}]    = {Control_Type_TxLen};
+       Serve_31_Hex[{Poss}].Serve_Addres[{structDIIndex}]          = {Serve_Addres};
+       Serve_31_Hex[{Poss}].Serve_Session[{structDIIndex}]         = {Serve_Session};
+       Serve_31_Hex[{Poss}].Security_Access[{structDIIndex}]       = {SSecurity_Access};
+       Serve_31_Hex[{Poss}].Control_Option_Count[{structDIIndex}]  = {Control_Option_Count}; 
+       Serve_31_Hex[{Poss}].Serve_NRC_Count[{structDIIndex}]       = {structDIDNRC_Count}; 
+       Serve_31_Hex[{Poss}].Serve_NRC22[{structDIIndex}]           = {Serve_NRC22};
+        '''.format(
+                 Poss=course_dict[course]['Pos'],
+                 structDIIndex= list(course_dict[course]['例程控制类型'].keys()).index(row[columns[2]]),#_-course_dict[course][1]
+                 Control_Type=row[columns[2]],
+                 Control_Type_TxLen = row[columns[4]], #260130 新增：31例程长度根据控制类型获取
+                 Serve_Addres=Addres,Serve_Session=Session,
+                 structDIDNRC_Count=len(NRC_list) if pd.notna(row[columns[11]]) and (row[columns[11]] !='/') else 0,
+                 Control_Option_Count=course_dict[course]['例程控制类型'][row[columns[2]]]['例程控制选项个数'],
+                 SSecurity_Access= str(int(row[columns[6]])) if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0,
+                 Serve_NRC22=int(row[columns[12]]) if pd.notna(row[columns[12]]) and row[columns[6]]!='/' else 0)
+                
+             
+                if pd.notna(row[columns[3]]) and row[columns[3]] !='/':   
+                    Control_Type_list['Control_Option'].append(row[columns[3]])
+                    structCode+='''
+       Serve_31_Hex[{Poss}].Control_Option[{structDIIndex}][{index}]     = {Control_Option};'''.format(Poss=course_dict[course]['Pos'],structDIIndex=list(course_dict[course]['例程控制类型'].keys()).index(row[columns[2]]),
+                                                                                                       index=course_dict[course]['例程控制类型'][row[columns[2]]]['例程控制选项列表'].index(row[columns[3]]),Control_Option=row[columns[3]])
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+                   
+        return (structCode+"\n  ",Current_RID)#Serve_Data_Count ++;
+    def process_2E_H(self,Poss,NRC22,Rsp,Addres,Session):
+        """处理2E_H配置表"""
+        sheetname='2E_H'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        columns=['DID号','DID描述','是否需安全访问','正常发送字节数','NRC','结构体','INI']#sheet.columns.tolist()
+        iniDID=[]  
+        structDID=[]  
+        structCode=""
+        DID_Temp = ''
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                DID_Temp = str(row['DID号']).replace('0x','').replace('0X','').replace('.0','')
+                if(len(DID_Temp)<4):
+                    DID_Temp = ('0000'[:(4-len(DID_Temp))]) + str(DID_Temp)
+                
+                if row['INI']==1 or row['INI']=='1':
+                    iniDID.append(row['DID号'])    
+                if row['结构体']==1 or row['结构体']=='1':
+                    structDID.append(row['DID号'])                      
+                    structCode+='''
+                
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]         = {Serve_Fun};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]     = {Serve_Fun_Len};
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]      = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]     = {Serve_Session};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]   = {structDIDNRC_Count};
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}]   = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}]       = {Serve_NRC22};'''.format(Poss=Poss,structDIIndex=_,
+                                                                                           Serve_Fun='0x'+DID_Temp,
+                                                                                           Serve_Addres=Addres,Serve_Session=Session,
+               structDIDNRC_Count=len(ast.literal_eval(row['NRC'])) if pd.notna(row['NRC']) else 0,
+               SSecurity_Access= row['是否需安全访问'] if pd.notna(row['是否需安全访问']) and row['是否需安全访问']!='/' else 0,
+               Serve_NRC22=int(NRC22) if pd.notna(NRC22) else 0,
+               Serve_Fun_Len=str(row[columns[3]]).replace('/','0').replace('.0','').replace('nan','0')
+               )
+                    if pd.notna(row['NRC']):
+                        for _NRC,NRC in enumerate(ast.literal_eval(row['NRC'])):
+                            structCode+='''
+      Serve_Data[{Poss}].Serve_NRC[{structDIIndex}][{index}]      = {NRCCode};'''.format(Poss=Poss,structDIIndex=_,index=_NRC,NRCCode="0x{:X}".format(NRC))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        structCode='''
+
+  /********************2E结构体*****************/        
+  Serve_Data[{Poss}].Serve                = 0x2E;
+  Serve_Data[{Poss}].Serve_Fun_Count      = {count};'''.format(Poss=Poss,count=len(structDID))+structCode
+        
+        self.UDS_Main_info += self.process_2E_DID(iniDID)
+        return (structCode+"\n  ")#Serve_Data_Count ++;
+        #print(self.UDS_Main_info)
+    def process_22_DID(self,Poss,RSP,NRC_list,NRC22,Addres,Session):
+        """处理22_DID配置表"""
+        sheetname='22_DID'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        #           0       1       2           3               4            5                6          7       8     
+        columns=['DID号','DID描述',"字节数",'是否需安全验证','是否测试','数据未使用字节填充值','解析方式','响应内容','是否可写']#sheet.columns.tolist()          
+        iniDID=["DID_{}".format(buf) for buf in list(sheet[columns[0]] )]
+        structDID=[]  
+        structCode='''
+   /********************22结构体*****************/
+  Serve_Data[{Poss}].Serve                = 0x22;
+  Serve_Data[{Poss}].Serve_Fun_Count      = {Serve_Fun_Count};                
+  '''.format(Poss=Poss,Serve_Fun_Count=len(iniDID))        
+        ini_info='\n##22读取DID配置\nDID_22_Traversal=[{}]{}\n'.format(len(iniDID),"{"+",".join(iniDID)+"}")
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                structDID.append(row[columns[0]])   
+
+                structCode+='''
+            
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]         = {Serve_Fun};
+      Serve_Data[{Poss}].RSP[{structDIIndex}]               = {RSP};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]     = 3;
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]      = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]     = {Serve_Session};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]   = {structDIDNRC_Count};
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}]   = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}]       = {Serve_NRC22};'''.format(Poss=Poss,RSP=str(int(RSP)),structDIIndex=_,Serve_Fun='0x'+row[columns[0]],
+                                                                                         Serve_Addres=Addres,Serve_Session=Session,
+            structDIDNRC_Count=len(NRC_list) ,Serve_NRC22= int(NRC22) if pd.notna(NRC22) else 0,
+            SSecurity_Access= row[columns[3]] if pd.notna(row[columns[3]]) and row[columns[3]]!='/' else 0
+            )
+                if _isnotna(row[columns[4]])==1 or _isnotna(row[columns[4]])=='1' :
+                    ini_info+="DID_{} = [{}],[{}],[0x{},0x{}]:[{}],[{}],[{}]\n".format(
+                        row[columns[0]],
+                        _isnotna(row[columns[6]]), ##修改DID_22生成时解析方式未填时生成字符null问题2025.12.8
+                        row[columns[2]],
+                        row[columns[0]][:2],
+                        row[columns[0]][2:],
+                        row[columns[7]] if pd.notna(row[columns[7]]) else '',
+                        row[columns[8]] if pd.notna(row[columns[8]]) else '',
+                        row[columns[5]] if pd.notna(row[columns[5]]) else '')#重新打开未使用填充值#20260408
+            
+                if len(NRC_list)>0:
+                    for _NRC,NRC in enumerate(NRC_list):
+                        structCode+='''
+      Serve_Data[{Poss}].Serve_NRC[{structDIIndex}][{index}]      = {NRCCode};'''.format(Poss=Poss,structDIIndex=_,index=_NRC,NRCCode="0x{:X}".format(NRC))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+
+        self.UDS_Main_info +=ini_info
+        self.process_22_DIDs()
+        return (structCode+"\n  ")#Serve_Data_Count ++;
+        
+
+    def process_22_DIDs(self):
+        """处理22_DIDs配置表"""
+        sheetname='Read_DIDs'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        #           0       1       
+        columns=['DID号','DID描述']
+        iniDID=["0x{}".format(buf) for buf in list(sheet[columns[0]] )]
+        structDID=[]    
+        ini_info=''
+        Flag_ = 0
+        List_Plural_DID = []  
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[0]]):
+                    structDID.append(row[columns[0]])                
+                    did=','.join([f"[0x{element[:2]},0x{element[2:]}]" for element in  str(row[columns[0]]).split(',')]) if pd.notna(row[columns[0]]) else ''
+                    Name = ''
+                    Name = 'Plural_DID_' + str(_)
+                    if('不同' in row[columns[1]] and Flag_ < 3):
+                        Flag_ +=1
+                        ini_info+='''
+    #读取多个DID
+    DID_Read_Plural = {{{}}}\n'''.format(did)
+
+                    if('相同' in row[columns[1]] and Flag_ < 3):  
+                        Flag_ +=1
+                        ini_info+='''
+    #读取多个相同DID
+    DID_Read_Plural_Same = {{{}}}\n'''.format(did)
+
+                    if('不支持' in row[columns[1]] and Flag_ < 3):  
+                        Flag_ +=1
+                        ini_info+='''
+    #读取数据中含不支持DID
+    DID_Read_Plural_Some_NotSupport = {{{}}}\n'''.format(did)
+                    if(Flag_ > 3):
+                        ini_info+='''
+    #其它:{}
+    {} = {{{}}}\n'''.format(str(row[columns[1]]),Name,did)
+                        List_Plural_DID.append(Name)
+                    if(Flag_ == 3):
+                        Flag_ +=1
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        ini_info+='''
+#其它:汇总测试
+Other_Plural_DID = {}\n'''.format(str(List_Plural_DID).replace("'",""))
+        self.UDS_Main_info +=ini_info
+    
+        
+    def process_2E_DID(self,DIDlist):
+        """处理2E_DID配置表"""
+        sheetname='2E_DID'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        List = [str(item) for item in sheet.columns[2:]]
+        
+        DIDlist1=Counter(List)
+        DIDlist2=Counter(DIDlist)
+        if DIDlist1!=DIDlist2:
+            if DIDlist1-DIDlist2:
+                messagebox.showerror("DID加载错误",f"<2E_DID>中配置的DID{list(DIDlist1-DIDlist2)}在<2E_H>中没有配置",parent=self.master)
+            if DIDlist2-DIDlist1:
+                messagebox.showerror("DID加载错误",f"<2E_H>中配置的DID{list(DIDlist2-DIDlist1)}在<2E_DID>中没有配置",parent=self.master)
+            return 
+        DIDtxt="\n##2E写入DID配置\nDID_2E_Traversal=[{len}]{{{DID}}}\n".format(len=len(sheet.columns[2:]),DID=','.join(["DID2E_" + str('0000'[:4-len(str(element))] + str(element)) for element in  sheet.columns[2:]]))
+        
+        for DID in sheet.columns[2:]:
+            if len(str(DID))<4:
+                DIDstr='0000'[:(4-len(str(DID)))]+str(DID)
+            else:
+                DIDstr=DID
+            DIDReadstr = ''
+            DIDRead = str(sheet[DID][7]).replace("/","nan").replace("0X","").replace("0x","").replace(",","").replace("，","")
+            if(DIDRead != 'nan'):
+                 if len(str(DIDRead))<4:
+                     DIDReadstr = '0000'[:(4-len(str(DIDRead)))]+str(DIDRead)
+                 else:
+                     DIDReadstr = DIDRead
+                 DIDReadstr = '0x'+ DIDReadstr[:2] + ',' + '0x' + DIDReadstr[2:]
+                 
+            DIDtxt+="DID2E_{DID}=[0x{DIDH},0x{DIDL}],([{dlc}],[{data}],[{result}]) ([{dlc1}],[{data1}],[{result1}]) [{padding}],[{redDID}]\n".format(DID=DIDstr,DIDH=DIDstr[:2],DIDL=DIDstr[2:],
+                    dlc=sheet[DID][0],data=sheet[DID][1],result=sheet[DID][2],dlc1=sheet[DID][3],data1=sheet[DID][4],result1=sheet[DID][5],padding=sheet[DID][6],redDID= DIDReadstr)  #str(sheet[DID][7]).replace("nan","").replace("/","")
+
+        return (DIDtxt)
+    def process_Serve(self):
+        """处理服务配置表"""
+        sheetname='服务'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        Serve_count=0
+        Serve_dict={}
+        Serve_list=[]
+        #        0          1      2               3          4       5                 6                       7                   8                   9                   10              11          12              13                          14           15         16                      17
+        columns=["服务名称","服务","支持子功能列表","子功能描述","参数","是否需要安全验证","是否支持肯定响应抑制位","默认模式\n物理寻址","扩展模式\n物理寻址","默认模式\n功能寻址","扩展模式\n功能寻址","NRC优先级","NRC22的条件","长安工厂模式NRC22的条件","例程状态记录","预期发送长度","编程模式\n物理寻址","编程模式\n功能寻址"]#sheet.columns.tolist()
+        Sercount=0
+        Serve_Data_Count=0
+        Serve_31_Hex_Count = 0
+        Ser=''
+        serbit=0
+        for index,ceil in enumerate(sheet[columns[1]]):    
+            if ceil == 'END' :
+                break        
+            if pd.notna(ceil):  
+                    
+                Serve_dict[ceil]=[0,1]
+                Serve_dict[ceil][0]=index
+                Sercount=1
+                Ser=ceil
+                serbit=index
+                Serve_list.append(index)
+            else:
+                Serve_dict[Ser][1]+=1
+            
+        if '0x31' not in  Serve_dict.keys():
+            Serve_Data_Count=len(Serve_dict.keys())
+        else:
+            Serve_Data_Count=len(Serve_dict.keys())-1    
+        structCode=''
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[1]]) and row[columns[1]] in ["0x10","0x11","0x14","0x19","0x2E",'0x22',"0x28","0x27","0x28","0x31","0x34","0x36","0x37","0x3E","0x85"]:
+                    if _!=0 and '0x31' not in row[columns[1]]:
+                        Serve_count+=1                     
+                    Serve_= row[columns[1]]
+                    Serve_Fun_num=Serve_dict[Serve_][1]     
+                    if Serve_ not in ['0x31','0x2E','0x22']:     
+                        structCode+='''
+
+      /********************{Serve}结构体*****************/        
+      Serve_Data[{Poss}].Serve                = 0x{Serve};
+      Serve_Data[{Poss}].Serve_Fun_Count      = {count};\n'''.format(Poss=Serve_count,Serve=Serve_[2:],count=Serve_Fun_num)
+  
+                Addres=0
+                Session=0
+                if (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')) or (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[16]]) and (row[columns[16]]==1 or row[columns[16]]=='1')):
+                    Addres|=(1)  
+                if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')) or (pd.notna(row[columns[17]]) and (row[columns[17]]==1 or row[columns[17]]=='1')):
+                    Addres|=(1<<1)    
+                if (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                    Session|=(1<<2)		                                                    
+                if (pd.notna(row[columns[16]]) and (row[columns[16]]==1 or row[columns[16]]=='1')) or (pd.notna(row[columns[17]]) and (row[columns[17]]==1 or row[columns[17]]=='1')):
+                    Session|=(1<<1)						 
+                if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')):
+                    Session|=1        
+                if Serve_ not in ['0x31','0x2E','0x22'] and Serve_dict[Serve_][0] <= _ <Serve_dict[Serve_][0]+Serve_dict[Serve_][1]:#and row[columns[2]]!='/' 
+                                           
+                    structCode+='''
+                
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]         = {Serve_Fun};            {commentate}
+      Serve_Data[{Poss}].RSP[{structDIIndex}]               = {RSP};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]     = {fun_len};
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]      = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]     = {Serve_Session};
+      Serve_Data[{Poss}].Serve_Para_Count[{structDIIndex}]  = {Serve_Para_Count};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]   = {structDIDNRC_Count}; 
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}]   = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}]       = {Serve_NRC22};'''.format(commentate='//'+row[columns[3]] if pd.notna(row[columns[3]]) else '',
+                Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0],RSP=str(row[columns[6]]).replace(".0","") if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0,
+                Serve_Fun=('0x'+(row[columns[2]][2:]  if '0x' in row[columns[2]] else row[columns[2]])if pd.notna(row[columns[2]]) and row[columns[6]]!='/' else 0),
+                Serve_Addres=Addres,Serve_Session=Session,
+               structDIDNRC_Count=len(ast.literal_eval(row[columns[11]])) if pd.notna(row[columns[11]]) else 0,
+               SSecurity_Access= str(int(row[columns[5]])) if pd.notna(row[columns[5]]) and row[columns[5]]!='/' else 0,
+               Serve_Para_Count=len([ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]) if pd.notna(row[columns[4]]) and row[columns[4]]!='/' else 0,
+               fun_len= _isnotna(row[columns[15]]),#str(3+ len([ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]) if pd.notna(row[columns[4]]) and row[columns[4]]!='/' else 0),
+               Serve_NRC22=int(row[columns[12]]) if pd.notna(row[columns[12]]) and row[columns[12]]!='/' else 0
+               )
+                    if pd.notna(row[columns[4]]) and row[columns[4]]!='/' :
+                        Serve_Para_list=[ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]                    
+                        for _Para,Para in enumerate(Serve_Para_list):
+                            code='0x'
+                            if isinstance(Para,int):
+                                Para=[Para]
+                            for data in Para:
+                                code+='{:X}'.format(data)
+                            structCode+='''
+      Serve_Data[{Poss}].Serve_Para[{structDIIndex}][{index}]     = {ParaCode};
+      Serve_Data[{Poss}].Serve_Para_Len[{structDIIndex}][{index}] = {Para_Len};'''.format(Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0],index=_Para,ParaCode=code,Para_Len=len(Para) )  
+                    if pd.notna(row[columns[11]]):
+                        for _NRC,NRC in enumerate(ast.literal_eval(row[columns[11]])):
+                            structCode+='''
+      Serve_Data[{Poss}].Serve_NRC[{structDIIndex}][{index}]      = {NRCCode};'''.format(Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0],index=_NRC,NRCCode="0x{:X}".format(NRC) )
+                if Serve_ =='0x31':# and Serve_dict[Serve_][0] <= _ <Serve_dict[Serve_][0]+Serve_dict[Serve_][1]:#and row[columns[2]]!='/' 
+                    Var=self.process_31H()
+                    structCode+=Var[0]
+                if Serve_ =='0x2E':
+                    structCode+=self.process_2E_H(Serve_count,row[columns[12]],int(row[6]),Addres,Session)
+                if Serve_ =='0x22':
+                    NRCList=[]
+                    if pd.notna(row[columns[11]]):
+                        NRCList=ast.literal_eval(row[columns[11]])
+                    structCode+=self.process_22_DID(Serve_count,row[columns[6]],NRCList,row[columns[12]],Addres,Session)                      
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        self.struct+='''
+  Serve_Data_Count = {};
+  Serve_31_Hex_Count = {};'''.format(Serve_Data_Count,str(Var[1]))         
+        self.struct+=(structCode)   
+        
+                         
+class UDSExcelProcessor():
+
+    def __init__(self,excel_file,master):
+        self.master = master
+        self.excel_file = excel_file
+        self.sheetnames = pd.ExcelFile(self.excel_file).sheet_names
+        self.Other = {}       
+        self.sheets = {}
+        self._current_sheet = ''
+        self._current_row = 0
+        self._error_shown = False
+
+        self.UDS_Main_info=''
+        self.Serve = {}
+        self.Current_Porject = ""   #当前项目
+        self.SupportDID_Read = 1   #一次性读取的DID个数
+        self.struct ='''/*@!Encoding:936*/
+includes
+{
+  
+}
+
+variables
+{
+  /*服务(新 ,参照配置表) * 结构体*/
+  struct Serve_Support
+  {
+    byte Serve;                            /*服务*/
+    dword Serve_Fun[80];                  /*服务支持的子功能*/ 
+    byte Serve_Fun_Count;                  /*服务支持的子功能个数*/
+    byte Serve_Fun_Len[80];               /*服务支持的子功能对应的正确长度*/ 
+    
+    byte Serve_Para[80][20];              /*每个子功能对应的参数*/ 
+    byte Serve_Para_Count[20];             /*每个子功能对应的参数个数*/ 
+    byte Serve_Para_Len[80][20];          /*子功能对应的每个参数的长度*/
+    
+    byte Serve_NRC[80][20];               /*NRC优先级(由高到低)*//*与子功能位置顺序对应*/
+    byte Serve_NRC_Count[80];             /*NRC个数*/
+    byte Serve_NRC22[80];                 /*NRC22条件*/
+    byte RSP[80];                         /*肯定响应抑制位 1:支持  0:不支持*//*与子功能位置顺序对应*/
+    byte Security_Access[80];             /*是否需要安全访问*//*与子功能位置顺序对应*/
+    byte Serve_Addres[80];                /*寻址方式*//*与子功能位置顺序对应*/
+    byte Serve_Session[80];               /*会话*//*与子功能位置顺序对应*/
+  };
+  struct Serve_Support Serve_Data[18];
+  dword Serve_Data_Count;
+  
+  
+  /*31服务(新 ,参照配置表) * 结构体*/
+  /*1字节服务 + 1字节例程控制类型 + 2字节例程DID + 例程控制选项   例如 :长安角度置零请求31 01 FE E0 01*/
+  
+  struct Serve_31_Support
+  {   
+    byte Routine[2];                      /*例程DID/进程号(一个例程2个byte)*/
+    byte Routine_Len;                     /*例程对应的发送长度*/
+    char Interpretation[50];              /*例程释义*/
+    
+    byte Control_Type_Count;              /*对应例程下有几个控制类型(和例程位置对应)*/
+    byte Control_Type[10];                /*例程控制类型*//*和例程位置对应(一个例程多种控制类型(控制类型1byte))*/
+    byte Control_Type_RSP[10];            /*例程控制类型-肯定应答抑制位*/
+    byte Control_Type_RxLen[10];          /*控制类型的响应长度*//*跟随控制类型*/
+    int Control_Type_Success[10];         /*跟随控制类型,成功对应的数据*/
+    int Control_Type_Failed[10];          /*跟随控制类型,失败对应的数据*/    
+    int Control_Type_Others[10];          /*跟随控制类型,其他对应的数据*/
+    
+    byte Control_Option_Count[10];        /*对应例程下有几个控制选项(和控制类型对应)*/
+    byte Control_Option[10][10];          /*例程控制选项*//*和控制类型对应(多种控制选项或没有控制选项 控制选项1byte)*/
+    
+    byte Security_Access[10];             /*是否需要安全访问(和控制类型对应)*/
+    byte Serve_Addres[10];                /*支持的寻址方式(和控制类型对应)*/
+    byte Serve_Session[10];               /*支持的会话(和控制类型对应)*/
+    byte Serve_NRC22[10];                 /*NRC22条件(和控制类型对应)*/
+    byte Serve_NRC[10][20];               /*31服务下的NRC(和控制类型对应)*/
+    byte Serve_NRC_Count[10];             /*31服务下的NRC个数(和控制类型对应)*/
+    byte Serve_NRC_Special[10][20];       /*31服务下的特殊NRC优先级NRC(和控制类型对应)*/
+    byte Serve_NRC_Special_Count[10];     /*31服务下的特殊NRC优先级个数(和控制类型对应)*/
+    
+  };
+  struct Serve_31_Support Serve_31_Hex[20];
+  dword Serve_31_Hex_Count;
+}
+
+
+void _Init_Struct()
+{
+  writeEx(-3,1,"------------初始化结构体---------------");
+  
+'''
+
+    def get_resource_path(self,relative_path):
+        if getattr(sys, 'frozen', False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_path, relative_path)
+    
+    def normalize_number(self,value, eps=1e-9):
+        """
+        判断数值是否"接近整数"，接近则取整返回 int，否则原样返回 float。
+        可对 openpyxl / pandas / xlrd 读取到的任意数值统一处理。
+        """
+        if str(value) == 'nan':
+            return value
+        if isinstance(value, bool):
+            return value
+        if isinstance(value, int):
+            return value
+        if isinstance(value, float):
+            rounded = round(value)
+            # 与最近整数差值小于阈值，视为浮点精度误差，强制取整
+            if abs(value - rounded) < eps:
+                return int(rounded)
+            return value
+        return value
+
+    def extract_zip_with_encoding(self, zip_path, extract_to, filename_encoding='gbk'):
+        """
+        解压 zip 文件，正确处理中文文件名编码，并转换 .can/.cin 文件编码为 gbk
+        
+        Args:
+            zip_path: zip 文件路径
+            extract_to: 解压目标目录
+            filename_encoding: 文件名编码（默认为 UTF-8)
+        """
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            for file_info in zip_ref.infolist():
+                # 处理文件名编码（解决中文文件名乱码）
+                try:
+                    # zip 文件中的文件名通常使用 cp437 编码存储
+                    file_info.filename = file_info.filename.encode('cp437').decode(filename_encoding)
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    pass  # 如果失败，保持原文件名
+                
+                # 解压文件
+                zip_ref.extract(file_info, extract_to)
+                
+                # 如果解压的是 .can 或 .cin 文件，转换其编码为 UTF-8（不修改内容）
+                if file_info.filename.endswith('.can') or file_info.filename.endswith('.cin'):
+                    file_full_path = os.path.join(extract_to, file_info.filename)
+                    self.convert_file_to_gbk(file_full_path)
+    
+    def convert_file_to_gbk(self, file_path):
+        """
+        将文件编码转换为 gbk
+        Args:
+            file_path: 文件路径
+        """
+        try:
+            # 读取文件内容（尝试多种编码）
+            content = None
+            for enc in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                try:
+                    with open(file_path, 'r', encoding=enc) as f:
+                        content = f.read()
+                    break
+                except UnicodeDecodeError:
+                    continue
+            if content is None:
+                # print(f"无法读取文件: {file_path}")
+                return
+            content = content.replace('/*@!Encoding:65001*/', '/*@!Encoding:936*/')
+            
+            # 保存为 gbk 编码
+            with open(file_path, 'w', encoding='gbk') as f:
+                f.write(content)
+                
+        except Exception as e:
+            print(f"转换文件编码时出错 {file_path}: {e}")
+    
+    def create_zip_from_folder(self,folder_path, output_zip_path):
+        """
+        使用zipfile模块将文件夹打包为ZIP文件
+        可以更好地控制压缩选项
+        如果已存在相同文件则删除后再压缩
+        """
+        
+        if getattr(sys, 'frozen', False):
+            return
+        if os.path.exists(output_zip_path):
+            os.remove(output_zip_path)
+        with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(folder_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    # 计算相对路径，保持文件夹结构
+                    arcname = os.path.relpath(file_path, folder_path)
+                    zipf.write(file_path, arcname)
+    
+    def Data_Change_For_Input(self,data: str):
+        """
+        将十六进制字符串转换为带0x前缀的格式
+        
+        Args:
+            data: 输入字符串，如 "F1 A1 00 00 00 00 11 22 33 44 55"
+        Returns:
+            Change_Str: 转换后的字符串，如 "0xF1 0xA1 0x00 0x00 0x00 0x00 0x11 0x22 0x33 0x44 0x55"
+            Data_Len: 数据长度
+        """
+        groups = data.split()
+        Change_Str = " ".join([f"0x{x}" for x in groups])
+        Data_Len = len(groups)
+        
+        return Change_Str, Data_Len
+    
+    def compare_strings(self,Str_1_Input, Str_2_Input, ignore_case, method):
+        """
+        字符串比较函数，支持多种不区分大小写的方法
+        Args:
+            Str_1_Input: 第一个字符串
+            Str_2_Input: 第二个字符串
+            ignore_case: 是否忽略大小写
+            method: 方法，可选 "casefold", "lower", "upper"
+        Returns:
+            bool: 是否相等
+        """
+        str1 = Str_1_Input
+        str2 = Str_2_Input
+        # 提取字母
+        letters_1 = ''.join([char for char in Str_1_Input if char.isalpha()])
+        # 提取字母
+        letters_2 = ''.join([char for char in Str_2_Input if char.isalpha()])
+        # 提取数字
+        digits_1 = ''.join([char for char in Str_1_Input if char.isdigit()])
+
+        if ignore_case == 0 :
+            return str1 == str2
+        
+        if letters_1.lower() == letters_2.lower():
+            return digits_1 != "10"
+        if method == "casefold":
+            return str1.casefold() == str2.casefold()
+        elif method == "lower":
+            return str1.lower() == str2.lower()
+        elif method == "upper":
+            return str1.upper() == str2.upper()
+        else:
+            raise ValueError(f"不支持的比较方法: {method}")
+
+    def parse_to_list(self,data):
+        try:
+            # 根据类型转换
+            if isinstance(data, list):
+                return data
+            elif isinstance(data, tuple):
+                return list(data)
+            elif isinstance(data, set):
+                return list(data)
+            elif isinstance(data, (int, float, str, bool)):
+                return [data]
+            elif isinstance(data, dict):
+                return [data]  # 或者 list(data.items())
+            else:
+                return [data]  # 其他未知类型，包装成列表
+        except:
+            return []  # 解析失败
+    
+    def safe_int_to_str(self,value):
+        if pd.isna(value):
+            return ""
+        if isinstance(value, float) and value.is_integer():
+            value = int(value)
+        return str(value)
+
+    def _parse_number(self, value):
+        """解析数字值（支持十六进制）"""
+        if pd.isna(value):
+            return None
+        
+        # 处理字符串类型的数值
+        if isinstance(value, str):
+            value = value.strip().lower()
+            # 处理十六进制
+            if value.startswith('0x'):
+                try:
+                    return int(value, 16)
+                except ValueError:
+                    messagebox.showwarning("格式错误", f"非法十六进制值: {value}",parent=self.master)
+                    return None
+            # 处理二进制
+            elif value.startswith('0b'):
+                try:
+                    return int(value, 2)
+                except ValueError:
+                    messagebox.showwarning("格式错误", f"非法二进制值: {value}",parent=self.master)
+                    return None
+            # 处理科学计数法
+            elif 'e' in value:
+                try:
+                    return float(value)
+                except ValueError:
+                    messagebox.showwarning("格式错误", f"非法科学计数法值: {value}",parent=self.master)
+                    return None
+            elif '[' in value:
+                try:
+                    value.strip('[]')
+                    pet=re.compile(r'0x[0-9a-fA-F]+|\d+')
+                    mat=pet.findall(value)
+                    listvalue=[]
+                    for ma in mat:
+                            if ma.startswith('0x'):
+                                    listvalue.append(ma)
+                            else:
+                                    listvalue.append(int(ma)) 
+                                        
+                    return listvalue
+                except ValueError:
+                    messagebox.showwarning("格式错误", f"非法列表: {value}",parent=self.master)
+                    return None                
+            elif '.' in value:
+                try:                                     
+                    #print(value.strip('0').strip('.') if '.' in value else value)
+                    return value.strip('0').strip('.') if '.' in value else value
+                except ValueError:
+                    messagebox.showwarning("格式错误", f"非法浮点字符串: {value}",parent=self.master)
+                    return None                
+            elif '/' == value or '\\'==value:
+                try:                                     
+                    
+                    return 0
+                except ValueError:
+                    messagebox.showwarning("格式错误", f"非法浮点字符串: {value}",parent=self.master)
+                    return None                   
+        # 通用数值处理
+        try:
+            num = float(value)
+            return int(num) if num.is_integer() else num
+        except ValueError:
+            messagebox.showwarning("格式错误", f"无法解析的数值: {value}",parent=self.master)
+            return None
+        
+    def _load_excel_sheets(self,name):
+        """统一加载所有Excel表"""
+        try:
+            return pd.read_excel(self.excel_file, sheet_name=name)
+        except Exception as e:
+            messagebox.showerror("Excel加载错误", f"读取Excel失败: {str(e),name}",parent=self.master)
+            return
+   
+    def _handle_sheet_error(self, sheetname, excel_row, exc):
+        """iterrows 循环内出错: 弹窗显示 sheet + Excel行号 + 错误信息"""
+        import traceback
+        tb_text = traceback.format_exc()
+        err_msg = (
+            f"Sheet工作表: {sheetname}\n"
+            f"Excel行号: 第{excel_row}行\n"
+            f"错误类型: {type(exc).__name__}\n"
+            f"错误信息: {exc}\n"
+            f"\n详细堆栈:\n{tb_text}"
+        )
+        messagebox.showerror("Sheet处理错误", err_msg, parent=self.master)
+        self._error_shown = True
+        try:
+            log_path = os.path.join(os.path.dirname(self.excel_file), "Excel2Case_error.log")
+            with open(log_path, 'a', encoding='utf-8') as lf:
+                lf.write("\n" + "=" * 60 + "\n")
+                lf.write(f"Sheet: {sheetname}, Excel行: {excel_row}\n")
+                lf.write(tb_text)
+        except Exception:
+            pass
+        raise exc
+
+    def _handle_global_error(self, exc):
+        """全局兜底: 非 iterrows 内的错误, 显示当前 sheet + 行号(若有)"""
+        import traceback
+        tb_text = traceback.format_exc()
+        sheet_info = self._current_sheet if self._current_sheet else "未知(加载/保存阶段)"
+        row_info = f"第{self._current_row}行" if self._current_row else "未进入数据行"
+        err_msg = (
+            f"当前Sheet: {sheet_info}\n"
+            f"当前位置: {row_info}\n"
+            f"错误类型: {type(exc).__name__}\n"
+            f"错误信息: {exc}\n"
+            f"\n详细堆栈:\n{tb_text}"
+        )
+        messagebox.showerror("运行错误", err_msg, parent=self.master)
+        try:
+            log_path = os.path.join(os.path.dirname(self.excel_file), "Excel2Case_error.log")
+            with open(log_path, 'a', encoding='utf-8') as lf:
+                lf.write("\n" + "=" * 60 + "\n")
+                lf.write(f"[全局错误] Sheet: {sheet_info}, 行: {row_info}\n")
+                lf.write(tb_text)
+        except Exception:
+            pass
+        raise exc
+
+    def _save_file(self):
+        """统一保存文件"""
+            
+    # 弹出确认对话框
+        User_Choice = messagebox.askyesno(
+            "生成文件确认",
+            "是否生成完整文件？\n\n"
+            "【是】→ 解压模板并生成完整文件（ini + struct）\n"
+            "【否】→ 仅生成（ini + struct）文件",
+            icon='question'
+        )
+        #---------------------------------压缩文件Testmodule_UDS-------------------------------#
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        folder_to_zip = os.path.join(current_dir, "Testmodule_UDS")
+        output_zip = os.path.join(current_dir, "Testmodule_UDS.zip")
+        self.create_zip_from_folder(folder_to_zip, output_zip)
+        #---------------------------------解压文件Testmodule_UDS-------------------------------#
+        if User_Choice:
+            rar_path = self.get_resource_path("Testmodule_UDS.zip")
+            extract_to = os.path.dirname(self.excel_file) + "/Testmodule_UDS"
+            ini_file_path=os.path.dirname(self.excel_file)+"/Testmodule_UDS/UDS_Main_info.ini"
+            struct_file_path=os.path.dirname(self.excel_file)+"/Testmodule_UDS/Struct.cin"
+            if os.path.exists(rar_path):
+                # 使用带编码处理的解压函数（解决中文乱码问题）
+                self.extract_zip_with_encoding(rar_path, extract_to, filename_encoding='gbk')
+        else:
+            ini_file_path=os.path.dirname(self.excel_file)+"/UDS_Main_info.ini"
+            struct_file_path=os.path.dirname(self.excel_file)+"/Struct.cin"
+        #---------------------------------保存路径，应当在此处进行修改-------------------------------#
+        try:
+            with open(ini_file_path, 'w', encoding='utf-8') as f:
+                f.write(self.UDS_Main_info)
+            with open(struct_file_path, 'w', encoding='gbk') as f:
+                f.write(self.struct+'\n}')                
+        except Exception as e:
+            messagebox.showerror("保存失败", f"文件保存失败：{str(e)}",parent=self.master)
+        
+    def process_Other(self):
+        """处理other配置表"""
+        sheetname='Other'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        self.Other = sheet.set_index('Symbol')['Value'].to_dict()    
+        columns=sheet.columns.tolist()
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[0]]):
+                    if _ ==0:
+                        self.UDS_Main_info+='#'+'******************************{group}******************************#\n'.format(group=row[columns[0]])
+                    else:
+                        self.UDS_Main_info+='\n\n#'+'******************************{group}******************************#\n'.format(group=row[columns[0]])
+                if pd.notna(row[columns[1]]):
+                    if pd.notna(row[columns[4]]):
+                        self.UDS_Main_info+="\n#{comment}\n".format(comment=row[columns[4]])  
+                    if 'ECU_project' in row[columns[1]]:
+                        self.Current_Porject = row[columns[2]]  #将当前项目赋值给全局变量
+                        self.UDS_Main_info+="[Project_Information]\n"
+                        self.UDS_Main_info+="{Var} = {Value}\n".format(Var=row[columns[1]],Value=row[columns[2]])
+                        self.UDS_Main_info+="[{}]\n".format(row[columns[2]])
+                    else:
+                        self.UDS_Main_info+="{Var} = {Value}\n".format(Var=row[columns[1]],Value=row[columns[2]])
+                if pd.notna(row[columns[1]]) and  str(row[columns[1]]) == "DID_22_Support":
+                    self.SupportDID_Read = row[columns[2]]
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+    def process_1906(self):
+        """处理1906配置表"""
+        sheetname='1906'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        columns=sheet.columns.tolist()
+        txt='DTC_ExtendedDataRecord = {sub}'
+        template=[]
+        for date in sheet[columns[0]]:
+            template.append('['+_returnStr(date)+']')
+        self.UDS_Main_info+=txt.format(sub="{"+','.join(pd.Series(template).unique().tolist())).replace("'","")+"}\n"
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[0]]):
+                    self.UDS_Main_info+=_returnStr(row[columns[0]])+" = "+'''[({sub1}),({sub2}),({sub3}),({sub4},{sub5})]\n'''.format(
+                        sub1=row[columns[1]],
+                        sub2=row[columns[2]],
+                        sub3=row[columns[3]],
+                        sub4=row[columns[4]],
+                        sub5=row[columns[5]],
+                        )
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+
+        #20260609  新增
+        if self.compare_strings(self.Current_Porject,"ChangAn",1,"lower"):  
+            self.process_FixDataSave()
+        if self.compare_strings(self.Current_Porject,"Geely3.0",1,"lower"):
+            self.OEM_Config()
+        if self.compare_strings(self.Current_Porject,"BYD",1,"lower"):
+            self.OEM_Config()
+        self.NRC22_Config() #20260413新增
+                
+    def process_FixDataSave(self):
+        """处理ChangAn配置表"""
+        sheetname='ChangAn'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        #               0           1       2           3                4            5        6            7           8
+        columns=["MessageName/ID","DTC","Signame","Invalid_Value","Normal_Value","故障类型","故障成熟帧数","SigSave","OccupancyByte"]
+        iniFixDataSave = []
+        ini_info_1 = ''
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+            
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[0]]) :
+                    ini_info_1+='\n'
+                    iniFixDataSave.append('Node_' + str(row[columns[0]]))
+                    ini_info_1+='Node_' + str(row[columns[0]]) + " = "+'''[{sub1}] {{[{sub2},{sub3},{sub4},{sub5},{sub7},{sub6}][{sub8}][{sub9}]}}'''.format(
+                        sub1="0x" + str(row[columns[0]]).replace("0x","").replace("0X",""),
+                        sub2="0x" + (row[columns[1]] if pd.notna(row[columns[1]])  else '0').replace("0x","").replace("0X",""),
+                        sub3=row[columns[2]] if pd.notna(row[columns[2]])  else '',
+                        sub4=int(row[columns[3]] if pd.notna(row[columns[3]]) else 0),
+                        sub5=int(row[columns[4]] if pd.notna(row[columns[4]]) else 0),
+                        sub6=row[columns[5]],
+                        sub7=int(row[columns[6]] if pd.notna(row[columns[6]]) else 0),
+                        sub8=str(row[columns[7]] if pd.notna(row[columns[7]]) else row[columns[2]] if pd.notna(row[columns[2]])  else '').replace("\r\n",",").replace("\n",",").replace("\r",","),
+                        sub9=str(row[columns[8]] if pd.notna(row[columns[8]]) else "1").replace("\r\n",",").replace("\n",",").replace("\r",",")
+                        )
+                else:
+                    ini_info_1+=''' {{[{sub2},{sub3},{sub4},{sub5},{sub7},{sub6}][{sub8}][{sub9}]}}'''.format(
+                        sub2="0x" + (row[columns[1]] if pd.notna(row[columns[1]])  else '0').replace("0x","").replace("0X",""),
+                        sub3=row[columns[2]] if pd.notna(row[columns[2]])  else '',
+                        sub4=int(row[columns[3]] if pd.notna(row[columns[3]]) else 0),
+                        sub5=int(row[columns[4]] if pd.notna(row[columns[4]]) else 0),
+                        sub6=row[columns[5]],
+                        sub7=int(row[columns[6]] if pd.notna(row[columns[6]]) else 0),
+                        sub8=str(row[columns[7]] if pd.notna(row[columns[7]]) else row[columns[2]] if pd.notna(row[columns[2]])  else '').replace("\r\n",",").replace("\n",",").replace("\r",","),
+                        sub9=str(row[columns[8]] if pd.notna(row[columns[8]]) else "1").replace("\r\n",",").replace("\n",",").replace("\r",",")
+                        ) 
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        ini_info=f'\n\nFixDataSave_Traversal = {iniFixDataSave}'.replace("'","").replace(" ","")
+        
+        self.UDS_Main_info+=ini_info
+        self.UDS_Main_info+=ini_info_1
+
+    def NRC22_Config(self):
+        """处理NRC配置表"""
+        sheetname='NRC22Mapping'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            #messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)    
+        sheet = self.sheets[sheetname]  
+        #           0       1      2
+        columns=["NRC条件","NRC","备注"]
+        ini_info_1 = ''
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                    self._current_row = _excel_row
+
+                    if pd.notna(row[columns[0]]):
+                        ini_info_1+="\n##{comment}\n".format(comment=row[columns[2]])  
+                        ini_info_1+="{Var} = {Value}\n".format(Var=row[columns[0]],Value=str(row[columns[1]]).replace("nan","0x22"))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        self.UDS_Main_info+=ini_info_1
+
+    def OEM_Config(self):
+        """处理OEM配置表"""
+        if self.compare_strings(self.Current_Porject,"Geely3.0",1,"lower"):
+            sheetname='Geely'
+            self._current_sheet = sheetname
+
+            self._current_row = 0
+
+            self._error_shown = False
+
+        if self.compare_strings(self.Current_Porject,"BYD",1,"lower"):
+            sheetname='BYD'
+            self._current_sheet = sheetname
+
+            self._current_row = 0
+
+            self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)    
+        sheet = self.sheets[sheetname]  
+        #           0       1      2          3
+        columns=["描述","生成名称","数据值","备注"]
+        ini_info_1 = ''
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                    self._current_row = _excel_row
+
+                    if pd.notna(row[columns[1]]):
+                        comment_ = str(row[columns[3]]).replace("nan","")
+                        if len(comment_) != 0:
+                            ini_info_1+="\n#{comment}\n".format(comment=comment_)  
+                        ini_info_1+="{Var} = {Value}\n".format(Var=row[columns[1]],Value=str(row[columns[2]]))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        self.UDS_Main_info+=ini_info_1
+
+    def process_1904(self):
+        """处理1904配置表"""
+        sheetname='1904'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        columns=sheet.columns.tolist()
+        txt="\n\n\n"+'Freeze_Frame = {sub}'
+        template=[]
+        DID_Time = []
+        for date in sheet[columns[0]]:
+            template.append('['+(date)+']')
+        self.UDS_Main_info+=txt.format(sub="{"+','.join(pd.Series(template).unique().tolist())).replace("'","")+"}\n"
+        self.UDS_Main_info+="#索引 = [(DID),(长度),(数据类型),(精度+偏移+误差+最小值+最大值),(无效值),(初始值),(信号来源+信号名称),(4次设置值),(遍历值)]\n"
+        if "LocalTime" in list(sheet[columns[0]]):
+            DID_Temp = re.sub(r'[,\[\]\(\)\{\}]','',str(list(sheet[sheet[columns[0]]=="LocalTime"][columns[1]])[0]))      
+            DID_Temp = str(DID_Temp).replace("0x","").replace("0X","")
+            DIDstr='0000'[:(4-len(str(DID_Temp)))]+str(DID_Temp)
+            DID = list('0x'+ DIDstr[:2] + ',' + '0x' + DIDstr[2:])
+            
+            MsgID=list(sheet[sheet[columns[0]]=="LocalTime"][columns[12]])[0]
+            DATAtype=list(sheet[sheet[columns[0]]=="LocalTime"][columns[3]])[0]
+            sum=sheet[sheet[columns[0]]=="LocalTime"][columns[2]].sum()
+            timelist=[]      
+            second = []
+            minute = []
+            hour   = []
+            day    = []
+            month  = []
+            year   = []
+            time   = []
+            
+            second1 = []
+            minute1 = []
+            hour1   = []
+            day1   = []
+            month1  = []
+            year1  = []
+            time1  = []
+
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+                if pd.notna(row[columns[0]]) and row[columns[0]] != "LocalTime":
+                    DID_Temp = re.sub(r'[,\[\]\(\)\{\}]','',str(row[columns[1]]))   
+                    DID_Temp = str(DID_Temp).replace("0x","").replace("0X","")  
+                    DIDstr=('0000'[:(4-len(str(DID_Temp)))]+str(DID_Temp))
+                    DIDstr = ('0x'+ DIDstr[:2] + ',' + '0x' + DIDstr[2:])
+                    DID = ast.literal_eval(str(DIDstr))
+                    self.UDS_Main_info+=(row[columns[0]])+" = "+'''[({sub1},{sub2}),({sub3}),({sub4}),({sub5}),({sub6}),({sub11}),({sub7},{sub8}),({sub9}),({sub10})]  \n'''.format(
+                        sub1="0x{:X}".format(DID[0]),
+                        sub2="0x{:X}".format(DID[1]),
+                        sub3="0x{:X}".format(row[columns[2]]),
+                        sub4=row[columns[3]],
+                        sub5=','.join( map(str,row[4:9])),  #修改未生成最大值问题20251208
+                        sub6=row[columns[10]],
+                        sub11=self.normalize_number(row[columns[11]]),             #新增初始值
+                        sub7=row[columns[12]],
+                        sub8=row[columns[13]],
+                        sub9=str(row[columns[14]]).replace("[","").replace("]",""),
+                        sub10=str(row[columns[15]]).replace("[","").replace("]",""),
+                        ).replace("nan",'').replace("/",'')    
+                elif row[columns[0]] == "LocalTime":
+                    DID_Temp = re.sub(r'[,\[\]\(\)\{\}]','',str(row[columns[1]]))   
+                    DID_Temp = str(DID_Temp).replace("0x","").replace("0X","")  
+                    DIDstr=('0000'[:(4-len(str(DID_Temp)))]+str(DID_Temp))
+                    DIDstr = ('0x'+ DIDstr[:2] + ',' + '0x' + DIDstr[2:])
+                    DID_Time = ast.literal_eval(str(DIDstr))
+                    timelist.append("({sub1},{sub2},{sub3},{sub4},{sub5},{sub6})" .format( #释义 + 信号 + 占用字节 + 起始字节 + 偏移 + 初始值
+                        sub1 = row[columns[9]].split('/')[0],
+                        sub2 = row[columns[13]],
+                        sub3 = row[columns[2]],
+                        sub4 = row[columns[9]].split('/')[1],
+                        sub5 = row[columns[5]],
+                        sub6 = row[columns[11]]))  #新增初始值
+                    if row[columns[9]].split('/')[0] == "second":
+                        if(str(row[columns[14]]) != 'nan'):
+                            second = ast.literal_eval(row[columns[14]])
+                        if(str(row[columns[15]]) != 'nan'):
+                            second1 = ast.literal_eval(row[columns[15]])
+                    if row[columns[9]].split('/')[0] == "minute":
+                        if(str(row[columns[14]]) != 'nan'):
+                            minute = ast.literal_eval(row[columns[14]])
+                        if(str(row[columns[15]]) != 'nan'):
+                            minute1 = ast.literal_eval(row[columns[15]])
+                    if row[columns[9]].split('/')[0] == "hour":
+                        if(str(row[columns[14]]) != 'nan'):
+                            hour = ast.literal_eval(row[columns[14]])
+                        if(str(row[columns[15]]) != 'nan'):
+                            hour1 = ast.literal_eval(row[columns[15]])
+                    if row[columns[9]].split('/')[0] == "day":
+                        if(str(row[columns[14]]) != 'nan'):
+                            day = ast.literal_eval(row[columns[14]])
+                        if(str(row[columns[15]]) != 'nan'):
+                            day1 = ast.literal_eval(row[columns[15]])
+                    if row[columns[9]].split('/')[0] == "month":
+                        if(str(row[columns[14]]) != 'nan'):
+                            month = ast.literal_eval(row[columns[14]])
+                        if(str(row[columns[15]]) != 'nan'):
+                            month1 = ast.literal_eval(row[columns[15]])
+                    if row[columns[9]].split('/')[0] == "year":
+                        if(str(row[columns[14]]) != 'nan'):
+                            year = ast.literal_eval(row[columns[14]])
+                        if(str(row[columns[15]]) != 'nan'):
+                            year1 = ast.literal_eval(row[columns[15]])
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        if "LocalTime" in list(sheet[columns[0]]):        
+            for i in range(4):
+                Time_Str = ""
+                if len(year) >0:
+                    Time_Str +=   str(year[i]) + "/"
+                if len(month) >0: 
+                    Time_Str +=   str(month[i]) + "/"
+                if len(day) >0:   
+                    Time_Str +=   str(day[i]) + "_"
+                if len(hour) >0:  
+                    Time_Str +=   str(hour[i]) + ":"
+                if len(minute) >0:
+                    Time_Str +=   str(minute[i]) + ":"
+                if len(second) >0:
+                    Time_Str +=   str(second[i])
+                    
+                if( len(hour) == 0 and len(minute) == 0 ):
+                    Time_Str = Time_Str.replace("_","")
+                if len(second) == 0:
+                    Time_Str = Time_Str[:-1]
+                time.append(Time_Str) 
+
+            year1 = self.parse_to_list(year1)
+            month1 = self.parse_to_list(month1)
+            day1 = self.parse_to_list(day1)
+            hour1 = self.parse_to_list(hour1)
+            minute1 = self.parse_to_list(minute1)
+            second1 = self.parse_to_list(second1)
+            for i in range(max(len(year1),len(second1))):
+                Time_Str = ""
+                if len(year1) >0:
+                    Time_Str +=   str(year1[i]) + "/"
+                if len(month1) >0: 
+                    Time_Str +=   str(month1[i]) + "/"
+                if len(day1) >0:   
+                    Time_Str +=   str(day1[i]) + "_"
+                if len(hour1) >0:  
+                    Time_Str +=   str(hour1[i]) + ":"
+                if len(minute1) >0:
+                    Time_Str +=   str(minute1[i]) + ":"
+                if len(second1) >0:
+                    Time_Str +=   str(second1[i])
+                    
+                if( len(hour1) == 0 and len(minute1) == 0 ):
+                    Time_Str = Time_Str.replace("_","")
+                if len(second1) == 0:
+                    Time_Str = Time_Str[:-1]
+                time1.append(Time_Str)
+            self.UDS_Main_info+="#索引 = [(DID),(长度),(节点),(数据类型),(释义+信号名称+占用字节+起始字节+偏移+初始值),(无效值),(4次设置值),(遍历值)]\n"
+            self.UDS_Main_info+='''LocalTime=[({sub1}),({sub2}),({sub3}),({sub4}),{sub5},({sub6}),({sub7}),({sub8})] \n\n\n'''.format(
+        sub1  = "0x{:X},0x{:X}".format(DID_Time[0],DID_Time[1]),
+        sub2  = "0x{:X}".format(sum),
+        sub3  = MsgID,
+        sub4  = DATAtype,
+        sub5  = str(timelist).replace("[","").replace("]","").replace("'","").replace("nan",""),  #释义 + 信号 + 占用字节 + 起始字节 + 偏移
+        sub6  = list(sheet[sheet[columns[0]]=="LocalTime"][columns[10]])[0],
+        sub7  = str(time).replace("[","").replace("]","").replace("'",""),  
+        sub8  = str(time1).replace("[","").replace("]","").replace("'",""),               
+        )          
+
+    def process_DTC(self):
+        """处理DTC配置表"""
+        sheetname='DTC'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)                        
+        sheet = self.sheets[sheetname]  
+        #           0      1    2       3       4       5               6          7        8       9
+        columns=["序号","类别","DTC码","Node","Signal","故障类型与描述","无效值","正常值","对应掩码","故障成熟时间"]#sheet.columns.tolist()
+        List_Temp=[]
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                List_Temp.append(str(row[columns[2]]) if '0x' in str(row[columns[2]]) else '0x'+str(row[columns[2]]))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        self.UDS_Main_info+='''\n\nALL_DTC ={sub} \n'''.format(sub=str(List_Temp).replace("[","{").replace("]","}").replace("'","").replace(" ","") )  #list(sheet[columns[2]])
+        
+        Losttemplate=[]
+        Invalidtemplate=[]        
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[5]]):
+                    if "Lost" in row[columns[5]]:
+                        Losttemplate.append('''({sub1},{sub2},{sub3},{sub4})'''.format(
+                            sub1=row[columns[3]],
+                            sub2=row[columns[2]] if '0x' in str(row[columns[2]]) else '0x'+str(row[columns[2]]),  #修改DTC列表中故障掩码缺失'0x'问题 20251202 
+                            sub3=str(row[columns[8]] if '0x' in str(row[columns[8]]) else '0x'+str(row[columns[8]])).replace(".0",""),  #修改DTC列表中故障掩码缺失'0x'问题 20251202
+                            sub4=int(str(row[columns[9]]).replace("ms","").replace("MS","").replace(".0","")),  #修改DTC列表中故障成熟时间带单位问题 20251029
+                            ))
+                    if "Invalid" in row[columns[5]]:
+                        Invalidtemplate.append('''({sub1},{sub2},{sub3},{sub4},{sub5},{sub6},{sub7})'''.format(
+                            sub1=row[columns[3]],
+                            sub2=str(row[columns[2]] if '0x' in str(row[columns[2]]) else '0x'+str(row[columns[2]])).replace(".0",""),  #修改DTC列表中故障掩码缺失'0x'问题 20251202
+                            sub3=str(row[columns[8]] if '0x' in str(row[columns[8]]) else '0x'+str(row[columns[8]])).replace(".0",""),   #修改DTC列表中故障掩码缺失'0x'问题 20251202
+                            sub4=int(str(row[columns[9]]).replace("ms","").replace("MS","").replace(".0","")), #修改DTC列表中故障成熟时间带单位问题 20251029
+                            sub5=row[columns[4]],  
+                            sub6=str(row[columns[6]]).replace(".0",""),  
+                            sub7=int(row[columns[7]])
+                            ))  
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        self.UDS_Main_info+='''
+DTC_19_Invalid ={} 
+        
+DTC_19_Lost ={}'''.format(str(Invalidtemplate).replace("[","{").replace("]","}").replace("'",""),str(Losttemplate).replace("[","{").replace("]","}").replace("'",""))
+        
+    def process_31H(self,Rsp):
+        """处理31H配置表"""
+        sheetname='31H'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+                #0          1       2           3           4           5           6           7                   8                   9                   10              11          12              13          14              15          16
+        columns=["进程号","描述","例程控制类型","例程控制选项","发送长度","响应长度","安全访问","默认模式\n物理寻址","扩展模式\n物理寻址","默认模式\n功能寻址","扩展模式\n功能寻址","NRC优先级","NRC22的条件","例程状态成功","例程状态失败","例程状态其他","特殊NRC优先级"]
+
+        structCode=""
+        course_dict={}
+        current_process = None  
+        routine_type_ = ""
+        index=0   
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                # if pd.notna(row[0]): # 进程号不为空 
+                if pd.notna(row.iloc[0]): # 进程号不为空 
+                    DID_Value = ''
+                    DID_Value = str(row[columns[0]])
+                    if "." in DID_Value:
+                        DID_Value = DID_Value[:DID_Value.find(".")]   
+                    for _i in range(4-len(DID_Value)):
+                        DID_Value = '0' + DID_Value
+                    current_process = DID_Value.replace("0X","").replace("0x","")     #防止进程号中存在0x起始导致出错 20251029
+                    # 初始化该进程的字典结构
+                    if current_process not in course_dict:
+                        course_dict[current_process] = {
+                            "Index":index,
+                            "Pos":_,
+                            "例程控制类型": {}
+                        }
+                        index+=1
+                # 处理例程控制类型和选项
+                # routine_type = row[2] # 例程控制类型
+                # routine_option = row[3] if pd.notna(row[3]) and row[3]!="/" else "" # 例程控制选项
+                routine_type = row.iloc[2] # 例程控制类型
+                routine_option = row.iloc[3] if pd.notna(row.iloc[3]) and row.iloc[3]!="/" else "" # 例程控制选项
+            
+                # 初始化该例程控制类型的字典结构
+                if(str(routine_type) == 'nan'):
+                    routine_type = routine_type_
+                
+                if routine_type not in course_dict[current_process]["例程控制类型"]:
+                    course_dict[current_process]["例程控制类型"][routine_type] = {
+                        "例程控制选项个数": 0,
+                        "例程控制选项列表": []
+                    }
+                # 添加选项并计数
+                course_dict[current_process]["例程控制类型"][routine_type]["例程控制选项个数"] += 1
+                course_dict[current_process]["例程控制类型"][routine_type]["例程控制选项列表"].append(routine_option)
+                routine_type_ = routine_type  
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                Addres=0
+                Session=0
+                if (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')) or (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')):
+                    Addres|=(1)  ##修改生成的支持的会话错误20251029 
+                if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                    Addres|=(1<<1)                                    
+                if (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                    Session|=(1<<2)						 
+                if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')):
+                    Session|=1        
+                if pd.notna(row[columns[0]] ):     
+                    DID = str(row[columns[0]])
+                    if "." in DID:
+                        DID = DID[:DID.find(".")]   
+                    if len(str(DID))<4:
+                        DID_Value='0000'[:(4-len(str(DID)))]+str(DID)
+                    else:
+                        DID_Value=DID
+                    
+                    self.UDS_Main_info += '''
+{} = {{0x31,{},0x{},0x{}{}}}'''.format(row[columns[1]],row[columns[2]],str(DID_Value).replace("0X","").replace("0x","")[:2],str(DID_Value).replace("0X","").replace("0x","")[2:4],',0x{}'.format(str(row[columns[3]]).replace("0X","").replace("0x","")) if pd.notna(row[columns[3]]) and row[columns[3]]!='/' else '')
+                    DID_Value=str(row[columns[0]])
+                    if "." in DID_Value:
+                        DID_Value = DID_Value[:DID_Value.find(".")]   
+                    for _i in range(4-len(DID_Value)):
+                        DID_Value = '0' + DID_Value                  
+                    course=  str(DID_Value).replace("0X","").replace("0x","") 
+                    Control_Type_list={'Control_Type':[],
+                                       'Control_Option':[]}                                          
+                    structCode+='''
+               
+       /********************0x31 结构体*****************/     
+       Serve_31_Hex[{Poss}].Routine[0]                        = 0x{Serve_Fun1};            
+       Serve_31_Hex[{Poss}].Routine[1]                        = 0x{Serve_Fun2};            
+       Serve_31_Hex[{Poss}].Routine_Len                       = {Routine_Len};          
+       Serve_31_Hex[{Poss}].Control_Type_Count                = {Fun_Count};'''.format(Serve_Fun1=str(DID_Value).replace("0X","").replace("0x","")[:2],Serve_Fun2=str(DID_Value).replace("0X","").replace("0x","")[2:4],Routine_Len=row[columns[4]] if row[columns[4]]>0 else 4,
+                 Poss=course_dict[course]["Index"],Fun_Count= len(course_dict[course]['例程控制类型'])
+                ) 
+                NRC_list=ast.literal_eval(row[columns[11]])
+                if pd.notna(row[columns[16]] ):
+                    NRC_list_Special = ast.literal_eval(row[columns[16]])
+                if pd.notna(row[columns[2]]) and row[columns[2]] not in Control_Type_list['Control_Type']:
+                    routine_type_ = row[columns[2]]
+                    Control_Type_list['Control_Type'].append(row[columns[2]])
+                    structCode+='''
+   
+       Serve_31_Hex[{Poss}].Control_Type[{structDIIndex}]     = {Control_Type};
+       Serve_31_Hex[{Poss}].Control_Type_RSP[{structDIIndex}]     = {Control_Type_RSP};
+       Serve_31_Hex[{Poss}].Serve_Addres[{structDIIndex}]    = {Serve_Addres};
+       Serve_31_Hex[{Poss}].Serve_Session[{structDIIndex}]    = {Serve_Session};
+       Serve_31_Hex[{Poss}].Security_Access[{structDIIndex}] = {SSecurity_Access};
+       Serve_31_Hex[{Poss}].Serve_NRC_Count[{structDIIndex}]  = {structDIDNRC_Count}; 
+       Serve_31_Hex[{Poss}].Serve_NRC_Special_Count[{structDIIndex}]  = {structDIDNRC_Count_}; 
+       Serve_31_Hex[{Poss}].Control_Type_RxLen[{structDIIndex}]  = {Control_Type_RxLen}; 
+       Serve_31_Hex[{Poss}].Control_Type_Success[{structDIIndex}]  = {Control_Type_Success}; 
+       Serve_31_Hex[{Poss}].Control_Type_Failed[{structDIIndex}]  = {Control_Type_Failed}; 
+       Serve_31_Hex[{Poss}].Control_Type_Others[{structDIIndex}]  = {Control_Type_Others}; 
+       Serve_31_Hex[{Poss}].Control_Option_Count[{structDIIndex}]  = {Control_Option_Count}; 
+       Serve_31_Hex[{Poss}].Serve_NRC22[{structDIIndex}]  = {Serve_NRC22}; '''.format(
+                 Poss=course_dict[course]["Index"],
+                 structDIIndex= list(course_dict[course]['例程控制类型'].keys()).index(row[columns[2]]),
+                 Control_Type=row[columns[2]],
+                 Control_Type_RSP=Rsp,
+                 Serve_Addres=Addres if Addres>0 else 3,
+                 Serve_Session=Session if Session>0 else 5,
+                 structDIDNRC_Count=len(NRC_list) if pd.notna(row[columns[11]]) and (row[columns[11]] !='/') else 0,
+                 structDIDNRC_Count_ = len(NRC_list_Special) if pd.notna(row[columns[16]]) and (row[columns[16]] !='/') else 0,
+                 Control_Option_Count=course_dict[course]['例程控制类型'][row[columns[2]]]['例程控制选项个数'],
+                 SSecurity_Access= str(int(row[columns[6]])) if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0      ,
+
+                ##修改补充遗漏部分20251029
+                Control_Type_RxLen = self._parse_number(row[columns[5]]) if pd.notna(row[columns[5]]) and row[columns[5]]!='/' else 0      ,
+                Control_Type_Success = self._parse_number(row[columns[13]]) if pd.notna(row[columns[13]]) and row[columns[13]]!='/' else 0      ,
+                Control_Type_Failed = self._parse_number(row[columns[14]]) if pd.notna(row[columns[14]]) and row[columns[14]]!='/' else 0      ,
+                Control_Type_Others = self._parse_number(row[columns[15]]) if pd.notna(row[columns[15]]) and row[columns[15]]!='/' else 0      ,
+                Serve_NRC22=int(row[columns[12]]) if pd.notna(row[columns[12]]) and row[columns[6]]!='/' else 0
+       )
+                    if pd.notna(row[columns[11]]):
+                        for _NRC,NRC in enumerate(NRC_list):
+                            structCode+='''
+       Serve_31_Hex[{Poss}].Serve_NRC[{structDIIndex}][{index}]     = {NRCCode};'''.format(Poss=course_dict[course]["Index"],structDIIndex=list(course_dict[course]['例程控制类型'].keys()).index(row[columns[2]]),index=_NRC,NRCCode="0x{:X}".format(NRC) 
+                    )
+   
+                    if pd.notna(row[columns[16]]):
+                        for _NRC,NRC in enumerate(NRC_list_Special):
+                            structCode+='''
+       Serve_31_Hex[{Poss}].Serve_NRC_Special[{structDIIndex}][{index}]     = {NRCCode};'''.format(Poss=course_dict[course]["Index"],structDIIndex=list(course_dict[course]['例程控制类型'].keys()).index(row[columns[2]]),index=_NRC,NRCCode="0x{:X}".format(NRC) 
+                    )
+   
+                if pd.notna(row[columns[3]]) and row[columns[3]] !='/':   
+                    Control_Type_list['Control_Option'].append(row[columns[3]])
+                    structCode+='''
+       Serve_31_Hex[{Poss}].Control_Option[{structDIIndex}][{index}]     = {Control_Option};'''.format(Poss=course_dict[course]['Index'],structDIIndex=list(course_dict[course]['例程控制类型'].keys()).index(routine_type_),
+                                                                                                       index=course_dict[course]['例程控制类型'][routine_type_]['例程控制选项列表'].index(row[columns[3]]),Control_Option=row[columns[3]])
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+          
+        return (structCode+"\n  ",course_dict[course]["Index"]+1)
+    
+    def process_2E_H(self,Poss,NRC22,Rsp,_Addres,_Session,_Access):
+        """处理2E_H配置表"""
+        sheetname='2E_H'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        columns=['DID号','DID描述','是否需安全访问','正常发送字节数','物理寻址','功能寻址','默认会话','编程会话','拓展会话','NRC','结构体','INI']#sheet.columns.tolist()
+        iniDID=[]  
+        structDID=[]  
+        structCode=""
+        DID_Temp = ''
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                DID_Temp = str(row['DID号']).replace('0x','').replace('0X','').replace('.0','')
+                if(len(DID_Temp)<4):
+                    DID_Temp = ('0000'[:(4-len(DID_Temp))]) + str(DID_Temp)
+                
+                if row['INI']==1 or row['INI']=='1':
+                    iniDID.append(str(row['DID号']).replace('.0',''))
+                if row['结构体']==1 or row['结构体']=='1':
+                    structDID.append(str(row['DID号']))
+                    Addres=_Addres
+                    Session=_Session
+                                                
+                    structCode+='''
+                
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]        = {Serve_Fun};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]    = {Serve_Fun_Len};
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]     = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]    = {Serve_Session};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]  = {structDIDNRC_Count};
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}] = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}] = {Serve_NRC22};'''.format(Poss=Poss,structDIIndex=_,
+                                                                                           Serve_Fun='0x'+DID_Temp,
+                                                                                           Serve_Addres=Addres,Serve_Session=Session,
+               structDIDNRC_Count=len(ast.literal_eval(row['NRC'])) if pd.notna(row['NRC']) else 0,
+               SSecurity_Access= _Access ,
+               Serve_NRC22=int(NRC22) if pd.notna(NRC22) else 0,
+               Serve_Fun_Len= self._parse_number(row[columns[3]])
+           
+               )
+                    if pd.notna(row['NRC']):
+                        for _NRC,NRC in enumerate(ast.literal_eval(row['NRC'])):
+                            structCode+='''
+      Serve_Data[{Poss}].Serve_NRC[{structDIIndex}][{index}]     = {NRCCode};'''.format(Poss=Poss,structDIIndex=_,index=_NRC,NRCCode="0x{:X}".format(NRC))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        structCode='''
+
+  /********************2E结构体*****************/        
+  Serve_Data[{Poss}].Serve               = 0x2E;
+  Serve_Data[{Poss}].Serve_Fun_Count     = {count};'''.format(Poss=Poss,count=len(structDID))+structCode
+        
+        self.UDS_Main_info += self.process_2E_DID(iniDID)
+        return (structCode+"\n  ")
+    
+    def process_22_DID(self,Poss,RSP,NRC_list,NRC22,Addres,Session):
+        """处理22_DID配置表"""
+        sheetname='22_DID'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        sheetname_1='FunDID'
+        Sevre_22_DID_Count = 0
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)  
+            self.sheets[sheetname_1]=self._load_excel_sheets(sheetname_1)    
+        sheet = self.sheets[sheetname]  
+        sheet1 = self.sheets[sheetname_1] 
+        columns=['DID号','DID描述',"总长度",'是否需安全验证','是否测试','数据类型','数据未使用字节填充值','解析方式','响应内容',"默认模式\n物理寻址","扩展模式\n物理寻址","默认模式\n功能寻址","扩展模式\n功能寻址",'是否可写','备注']#sheet.columns.tolist()
+        #                   0                       1                   2      3    4       5       6               7          8            9                   10          11
+        columns_FunDid =['DID number\nDID号','Length (Bytes)\n总长度','类型','精度','偏移','误差','解析/起始字节','信号来源','信号名称','DID Description\nDID描述','设置值','信号无效操作']
+        iniDID=["DID_{}".format('0000'[:(4-len(str(buf)))]+str(buf)) for buf in list(sheet[columns[0]])]
+        iniDID_FunDid=["DID_{}".format('0000'[:(4-len(str(buf)))]+str(buf)) for buf in list(sheet1[columns_FunDid[0]] )]
+        iniDID_All=[]
+        structDID=[]  
+        structCode='''
+   /********************22结构体*****************/
+  Serve_Data[{Poss}].Serve = 0x22;
+  Serve_Data[{Poss}].Serve_Fun_Count = {Serve_Fun_Count};                
+  '''.format(Poss=Poss,Serve_Fun_Count=(len(iniDID) ) + len(iniDID_FunDid) )        
+        for _excel_row,(_i,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+            
+                self._current_row = _excel_row
+
+                Temp_Str=''
+                if _isnotna(row[columns[4]])==1 or _isnotna(row[columns[4]])=='1' :
+                    Temp_Str = "DID_" + str('0000'[:(4-len(str(row[columns[0]])))]+str(row[columns[0]])).upper()
+                    iniDID_All.append(Temp_Str)   
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        Temp_Str_2 = ''
+        for _excel_row,(_i,row) in enumerate(sheet1.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                Temp_Str=''
+                Temp_Str = "DID_" +str('0000'[:(4-len(str(row[columns_FunDid[0]])))]+str(row[columns_FunDid[0]])).upper()
+                if(str(row[columns_FunDid[0]]) == 'nan' or Temp_Str_2 == Temp_Str):
+                    continue
+                Temp_Str_2 = Temp_Str
+                iniDID_All.append(Temp_Str)
+            except Exception as e:
+                self._handle_sheet_error(sheetname_1 if 'sheetname_1' in locals() else sheetname, _excel_row, e)
+
+        _i = 0
+        ini_info='\n##22读取DID配置\nDID_22_Traversal=[{}]{}\n'.format(len(iniDID_All),"{"+",".join(iniDID_All)+"}")
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                structDID.append(row[columns[0]])                 
+                DID_Value = ''
+                DID_Value = str(row[columns[0]]) 
+                for _i in range(4-len(str(row[columns[0]]))):
+                    DID_Value = '0' + DID_Value
+                DID_Value = DID_Value if '0x' in DID_Value else '0x'+str(DID_Value)
+                structCode+='''
+            
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]        = {Serve_Fun};
+      Serve_Data[{Poss}].RSP[{structDIIndex}]              = {RSP};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]    = 3;
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]     = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]    = {Serve_Session};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]  = {structDIDNRC_Count};
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}] = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}] = {Serve_NRC22};'''.format(Poss=Poss,RSP=RSP,structDIIndex=_,Serve_Fun=DID_Value,#'0x'+str(row[columns[0]])
+                                                                                         Serve_Addres=Addres,Serve_Session=Session,
+            structDIDNRC_Count=len(NRC_list) ,Serve_NRC22= int(NRC22) if pd.notna(NRC22) else 0,
+            SSecurity_Access= row[columns[3]] if pd.notna(row[columns[3]]) and row[columns[3]]!='/' else 0,
+            )
+                Sevre_22_DID_Count = _
+                DID_Value = DID_Value[2:]
+                if _isnotna(row[columns[4]])==1 or _isnotna(row[columns[4]])=='1' :   
+                    DataStr = str(row[columns[8]] if pd.notna(row[columns[8]]) else '')
+                    if  int(_isnotna(row[columns[7]])) == 8:
+                        DataStr_ = DataStr
+                        DataStr = DataStr_.replace('\n','')
+                    
+                    ini_info+="DID_{} = [{}],[{}],[0x{},0x{}]:[{}],[{}],[{}]\n".format(
+                    str('0000'[:(4-len(str(row[columns[0]])))]+str(row[columns[0]])).upper(),
+                    int(_isnotna(row[columns[7]])), ##修改DID_22生成时解析方式未填时生成字符null问题20251029
+                    str(row[columns[2]]).replace('.0',''),
+                    DID_Value[:2],
+                    DID_Value[2:],
+                    DataStr,
+                    int(row[columns[13]]) if pd.notna(row[columns[13]]) else 0,
+                    str(row[columns[6]] if pd.notna(row[columns[6]]) else '0').replace('/','0')) ##新增未使用位填充值 2025.11.30
+                
+
+                if len(NRC_list)>0:
+                    for _NRC,NRC in enumerate(NRC_list):
+                        structCode+='''
+      Serve_Data[{Poss}].Serve_NRC[{structDIIndex}][{index}]     = {NRCCode};'''.format(Poss=Poss,structDIIndex=_,index=_NRC,NRCCode="0x{:X}".format(NRC))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+  # 功能DID遍历
+        for _excel_row,(_,row) in enumerate(sheet1.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if(str(row[columns_FunDid[0]]) == 'NAN' or len(str(row[columns_FunDid[0]])) == 0 or str(row[columns_FunDid[0]]) == 'nan' or row[columns_FunDid[0]] == '') :
+                    continue
+            
+                Sevre_22_DID_Count+=1
+                structDID.append(row[columns_FunDid[0]])                                  
+                DID_Value = ''
+                DID_Value = str(row[columns_FunDid[0]])   
+                for _i in range(4-len(str(row[columns_FunDid[0]]))):
+                    DID_Value = '0' + DID_Value
+                DID_Value = DID_Value if '0x' in DID_Value else '0x'+str(DID_Value)                                
+
+                structCode+='''
+            
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]        = {Serve_Fun};
+      Serve_Data[{Poss}].RSP[{structDIIndex}]              = {RSP};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]    = 3;
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]     = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]    = {Serve_Session};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]  = {structDIDNRC_Count};
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}] = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}] = {Serve_NRC22};'''.format(Poss=Poss,RSP=RSP,structDIIndex=Sevre_22_DID_Count,Serve_Fun=DID_Value,
+                                                                                         Serve_Addres=Addres,Serve_Session=Session,
+            structDIDNRC_Count= 0,
+            Serve_NRC22 = 0,
+            SSecurity_Access= 0 )   
+                DID_Value = DID_Value[2:]
+                ini_info+="DID_{} = [{}],[{}],[0x{},0x{}]:[],[{}],[{}]\n".format(
+                str('0000'[:(4-len(str(row[columns_FunDid[0]])))]+str(row[columns_FunDid[0]])).upper(),
+                0,##功能DID目前无输入接口，默认为0
+                str(row[columns_FunDid[1]]).replace(".0",''),
+                DID_Value[:2],
+                DID_Value[2:],0,0)   #目前功能DID只验证长度
+            except Exception as e:
+                self._handle_sheet_error(sheetname_1 if 'sheetname_1' in locals() else sheetname, _excel_row, e)
+
+            
+        self.UDS_Main_info +=ini_info   
+        
+        _i = 0
+        iniDID_All_=[]
+        Temp_Str_2 =''
+        for _excel_row,(_i,row) in enumerate(sheet1.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                Temp_Str=''
+                Temp_Str = "FunDID_" +str('0000'[:(4-len(str(row[columns_FunDid[0]])))]+str(row[columns_FunDid[0]])).upper()
+                if(len(str(row[columns_FunDid[0]]).replace("nan",''))==0 or Temp_Str_2 == Temp_Str):
+                    continue
+                Temp_Str_2 = Temp_Str
+                iniDID_All_.append(Temp_Str)
+            except Exception as e:
+                self._handle_sheet_error(sheetname_1 if 'sheetname_1' in locals() else sheetname, _excel_row, e)
+
+        ini_info='\n\nDID_22_Fun_Traversal=[{}]{}\n'.format(len(iniDID_All_),"{"+",".join(iniDID_All_)+"}")  
+        
+        Start_Pos = 0
+        End_Pos = -2    
+        second = []
+        minute = []
+        hour   = []
+        day    = []
+        month  = []
+        year   = []
+        time   = []
+        for _excel_row,(_,row) in enumerate(sheet1.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                DID_Value = str(row[columns_FunDid[0]])  
+                DID_Value = str(DID_Value).replace('0X','').replace('0x','')
+                for _i in range(4-len(str(row[columns_FunDid[0]]))):
+                    DID_Value = '0' + DID_Value
+                if('nan' not in DID_Value):
+                    Temp_Str_2 = DID_Value
+            
+                _field_val_t = row[columns_FunDid[6]]
+                _field_parts_t = str(_field_val_t).split('/') if pd.notna(_field_val_t) else ['']  # 修复解析/起始字节为NaN时报错
+                if(len(str(_field_val_t))>3 or 'LocalTime' in str(row[columns_FunDid[9]]) or '时间' in str(row[columns_FunDid[9]])):
+                    if(len(str(row[columns_FunDid[10]]))> 3):
+                        if _field_parts_t[0] == "second":
+                            second = ast.literal_eval(row[columns_FunDid[10]])
+                        if _field_parts_t[0] == "minute":
+                            minute = ast.literal_eval(row[columns_FunDid[10]])
+                        if _field_parts_t[0] == "hour":
+                            hour = ast.literal_eval(row[columns_FunDid[10]])
+                        if _field_parts_t[0] == "day":
+                            day = ast.literal_eval(row[columns_FunDid[10]])
+                        if _field_parts_t[0] == "month":
+                            month = ast.literal_eval(row[columns_FunDid[10]])
+                        if _field_parts_t[0] == "year":
+                            year = ast.literal_eval(row[columns_FunDid[10]])
+                    if(Start_Pos == 0):
+                        Start_Pos = _
+                        End_Pos = Start_Pos-1
+                    End_Pos+=1
+                else:        #DID       长度   名称  DID  类型+精度+偏移+误差  解析 节点+信号  设置值 信号,无效值,正常值
+                    ini_info+="FunDID_{} = [({}),({}),(0x{},0x{}),({},{},{},{}),({}),({},{}),({}),({})]\n".format(
+                    str('0000'[:(4-len(str(row[columns_FunDid[0]])))]+str(row[columns_FunDid[0]])).upper(),
+                    str(row[columns_FunDid[1]]).replace(".0",''), 
+                    str(row[columns_FunDid[9]]).replace('nan','').replace('/',''), 
+                    DID_Value[:2],
+                    DID_Value[2:],
+                    str(row[columns_FunDid[2]]).replace('nan','').replace('/',''),
+                    str(row[columns_FunDid[3]]) if pd.notna(row[columns_FunDid[3]]) else 0,
+                    str(row[columns_FunDid[4]]) if pd.notna(row[columns_FunDid[4]]) else 0,
+                    str(row[columns_FunDid[5]]) if pd.notna(row[columns_FunDid[5]]) else 0,
+                    str(row[columns_FunDid[6]]).replace('nan','').replace('/',''),
+                    str(row[columns_FunDid[7]]).replace('nan','').replace('/',''),
+                    str(row[columns_FunDid[8]]).replace('nan','').replace('/',''),
+                    str(row[columns_FunDid[10]]).replace('nan','').replace('/','').replace('[','').replace(']',''),
+                    str(row[columns_FunDid[11]]).replace('nan',',,').replace('/',',,').replace('[','').replace(']','')
+                    ) 
+            except Exception as e:
+                self._handle_sheet_error(sheetname_1 if 'sheetname_1' in locals() else sheetname, _excel_row, e)
+
+        Len_All = 0
+        len_year = 0
+        Count_Time= 0
+        Count = 0
+        Len_List = []
+        minLen = 10
+        Len_List.append(len(second))
+        Len_List.append(len(minute))
+        Len_List.append(len(hour))
+        Len_List.append(len(day))
+        Len_List.append(len(month))
+        Len_List.append(len(year))
+        for i in range(6):
+            if(Len_List[i] != 0 and Len_List[i]<minLen):
+                minLen = Len_List[i]
+        if minLen == 10:
+            minLen = 0   # 全空时 minLen=0, 走 minLen==0 分支
+                
+        for i in range(minLen):
+            Time_Str = ""
+            if len(year) >0:
+                Time_Str +=   str(year[i]) + "/"
+            if len(month) >0: 
+                Time_Str +=   str(month[i]) + "/"
+            if len(day) >0:   
+                Time_Str +=   str(day[i]) + "_"
+            if len(hour) >0:  
+                Time_Str +=   str(hour[i]) + ":"
+            if len(minute) >0:
+                Time_Str +=   str(minute[i]) + ":"
+            if len(second) >0:
+                Time_Str +=   str(second[i])
+            if( len(hour) == 0 and len(minute) == 0 ):
+                Time_Str = Time_Str.replace("_","")
+            if len(second) == 0:
+                Time_Str = Time_Str[:-1]
+            time.append(Time_Str)
+            
+        for _excel_row,(_,row) in enumerate(sheet1.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if(End_Pos<Start_Pos):
+                    break
+                if(_ < Start_Pos):
+                    continue
+                if(_ > End_Pos ):
+                    break
+            
+                DID_Value = str(row[columns_FunDid[0]])  
+                DID_Value = str(DID_Value).replace('0X','').replace('0x','')
+                for _i in range(4-len(str(row[columns_FunDid[0]]))):
+                    DID_Value = '0' + DID_Value
+                if('nan' not in DID_Value):
+                    Temp_Str_2 = DID_Value
+
+                _field_val_t2 = row[columns_FunDid[6]]
+                _field_parts_t2 = str(_field_val_t2).split('/') if pd.notna(_field_val_t2) else ['','']  # 修复解析/起始字节为NaN时报错
+                if len(_field_parts_t2) < 2:  # 修复无'/'分隔导致索引越界
+                    _field_parts_t2 = [_field_parts_t2[0], ''] if _field_parts_t2 else ['','']
+
+                if(_ == Start_Pos):
+                    if minLen == 0:
+                        # LocalTime 数据全空, 第一个元组输出空 5 元组
+                        ini_info+="FunDID_{} = [({}),(LocalTime),(0x{},0x{}),({}),({}),(,,,,)".format(
+                            Temp_Str_2,str(row[columns_FunDid[1]]).replace(".0",''), Temp_Str_2[:2],Temp_Str_2[2:],
+                            str(row[columns_FunDid[7]]).replace('nan','').replace('/',''),str(row[columns_FunDid[2]]).replace('nan','').replace('/',''))
+                    else:
+                        Len_All = str(row[columns_FunDid[1]]).replace(".0",'')
+                        len_year = int(Len_All) - (End_Pos - Start_Pos) - 3
+                        Count_Time+=1                                                  #解析 + 信号名 + 占用长度 + 起始字节 + 偏移
+                        ini_info+="FunDID_{} = [({}),(LocalTime),(0x{},0x{}),({}),({}),({},{},{},{},{})".format(
+                            Temp_Str_2,str(row[columns_FunDid[1]]).replace(".0",''), Temp_Str_2[:2],Temp_Str_2[2:],
+                            str(row[columns_FunDid[7]]).replace('nan','').replace('/',''),str(row[columns_FunDid[2]]).replace('nan','').replace('/',''),
+                            _field_parts_t2[0],
+                            str(row[columns_FunDid[8]]).replace('nan','').replace('/',''),
+                            len_year if(_field_parts_t2[0] == 'year') else 1,
+                            _field_parts_t2[1].replace('.0',''),
+                            str(row[columns_FunDid[4]]).replace('.0','') if pd.notna(row[columns_FunDid[4]]) else 0 )
+                else:
+                    Count_Time+=1
+                    ini_info+=",({},{},{},{},{})".format(
+                        _field_parts_t2[0],
+                        str(row[columns_FunDid[8]]).replace('nan','').replace('/',''),
+                        len_year if(_field_parts_t2[0] == 'year') else 1,
+                        _field_parts_t2[1].replace('.0',''),
+                        str(row[columns_FunDid[4]]).replace('.0','') if pd.notna(row[columns_FunDid[4]]) else 0 )
+                if(_ == End_Pos):
+                    if minLen > 0:
+                        if(Count_Time<=3):
+                            for i in range(3-Count_Time):
+                                ini_info+=",(,,,,)"
+                        ini_info+=' ,(' + str(time).replace("[","").replace("]","").replace("'","")  + ')'
+                    else:
+                        # minLen==0: 无时间分量, 固定补 5 个空元组, time 输出 ()
+                        for i in range(5):
+                            ini_info+=",(,,,,)"
+                        ini_info+=' ,()'
+                    ini_info+=',({})]\n'.format(str(row[columns_FunDid[11]]).replace('nan',',,').replace('/',',,').replace('[','').replace(']',''))
+            except Exception as e:
+                self._handle_sheet_error(sheetname_1 if 'sheetname_1' in locals() else sheetname, _excel_row, e)
+
+            
+          
+        self.UDS_Main_info +=ini_info
+        if self.SupportDID_Read > 1:
+            self.process_22_DIDs()
+        return (structCode+"\n  ")      
+        
+    def process_22_DIDs(self):
+        """处理22_DIDs配置表"""
+        sheetname='22_DIDs'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        #           0       1       
+        columns=['DID号','DID描述']
+        iniDID=["0x{}".format(buf) for buf in list(sheet[columns[0]] )]
+        structDID=[]    
+        ini_info=''
+        Flag_ = 0
+        List_Plural_DID = []   
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[0]]):
+                    structDID.append(row[columns[0]])                
+                    did=','.join([f"[0x{element[:2]},0x{element[2:]}]" for element in  str(row[columns[0]]).split(',')]) if pd.notna(row[columns[0]]) else ''
+                    Name = ''
+                    Name = 'Plural_DID_' + str(_)
+                    if('不同' in row[columns[1]] and Flag_ < 3):
+                        Flag_ +=1
+                        ini_info+='''
+    #读取多个DID
+    DID_Read_Plural = {{{}}}\n'''.format(did)
+
+                    if('相同' in row[columns[1]] and Flag_ < 3):  
+                        Flag_ +=1
+                        ini_info+='''
+    #读取多个相同DID
+    DID_Read_Plural_Same = {{{}}}\n'''.format(did)
+
+                    if('不支持' in row[columns[1]] and Flag_ < 3):  
+                        Flag_ +=1
+                        ini_info+='''
+    #读取数据中含不支持DID
+    DID_Read_Plural_Some_NotSupport = {{{}}}\n'''.format(did)
+                    if(Flag_ > 3):
+                        ini_info+='''
+    #其它:{}
+    {} = {{{}}}\n'''.format(str(row[columns[1]]),Name,did)
+                        List_Plural_DID.append(Name)
+                    if(Flag_ == 3):
+                        Flag_ +=1
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        ini_info+='''
+#其它:汇总测试
+Other_Plural_DID = {}\n'''.format(str(List_Plural_DID).replace("'",""))
+        self.UDS_Main_info +=ini_info
+        
+    def process_2E_DID(self,DIDlist):
+        """处理2E_DID配置表"""
+        sheetname='2E_DID'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        List = [str(item) for item in sheet.columns[2:]]
+        
+        DIDlist1=Counter(List)
+        DIDlist2=Counter(DIDlist)
+        if DIDlist1!=DIDlist2:
+            if DIDlist1-DIDlist2:
+                messagebox.showerror("DID加载错误",f"<2E_DID>中配置的DID{list(DIDlist1-DIDlist2)}在<2E_H>中没有配置",parent=self.master)
+            if DIDlist2-DIDlist1:
+                messagebox.showerror("DID加载错误",f"<2E_H>中配置的DID{list(DIDlist2-DIDlist1)}在<2E_DID>中没有配置",parent=self.master)
+            return 
+        
+        DIDtxt="\n##2E写入DID配置\nDID_2E_Traversal=[{len}]{{{DID}}}\n".format(len=len(sheet.columns[2:]),DID=','.join(["DID2E_" + str('0000'[:4-len(str(element))] + str(element)) for element in  sheet.columns[2:]]))
+        
+        for DID in sheet.columns[2:]:
+            if len(str(DID))<4:
+                DIDstr='0000'[:(4-len(str(DID)))]+str(DID)
+            else:
+                DIDstr=DID
+            DIDReadstr = ''
+            DIDRead = str(sheet[DID][7]).replace("/","nan").replace("0X","").replace("0x","").replace(",","").replace("，","")
+            if(DIDRead != 'nan'):
+                 if len(str(DIDRead))<4:
+                     DIDReadstr = '0000'[:(4-len(str(DIDRead)))]+str(DIDRead)
+                 else:
+                     DIDReadstr = DIDRead
+                 DIDReadstr = '0x'+ DIDReadstr[:2] + ',' + '0x' + DIDReadstr[2:]
+                 
+            DIDtxt+="DID2E_{DID}=[0x{DIDH},0x{DIDL}],([{dlc}],[{data}],[{result}]) ([{dlc1}],[{data1}],[{result1}]) [{padding}],[{redDID}]\n".format(DID=DIDstr,DIDH=DIDstr[:2],DIDL=DIDstr[2:],
+                    dlc=sheet[DID][0],data=sheet[DID][1],result=sheet[DID][2],dlc1=sheet[DID][3],data1=sheet[DID][4],result1=sheet[DID][5],padding=sheet[DID][6],redDID= DIDReadstr)  #str(sheet[DID][7]).replace("nan","").replace("/","")
+
+        return (DIDtxt)
+    
+    def process_Serve(self):
+        """处理服务配置表"""
+        sheetname='服务'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            messagebox.showerror("Excel加载错误",f"缺少{sheetname}工作表",parent=self.master)
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)             
+                    
+        sheet = self.sheets[sheetname]  
+        Serve_count=0
+        Serve_dict={}
+        Serve_list=[]
+        #        0          1      2               3          4       5                 6                       7                   8                   9                   10              11          12              13                          14           15         16                      17
+        columns=["服务名称","服务","支持子功能列表","子功能描述","参数","是否需要安全验证","是否支持肯定响应抑制位","默认模式\n物理寻址","扩展模式\n物理寻址","默认模式\n功能寻址","扩展模式\n功能寻址","NRC优先级","NRC22的条件","长安工厂模式NRC22的条件","例程状态记录","预期发送长度","编程模式\n物理寻址","编程模式\n功能寻址",]#sheet.columns.tolist()
+        Sercount=0
+        Ser=''
+        serbit=0
+        for index,ceil in enumerate(sheet[columns[1]]):            
+            if pd.notna(ceil):  
+
+                Serve_dict[ceil]=[0,1]
+                Serve_dict[ceil][0]=index
+                Sercount=1
+                Ser=ceil
+                serbit=index
+                Serve_list.append(index)
+            else:
+                    #Serve_Data_Count+=1
+                Serve_dict[Ser][1]+=1
+        if '0x31' not in  Serve_dict.keys():
+            Serve_Data_Count=len(Serve_dict.keys())
+        else:
+            Serve_Data_Count=len(Serve_dict.keys())-1
+            Serve_31_Hex_Count = Serve_dict['0x31'][1]
+
+        structCode=''
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[1]]) and row[columns[1]] in ["0x10","0x11","0x14","0x19","0x2E",'0x23','0x22',"0x27","0x28","0x31","0x34","0x36","0x37","0x3E","0x85"]:
+                    if _!=0 and '0x31' not in row[columns[1]]:
+                        Serve_count+=1                     
+                    Serve_= row[columns[1]]
+                    Serve_Fun_num=Serve_dict[Serve_][1]  
+                    if Serve_ in ['0x22','0x2E']:
+                        Addres=0
+                        Session=0
+                        if (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')) or (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')):
+                            Addres|=(1)  
+                        if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                            Addres|=(1<<1)                                    
+                        if (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                            Session|=(1<<2)						 
+                        if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')):
+                            Session|=1  
+                        
+                    if Serve_ not in ['0x31','0x2E','0x22','0x19']:     
+                        structCode+='''
+
+      /********************{Serve}结构体*****************/        
+      Serve_Data[{Poss}].Serve               = 0x{Serve};
+      Serve_Data[{Poss}].Serve_Fun_Count     = {count};\n'''.format(Poss=Serve_count,Serve=Serve_[2:],count=Serve_Fun_num)
+  
+                if Serve_ not in ['0x31','0x2E','0x22','0x19'] and Serve_dict[Serve_][0] <= _ <Serve_dict[Serve_][0]+Serve_dict[Serve_][1]:#and row[columns[2]]!='/' 
+                    Addres=0
+                    Session=0
+                    if (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')) or (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')):
+                        Addres|=(1)  
+                    if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                        Addres|=(1<<1)                                    
+                    if (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                        Session|=(1<<2)						 
+                    if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')):
+                        Session|=1  
+                             
+                    structCode+='''
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]        = {Serve_Fun};            {commentate}
+      Serve_Data[{Poss}].RSP[{structDIIndex}]              = {RSP};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]    = {fun_len};
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]     = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]    = {Serve_Session};
+      Serve_Data[{Poss}].Serve_Para_Count[{structDIIndex}] = {Serve_Para_Count};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]  = {structDIDNRC_Count}; 
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}] = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}] = {Serve_NRC22};'''.format(commentate='//'+row[columns[3]] if pd.notna(row[columns[3]]) else '',
+                Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0],RSP=int(row[columns[6]] if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0),
+                Serve_Fun=str('0x'+(row[columns[2]][2:]  if '0x' in row[columns[2]] else row[columns[2]])if pd.notna(row[columns[2]]) and row[columns[6]]!='/' else 0).replace("/","0"),
+                Serve_Addres=Addres,Serve_Session=Session,
+               structDIDNRC_Count=len(ast.literal_eval(row[columns[11]])) if pd.notna(row[columns[11]]) and row[columns[11]]!='/' else 0,
+               SSecurity_Access= str(int(row[columns[5]])) if pd.notna(row[columns[5]]) and row[columns[5]]!='/' else 0,
+               Serve_Para_Count=len([ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]) if pd.notna(row[columns[4]]) and row[columns[4]]!='/' else 0,
+               fun_len= int(_isnotna(row[columns[15]])),#str(3+ len([ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]) if pd.notna(row[columns[4]]) and row[columns[4]]!='/' else 0),
+               Serve_NRC22=int(row[columns[12]]) if pd.notna(row[columns[12]]) and row[columns[12]]!='/' else 0
+               )
+                    if pd.notna(row[columns[4]]) and row[columns[4]]!='/' :
+                        Serve_Para_list=[ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]                    
+                        for _Para,Para in enumerate(Serve_Para_list):
+                            code='0x'
+                            if isinstance(Para,int):
+                                Para=[Para]
+                            for data in Para:
+                                code+='{:X}'.format(data)
+                            structCode+='''
+      Serve_Data[{Poss}].Serve_Para[{structDIIndex}][{index}]     = {ParaCode};
+      Serve_Data[{Poss}].Serve_Para_Len[{structDIIndex}][{index}]     = {Para_Len};'''.format(Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0],index=_Para,ParaCode=code,Para_Len=len(Para) )  
+                    if pd.notna(row[columns[11]]):
+                        for _NRC,NRC in enumerate(ast.literal_eval(row[columns[11]])):
+                            structCode+='''
+      Serve_Data[{Poss}].Serve_NRC[{structDIIndex}][{index}]     = {NRCCode};'''.format(Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0],index=_NRC,NRCCode="0x{:X}".format(NRC) )
+                if Serve_ =='0x31':
+                    Var=self.process_31H(int(row[columns[6]] if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0))
+                    structCode+=Var[0]
+                if Serve_ =='0x2E':
+                    structCode+=self.process_2E_H(Serve_count,row[columns[12]],int(row[columns[6]] if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0),Addres,Session,int(row[columns[5]] if pd.notna(row[columns[5]]) and row[columns[5]]!='/' else 0))
+                if Serve_ =='0x22':
+                    NRCList=[]
+                    if pd.notna(row[columns[11]]):
+                        NRCList=ast.literal_eval(row[columns[11]])
+                    structCode+=self.process_22_DID(Serve_count,int(row[columns[6]] if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0),NRCList,row[columns[12]],Addres,Session)   
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        #--------------------------------------------------------#
+          
+        start_State = 0
+        List_19_Fun = []
+        List_19_Para = []
+        Dic_19={}
+        Temp_ = ''
+        Temp_1= ''
+        _i = Serve_dict['0x19'][0]  
+        for _excel_row,(_i,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if (pd.notna(row[columns[1]]) and str(row[columns[1]]) == "0x19") or start_State == 1:
+                    start_State = 1
+                    Temp_ = str(row[columns[2]])
+                    if(Temp_ == 'nan'):
+                        List_19_Fun.append(Temp_1)
+                    elif(Temp_ != 'nan'):
+                        List_19_Fun.append((Temp_ if '0x' in Temp_ else '0x' + Temp_))
+                    List_19_Para.append(str(row[columns[4]]).replace("/","0"))
+                    if(row[columns[2]] != 0 and str(row[columns[2]]) != 'nan'):
+                        Temp_1 = str(row[columns[2]]) if '0x' in str(row[columns[2]]) else '0x' + str(row[columns[2]])
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+        Temp_=[]            
+        for _i in range(len(List_19_Fun)):
+            Temp_.append(List_19_Para[_i])
+            if(_i <len(List_19_Fun)-1):
+                if(List_19_Fun[_i+1] != List_19_Fun[_i]):
+                    Dic_19[List_19_Fun[_i]] = Temp_
+                    Temp_=[]
+            else:
+                 Dic_19[List_19_Fun[_i]] = Temp_
+                    
+        Serve_count = 0
+        Count_Para = 0
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[1]]) and row[columns[1]] in ["0x10","0x11","0x14","0x19","0x2E",'0x22',"0x23","0x28","0x27","0x28","0x31","0x34","0x36","0x37","0x3E","0x85"]:
+                    if _!=0 and '0x31' not in row[columns[1]]:
+                        Serve_count+=1                     
+                if pd.notna(row[columns[1]]) and str(row[columns[1]]) == "0x19" :
+                    Serve_= row[columns[1]]
+                    Serve_Fun_num=Serve_dict[Serve_][1]  
+                    if str(Serve_) == "0x19":     
+                        structCode+='''
+
+      /********************{Serve}结构体*****************/        
+      Serve_Data[{Poss}].Serve               = 0x{Serve};
+      Serve_Data[{Poss}].Serve_Fun_Count     = {count};\n'''.format(Poss=Serve_count,Serve=Serve_[2:],count=len(Dic_19))
+                if str(Serve_) == "0x19" and Serve_dict[Serve_][0] <= _ <Serve_dict[Serve_][0]+Serve_dict[Serve_][1]:#and row[columns[2]]!='/' 
+                    Addres=0
+                    Session=0
+                    if (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')) or (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')):
+                        Addres|=(1)  
+                    if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                        Addres|=(1<<1)                                    
+                    if (pd.notna(row[columns[8]]) and (row[columns[8]]==1 or row[columns[8]]=='1')) or (pd.notna(row[columns[10]]) and (row[columns[10]]==1 or row[columns[10]]=='1')):
+                        Session|=(1<<2)						 
+                    if (pd.notna(row[columns[9]]) and (row[columns[9]]==1 or row[columns[9]]=='1')) or (pd.notna(row[columns[7]]) and (row[columns[7]]==1 or row[columns[7]]=='1')):
+                        Session|=1    
+                    if (row[columns[2]] != 0 and str(row[columns[2]])!= 'nan'):
+                       # Count_Para = 0
+                        Fun_Temp=str('0x'+(row[columns[2]][2:]  if '0x' in row[columns[2]] else row[columns[2]])if pd.notna(row[columns[2]]) and row[columns[6]]!='/' else 0).replace("/","0")
+                        structCode+='''
+                
+      Serve_Data[{Poss}].Serve_Fun[{structDIIndex}]        = {Serve_Fun};            {commentate}
+      Serve_Data[{Poss}].RSP[{structDIIndex}]              = {RSP};
+      Serve_Data[{Poss}].Serve_Fun_Len[{structDIIndex}]    = {fun_len};
+      Serve_Data[{Poss}].Serve_Addres[{structDIIndex}]     = {Serve_Addres};
+      Serve_Data[{Poss}].Serve_Session[{structDIIndex}]    = {Serve_Session};
+      Serve_Data[{Poss}].Serve_Para_Count[{structDIIndex}] = {Serve_Para_Count};
+      Serve_Data[{Poss}].Serve_NRC_Count[{structDIIndex}]  = {structDIDNRC_Count}; 
+      Serve_Data[{Poss}].Security_Access[{structDIIndex}] = {SSecurity_Access};
+      Serve_Data[{Poss}].Serve_NRC22[{structDIIndex}] = {Serve_NRC22};'''.format(commentate='//'+row[columns[3]] if pd.notna(row[columns[3]]) else '',
+                Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0]-Count_Para,RSP=int(row[columns[6]] if pd.notna(row[columns[6]]) and row[columns[6]]!='/' else 0),
+                Serve_Fun=Fun_Temp,#str('0x'+(row[columns[2]][2:]  if '0x' in row[columns[2]] else row[columns[2]])if pd.notna(row[columns[2]]) and row[columns[6]]!='/' else 0).replace("/","0")
+                Serve_Addres=Addres,Serve_Session=Session,
+               structDIDNRC_Count=len(ast.literal_eval(row[columns[11]])) if pd.notna(row[columns[11]]) and row[columns[11]]!='/' else 0,
+               SSecurity_Access= str(int(row[columns[5]])) if pd.notna(row[columns[5]]) and row[columns[5]]!='/' else 0,
+               Serve_Para_Count= len(Dic_19[Fun_Temp]) if len(Dic_19[Fun_Temp])>=1 and Dic_19[Fun_Temp][0]!='0' and Dic_19[Fun_Temp][0]!='nan' else 0,#len([ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]) if pd.notna(row[columns[4]]) and row[columns[4]]!='/' else 0
+               fun_len= int(_isnotna(row[columns[15]])),#str(3+ len([ast.literal_eval(ii) for ii in str(row[columns[4]]).split('\n')]) if pd.notna(row[columns[4]]) and row[columns[4]]!='/' else 0),
+               Serve_NRC22=int(row[columns[12]]) if pd.notna(row[columns[12]]) and row[columns[12]]!='/' else 0
+               )  
+                    if ((row[columns[2]] == 0 or str(row[columns[2]])== 'nan') and (row[columns[4]] != 0 and str(row[columns[4]])!= 'nan')):
+                        Count_Para+=1
+                        structDIIndex=_-Serve_dict[Serve_][0]
+                    if (row[columns[2]] != 0 and str(row[columns[2]])!= 'nan'):
+                        if pd.notna(row[columns[4]]) and row[columns[4]]!='/' :
+                            for _Para in range(len(Dic_19[Fun_Temp])):
+                                structCode+='''
+      Serve_Data[{Poss}].Serve_Para[{structDIIndex}][{index}]     = {ParaCode};                                                                            
+      Serve_Data[{Poss}].Serve_Para_Len[{structDIIndex}][{index}]     = {Para_Len};'''.format(Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0]-Count_Para,index=_Para,ParaCode=Dic_19[Fun_Temp][_Para],Para_Len=1 )  #_-Serve_dict[Serve_][0]
+                    if pd.notna(row[columns[11]]):
+                        if (row[columns[2]] != 0 and str(row[columns[2]])!= 'nan'):
+                            for _NRC,NRC in enumerate(ast.literal_eval(row[columns[11]])):
+                                structCode+='''
+      Serve_Data[{Poss}].Serve_NRC[{structDIIndex}][{index}]     = {NRCCode};'''.format(Poss=Serve_count,structDIIndex=_-Serve_dict[Serve_][0]-Count_Para,index=_NRC,NRCCode="0x{:X}".format(NRC) )#_-Serve_dict[Serve_][0]
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+              
+        #--------------------------------------------------------#          
+        self.struct+='''
+  Serve_Data_Count = {};
+  Serve_31_Hex_Count = {};'''.format(Serve_Data_Count,str(Var[1]))           
+        
+        self.struct+=(structCode)
+        self.EOL_Process()
+
+    def EOL_Process(self):
+        """处理EOL下线流程"""
+        sheetname='EOL流程'
+        self._current_sheet = sheetname
+
+        self._current_row = 0
+
+        self._error_shown = False
+
+        if sheetname not in self.sheetnames:
+            return 
+        else:
+            self.sheets[sheetname]=self._load_excel_sheets(sheetname)   
+        send_dict = {}
+        send_index = 0
+        res_dict = {}
+        res_index = 0
+        sheet = self.sheets[sheetname]  
+        #           0       1      2          3
+        columns=["服务","数据","返回值","备注"]
+        ini_info_1='''
+}
+testcase  TestCase_EOL()
+{
+  dword Seed_Get;''' 
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+                self._current_row = _excel_row
+                if pd.notna(row[columns[0]]):
+                    Serve_Input = self.safe_int_to_str(row[columns[0]])
+                    DataInput,Data_Len = self.Data_Change_For_Input(str(row[columns[1]]).replace("0x","").replace("0X","").replace(","," "))
+                    if(DataInput == "0xnan"):
+                        continue
+                    Data_Save = '0x' + Serve_Input + ',' + str(DataInput).replace(" ",",").replace("nan","0")
+                    send_key = (Serve_Input, DataInput)
+                    if send_key not in send_dict:
+                        send_index += 1
+                        send_dict[send_key] = send_index
+                        ini_info_1+='''
+  byte DataSend_{Serve}_{Count}[{Data_Len}] = {{{Data_Save}}};'''.format(Serve=Serve_Input,Count=send_index,Data_Len=Data_Len+1,Data_Save=Data_Save)
+                    if len(str(row[columns[2]]).replace("NRC","").replace("nan","")) > 4:
+                        DataRxInput,DataRx_Len = self.Data_Change_For_Input(str(row[columns[2]]).replace("0x","").replace("0X","").replace(","," "))
+                        Data_SaveRx = '0x' + Serve_Input + ',' + str(DataRxInput).replace(" ",",")
+                        res_key = (Serve_Input, DataRxInput)
+                        if res_key not in res_dict:
+                            res_index += 1
+                            res_dict[res_key] = res_index
+                            ini_info_1+='''
+  byte DataRes_{Serve}_{Count}[{Data_Len}] = {{{Data_Save}}};'''.format(Serve=Serve_Input,Count=res_index,Data_Len=DataRx_Len+1,Data_Save=Data_SaveRx)
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+
+        ini_info_1+='''
+
+  Init();
+  _Start();
+  testWaitForTimeout(500);
+  _WriteEx_and_Report("","初始化完成");\n'''
+#*------------------------------------装载全部预期发送数据完毕-------------------------------------*#
+        Serve_27_Count = 0
+        for _excel_row,(_,row) in enumerate(sheet.iterrows(), start=2):
+
+            try:
+
+                self._current_row = _excel_row
+
+                if pd.notna(row[columns[0]]):
+                    Serve_Input = self.safe_int_to_str(row[columns[0]])
+                    DataInputRx = str(self.normalize_number(row[columns[2]])).replace("0x","").replace("0X","")
+                    DataInput,Data_Len = self.Data_Change_For_Input(str(row[columns[1]]).replace("0x","").replace("0X","").replace(","," "))
+                    Data_Save = '0x' + Serve_Input + ',' + str(DataInput).replace(" ",",")
+                    if Serve_Input == "27" and Serve_27_Count == 0 and (str(row[columns[1]]) == 'nan' or str(row[columns[1]]) == ' '):
+                        Serve_27_Count +=1
+                        ini_info_1+='''
+  Seed_Get = _get_seed(phyreq_ID);'''
+                    elif Serve_Input == "27" and Serve_27_Count == 1:
+                        Serve_27_Count = 0
+                        ini_info_1+='''
+  _Send_Key(SendKey_Len,phyreq_ID,Seed_Get,0);'''
+                    elif Serve_Input == "22" and (len(DataInputRx) == 0 or DataInputRx == 'nan'):
+                        ini_info_1+='''
+  EOL_Serve_22_Send(DataSend_{Serve}_{Count});\n'''.format(Serve=Serve_Input,Count=send_dict[(Serve_Input, DataInput)])
+                    else:
+                        ini_info_1+='''
+  _Send_Diag({Len},phyreq_ID,DataSend_{Serve}_{Count});'''.format(Serve=Serve_Input,Count=send_dict[(Serve_Input, DataInput)],Len=Data_Len+1)
+                    Res_Data,Res_Len = self.Data_Change_For_Input(str(row[columns[1]]).replace("0x","").replace("0X","").replace(","," "))
+                
+                    if Serve_Input == "31" and (len(DataInputRx) == 0 or DataInputRx == 'nan'):
+                        ini_info_1+='''
+  _Check_31Routine_Rx(DataSend_{Serve}_{Count},1);\n'''.format(Serve=Serve_Input,Count=send_dict[(Serve_Input, DataInput)])
+                    else:
+                        if "NRC" in DataInputRx or len(DataInputRx)<=2:
+                            ini_info_1+='''
+  _TestResult(SendData,phyreq_ID,"",{Res});\n'''.format(Res=DataInputRx)
+                        elif len(DataInputRx.replace("nan","")) == 0:
+                            continue
+                        else:
+                            DataRxInput,DataRx_Len = self.Data_Change_For_Input(str(row[columns[2]]).replace("0x","").replace("0X","").replace(","," "))
+                            ini_info_1+='''
+  _Check_Response_Config(SendData,DataRes_{Serve}_{Count});\n'''.format(Serve=Serve_Input,Count=res_dict[(Serve_Input, DataRxInput)])
+        
+                elif pd.notna(row[columns[1]]):
+                    ini_info_1+='''
+  {StrInput};'''  .format(StrInput = str(row[columns[1]]))
+            except Exception as e:
+                self._handle_sheet_error(sheetname, _excel_row, e)
+
+                
+        ini_info_1+='''
+        
+  End_Main();'''
+        self.struct+=(ini_info_1)
+
+
+def _returnStr(Strtxt):
+    Strtxt=re.sub(r'[^a-zA-Z0-9\s]','_',str(Strtxt))
+    Strtxt=re.sub(' ','_',str(Strtxt))
+    return Strtxt
+
+def _isnotna(row):
+    
+    return row if pd.notna(row) else 0
+
+if __name__ == "__main__":
+    app = Application()
+    app.root.mainloop()

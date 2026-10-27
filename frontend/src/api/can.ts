@@ -195,10 +195,14 @@ export const generateCanoeConfigFromTree = (
   readyOff: string = '',
   carSpdSignal: string = '',
   oem: string = '',
+  securityAlgo: string = '',
   canChannel: number = 1,
   relayModule: number = 0,
   dtcList: string[] = [],
   crcAlgorithms: any[] | null = null,
+  releaseVersion: string = '',
+  releaseAuthor: string = '',
+  changeNote: string = '',
 ) => {
   return client.post('/great-canoe/generate-config-from-tree', {
     tree_data: treeData,
@@ -214,14 +218,24 @@ export const generateCanoeConfigFromTree = (
     ready_off: readyOff,
     car_spd_signal: carSpdSignal,
     oem: oem,
+    security_algo: securityAlgo,
     can_channel: canChannel,
     relay_module: relayModule,
     dtc_list: dtcList,
     crc_algorithms: crcAlgorithms,
+    release_version: releaseVersion,
+    release_author: releaseAuthor,
+    change_note: changeNote,
   }, {
     timeout: 300000,
   })
 }
+
+/** 获取建议的释放记录版本号（依据输出目录已有《释放记录.txt》推断） */
+export const getSuggestedReleaseVersion = (outputDir: string, dbcName: string) =>
+  client.get('/great-canoe/suggest-version', {
+    params: { output_dir: outputDir, dbc_name: dbcName },
+  })
 
 // ==================== CRC 算法管理接口 ====================
 

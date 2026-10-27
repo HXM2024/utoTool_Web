@@ -1,0 +1,564 @@
+﻿<testmodule title="BT_UDS诊断测试" version="1.0">
+   
+   <testgroup title="调试">
+     	<capltestcase name="ToolTest" title="工具验证" />
+     	<capltestcase name="Security_Test" title="安全算法验证" />
+     	<capltestcase name="Case_K15_ON" title="上点火" />
+     	<capltestcase name="Case_K15_OFF" title="下点火" />
+     	<capltestcase name="Case_K30_ON" title="上总电" />
+     	<capltestcase name="Case_K30_OFF" title="下总电" />
+     	<capltestcase name="ID_Loop" title="诊断请求ID遍历" />
+   </testgroup>
+
+   <testgroup title="10服务">	
+      <capltestcase name="Case_10_Phy_Def_011"   title="BT_UDS10物理_默认(10 01)" />
+      <capltestcase name="Case_10_Phy_Def_02"   title="BT_UDS10物理_默认(10 02)" />
+      <capltestcase name="Case_10_Phy_Def_03"   title="BT_UDS10物理_默认(10 03)" />
+      <capltestcase name="Case_10_Phy_Def_04"   title="BT_UDS10物理_默认(肯定响应抑制位)" />
+      <capltestcase name="Case_10_Phy_Def_07"   title="BT_UDS10物理_默认(NRC优先级)" />
+      <capltestcase name="Case_10_Phy_Def_08"   title="BT_UDS10物理_默认(NRC13)" />
+      <capltestcase name="Case_10_Phy_Def_09"   title="BT_UDS10物理_默认(NRC12)" />     
+
+      <capltestcase name="Case_10_Phy_Def_01"   title="BT_UDS10物理_扩展(10 01)" />
+      <capltestcase name="Case_10_Phy_Ex_2"   title="BT_UDS10物理_扩展(10 02)" />
+      <capltestcase name="Case_10_Phy_Def_03"   title="BT_UDS10物理_扩展(10 03)" />
+      <capltestcase name="Case_10_Phy_Def_04"   title="BT_UDS10物理_扩展(肯定响应抑制位)" />
+      <capltestcase name="Case_10_Phy_Def_07"   title="BT_UDS10物理_扩展(NRC优先级)" />
+      <capltestcase name="Case_10_Phy_Def_08"   title="BT_UDS10物理_扩展(NRC13)" />
+      <capltestcase name="Case_10_Phy_Def_09"   title="BT_UDS10物理_扩展(NRC12)" />    
+
+      <capltestcase name="Case_10_Phy_Def_01"   title="BT_UDS10物理_编程(10 01)" />
+      <capltestcase name="Case_10_Phy_Pro_2"   title="BT_UDS10物理_编程(10 02)" />
+      <capltestcase name="Case_10_Phy_Pro_3"   title="BT_UDS10物理_编程(10 03)" />
+      <capltestcase name="Case_10_Phy_Def_04"   title="BT_UDS10物理_编程(肯定响应抑制位)" />
+      <capltestcase name="Case_10_Phy_Def_07"   title="BT_UDS10物理_编程(NRC优先级)" />
+      <capltestcase name="Case_10_Phy_Def_08"   title="BT_UDS10物理_编程(NRC13)" />
+      <capltestcase name="Case_10_Phy_Def_09"   title="BT_UDS10物理_编程(NRC12)" />
+    
+      <capltestcase name="Case_10_Phy_Def_01"   title="BT_UDS10功能_默认(10 01)" />
+      <capltestcase name="Case_10_Phy_Def_02"   title="BT_UDS10功能_默认(10 02)" />
+      <capltestcase name="Case_10_Phy_Def_03"   title="BT_UDS10功能_默认(10 03)" />
+      <capltestcase name="Case_10_Phy_Def_04"   title="BT_UDS10功能_默认(肯定响应抑制位)" />
+      <capltestcase name="Case_10_Phy_Def_07"   title="BT_UDS10功能_默认(NRC优先级)" />
+      <capltestcase name="Case_10_Phy_Def_08"   title="BT_UDS10功能_默认(NRC13)" />
+      <capltestcase name="Case_10_Phy_Def_09"   title="BT_UDS10功能_默认(NRC12)" />  
+
+      <capltestcase name="Case_10_Phy_Def_01"   title="BT_UDS10功能_扩展(10 01)" />
+      <capltestcase name="Case_10_Phy_Ex_2"       title="BT_UDS10功能_扩展(10 02)" />
+      <capltestcase name="Case_10_Phy_Def_03"   title="BT_UDS10功能_扩展(10 03)" />
+      <capltestcase name="Case_10_Phy_Def_04"   title="BT_UDS10功能_扩展(肯定响应抑制位)" />
+      <capltestcase name="Case_10_Phy_Def_07"   title="BT_UDS10功能_扩展(NRC优先级)" />
+      <capltestcase name="Case_10_Phy_Def_08"   title="BT_UDS10功能_扩展(NRC13)" />
+      <capltestcase name="Case_10_Phy_Def_09"   title="BT_UDS10功能_扩展(NRC12)" />
+
+      <capltestcase name="Case_10_Phy_Def_01"   title="BT_UDS10功能_编程(10 01)" />
+      <capltestcase name="Case_10_Phy_Pro_2"   title="BT_UDS10功能_编程(10 02)" />
+      <capltestcase name="Case_10_Phy_Pro_3"   title="BT_UDS10功能_编程(10 03)" />
+      <capltestcase name="Case_10_Phy_Def_04"   title="BT_UDS10功能_编程(肯定响应抑制位)" />
+      <capltestcase name="Case_10_Phy_Def_07"   title="BT_UDS10功能_编程(NRC优先级)" />
+      <capltestcase name="Case_10_Phy_Def_08"   title="BT_UDS10功能_编程(NRC13)" />
+      <capltestcase name="Case_10_Phy_Def_09"   title="BT_UDS10功能_编程(NRC12)" />
+
+
+      <capltestcase name="Case_10_Phy_Ex_3_GAC"   title="BT_UDS10物理_扩展(NRC22)_广汽" />
+      <capltestcase name="Case_10_Phy_Ex_3_GAC"   title="BT_UDS10功能_扩展(NRC22)_广汽" />
+   </testgroup>
+
+  <testgroup title="11服务">
+    <capltestcase name="Case_11_Phy_Def_01"   title="BT_UDS11物理_默认(遍历子功能)" />
+    <capltestcase name="Case_11_Phy_Def_02"   title="BT_UDS11物理_默认(肯定响应抑制位)" />
+    <capltestcase name="Case_11_Phy_Def_03"   title="BT_UDS11物理_默认(NRC优先级)" />
+    <capltestcase name="Case_11_Phy_Def_04"   title="BT_UDS11物理_默认(NRC13)" />
+    <capltestcase name="Case_11_Phy_Def_05"   title="BT_UDS11物理_默认(NRC12)" />
+
+    <capltestcase name="Case_11_Phy_Def_01"   title="BT_UDS11物理_编程(遍历子功能)" />
+    <capltestcase name="Case_11_Phy_Def_02"   title="BT_UDS11物理_编程(肯定响应抑制位)" />
+    <capltestcase name="Case_11_Phy_Def_03"   title="BT_UDS11物理_编程(NRC优先级)" />
+    <capltestcase name="Case_11_Phy_Def_04"   title="BT_UDS11物理_编程(NRC13)" />
+    <capltestcase name="Case_11_Phy_Def_05"   title="BT_UDS11物理_编程(NRC12)" />    
+
+    <capltestcase name="Case_11_Phy_Def_01"   title="BT_UDS11物理_扩展(遍历子功能)" />
+    <capltestcase name="Case_11_Phy_Def_02"   title="BT_UDS11物理_扩展(肯定响应抑制位)" />
+    <capltestcase name="Case_11_Phy_Def_03"   title="BT_UDS11物理_扩展(NRC优先级)" />
+    <capltestcase name="Case_11_Phy_Def_04"   title="BT_UDS11物理_扩展(NRC13)" />
+    <capltestcase name="Case_11_Phy_Def_05"   title="BT_UDS11物理_扩展(NRC12)" />
+
+    <capltestcase name="Case_11_Phy_Def_01"   title="BT_UDS11功能_默认(遍历子功能)" />
+    <capltestcase name="Case_11_Phy_Def_02"   title="BT_UDS11功能_默认(肯定响应抑制位)" />
+    <capltestcase name="Case_11_Phy_Def_03"   title="BT_UDS11功能_默认(NRC优先级)" />
+    <capltestcase name="Case_11_Phy_Def_04"   title="BT_UDS11功能_默认(NRC13)" />
+    <capltestcase name="Case_11_Phy_Def_05"   title="BT_UDS11功能_默认(NRC12)" />
+
+    <capltestcase name="Case_11_Phy_Def_01"   title="BT_UDS11功能_编程(遍历子功能)" />
+    <capltestcase name="Case_11_Phy_Def_02"   title="BT_UDS11功能_编程(肯定响应抑制位)" />
+    <capltestcase name="Case_11_Phy_Def_03"   title="BT_UDS11功能_编程(NRC优先级)" />
+    <capltestcase name="Case_11_Phy_Def_04"   title="BT_UDS11功能_编程(NRC13)" />
+    <capltestcase name="Case_11_Phy_Def_05"   title="BT_UDS11功能_编程(NRC12)" />
+
+    <capltestcase name="Case_11_Phy_Def_01"   title="BT_UDS11功能_拓展(遍历子功能)" />
+    <capltestcase name="Case_11_Phy_Def_02"   title="BT_UDS11功能_拓展(肯定响应抑制位)" />
+    <capltestcase name="Case_11_Phy_Def_03"   title="BT_UDS11功能_拓展(NRC优先级)" />
+    <capltestcase name="Case_11_Phy_Def_04"   title="BT_UDS11功能_拓展(NRC13)" />
+    <capltestcase name="Case_11_Phy_Def_05"   title="BT_UDS11功能_拓展(NRC12)" />
+  </testgroup>
+
+  <testgroup title="22服务">
+    <capltestcase name="Case_22_Phy_Def_01"   title="BT_UDS22物理_默认(遍历DID读取)" />
+    <capltestcase name="Case_22_Phy_Def_02"   title="BT_UDS22物理_默认(NRC13)" />
+    <capltestcase name="Case_22_Phy_Def_03"   title="BT_UDS22物理_默认(NRC31)" />
+    <capltestcase name="Case_22_Phy_Def_04"   title="BT_UDS22物理_默认(NRC优先级)" />
+    <capltestcase name="Case_22_Phy_Def_05"   title="BT_UDS22物理_默认(一次性读多个DID)"/>
+    <capltestcase name="Case_22_Phy_Def_06"   title="BT_UDS22物理_默认(一次性读多个相同的DID)"/>
+    <capltestcase name="Case_22_Phy_Def_07"   title="BT_UDS22物理_默认(读取数据中含不支持DID)"/>
+    <capltestcase name="Case_22_Phy_Def_08"   title="BT_UDS22物理_默认(读取数据_其他项次)"/>
+
+    <capltestcase name="Case_22_Phy_Def_01"   title="BT_UDS22物理_编程(遍历DID读取)" />
+    <capltestcase name="Case_22_Phy_Def_02"   title="BT_UDS22物理_编程(NRC13)" />
+    <capltestcase name="Case_22_Phy_Def_03"   title="BT_UDS22物理_编程(NRC31)" />
+    <capltestcase name="Case_22_Phy_Def_04"   title="BT_UDS22物理_编程(NRC优先级)" />
+    <capltestcase name="Case_22_Phy_Def_05"   title="BT_UDS22物理_编程(一次性读多个DID)"/>
+    <capltestcase name="Case_22_Phy_Def_06"   title="BT_UDS22物理_编程(一次性读多个相同的DID)"/>
+    <capltestcase name="Case_22_Phy_Def_07"   title="BT_UDS22物理_编程(读取数据中含不支持DID)"/>
+    <capltestcase name="Case_22_Phy_Def_08"   title="BT_UDS22物理_编程(读取数据_其他项次)"/>
+
+    <capltestcase name="Case_22_Phy_Def_01"   title="BT_UDS22物理_拓展(遍历DID读取)" />
+    <capltestcase name="Case_22_Phy_Def_02"   title="BT_UDS22物理_拓展(NRC13)" />
+    <capltestcase name="Case_22_Phy_Def_03"   title="BT_UDS22物理_拓展(NRC31)" />
+    <capltestcase name="Case_22_Phy_Def_04"   title="BT_UDS22物理_拓展(NRC优先级)" />
+    <capltestcase name="Case_22_Phy_Def_05"   title="BT_UDS22物理_拓展(一次性读多个DID)"/>
+    <capltestcase name="Case_22_Phy_Def_06"   title="BT_UDS22物理_拓展(一次性读多个相同的DID)"/>
+    <capltestcase name="Case_22_Phy_Def_07"   title="BT_UDS22物理_拓展(读取数据中含不支持DID)"/>
+    <capltestcase name="Case_22_Phy_Def_08"   title="BT_UDS22物理_拓展(读取数据_其他项次)"/>
+
+    <capltestcase name="Case_22_Phy_Def_01"   title="BT_UDS22功能_默认(遍历DID读取)" />
+    <capltestcase name="Case_22_Phy_Def_02"   title="BT_UDS22功能_默认(NRC13)" />
+    <capltestcase name="Case_22_Phy_Def_03"   title="BT_UDS22功能_默认(NRC31)" />
+    <capltestcase name="Case_22_Phy_Def_04"   title="BT_UDS22功能_默认(NRC优先级)" />
+    <capltestcase name="Case_22_Phy_Def_05"   title="BT_UDS22功能_默认(一次性读多个DID)"/>
+    <capltestcase name="Case_22_Phy_Def_06"   title="BT_UDS22功能_默认(一次性读多个相同的DID)"/>
+    <capltestcase name="Case_22_Phy_Def_07"   title="BT_UDS22功能_默认(读取数据中含不支持DID)"/>
+    <capltestcase name="Case_22_Phy_Def_08"   title="BT_UDS22功能_默认(读取数据_其他项次)"/>
+
+    <capltestcase name="Case_22_Phy_Def_01"   title="BT_UDS22功能_编程(遍历DID读取)" />
+    <capltestcase name="Case_22_Phy_Def_02"   title="BT_UDS22功能_编程(NRC13)" />
+    <capltestcase name="Case_22_Phy_Def_03"   title="BT_UDS22功能_编程(NRC31)" />
+    <capltestcase name="Case_22_Phy_Def_04"   title="BT_UDS22功能_编程(NRC优先级)" />
+    <capltestcase name="Case_22_Phy_Def_05"   title="BT_UDS22功能_编程(一次性读多个DID)"/>
+    <capltestcase name="Case_22_Phy_Def_06"   title="BT_UDS22功能_编程(一次性读多个相同的DID)"/>
+    <capltestcase name="Case_22_Phy_Def_07"   title="BT_UDS22功能_编程(读取数据中含不支持DID)"/>
+    <capltestcase name="Case_22_Phy_Def_08"   title="BT_UDS22功能_编程(读取数据_其他项次)"/>
+
+    <capltestcase name="Case_22_Phy_Def_01"   title="BT_UDS22功能_拓展(遍历DID读取)" />
+    <capltestcase name="Case_22_Phy_Def_02"   title="BT_UDS22功能_拓展(NRC13)" />
+    <capltestcase name="Case_22_Phy_Def_03"   title="BT_UDS22功能_拓展(NRC31)" />
+    <capltestcase name="Case_22_Phy_Def_04"   title="BT_UDS22功能_拓展(NRC优先级)" />
+    <capltestcase name="Case_22_Phy_Def_05"   title="BT_UDS22功能_拓展(一次性读多个DID)"/>
+    <capltestcase name="Case_22_Phy_Def_06"   title="BT_UDS22功能_拓展(一次性读多个相同的DID)"/>
+    <capltestcase name="Case_22_Phy_Def_07"   title="BT_UDS22功能_拓展(读取数据中含不支持DID)"/>
+    <capltestcase name="Case_22_Phy_Def_08"   title="BT_UDS22功能_拓展(读取数据_其他项次)"/>
+  </testgroup>
+
+  <testgroup title="27服务">
+    <capltestcase name="Case_27_Phy_Def_01"   title="BT_UDS27物理_默认(NRC7F)" />
+
+    <capltestcase name="Case_27_Phy_Pro_01"   title="BT_UDS27物理_编程(NRC13)" />
+    <capltestcase name="Case_27_Phy_Pro_02"   title="BT_UDS27物理_编程(NRC12)" />
+    <capltestcase name="Case_27_Phy_Pro_03"   title="BT_UDS27物理_编程(NRC24)" />
+    <capltestcase name="Case_27_Phy_Pro_04"   title="BT_UDS27物理_编程(NRC优先级)" />
+    <!-- <capltestcase name="Case_27_Phy_Pro_05"   title="BT_UDS27物理_编程(下电对错误计数影响测试)" /> -->
+    <!-- <capltestcase name="Case_27_Phy_Pro_06"   title="BT_UDS27物理_编程(重启对错误计数影响测试)" /> -->
+    <capltestcase name="Case_27_Phy_Pro_07"   title="BT_UDS27物理_编程(不正确报文对错误计数影响测试)" />
+    <capltestcase name="Case_27_Phy_Pro_08"   title="BT_UDS27物理_编程(解锁情况下再次请求种子)" />
+    <capltestcase name="Case_27_Phy_Pro_09"   title="BT_UDS27物理_编程(满延时错误计数器变化测试)" />
+    <!-- <capltestcase name="Case_27_Phy_Pro_10"   title="BT_UDS27物理_编程(会话切换对10s延时的影响测试)" /> -->
+    <!-- <capltestcase name="Case_27_Phy_Pro_11"   title="BT_UDS27物理_编程(断电对10s延时的影响测试)" /> -->
+    <capltestcase name="Case_27_Phy_Pro_12"   title="BT_UDS27物理_编程(检测安全访问解锁状态)" />
+    <capltestcase name="Case_27_Phy_Pro_13"   title="BT_UDS27物理_编程(连续请求种子)" /> 
+    <capltestcase name="Case_27_Phy_Pro_15"   title="BT_UDS27物理_编程(连续数次请求种子，统计重复次数)" />
+    <capltestcase name="Case_27_Phy_Pro_14"   title="BT_UDS27物理_编程(延时时间测试)" />
+    <capltestcase name="Case_27_Phy_Pro_16"   title="BT_UDS27物理_编程(支持的子功能测试)" />
+    <capltestcase name="Case_27_Phy_Pro_17"   title="BT_UDS27物理_编程(解锁后错误计数器清零)" />
+    <capltestcase name="Case_27_Phy_Pro_18"   title="BT_UDS27物理_编程(已解锁状态-上下电及11复位)" />
+    <capltestcase name="Case_27_Phy_Pro_19"   title="BT_UDS27物理_编程(已解锁状态-会话切换)" />
+    <capltestcase name="Case_27_Phy_Pro_20"   title="BT_UDS27物理_编程(未解锁状态-11复位)" />
+    <capltestcase name="Case_27_Phy_Pro_21"   title="BT_UDS27物理_编程(未解锁状态-上下电)" />
+    <capltestcase name="Case_27_Phy_Pro_22"   title="BT_UDS27物理_编程(未解锁状态-会话切换)" />
+    <capltestcase name="Case_27_Phy_Pro_22_01"   title="BT_UDS27物理_编程(未解锁状态-会话切换(编程会话切编程会话))" />
+    <capltestcase name="Case_27_Phy_Pro_23"   title="BT_UDS27物理_编程(长度不正确的正确秘钥)" />
+    <capltestcase name="Case_27_Phy_Pro_24"   title="BT_UDS27物理_编程(子功能错误的正确秘钥)" />
+
+    <capltestcase name="Case_27_Phy_Pro_01"   title="BT_UDS27物理_拓展(NRC13)" />
+    <capltestcase name="Case_27_Phy_Pro_02"   title="BT_UDS27物理_拓展(NRC12)" />
+    <capltestcase name="Case_27_Phy_Pro_03"   title="BT_UDS27物理_拓展(NRC24)" />
+    <capltestcase name="Case_27_Phy_Pro_04"   title="BT_UDS27物理_拓展(NRC优先级)" />
+    <!-- <capltestcase name="Case_27_Phy_Ex_05"   title="BT_UDS27物理_拓展(下电对错误计数影响测试)" />
+    <capltestcase name="Case_27_Phy_Ex_06"   title="BT_UDS27物理_拓展(重启对错误计数影响测试)" /> -->
+    <capltestcase name="Case_27_Phy_Ex_07"   title="BT_UDS27物理_拓展(不正确报文对错误计数影响测试)" />
+    <capltestcase name="Case_27_Phy_Ex_08"   title="BT_UDS27物理_拓展(解锁情况下再次请求种子)" />
+    <capltestcase name="Case_27_Phy_Ex_09"   title="BT_UDS27物理_拓展(满延时错误计数器变化测试)" />
+    <!-- <capltestcase name="Case_27_Phy_Ex_10"   title="BT_UDS27物理_拓展(会话切换对10s延时的影响测试)" />
+    <capltestcase name="Case_27_Phy_Ex_11"   title="BT_UDS27物理_拓展(断电对10s延时的影响测试)" /> -->
+    <capltestcase name="Case_27_Phy_Ex_12"   title="BT_UDS27物理_拓展(检测安全访问解锁状态)" />
+    <capltestcase name="Case_27_Phy_Ex_13"   title="BT_UDS27物理_拓展(连续请求种子)" />
+    <capltestcase name="Case_27_Phy_Ex_15"   title="BT_UDS27物理_拓展(连续数次请求种子，统计重复次数)" />
+    <capltestcase name="Case_27_Phy_Ex_14"   title="BT_UDS27物理_拓展(延时时间测试)" />
+    <capltestcase name="Case_27_Phy_Pro_16"   title="BT_UDS27物理_拓展(支持的子功能测试)" />
+    <capltestcase name="Case_27_Phy_Pro_17"   title="BT_UDS27物理_拓展(解锁后错误计数器清零)" />
+    <capltestcase name="Case_27_Phy_Pro_18"   title="BT_UDS27物理_拓展(已解锁状态-上下电及11复位)" />
+    <capltestcase name="Case_27_Phy_Pro_19"   title="BT_UDS27物理_拓展(已解锁状态-会话切换)" />
+    <capltestcase name="Case_27_Phy_Pro_20"   title="BT_UDS27物理_拓展(未解锁状态-11复位)" />
+    <capltestcase name="Case_27_Phy_Pro_21"   title="BT_UDS27物理_拓展(未解锁状态-上下电)" />
+    <capltestcase name="Case_27_Phy_Pro_22"   title="BT_UDS27物理_拓展(未解锁状态-会话切换)" />
+    <capltestcase name="Case_27_Phy_Pro_22_01"   title="BT_UDS27物理_拓展(未解锁状态-会话切换(编程会话切编程会话))" />
+    <capltestcase name="Case_27_Phy_Pro_23"   title="BT_UDS27物理_拓展(长度不正确的正确秘钥)" />
+    <capltestcase name="Case_27_Phy_Pro_24"   title="BT_UDS27物理_拓展(子功能错误的正确秘钥)" />
+
+    <capltestcase name="Case_27_Phy_Def_01"   title="BT_UDS27功能_默认(无响应)" />
+    <capltestcase name="Case_27_Phy_Def_01"   title="BT_UDS27功能_编程(无响应)" />
+    <capltestcase name="Case_27_Phy_Def_01"   title="BT_UDS27功能_拓展(无响应)" />
+
+  </testgroup>
+
+  <testgroup title="28服务">
+    <capltestcase name="Case_28_Phy_Def_01"   title="BT_UDS28物理_默认(NRC7F)" />
+    <capltestcase name="Case_28_Phy_Pro_01"   title="BT_UDS28物理_编程(子功能及肯定响应抑制位)" />
+    <capltestcase name="Case_28_Phy_Pro_02"   title="BT_UDS28物理_编程(NRC13)" />
+    <capltestcase name="Case_28_Phy_Pro_03"   title="BT_UDS28物理_编程(NRC12)" />
+    <capltestcase name="Case_28_Phy_Pro_04"   title="BT_UDS28物理_编程(NRC31)" />
+    <capltestcase name="Case_28_Phy_Pro_05"   title="BT_UDS28物理_编程(NRC优先级)" />
+
+    <capltestcase name="Case_28_Phy_Pro_01"   title="BT_UDS28物理_拓展(子功能及肯定响应抑制位)" />
+    <capltestcase name="Case_28_Phy_Pro_02"   title="BT_UDS28物理_拓展(NRC13)" />
+    <capltestcase name="Case_28_Phy_Pro_03"   title="BT_UDS28物理_拓展(NRC12)" />
+    <capltestcase name="Case_28_Phy_Pro_04"   title="BT_UDS28物理_拓展(NRC31)" />
+    <capltestcase name="Case_28_Phy_Pro_05"   title="BT_UDS28物理_拓展(NRC优先级)" />
+
+    <capltestcase name="Case_28_Phy_Def_01"   title="BT_UDS28功能_默认(NRC7F)" />
+    <capltestcase name="Case_28_Phy_Pro_01"   title="BT_UDS28功能_编程(子功能及肯定响应抑制位)" />
+    <capltestcase name="Case_28_Phy_Pro_02"   title="BT_UDS28功能_编程(NRC13)" />
+    <capltestcase name="Case_28_Phy_Pro_03"   title="BT_UDS28功能_编程(NRC12)" />
+    <capltestcase name="Case_28_Phy_Pro_04"   title="BT_UDS28功能_编程(NRC31)" />
+    <capltestcase name="Case_28_Phy_Pro_05"   title="BT_UDS28功能_编程(NRC优先级)" />
+
+    <capltestcase name="Case_28_Phy_Pro_01"   title="BT_UDS28功能_拓展(子功能及肯定响应抑制位)" />
+    <capltestcase name="Case_28_Phy_Pro_02"   title="BT_UDS28功能_拓展(NRC13)" />
+    <capltestcase name="Case_28_Phy_Pro_03"   title="BT_UDS28功能_拓展(NRC12)" />
+    <capltestcase name="Case_28_Phy_Pro_04"   title="BT_UDS28功能_拓展(NRC31)" />
+    <capltestcase name="Case_28_Phy_Pro_05"   title="BT_UDS28功能_拓展(NRC优先级)" />  
+  </testgroup>
+
+  <testgroup title="2E服务">
+    <capltestcase name="Case_2E_Phy_Def_01"   title="BT_UDS2E物理_默认(NRC7F＞NRC13)" />
+    <capltestcase name="Case_2E_Phy_Pro_01"   title="BT_UDS2E物理_编程(遍历DID)" />
+    <capltestcase name="Case_2E_Phy_Pro_02"   title="BT_UDS2E物理_编程(NRC31)" />
+    <capltestcase name="Case_2E_Phy_Pro_03"   title="BT_UDS2E物理_编程(NRC13)" />
+    <capltestcase name="Case_2E_Phy_Pro_04"   title="BT_UDS2E物理_编程(NRC33)" />
+    <capltestcase name="Case_2E_Phy_Pro_05"   title="BT_UDS2E物理_编程(NRC优先级)" />
+    <capltestcase name="Case_2E_Phy_Pro_01"   title="BT_UDS2E物理_拓展(遍历DID)" />
+    <capltestcase name="Case_2E_Phy_Pro_02"   title="BT_UDS2E物理_拓展(NRC31)" />
+    <capltestcase name="Case_2E_Phy_Pro_03"   title="BT_UDS2E物理_拓展(NRC13)" />
+    <capltestcase name="Case_2E_Phy_Pro_04"   title="BT_UDS2E物理_拓展(NRC33)" />
+    <capltestcase name="Case_2E_Phy_Pro_05"   title="BT_UDS2E物理_拓展(NRC优先级)" />
+    <capltestcase name="Case_2E_Phy_Def_01"   title="BT_UDS2E功能_默认(不响应)" />
+    <capltestcase name="Case_2E_Phy_Def_01"   title="BT_UDS2E功能_编程(不响应)" />
+    <capltestcase name="Case_2E_Phy_Def_01"   title="BT_UDS2E功能_拓展(不响应)" />
+    <capltestcase name="Case_2E_Phy_Def_01"   title="BT_UDS2E物理_拓展(不响应,按需选择)" />
+  </testgroup>
+
+  <testgroup title="31服务">
+    <capltestcase name="Case_31_Phy_Def_01"   title="BT_UDS31物理_默认(NRC7F)" />
+    <capltestcase name="Case_31_Phy_Pro_01"   title="BT_UDS31物理_编程(Response)" />
+    <capltestcase name="Case_31_Phy_Pro_02"   title="BT_UDS31物理_编程(NRC13)" />
+    <capltestcase name="Case_31_Phy_Pro_03"   title="BT_UDS31物理_编程(NRC12)" />
+    <capltestcase name="Case_31_Phy_Pro_04"   title="BT_UDS31物理_编程(NRC33)" />
+    <capltestcase name="Case_31_Phy_Pro_05"   title="BT_UDS31物理_编程(NRC31)" />
+    <capltestcase name="Case_31_Phy_Pro_06"   title="BT_UDS31物理_编程(NRC优先级)" />
+    <capltestcase name="Case_31_Phy_Pro_01"   title="BT_UDS31物理_拓展(Response_Ex)" />
+    <capltestcase name="Case_31_Phy_Pro_02"   title="BT_UDS31物理_拓展(NRC13)" />
+    <capltestcase name="Case_31_Phy_Pro_03"   title="BT_UDS31物理_拓展(NRC12)" />
+    <capltestcase name="Case_31_Phy_Pro_04"   title="BT_UDS31物理_拓展(NRC33)" />
+    <capltestcase name="Case_31_Phy_Pro_05"   title="BT_UDS31物理_拓展(NRC31)" />
+    <capltestcase name="Case_31_Phy_Pro_06"   title="BT_UDS31物理_拓展(NRC优先级)" />
+
+    <capltestcase name="Case_31_Phy_Def_01"   title="BT_UDS31功能_默认(NRC7F)" />
+    <capltestcase name="Case_31_Phy_Def_01"   title="BT_UDS31功能_编程(NRC7F)" />
+    <capltestcase name="Case_31_Phy_Def_01"   title="BT_UDS31功能_拓展(NRC7F)" />
+
+    <capltestcase name="Case_31_Phy_Pro_06_GAC"   title="BT_UDS31物理_编程(NRC优先级)_广汽" />
+  </testgroup>
+
+  <testgroup title="34服务">
+    <capltestcase name="Case_34_Phy_Def_01"   title="BT_UDS34物理_默认(NRC7F)" />
+    <capltestcase name="Case_34_Phy_Pro_01"   title="BT_UDS34物理_编程(NRC22/24)" />
+    <capltestcase name="Case_34_Phy_Pro_02"   title="BT_UDS34物理_编程(NRC13)" />
+    <capltestcase name="Case_34_Phy_Pro_03"   title="BT_UDS34物理_编程(NRC33)" />
+    <capltestcase name="Case_34_Phy_Pro_04"   title="BT_UDS34物理_编程(NRC31)" />
+    <capltestcase name="Case_34_Phy_Pro_05"   title="BT_UDS34物理_编程(驱动地址NRC优先级)" />
+    <capltestcase name="Case_34_Phy_Pro_06"   title="BT_UDS34物理_编程(APP地址NRC优先级)" />
+    <capltestcase name="Case_34_Phy_Def_01"   title="BT_UDS34物理_拓展(NRC7F)" />
+    <capltestcase name="Case_34_Phy_Def_01"   title="BT_UDS34功能_默认(NRC7F)" />
+    <capltestcase name="Case_34_Phy_Def_01"   title="BT_UDS34功能_编程(NRC7F)" />
+    <capltestcase name="Case_34_Phy_Def_01"   title="BT_UDS34功能_拓展(NRC7F)" />
+    <capltestcase name="Case_34_Phy_Pro_05_GAC"   title="BT_UDS34物理_编程(驱动地址NRC优先级)_广汽" />
+  </testgroup>
+
+  <testgroup title="36服务">
+    <capltestcase name="Case_36_Phy_Def_01"   title="BT_UDS36物理_默认(NRC7F)" />
+    <capltestcase name="Case_36_Phy_Pro_01"   title="BT_UDS36物理_编程(NRC优先级)" />
+    <capltestcase name="Case_36_Phy_Pro_02"   title="BT_UDS36物理_编程(NRC13)" />
+    <capltestcase name="Case_36_Phy_Def_01"   title="BT_UDS36物理_拓展(NRC7F)" />
+    <capltestcase name="Case_36_Phy_Def_01"   title="BT_UDS36功能_默认(NRC7F)" />
+    <capltestcase name="Case_36_Phy_Pro_01"   title="BT_UDS36功能_编程(NRC优先级)" />
+    <capltestcase name="Case_36_Phy_Def_01"   title="BT_UDS36功能_编程(NRC7F)" />
+    <capltestcase name="Case_36_Phy_Def_01"   title="BT_UDS36功能_拓展(NRC7F)" />
+  </testgroup>
+
+  <testgroup title="37服务">
+    <capltestcase name="Case_37_Phy_Def_01"   title="BT_UDS37物理_默认(NRC7F)" />
+    <capltestcase name="Case_37_Phy_Pro_01"   title="BT_UDS37物理_编程(NRC优先级)" />
+    <capltestcase name="Case_37_Phy_Pro_02"   title="BT_UDS37物理_编程(NRC13)" />
+    <capltestcase name="Case_37_Phy_Pro_03"   title="BT_UDS37物理_编程(NRC24)" />
+    <capltestcase name="Case_37_Phy_Def_01"   title="BT_UDS37物理_拓展(NRC7F)" />
+    <capltestcase name="Case_37_Phy_Def_01"   title="BT_UDS37功能_默认(NRC7F)" />
+    <capltestcase name="Case_37_Phy_Def_01"   title="BT_UDS37功能_编程(NRC7F)" />
+    <capltestcase name="Case_37_Phy_Def_01"   title="BT_UDS37功能_拓展(NRC7F)" />
+  </testgroup>
+
+  <testgroup title="3E服务">
+    <capltestcase name="Case_3E_Phy_Def_01"   title="BT_UDS3E物理_默认(3E 00)" />
+    <capltestcase name="Case_3E_Phy_Def_02"   title="BT_UDS3E物理_默认(3E 80)" />
+    <capltestcase name="Case_3E_Phy_Def_03"   title="BT_UDS3E物理_默认(NRC优先级)"/>
+    <capltestcase name="Case_3E_Phy_Def_04"   title="BT_UDS3E物理_默认(NRC13)" />
+    <capltestcase name="Case_3E_Phy_Def_05"   title="BT_UDS3E物理_默认(NRC12)" />
+
+    <capltestcase name="Case_3E_Phy_Def_01"   title="BT_UDS3E物理_编程(3E 00)" />
+    <capltestcase name="Case_3E_Phy_Def_02"   title="BT_UDS3E物理_编程(3E 80)" />
+    <capltestcase name="Case_3E_Phy_Def_03"   title="BT_UDS3E物理_编程(NRC优先级)"/>
+    <capltestcase name="Case_3E_Phy_Def_04"   title="BT_UDS3E物理_编程(NRC13)" />
+    <capltestcase name="Case_3E_Phy_Def_05"   title="BT_UDS3E物理_编程(NRC12)" />
+
+    <capltestcase name="Case_3E_Phy_Def_01"   title="BT_UDS3E物理_拓展(3E 00)" />
+    <capltestcase name="Case_3E_Phy_Def_02"   title="BT_UDS3E物理_拓展(3E 80)" />
+    <capltestcase name="Case_3E_Phy_Def_03"   title="BT_UDS3E物理_拓展(NRC优先级)" />
+    <capltestcase name="Case_3E_Phy_Def_04"   title="BT_UDS3E物理_拓展(NRC13)" />
+    <capltestcase name="Case_3E_Phy_Def_05"   title="BT_UDS3E物理_拓展(NRC12)" />
+
+    <capltestcase name="Case_3E_Phy_Def_01"   title="BT_UDS3E功能_默认(3E 00)" />
+    <capltestcase name="Case_3E_Phy_Def_02"   title="BT_UDS3E功能_默认(3E 80)" />
+    <capltestcase name="Case_3E_Phy_Def_03"   title="BT_UDS3E功能_默认(NRC优先级)"/>
+    <capltestcase name="Case_3E_Phy_Def_04"   title="BT_UDS3E功能_默认(NRC13)" />
+    <capltestcase name="Case_3E_Phy_Def_05"   title="BT_UDS3E功能_默认(NRC12)" />
+
+    <capltestcase name="Case_3E_Phy_Def_01"   title="BT_UDS3E功能_编程(3E 00)" />
+    <capltestcase name="Case_3E_Phy_Def_02"   title="BT_UDS3E功能_编程(3E 80)" />
+    <capltestcase name="Case_3E_Phy_Def_03"   title="BT_UDS3E功能_编程(NRC优先级)"/>
+    <capltestcase name="Case_3E_Phy_Def_04"   title="BT_UDS3E功能_编程(NRC13)" />
+    <capltestcase name="Case_3E_Phy_Def_05"   title="BT_UDS3E功能_编程(NRC12)" />
+
+    <capltestcase name="Case_3E_Phy_Def_01"   title="BT_UDS3E功能_拓展(3E 00)" />
+    <capltestcase name="Case_3E_Phy_Def_02"   title="BT_UDS3E功能_拓展(3E 80)" />
+    <capltestcase name="Case_3E_Phy_Def_03"   title="BT_UDS3E功能_拓展(NRC优先级)"/>
+    <capltestcase name="Case_3E_Phy_Def_04"   title="BT_UDS3E功能_拓展(NRC13)" />
+    <capltestcase name="Case_3E_Phy_Def_05"   title="BT_UDS3E功能_拓展(NRC12)" />
+  </testgroup>
+
+  <testgroup title="85服务">
+    <capltestcase name="Case_85_Phy_Def_01"   title="BT_UDS85物理_默认(NRC7F)" />
+    <capltestcase name="Case_85_Phy_Pro_01"   title="BT_UDS85物理_编程(85 01_02)" />
+    <capltestcase name="Case_85_Phy_Pro_02"   title="BT_UDS85物理_编程(85 81_82)" />
+    <capltestcase name="Case_85_Phy_Pro_03"   title="BT_UDS85物理_编程(NRC优先级)" />
+    <capltestcase name="Case_85_Phy_Pro_04"   title="BT_UDS85物理_编程(NRC13)" />
+    <capltestcase name="Case_85_Phy_Pro_05"   title="BT_UDS85物理_编程(NRC12)" />
+    <!-- <capltestcase name="Case_85_Phy_Pro_NRC22_Auto"   title="BT_UDS85物理_编程(NRC22遍历)" /> -->
+
+    <capltestcase name="Case_85_Phy_Pro_01"   title="BT_UDS85物理_拓展(85 01_02)" />
+    <capltestcase name="Case_85_Phy_Pro_02"   title="BT_UDS85物理_拓展(85 81_82)" />
+    <capltestcase name="Case_85_Phy_Pro_03"   title="BT_UDS85物理_拓展(NRC优先级)" />
+    <capltestcase name="Case_85_Phy_Pro_04"   title="BT_UDS85物理_拓展(NRC13)" />
+    <capltestcase name="Case_85_Phy_Pro_05"   title="BT_UDS85物理_拓展(NRC12)" />
+    <!-- <capltestcase name="Case_85_Phy_Pro_NRC22_Auto"   title="BT_UDS85物理_拓展(NRC22遍历)" /> -->
+
+    <capltestcase name="Case_85_Phy_Def_01"   title="BT_UDS85功能_默认(NRC7F)" />
+    <capltestcase name="Case_85_Phy_Pro_01"   title="BT_UDS85功能_编程(85 01_02)" />
+    <capltestcase name="Case_85_Phy_Pro_02"   title="BT_UDS85功能_编程(85 81_82)" />
+    <capltestcase name="Case_85_Phy_Pro_03"   title="BT_UDS85功能_编程(NRC优先级)" />
+    <capltestcase name="Case_85_Phy_Pro_04"   title="BT_UDS85功能_编程(NRC13)" />
+    <capltestcase name="Case_85_Phy_Pro_05"   title="BT_UDS85功能_编程(NRC12)" />
+    <!-- <capltestcase name="Case_85_Phy_Pro_NRC22_Auto"   title="BT_UDS85功能_编程(NRC22遍历)" /> -->
+
+    <capltestcase name="Case_85_Phy_Pro_01"   title="BT_UDS85功能_拓展(85 01_02)" />
+    <capltestcase name="Case_85_Phy_Pro_02"   title="BT_UDS85功能_拓展(85 81_82)" />
+    <capltestcase name="Case_85_Phy_Pro_03"   title="BT_UDS85功能_拓展(NRC优先级)" />
+    <capltestcase name="Case_85_Phy_Pro_04"   title="BT_UDS85功能_拓展(NRC13)" />
+    <capltestcase name="Case_85_Phy_Pro_05"   title="BT_UDS85功能_拓展(NRC12)" />
+    <!-- <capltestcase name="Case_85_Phy_Pro_NRC22_Auto"   title="BT_UDS85功能_拓展(NRC22遍历)" /> -->
+  </testgroup>
+
+  <testgroup title="不支持服务">
+    <capltestcase name="Case_Not_Support_Phy_Def"   title="BT_UDS物理_默认_不支持服务" />
+    <capltestcase name="Case_Not_Support_Phy_Def"   title="BT_UDS物理_拓展_不支持服务" />
+    <capltestcase name="Case_Not_Support_Phy_Def"   title="BT_UDS物理_编程_不支持服务" />
+    <capltestcase name="Case_Not_Support_Phy_Def"   title="BT_UDS功能_默认_不支持服务" />
+    <capltestcase name="Case_Not_Support_Phy_Def"   title="BT_UDS功能_拓展_不支持服务" />
+    <capltestcase name="Case_Not_Support_Phy_Def"   title="BT_UDS功能_编程_不支持服务" />
+  </testgroup>
+
+  <testgroup title="TP层-CAN">
+      <testgroup title="单帧请求以及单帧应答报文测试">
+        <capltestcase name="Can_TP_SF_1"   title="TP_CAN_单帧请求报文SF_DL错误测试" />
+        <capltestcase name="Can_TP_SF_2"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_1" />
+        <capltestcase name="Can_TP_SF_3"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_2" />
+        <capltestcase name="Can_TP_SF_4"   title="TP_CAN_单帧请求CAN帧报文的DLC错误测试_3" />
+        <capltestcase name="Can_TP_SF_5"   title="TP_CAN_协议控制信息为FF的单帧请求报文测试" />
+        <capltestcase name="Can_TP_SF_6"   title="TP_CAN_确认控制器发送的单帧响应报文SF_DL有效_1" />
+        <capltestcase name="Can_TP_SF_7"   title="TP_CAN_确认控制器发送的单帧响应报文SF_DL有效_2" />
+      </testgroup>
+      <testgroup title="首帧请求报文以及首帧应答报文测试">
+        <capltestcase name="Can_TP_FF_1"   title="TP_CAN_首帧请求报文FF_DL错误测试_1" />
+        <capltestcase name="Can_TP_FF_2"   title="TP_CAN_首帧请求报文FF_DL错误测试_2" />
+        <capltestcase name="Can_TP_FF_3"   title="TP_CAN_首帧请求报文FF_DL错误测试_3" />
+        <capltestcase name="Can_TP_FF_4"   title="TP_CAN_功能寻址请求首帧测试" />
+        <capltestcase name="Can_TP_FF_5"   title="TP_CAN_确认控制器发送的首帧响应报文FF_DL" />
+      </testgroup>
+      <testgroup title="连续帧请求报文和连续帧响应报文测试">
+        <capltestcase name="Can_TP_CF_1"   title="TP_CAN_停止发送后续部分连续帧" />
+        <capltestcase name="Can_TP_CF_2"   title="TP_CAN_不发送所有连续帧" />
+        <capltestcase name="Can_TP_CF_3"   title="TP_CAN_不发送某连续帧" />
+        <capltestcase name="Can_TP_CF_4"   title="TP_CAN_重复发送第一个连续帧" />
+        <capltestcase name="Can_TP_CF_5"   title="TP_CAN_多帧请求报文连续帧DLC错误" />
+        <capltestcase name="Can_TP_CF_10"   title="TP_CAN_连续帧SN值测试" />
+        <capltestcase name="Can_TP_CF_7"   title="TP_CAN_错误连续帧报文" />
+        <capltestcase name="Can_TP_CF_8"   title="TP_CAN_后续帧请求测试" />
+      </testgroup>
+      <testgroup title="流控帧请求报文和流控帧响应报文测试">
+        <capltestcase name="Can_TP_Stmin_1"   title="TP_CAN_Stmin值测试" />
+        <capltestcase name="Can_TP_Stmin_1_"   title="TP_CAN_Stmin值测试-边界值" />
+        <capltestcase name="Can_TP_Stmin_2"   title="TP_CAN_Stmin无效测试-us级值" />
+        <capltestcase name="Can_TP_Stmin_3"   title="TP_CAN_Stmin无效测试-保留值" />
+        <capltestcase name="Can_TP_FC_8"   title="TP_CAN_控制器收到的BlockSize测试" />
+        <capltestcase name="Can_TP_CF_11"   title="TP_CAN_确认控制器的流控制帧参数STmin有效" />
+        <capltestcase name="Can_TP_CF_9"   title="TP_CAN_确认控制器发送的流控帧中的BS和Stmin" />
+        <capltestcase name="Can_TP_CF_19"   title="TP_CAN_等待流控制帧" />
+        <capltestcase name="Can_TP_CF_18"   title="TP_CAN_流控制状态为OVFLW溢出" />
+        <capltestcase name="Can_TP_CF_16"   title="TP_CAN_无效流控制帧-FS无效值" />
+        <capltestcase name="Can_TP_CF_12"   title="TP_CAN_不发送流控制帧" />
+        <capltestcase name="Can_TP_CF_13"   title="TP_CAN_重复发送流控制帧" />
+        <capltestcase name="Can_TP_CF_14"   title="TP_CAN_长度不正确流控制帧" />
+        <capltestcase name="Can_TP_CF_15"   title="TP_CAN_功能寻址流控制帧" />
+        <capltestcase name="Can_TP_CF_17"   title="TP_CAN_流控帧请求测试" />
+        <capltestcase name="Can_TP_CF_20"   title="TP_CAN_未知请求报文测试" />
+      </testgroup>
+      <testgroup title="接收非期望 N_PDU 的处理测试">
+        <capltestcase name="Can_TP_Disturb_1"   title="TP_CAN_控制器多帧发送被非预期单帧请求报文干扰" />
+        <capltestcase name="Can_TP_Disturb_2"   title="TP_CAN_控制器多帧发送被非预期多帧请求报文第一帧干扰" />
+        <capltestcase name="Can_TP_Disturb_3"   title="TP_CAN_控制器多帧发送被非预期连续帧干扰" />
+        <capltestcase name="Can_TP_Disturb_4"   title="TP_CAN_控制器多帧发送被非预期流控制帧干扰" />
+        <capltestcase name="Can_TP_Disturb_5"   title="TP_CAN_控制器多帧发送被非预期未知报文干扰" />
+        <capltestcase name="Can_TP_Disturb_6"   title="TP_CAN_控制器多帧接收被新的单帧请求报文干扰" />
+        <capltestcase name="Can_TP_Disturb_7"   title="TP_CAN_控制器多帧接收被新的多帧请求报文第一帧干扰" />
+        <capltestcase name="Can_TP_Disturb_8"   title="TP_CAN_握手命令干扰多帧请求" />
+        <capltestcase name="Can_TP_Disturb_9"   title="TP_CAN_控制器多帧接收被流控制报文干扰" />
+        <capltestcase name="Can_TP_Disturb_10"   title="TP_CAN_控制器多帧接收被未知报文干扰" />
+      </testgroup>
+      <testgroup title="网络层定时参数测试">
+        <capltestcase name="Can_TP_Time_1"   title="TP_CAN_N_Bs时间测试" />
+        <capltestcase name="Can_TP_Time_2"   title="TP_CAN_N_Cr时间测试" />
+        <capltestcase name="Can_TP_Time_4"   title="TP_CAN_N_Cs时间测试" />
+        <capltestcase name="Can_TP_Time_5"   title="TP_CAN_N_Br时间测试" />
+      </testgroup>
+      <testgroup title="EPS应答流控帧BS值测试">
+        <capltestcase name="Can_TP_Time_3"   title="TP_CAN_BS值测试" />
+      </testgroup>
+  </testgroup>
+
+  <testgroup title="TP层-CANFD">
+      <testgroup title="单帧请求报文SF_DL测试/单帧请求报文(CAN_DL＞8)字节1低四位不为0测试">
+        <capltestcase name="CanFD_TP_SF_1"   title="TP_CANFD_单帧请求报文(CAN_DL≤8)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_2"   title="TP_CANFD_单帧请求报文(CAN_DL=12)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_3"   title="TP_CANFD_单帧请求报文(CAN_DL=16)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_4"   title="TP_CANFD_单帧请求报文(CAN_DL=20)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_5"   title="TP_CANFD_单帧请求报文(CAN_DL=24)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_6"   title="TP_CANFD_单帧请求报文(CAN_DL=32)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_7"   title="TP_CANFD_单帧请求报文(CAN_DL=48)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_8"   title="TP_CANFD_单帧请求报文(CAN_DL=64)SF_DL测试" />
+        <capltestcase name="CanFD_TP_SF_9"   title="TP_CANFD_协议控制信息为FF的单帧请求报文测试(CAN_DL)" />
+      </testgroup>
+      <testgroup title="首帧请求报文以及首帧应答报文测试">
+        <capltestcase name="CanFD_TP_FF_1"   title="TP_CANFD_首帧请求报文FF_DL错误测试_1" />
+        <capltestcase name="CanFD_TP_FF_2"   title="TP_CANFD_首帧请求报文FF_DL错误测试_2" />
+        <capltestcase name="CanFD_TP_FF_3"   title="TP_CANFD_功能寻址请求首帧测试" />
+        <capltestcase name="CanFD_TP_FF_4"   title="TP_CANFD_FF_DL＜4095" />
+        <capltestcase name="CanFD_TP_FF_5"   title="TP_CANFD_FF_DL＞4095" />
+      </testgroup>
+      <testgroup title="连续帧请求报文和连续帧响应报文测试">
+        <capltestcase name="CanFD_TP_CF_1"   title="TP_CANFD_停止发送后续部分连续帧" />
+        <capltestcase name="CanFD_TP_CF_2"   title="TP_CANFD_不发送所有连续帧" />
+        <capltestcase name="CanFD_TP_CF_3"   title="TP_CANFD_不发送某连续帧" />
+        <capltestcase name="CanFD_TP_CF_4"   title="TP_CANFD_重复发送第一个连续帧" />
+
+        <capltestcase name="CanFD_TP_CF_6"   title="TP_CANFD_连续帧SN值测试" />
+        <capltestcase name="CanFD_TP_CF_7"   title="TP_CANFD_错误连续帧报文" />
+        <capltestcase name="CanFD_TP_CF_8"   title="TP_CANFD_后续帧请求测试" />
+        <capltestcase name="CanFD_TP_CF_9"   title="TP_CANFD_最后一个连续帧CAN_DL测试" />
+      </testgroup>
+      <testgroup title="流控帧请求报文和流控帧响应报文测试">
+        <capltestcase name="CANFD_TP_Stmin_1"   title="TP_CANFD_Stmin值测试" />
+        <capltestcase name="CANFD_TP_Stmin_1_"   title="TP_CANFD_Stmin值测试-边界值" />
+        <capltestcase name="CANFD_TP_Stmin_2"   title="TP_CANFD_Stmin无效测试-us级值" />
+        <capltestcase name="CANFD_TP_Stmin_3"   title="TP_CANFD_Stmin无效测试-保留值" />
+        <capltestcase name="CANFD_TP_FC_8"   title="TP_CANFD_控制器收到的BlockSize测试" />
+        <capltestcase name="CANFD_TP_FC_2_"   title="TP_CANFD_确认控制器的流控制帧参数STmin有效" />
+        <capltestcase name="CANFD_TP_FC_2"   title="TP_CANFD_确认控制器发送的流控帧中的BS和STmin" />
+        <capltestcase name="CANFD_TP_FC_11"   title="TP_CANFD_等待流控制帧" />
+        <capltestcase name="CANFD_TP_FC_7"   title="TP_CANFD_流控制状态为OVFLW溢出" />
+        <capltestcase name="CANFD_TP_FC_10"   title="TP_CANFD_无效流控制帧-FS无效值" />
+        <capltestcase name="CANFD_TP_FC_3"   title="TP_CANFD_上位机收到首帧后-不发送流控帧" />
+        <capltestcase name="CANFD_TP_FC_4"   title="TP_CANFD_上位机收到首帧后-重复发送流控帧" />
+        <capltestcase name="CANFD_TP_FC_5"   title="TP_CANFD_长度不正确流控制帧" />
+        <capltestcase name="CANFD_TP_FC_6"   title="TP_CANFD_上位机发送功能寻址流控帧" />
+        <capltestcase name="CANFD_TP_FC_12"   title="TP_CANFD_流控帧请求测试" />
+        <capltestcase name="CANFD_TP_FC_13"   title="TP_CANFD_发送未知类型的诊断帧" />
+      </testgroup>
+      <testgroup title="接收非期望 N_PDU 的处理测试">
+        <capltestcase name="CanFD_TP_Disturb_1"   title="TP_CANFD_控制器多帧发送被非预期单帧请求报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_2"   title="TP_CANFD_控制器多帧发送被非预期多帧请求报文第一帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_3"   title="TP_CANFD_控制器多帧发送被非预期连续帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_4"   title="TP_CANFD_控制器多帧发送被非预期流控制帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_5"   title="TP_CANFD_控制器多帧发送被非预期未知报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_6"   title="TP_CANFD_控制器多帧接收被新的单帧请求报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_7"   title="TP_CANFD_控制器多帧接收被新的多帧请求报文第一帧干扰" />
+        <capltestcase name="CanFD_TP_Disturb_8"   title="TP_CANFD_握手命令干扰多帧请求" />
+        <capltestcase name="CanFD_TP_Disturb_9"   title="TP_CANFD_控制器多帧接收被流控制报文干扰" />
+        <capltestcase name="CanFD_TP_Disturb_10"   title="TP_CANFD_控制器多帧接收被未知报文干扰" />
+      </testgroup>
+      <testgroup title="网络层定时参数测试">
+        <capltestcase name="CanFD_TP_Time_1"   title="TP_CANFD_N_Bs时间测试" />
+        <capltestcase name="CanFD_TP_Time_2"   title="TP_CANFD_N_Cr时间测试" />
+        <capltestcase name="CanFD_TP_Time_4"   title="TP_CANFD_N_Cs时间测试" />
+        <capltestcase name="CanFD_TP_Time_5"   title="TP_CANFD_N_Br时间测试" />
+      </testgroup>
+      <testgroup title="EPS应答流控帧BS值测试">
+        <capltestcase name="CanFD_TP_Time_3"   title="TP_CANFD_EPS应答流控帧BS值测试" />
+      </testgroup>
+  </testgroup>
+
+  <testgroup title="其他测试">
+    <testgroup title="广汽GAC">
+        <!-- <capltestcase name="Case_Other_GAC_01"   title="默认会话下休眠验证-300S" />
+        <capltestcase name="Case_Other_GAC_02"   title="默认会话下休眠验证-301S" />
+        <capltestcase name="Case_Other_GAC_03"   title="默认会话下休眠验证-298S" />
+        <capltestcase name="Case_Other_GAC_04"   title="默认会话下休眠验证-100S" />
+        <capltestcase name="Case_Other_GAC_05"   title="默认会话下休眠验证-300S内有诊断报文请求" />
+        <capltestcase name="Case_Other_GAC_06"   title="默认会话下休眠验证-默认会话切换" />
+        <capltestcase name="Case_Other_GAC_07"   title="默认会话下休眠验证-拓展会话切换默认会话" /> -->
+        <capltestcase name="Case_Other_GAC_08"   title="1101响应后时间测试-拓展会话" />
+        <capltestcase name="Case_Other_GAC_09"   title="1101响应后时间测试-11复位" />
+        <capltestcase name="Case_Other_GAC_10"   title="1101响应后时间测试-高负载" />
+        <capltestcase name="Case_Other_GAC_11"   title="1002响应后时间测试-请求种子" />
+        <capltestcase name="Case_Other_GAC_12"   title="1002响应后时间测试-11复位" />
+        <capltestcase name="Case_Other_GAC_13"   title="1002响应后时间测试-高负载" />
+    </testgroup>
+  </testgroup>
+
+
+</testmodule>

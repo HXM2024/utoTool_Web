@@ -1,0 +1,3380 @@
+/*@!Encoding:936*/
+
+variables
+{
+  byte defsession=1;/*默认会话*/
+  byte exsession=3;/*扩展会话*/
+  int GlbHandlefile;
+  char Cdd_Name[50];
+  char DBC_Name[100];
+  diagRequest *Session_Start;
+  diagRequest *Update;
+  diagRequest *Diag01;
+  diagRequest *Diag09;
+  diagRequest *ClearDTC;
+  diagRequest *SendData;
+  message 0x11 IGON = {dlc=8};
+  message *Relaymsg={dlc=8};
+  char ECU_project[50];
+  char file_path_1[100] = ".\\Testmodule\\Testmodule_UDS\\";
+  char file_name_1[100] = ".\\Testmodule\\Testmodule_UDS\\UDS_Main_info.ini";
+  dword Response_ID;
+  dword phyreq_ID;
+  dword funreq_ID;
+  byte Session_BIN;                       //二进制下会话表示：bit0表示默认会话、bit1表示编程会话、bit2表示扩展会话
+  byte Support_CAN;
+  int CarSpd_Type = -1;                   //装载车速信号类型，为-1时进行查询，其余值不进行DBC查询
+  struct DTC_CarSpd
+  {
+    dword Sig_Id;                         // 节点
+    char CarSpd_Sig[50];                  //车速信号
+    char CarSpdInvalid_Sig[50];           //车速无效信号
+    
+    dword Invalid_DTC;                    //车速无效DTC
+    int Invalid_Time;                     //无效时间
+    char Invalid_Value[10];               //无效值范围
+    int Invalid_Value_Count;              //无效值个数
+    char Normal_Value[10];                //正常值范围
+    int Normal_Value_Count;               //正常值个数
+    dword Lost_DTC;                       //丢失DTC
+    int Lost_Time;                        //丢失时间
+    int Invalid_DTC_Flage;                //无效故障是否存在 1：存在  0：不存在
+    int Lost_DTC_Flage;                   //丢失故障是否存在 1：存在  0：不存在
+    dword Auxiliary_Speed_Node;           //备用车速节点
+    char Auxiliary_Speed_Sig[50];         //备用车速信号
+  };
+  struct DTC_CarSpd Struct_CarSpd;
+  
+  struct DTC_Ready
+  {
+    dword Sig_Id;                         // 节点
+    int  Ready_Active;                    //发动机开启时的值
+    char Ready_Sig[50];                   //发动机信号
+    char ReadyInvalid_Sig[50];            //发动机无效信号
+    
+    char Ready_ValueRange[10];            //发动机信号范围
+    int Ready_ValueRange_Count;           //发动机信号值个数
+    
+    dword Invalid_DTC;                    //发动机无效DTC
+    int Invalid_Time;                     //无效时间
+    char Invalid_Value[10];               //无效值范围
+    int Invalid_Value_Count;              //无效值个数
+    char Normal_Value[10];                //正常值
+    int Normal_Value_Count;               //正常值个数
+    dword Lost_DTC;                       //丢失DTC
+    int Lost_Time;                        //丢失时间
+    int Invalid_DTC_Flage;                //无效故障是否存在 1：存在  0：不存在
+    int Lost_DTC_Flage;                   //丢失故障是否存在 1：存在  0：不存在
+  };
+  struct DTC_Ready Struct_Ready;
+  
+  qword ALL_DTC[500];
+  dword ALL_DTC_Num;
+    
+  byte Pre_Programmed[4];
+  byte Arry_Len;
+  byte Arry_Data[64];
+  dword Ang_NotCal;
+  dword Abnormal_Reset;
+  dword Unconfigured;
+
+  /*************19服务***************/
+  
+  int Node_1904_Pos;
+  int State_Loop = 0;
+  byte DTC_H,DTC_M,DTC_L;
+  
+  byte DTC_Code;
+  qword Freeze_Frame_Number[10];
+  byte Freeze_Frame_Number_Count;
+  byte Fun_19;
+  byte Mask_19;          /*19服务掩码*/
+  dword Node_1904;
+  dword DTC_19[50][4];
+  dword DTC_19_Count;
+  dword DTC_Num_Rx;
+  
+  dword All_Node[100];
+  dword All_Node_Count;
+  
+  struct DTC_19_Invalid{
+    dword Node;
+    dword DTC;
+    byte Mask;
+    dword Time;
+    char Signal_Name[80];
+    byte Invalid_Index;
+    byte Invalid_Value;
+    byte Normal_Value;
+  }; 
+  struct DTC_19_Invalid Node_Invalid[30];   //信号无效结构体
+  dword Node_Invalid_Count;
+  
+  struct Mix_1904_Data{
+    byte DID_1904[2];
+    float Factor;
+    float Offset;
+    float Tolerance;
+    float DID_Value_min;
+    float DID_Value_max;
+    dword DID_1904_Len;
+    float Vaule_Ex;
+    float Vaule_Ex_2[8];                  //预期值 - 多组快照使用
+    char LocalTime_Value_2[8][50];        //转换后整体时间 - 多组快照使用(最大8组)
+    char LocalTime_Value_Set[8][50];      //转换后整体时间 - 多组快照使用(最大8组)
+    float Vaule_Set[6];
+    char LocalTime_Set[6][50];
+    char Str_DID_1904[40];                //释义
+    char Symbol[20];                      //符号
+    qword Invalid;                        //无效值
+    qword InitValue;                      //初始值
+    qword InitValueFlage;                 //初始值是否存在 1：存在  0：不存在
+    dword LocalTime[6][4];                //时间数据 ：占用字节+起始字节+偏移+初始值
+    char LocalTime_Str[6][20];            //时间对应释义
+    char LocalTime_Value[50];             //转换后整体时间
+    char Sig_Name[10][50];                //信号
+    dword Sig_Name_Count;                 //个数
+    char Sig_Name_Node[50];               //节点
+    int Step_Flage;                       //是否有对应操作流程
+    float Snapshot_Loop[10];              //用于快照遍历
+    char Time_Snapshot_Loop[10][50];      //用于快照遍历
+    byte Snapshot_Loop_Count;
+    byte Invalid_LastValue;                //无效值-最后一次有效值  Invalid_LastValue=0:无效值  Invalid_LastValue=1:取值原先-1
+  }; 
+  struct Mix_1904_Data mixArray[20];      //快照预输入结构体
+  dword mixArray_Len;
+  
+  struct Res_Data{
+    byte Res_DID[2];
+    byte Res_DID_Data[8];                 //快照原始数据
+    byte Res_DID_Data_2[8][8];            //多组快照原始数据
+    dword Res_DID_Data_Len;
+    float Vaule_Now;                      //解析后的值
+    float Vaule_Now_2[8];                 //解析后的值(多组)
+    float Factor;
+    float Offset;
+    float Tolerance;
+    dword Possition;                      //在输入结构体的位置
+    char Str[40];
+    char Symbol[20];
+    char LocalTime_Value[50];
+    char LocalTime_Value_2[8][50];        //多组时间值
+  };
+  struct Res_Data Res1904_Data[20];       //获取到的快照数据反馈结构体
+  dword Res1904_Data_Count;
+  
+  byte Signal_Flage;
+  int Canoe_Node_Flage;                   //用于判断是否为仿真信号
+  int Res_Position;                       //用于获取末端信号
+  byte Clear_1904;                        //1904快照 0:实时更新   1:14清除后才更新
+  
+  struct DTC_ExtendedDataRecord{
+    byte Ex_Data_Record_Num_Flage;
+    byte Ex_Data_Record_Num;
+    byte Ex_Data_Record_Len;
+    byte Ex_Data_Record_min;
+    byte Ex_Data_Record_max;
+    char Ex_Data_Record_Str[50];          //释义
+  };
+    struct DTC_ExtendedDataRecord ExDataRecord[6];
+    dword ExDataRecord_Count;
+  
+  struct Freeze_Frame_Special{
+    dword Sig_ID;           //ID
+    char Snapshot[50];      //释义
+    char Sig_Name[50];      //信号名称
+    int Invalid_Value;      //无效值
+    int Normal_Value;       //正常值
+    qword Invalid_Time;     //无效时间
+    qword Lost_Time;        //丢失时间
+  };
+    struct Freeze_Frame_Special Snapshot_Special[10];
+    dword Snapshot_Special_Count;
+  
+  byte Fault_Occurrence_counter_Full;
+  byte DTC_Aged_counter_Full;
+  dword DTC_Aging_counter_max;
+  int  Group_Count;
+  char Freeze_Frame_CAN_Error[10][100];
+  byte Freeze_Frame_CAN_Error_Count;
+  char Freeze_Frame_Special[10][100];
+  byte Freeze_Frame_Special_Count;
+  char Freeze_Frame_Special_Invalid[10][100];
+  byte Freeze_Frame_Special_Invalid_Count;
+  qword Node_Temp_List[50];    //装载无效节点个数
+  dword Node_Temp_List_Count;
+  byte LocalTime_Error;
+  byte DTC_Aging_Counter_Clear;
+  
+  byte DTC_19_max;
+  dword DTC_ResList[50][2];
+  byte DTC_ResList_Count;
+  /*-------------------用于14服务测试-----------------------*/
+  byte Clear_DTC_Ex;
+  dword DTC_Whitelist[20];
+  byte DTC_Whitelist_Count;
+  byte Serve_14_31[4];
+  /*-------------------------其他部分-----------------------*/
+  dword p2cmax;
+  byte Send_filler;           /*发送数据默认填充值*/
+  byte CANFD_Flage;           /*CANFD报文，0：CAN报文，1：CANFD报文*/
+  byte Fun_NRC13;             /*功能寻址方式下NRC13是否响应  0:默认不响应，1：响应*/
+  byte Set_Battery_RS232;     /*设置电压的方式  0:手动设置，1：RS232设置*/
+  byte Burn_in_Board;         /*老化板选择*/
+  byte Board_Channel;         /*老化板通道*/
+  byte LHB_State = 0;         /*老化板初始值*/
+  byte LHB_State_New = 0x03;  /*老化板初始值*/
+  dword High_Load_Range[2];   /*高负载率测试范围*/
+  float NRC22_CarSpd;         /*回NRC22的车速*/
+  float NRC22_Battery_Hight;  /*回NRC22的电压高值*/
+  float NRC22_Battery_Low;    /*回NRC22的电压低值*/
+  dword H_Battery_Time;       /*高压故障成熟时间*/
+  dword L_Battery_Time;       /*低压故障成熟时间*/
+  float NRC22_TasTorque;      /*回NRC22的力矩值*/
+  dword Ready_NRC22;
+  byte NRC22_Loop_Serve_31;
+  int NRC22_Loop_FunPos;
+  byte  NRC22_TasTorque_Fac_Flage;/*是否存在工厂模式与正常模式下NRC22力矩不同条件*/
+  float NRC22_TasTorque_Fac;      /*工厂模式回NRC22的力矩值*/
+  byte NRC_22_Gears_Normal;       /*NRC22_档位_正常档位*/
+  dword NRC_22_Gears_Range[2];    /*NRC_22_档位范围*/
+  char NRC22_SelectStr[50];        /*NRC_22遍历时选择测试项次*/
+  byte NRC22_Select[10];           /*NRC_22遍历时选择测试项次*/
+  int NRC22_Select_Count;         /*NRC_22遍历时选择测试项次个数*/
+  char Gears_Signal[50];          /*档位信号*/
+  dword Gears_ID;                 /*档位ID*/
+  char Traversal_DID[200][50];    /*获取遍历的字符串*/
+  int Traversal_Count;            /*获取遍历个数*/
+  char Data_Rev[500];             /*获取返回的数据,除NRC78及流控帧*/
+  dword EPS_TxID_1;               /*检测外发报文是否停发*/
+  dword CAN_Init_Time;            /*初始化不检测网络故障时间*/
+  float CarSpd_Now;
+  float Engine_State;
+  dword K15_OFF_Time;
+  dword ID_Range[2];              /*遍历的DID范围*/
+  char CarMode_Sig[50];           /*CarMode信号*/
+  char PwrLvlElecMai_Sig[50];     /*PwrLvlElecMai信号*/
+  char PwrLvlElecSubtyp_Sig[50];  /*PwrLvlElecSubtyp信号*/
+  char SteerSetgSteerMod[50];     /*SteerSetgSteerMod信号*/
+  char SteerAsscLvl[50];          /*SteerAsscLvl信号*/
+  char SteerSetg_UB[50];          /*SteerSetg_UB信号*/
+  char LatCtrlReqSafeLatCtrlModReq[100];        /*LatCtrlReqSafeLatCtrlModReq信号*/
+  dword HardwareTest_ID;
+  byte Brushed_Or_Brushless;
+  byte NotNRC78_Serve[15];        /*禁止返回NRC78的服务列表*/
+  int  NotNRC78_Serve_Count;
+  int Read_Now_Session_BT;        /*是否读取当前会话的BT数据*/
+  char Fault_Data_Report[2000];   /*用于当数据过大时记录错误部分数据，打印输出到Report与Trace界面*/
+  char Fault_Data_Write[2000];    /*用于当数据过大时记录错误部分数据，打印输出到Write界面*/
+  char Fault_Data_Send[2000];     /*用于当数据过大时装载发送数据，用于后续打印*/
+  int  Geely3_Flage;              /*用于判断是否为Geely3.0以上平台*/
+  char Tx_AngleSig[100];          /*用于存储角度外发信号*/
+  /*-------------------用于10服务测试-----------------------*/
+  dword P2can_server;
+  dword P2_can_server;
+  byte Serve_10_01_Time_Flage;    /*10服务正响应数据中是否包含时间*/
+  dword Sub_1002_Time_Flage;
+  dword Sub_1002_Time;
+ 
+  int Unlock_1002 = -1;
+  byte Pre_Programmed_1002;       /*10 02是否需要预编程条件，0：无，1：有预编程条件*/
+  byte Other_1002;                /*其进入10 02的前置条件开关，若为0：无其它条件，为1：有其它前置条件*/
+  byte Factory_1060;              /*是否检测工厂模式的10 60子功能，仅当为1时，在遍历10子功能时跳过*/
+  
+  /*-------------------用于11服务测试-----------------------*/
+  dword Wait_Time_11;
+  /*-------------------用于22服务测试-----------------------*/
+  byte  Traversal_22;             /*遍历22服务,Traversal_22 =0 :遍历22服务中两个byte分别到0xFF    Traversal_22 != 0 :22服务中byte1字节为Traversal_22，遍历byte2到0xFF*/
+  byte DID_22_Support;            /*22服务支持一次性读取的DID数*/
+  char DID_Data_str[1000];        /*字符串格式，取值于DID的第四组数据*/
+  byte DID_Data[1000];            /*22服务预期返回数据，取值于DID的第四组数据*/
+  byte DID_byte1;
+  byte DID_byte2;
+  byte Analysis;                  /*22服务对应的解析方式，取值于DID的第一组数据*/
+  dword DID_len_Ex;               /*22服务预期返回长度，取值于DID的第二组数据*/
+  dword Len_Input;                /*输入的长度*/
+  byte Write_Flage;               /*是否可写*/
+  byte UnUse_Byte;
+  
+  struct DID_Read_Input //用于读取多组DID
+  {
+    byte DID_byte[2];             //DID[]
+    dword DID;                    //DID
+    dword LenExResp;              //预期数据长度
+    int Analysis_Read;            //解析方式
+    byte Padding;                 //填充值
+    char ExResp[200];             //预期结果
+    byte ExResp_byte[300];        //预期结果
+    int ExRspCheck;               //是否判断返回结果
+  };
+  struct DID_Read_Input DID_Read[15];
+  dword DID_Read_Count;
+  
+  char Plural_DID[20][100];       /*装载多组DID读取*/
+  int Plural_DID_Count;           /*装载多组DID读取个数*/
+  
+  int Support_ReadSession;
+  byte Read_Now_Session[5];
+  /*-------------------用于31服务测试-----------------------*/
+  byte Len_31H;
+  byte Pre_Programmed_UnlockECU; /*预编程是否需要过安全访问，0：不需要，1：需要*/
+    
+  
+   /*-------------------用于2E服务测试-----------------------*/
+  byte Traversal_2E;   
+  
+  dword DID_2E_SendData_1_Len;            /*第一次2E发送数据总长度*/
+  byte DID_2E_SendData_1[400];            /*第一次2E发送数据*/
+  int  DID_2E_SendData_1_Response;
+  dword DID_2E_SendData_2_Len;            /*第一次2E发送数据总长度*/
+  byte DID_2E_SendData_2[400];            /*第二次2E发送数据*/
+  int  DID_2E_SendData_2_Response;
+  byte DID_2E_TxFiller;                   /*2E发送默认填充值*/
+  byte Read_2E_DID[20];                   /*用于检测是否写入成功*/
+  byte Read_2E_DID_Len;
+  int  Support_Read_2E_DID;
+  byte DID_2E_Len;                        
+  dword DID_2E_TxLen;   
+  byte Part_number_Fac;
+  byte Write_Part_number_Special;
+  byte Config_Len;
+  /*-------------------用于85服务测试-----------------------*/
+  dword S3_85_Time;                      /*85服务的S3time超时时间*/
+
+  /*-------------------用于27服务测试-----------------------*/
+  diagRequest *reqseed;
+  diagRequest *sendkey;
+  byte Get_Seed_Flage;
+  byte  AES_128;
+  byte  AES_CMAC_27;
+  dword Seed_AES[16];                   //AES安全算法
+  word Mask_GeelyAPP[16] = {0x40,0x21,0x07,0x49,0x10,0xD0,0x27,0x15,0x2A,0x19,0x0F,0x1F,0xAC,0x3E,0xFD,0x75};
+  word Mask_RCAPP[16] = {0xEA,0xCA,0xEE,0x20,0x4C,0x42,0x35,0x8D,0x34,0x2A,0xEF,0xDE,0x5E,0xE5,0x92,0x4F};
+  word Mask_Chery_APP[16] = {0x6C,0xA7,0xEB,0xBA,0xD8,0xE2,0x8B,0xFA,0x03,0x58,0x8F,0x35,0x3F,0xD7,0x14,0x02}; //T1V_APP
+  word Mask_DongFeng_APP[16] = {0x52,0x3E,0x0D,0x8A,0x9F,0x6C,0x1B,0x47,0x26,0x3A,0x8D,0x0F,0x5E,0x9B,0x1C,0x7A};
+  word Mask_CCAG_APP[16] = {0x58,0x94,0x93,0x03,0x62,0xEB,0x75,0x94,0xCD,0x10,0x16,0x50,0x25,0x0D,0x4C,0xD2};
+  word corresKey[16];
+  byte NRC78_flag;
+  byte noFail;                        //不需要判断
+  message 0x00 responseMsgs[10];      //用于接收发送诊断后的所有响应码
+  byte Key_Save[100];                 //用于TP层解锁安全访问
+  /*************AES_CBC***********************/
+  byte Iv[16] = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0x00,0x66,0x55,0x44,0x33,0x22,0x11};
+  byte ECU_Key[16] ={0x7d,0x0b,0xa5,0xb6,0xb5,0x7c,0x49,0x05,0x8d,0xf3,0xf9,0xad,0x2f,0x31,0x92,0xfb};
+  byte Secret_KEY[16];
+  byte Serial_number[16];
+  byte KEY_Len = 16;
+  byte RA[16];
+  byte ra[16];
+  byte R[16];
+  byte r[16];
+  byte Seed_CBC[16];
+  
+  byte RequestSeed_27;
+  byte SendKey_27;
+  byte SendKey_Len;
+  byte BT_RequestSeed_27;
+  byte BT_SendKey_27;
+  byte APP_BT_27_Flage;
+  dword Seed_Count;
+  dword Seed_Count_List[10100];
+  byte Seed_Count_List_AES128[10010][17];
+  
+  dword Seed_Count_Rept[10010][2];        //用于所有种子统计非AES128型
+  byte  Seed_Count_AES_Rept[10010][17];   //用于所有种子统计AES128型
+  
+  word Error_Count;
+  byte Request_Error_Count;
+  byte Request_Seed_Consistency;
+  byte Error_Count_Change;
+  dword Error_Count_Delay;
+  word Error_Count_Delay_Tolerance;
+  byte Error_Count_Delay_Reset;
+  dword Request_Seed_Count;
+  dword Request_Unlock_Count;
+  dword Restoration_Error_Count;
+  dword Serve_11_Unlock_Count;
+  byte ReqSeed_Count;
+  /*-------------------用于28服务测试-----------------------*/
+  char Sig_28_Set[50];    
+  float Factor_28;      //精度
+  float Offset_28;      //偏移
+  float Tolerance_28;   //误差
+  dword DID28_Case_CarSpd_1;
+  int DID28_Case_CarSpd_Return_1;
+  dword DID28_Case_CarSpd_2;
+  int DID28_Case_CarSpd_Return_2;
+  int64  DID28_Sig_Invaild_Value;
+  int Wait_28H_Time;
+  int Wait_28H_Tx_Time;
+  
+  /*-------------------用于TP层测试-----------------------*/
+  byte TP_filler;
+  byte BS;
+  byte STmin;
+  dword N_Bs_Time;
+  dword N_Bs_Time_Tolerance;
+  dword N_Br_Time;
+  dword N_Br_Time_Tolerance;
+  dword N_Cr_Time;
+  dword N_Cr_Time_Tolerance;
+  dword N_Cs_Time;
+  dword N_Cs_Time_Tolerance;
+  byte MF_Phy_SF_RxDisturb;
+  byte MF_Fun_SF_RxDisturb;
+  byte MF_Phy_MF_RxDisturb;
+  byte MF_Fun_MF_RxDisturb;
+  byte MF_Phy_SF_TxDisturb;
+  byte MF_Fun_SF_TxDisturb;
+  byte MF_Phy_MF_TxDisturb;
+  byte MF_Fun_MF_TxDisturb;
+  byte H_Disturb;
+  byte Response_CanFD;
+  dword FF_DL_Max;
+  byte TP_LastCFLen;
+  dword N_WFTmax;
+  /*-------------------用于NRC优先级测试-----------------------*/
+  byte Fun_NRC[10];           //用于NRC优先级测试
+  byte Fun_NRC_Count;         //用于NRC优先级测试
+  byte Fun_NRC_Send_Len;      //用于NRC优先级测试
+  byte NRC31_total,NRC13_total;
+  int  NRC13_Count,NRC31_Count;
+  int Serve_31_Len4_5;
+  byte NRC33_Pos;             //用于NRC优先级测试
+  int NRC22_Recover_Sense;    //用于NRC优先级测试中传感器恢复后是否重新安全访问
+  int Serve_31_NewNRC22;
+  int Serve_31_NRC22;
+  byte NRC22_Loop_Fun[20];
+  byte NRC22_Loop_Fun_Count;
+  byte NRC22_Loop_Rsp[20];
+  byte NRC22_Loop_Rsp_Count;
+  byte NRC22_Loop_Fun_Pos[20][3];
+  byte NRC22_Loop_Fun_Pos_Count;
+  
+  /*-------------------用于高级功能配置字测试-----------------------*/
+  struct Advanced_function_Node_DTC
+  {
+    dword Node;
+    dword DTC;
+    byte Falge_DTC;   /*用于判断是否输入DTC*/
+    byte Fun_Byte;    /*功能所在Byte*/
+    byte Fun_Bit;     /*功能所在Bit*/
+  };
+  struct Advanced_function_Node_DTC Advanced_function[20];
+  int Advanced_function_Count;
+  int DTC_IsRest;     //判断高级功能是否需要重启后再生效
+
+ /*-------------------用于测试长安冻结帧数据存放-----------------------*/
+  struct FixDataSave_ChangAn
+  {
+    word Node;                  //节点ID
+    dword DTC[10];              //对应的DTC
+    char SigName[10][50];       //制造故障的信号
+    int Invalid_Value[10];
+    int Normal_Value[10];
+    char Error_Type[10][20];    //故障类型
+    int Error_FPS[10];          //故障成熟帧数
+    int Error_Type_Count;       //该节点对应有多少个故障类型
+    int SigSaveCount[10];       //某个故障类型下 装载多少个信号
+    char SigSave[10][6][50];    //被装载的信号  最多10种故障类型  每个故障类型最多装载 6个信号
+    int OccupancyByte[10][6];   //被装载的每个信号占用多少byte
+  };
+  struct FixDataSave_ChangAn FixDataSave[10];
+  int FixDataSave_Count;
+  
+  /*-------------------用于测试22服务功能DID测试-----------------------*/
+  struct DID_Function_Struct
+  {
+    char DID_Index[50];           /*DID索引*/
+    dword DID;
+    byte DID_Byte[2];
+    int ExLen;                    /*期望长度*/
+    char Sig_Type[10];
+    char Sig_Step[40];            /*从快照中获取操作解析*/
+    float Factor;
+    float Offset;
+    float Tolerance;
+    float Max_Value;              /*最大值*/
+    qword Invalid;                /*无效值*/
+    qword ValueNow;               /*信号当前值原始数据*/
+    char Sig_From[10];            /*信号来源*/
+    char Sig_Name[50];            /*信号名称*/
+    int Value_Set_Flage;          /*1:已进行操作，0：无操作*/
+    float Value_Set[10];
+    int Value_Set_Count;
+    float Value_Ex[10];
+    char SigInvalid[50];          /*信号无效操作*/
+    int SigInvalidValue;          /*信号无效操作*/
+    int SigNormalValue;           /*信号无效操作*/
+    int Time_Flage;               /*1:该DID为时间参数  0:非时间值*/
+    int LocalTime_Config[6][3];   /*时间参数:占用字节/起始字节/偏移(时间参数无精度以及误差)*/
+    char LocalTime_SigName[6][50];/*时间对应的信号与上方顺序对应*/
+    char LocalTime_SigDef[6][10]; /*时间释义与上方顺序对应*/
+    char LocalTime_Set[10][20];
+    char LocalTime_Ex[10][20];
+    byte Invalid_LastValue;                //无效值-最后一次有效值  Invalid_LastValue=0:无效值  Invalid_LastValue=1:取值原先-1
+  };
+  struct DID_Function_Struct DID_Function[30];
+  int DID_Function_Count;
+  char Time_GetNow[50];
+  char Time_TempForSave[50];
+  
+  /*-------------------NRC22映射-----------------------*/
+  int CarSpd_Invalid_NRC;
+  int CarSpd_NRC;
+  int H_Battery_NRC;
+  int L_Battery_NRC;
+  int Ready_NRC;
+  int Gear_NRC;
+  int TasTorque_NRC;
+  int Sensor_NRC;
+  byte Serve_NRCSpecial[30];
+  byte Serve_NRCSpecial_Count;
+  
+  int Active = 1;
+  int Close = 0;
+  
+  char CarSpd_E2E_Sig[50];
+  char UsgMode_E2E_Sig[50];
+  
+  
+  /*-------------------VBF数据存储-----------------------*/
+  struct VBF_Addr
+  {
+    dword StartAddr[3];
+    byte DataSave[0x100];
+    int BlockCount;
+  };
+  struct VBF_Addr Struct_VBF_Addr[2];
+  word Index_VBF_7D,IndexVBF;
+  int FileInput_Type = 0; //当其值为-1时进行文件查询，其余值均不再进行
+  int StopForVBFTest;
+  char SWP1_Path[300];
+  char SWP2_Path[300];
+  
+  /*-------------------从testtitle中获取数据-----------------------*/
+  dword ID_From_Title;
+  byte Session_From_Title;
+  byte Serve_Form_Title;
+  dword DID_From_Title;
+  
+  /*-------------------Geely-----------------------*/
+  int CCP_Stepping;             //用于3.5平台CCP无效个数不累加，单独测试时每次均保持一个
+  dword Snapshot_Geely_DTC;     //用于1904测试中使用非节点的DTC进行测试
+  float Geely_Architecture;     //用于吉利架构选择
+  int Flage_SaveData_Geely;     //用于Geely时间无效值获取
+  int Flage_Invalid_Geely;      //用于Geely时间无效值获取
+  int CarSpd_mToKPH;            //_Get_1904_All_Data 接收到的数据中将m/s转换位KPH
+  dword FunDID_Read_CCP[10][5]; //最多10组，每组最多5个CCP
+  byte FunDID_Read_Vaule[10][5];
+  int FunDID_Read_CCPCount[10]; //每组多少个CCP
+  int FunDID_Read_TuningSet[10];//每组对应的TuningSet
+  int FunDID_Read_CCPGroupCount;//共多少组
+  int DataCheckGreater;
+  int TimeInvalid_FirstTime = 0;//用于时间无效第一次计算
+}
+
+
+_Get_DID(char Str[])
+{
+  char Temp_Value1[500];
+  char Temp_Value2[100];
+  char Temp_Value3[1000];
+  char Temp_Value4[50];
+  char Temp_Value5[50];
+  
+  char Temp_byte1[50];
+  char Temp_byte2[50];
+  char Temp_Str[1000];
+  
+  int j,m,Count,i;
+  j=0;m=0;
+  Len_Input = 0;
+  snprintf(Temp_Value3,elCount(Temp_Value3),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project, Str,"Null",Temp_Value3, 1000, file_name_1);
+  fileClose (GlbHandlefile);
+  Count = 1;
+  for(i = 0;i<strlen(Temp_Value3);i++)                  //查找INI文件中数组值并返回10进制
+  {
+    if(Temp_Value3[i] == 91 && Count == 1)/*取解析方式*/
+    {
+      snprintf(Temp_Value5,elCount(Temp_Value5),"%s","");
+      for(j=i+1;j<=strlen(Temp_Value3);j++)
+      {
+        if(Temp_Value3[j]==93)
+        {
+          Analysis = atol(Temp_Value5);
+          Count++;i=j;
+          break;
+        }
+        else
+          snprintf(Temp_Value5,elCount(Temp_Value5),"%s%c",Temp_Value5,Temp_Value3[j]);
+      }
+    }
+    if(Temp_Value3[i] == 91 && Count == 2)/*取预期长度*/
+    {
+      snprintf(Temp_Value4,elCount(Temp_Value4),"%s","");
+      for(j = i+1;j<strlen(Temp_Value3);j++)
+      {
+        if(Temp_Value3[j] == 93)
+        {
+          Count++;i=j;
+          break;
+        }
+        snprintf(Temp_Value4,elCount(Temp_Value4),"%s%c",Temp_Value4,HexToAsc(Temp_Value3[j]));
+      }
+    }
+    if(Temp_Value3[i] == 91 && Count == 3)/*取子服务DID*/
+    {
+      snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+      for(j = i;j<strlen(Temp_Value3);j++)
+      {
+        snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,HexToAsc(Temp_Value3[j]));
+        if(Temp_Value3[j] == 93)/*取间隔符 */
+        {
+          Count++;i=j;
+          break;
+        }
+      }
+    }
+    if(Temp_Value3[i] == 91  && Analysis == 1 && Count == 4)/*以16进制HEX格式获取数据*/
+    {
+      snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+      for(j=i+1;j<strlen(Temp_Value3);j++)
+      {
+        if(Temp_Value3[j]== 44)  /*取间隔符  */
+        {
+          DID_Data[m] = atol(Temp_Str);   /*取预期结果byte */
+          snprintf(Temp_Str,elCount(Temp_Str),"%s","");
+          m++;
+        }
+        else if(Temp_Value3[j]== 93 ) /*(最后一个byte终止) */
+        {
+          DID_Data[m] = atol(Temp_Str);
+          if(strlen(Temp_Str) != 0) //防止输入为空时进行输入数据个数计数
+            m++;  
+          snprintf(Temp_Str,elCount(Temp_Str),"%s","");
+          Count++;i=j;
+          break;
+        }
+        else
+          snprintf(Temp_Str,elCount(Temp_Str),"%s%c",Temp_Str,Temp_Value3[j]);
+      }
+    }
+    else if(Temp_Value3[i] == 91  && 
+           (Analysis == 2 || Analysis == 3 ||Analysis == 4||Analysis == 5||Analysis == 6 ||Analysis == 7|| Analysis == 8 || Analysis == 9) /*以字符串获取数据,3:整体转换为10进制判断,4:每个Byte分别转换10进制后拼接,5:原码拼接判断,6-8:混合判断*/
+           && Count == 4)
+    {
+      snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+      snprintf(DID_Data_str,elCount(DID_Data_str),"%s","");
+      for(j=i+1;j<strlen(Temp_Value3);j++)
+      {
+        if(Temp_Value3[j] == 93)
+        {
+          Count++;i=j;
+          break;
+        }
+        else
+          snprintf(DID_Data_str,elCount(DID_Data_str),"%s%c",DID_Data_str,HexToAsc(Temp_Value3[j]));
+      }
+    }  
+    else if(Temp_Value3[i] == 91  && (Analysis == 0 || Analysis>9 )&& Count == 4)/*非正常输入，直接跳过*/
+    {
+      for(j=i+1;j<strlen(Temp_Value3);j++)
+      {
+        if(Temp_Value3[j] == 93)
+        {
+          Count++;i=j;
+          break;
+        }
+      }
+    }
+    if(Temp_Value3[i] == 91 && Count == 5) /*取可写性*/
+    {
+      snprintf(Temp_Value5,elCount(Temp_Value5),"%s","");
+      for(j=i+1;j<=strlen(Temp_Value3);j++)
+      {
+        if(Temp_Value3[j]==93)
+        {
+          Write_Flage = atol(Temp_Value5);
+          Count++;i=j;
+          break;
+        }
+        else
+          snprintf(Temp_Value5,elCount(Temp_Value5),"%s%c",Temp_Value5,Temp_Value3[j]);
+      }
+    }
+    if(Temp_Value3[i] == 91 && Count == 6) /*取填充值*/
+    {
+      snprintf(Temp_Value5,elCount(Temp_Value5),"%s","");
+      for(j=i+1;j<=strlen(Temp_Value3);j++)
+      {
+        if(Temp_Value3[j]==93)
+        {
+          UnUse_Byte = atol(Temp_Value5);
+          Count++;i=j;
+          break;
+        }
+        else
+          snprintf(Temp_Value5,elCount(Temp_Value5),"%s%c",Temp_Value5,Temp_Value3[j]);
+      }
+    }
+  }
+  DID_len_Ex = atol(Temp_Value4);
+  for(i=0;i<strlen(Temp_Value2);i++)
+  {
+    if(Temp_Value2[i] == 91)
+    {
+      snprintf(Temp_byte1,elCount(Temp_byte1),"%s","");
+      for(j = i+1;j<strlen(Temp_Value2);j++)
+      {
+        if(Temp_Value2[j] == 44)
+          break;
+        snprintf(Temp_byte1,elCount(Temp_byte1),"%s%c",Temp_byte1,Temp_Value2[j]);
+      }
+      DID_byte1 = atol(Temp_byte1);
+    }
+    if(Temp_Value2[i] == 44 )
+    {
+      snprintf(Temp_byte2,elCount(Temp_byte2),"%s","");
+      for(j = i+1;j<strlen(Temp_Value2);j++)
+      {
+        if(Temp_Value2[j] == 93)
+          break;
+        snprintf(Temp_byte2,elCount(Temp_byte2),"%s%c",Temp_byte2,Temp_Value2[j]);
+      }
+      DID_byte2 = atol(Temp_byte2);
+    } 
+  }
+  Len_Input = m;
+  if(Analysis>=2 && Analysis<=9)
+    Len_Input = strlen(DID_Data_str);
+}
+
+_Get_Write_Part_number()
+{
+  char Temp_Value1[2000];  /*装载获取到的字符串对应的全部数据*/
+  char Temp_Value2[500];  /*装载获取到的分段数据*/
+  byte Special_1[10] = {0x11,0x22,0x33,0x44,0x55,0x66,0x77,0x88,0x99,0xAA};
+  int i,n,j;
+  int Send_1_Input,Send_2_Input;
+  byte Input_1[400],Input_2[400];
+  int Data_1_Len,Data_2_Len;
+  snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+  snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+  n = 0;
+  DID_2E_SendData_1[0] = 0x2E;
+  DID_2E_SendData_2[0] = 0x2E;
+  Read_2E_DID[0] = 0x22;
+  Send_1_Input = 0;
+  Send_2_Input = 0;
+  DID_2E_Len = 1;
+  Data_1_Len = 0;
+  Data_2_Len = 0;
+  Read_2E_DID_Len = 1;
+  writeEx(-3,0,"获取数据 %s","Write_Part_number");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,"Write_Part_number","Null",Temp_Value1, 2000, file_name_1);
+  fileClose (GlbHandlefile);
+  for(i=0;i<strlen(Temp_Value1);i++)
+  {
+    if(Temp_Value1[i]==91)
+    {
+      for(j=i+1;i<strlen(Temp_Value1);j++)
+      {
+        if(Temp_Value1[j] == 44 || Temp_Value1[j] == 93)
+        {
+          if(n==0)
+          {
+            DID_2E_SendData_1[DID_2E_Len] = atol(Temp_Value2);
+            DID_2E_SendData_2[DID_2E_Len] = atol(Temp_Value2);
+            DID_2E_Len++;
+          }
+          else if(n == 1)
+          {
+            DID_2E_SendData_1_Len = atol(Temp_Value2);
+            DID_2E_SendData_2_Len = DID_2E_SendData_1_Len;
+          }
+          else if(n == 2)
+          {
+            Input_1[Send_1_Input] = atol(Temp_Value2);
+            Send_1_Input++;
+          }
+          else if(n == 3)
+          {
+            Input_2[Send_2_Input] = atol(Temp_Value2);
+            Send_2_Input++;
+          }
+          else if(n == 4)
+          {
+            DID_2E_TxFiller = atol(Temp_Value2);
+          }
+          else if(n == 5)
+          {
+            Read_2E_DID[Read_2E_DID_Len] = atol(Temp_Value2);
+            Read_2E_DID_Len++;
+          }
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if(Temp_Value1[j] == 93)
+          {
+            i = j; n++;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+  }
+  Data_1_Len = DID_2E_Len;
+  Data_2_Len = DID_2E_Len;
+  if(Write_Part_number_Special == 1)
+  {
+    for(i=0;i<elCount(Special_1);i++)
+    {
+      DID_2E_SendData_1[i+DID_2E_Len] = Special_1[i];
+      DID_2E_SendData_2[i+DID_2E_Len] = Special_1[i];
+    }
+    Data_1_Len = Data_1_Len + elCount(Special_1) ;
+    Data_2_Len = Data_2_Len + elCount(Special_1);
+  }
+  for(i=0;i<Send_1_Input;i++)
+    DID_2E_SendData_1[i+Data_1_Len] = Input_1[i];
+  for(i=0;i<Send_2_Input;i++)
+    DID_2E_SendData_2[i+Data_2_Len] = Input_2[i];
+  Data_1_Len = Data_1_Len + Send_1_Input;
+  Data_2_Len = Data_2_Len + Send_2_Input;
+  
+  if(Data_1_Len<DID_2E_SendData_1_Len)
+  {
+    for(i=Data_1_Len;i<DID_2E_SendData_1_Len;i++)
+      DID_2E_SendData_1[i] = DID_2E_TxFiller;
+  }
+  if(Data_2_Len<DID_2E_SendData_2_Len)
+  {
+    for(i=Data_2_Len;i<DID_2E_SendData_2_Len;i++)
+      DID_2E_SendData_2[i] = DID_2E_TxFiller;
+  }
+  DID_2E_SendData_1_Response = -1;
+  DID_2E_SendData_2_Response = -1;
+  if(Read_2E_DID_Len <= 2)
+    Support_Read_2E_DID = -1;
+  else
+    Support_Read_2E_DID = 1;
+}
+_get_2E_DID(char Str[])
+{
+  char Temp_Value1[5000];  /*装载获取到的字符串对应的全部数据*/
+  char Temp_Value2[2000];  /*装载获取到的分段数据*/
+  
+  char Temp_Str[5000];
+  int i,n,j;
+  int Send_1_Input,Send_2_Input;
+  
+  snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+  snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+  n = 0;
+  DID_2E_SendData_1[0] = 0x2E;
+  DID_2E_SendData_2[0] = 0x2E;
+  Read_2E_DID[0] = 0x22;
+  Send_1_Input = 0;
+  Send_2_Input = 0;
+  
+  writeEx(-3,0,"获取数据 %s",Str);
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,Str,"Null",Temp_Value1, 5000, file_name_1);
+  fileClose (GlbHandlefile);
+  for(i=0;i<strlen(Temp_Value1);i++) 
+  {
+    if(Temp_Value1[i]== 91 && n==0) //装载预期发送DID
+    {
+      DID_2E_Len = 1;
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_SendData_1[DID_2E_Len]=atol(Temp_Value2);
+          DID_2E_SendData_2[DID_2E_Len]=atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          DID_2E_Len++;
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==1) //装载预期发送数据1长度
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_SendData_1_Len = atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==2) //装载第一次预期发送数据
+    {
+      Send_1_Input = 0;
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_SendData_1[3 + Send_1_Input]=atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          Send_1_Input++;
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==3) //装载第一次预期发送数据预期响应
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_SendData_1_Response=atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==4) //装载预期发送数据2长度
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_SendData_2_Len = atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==5) //装载第二次预期发送数据
+    {
+      Send_2_Input = 0;
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_SendData_2[3 + Send_2_Input]=atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          Send_2_Input++;
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==6) //装载第二次预期发送数据预期响应
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_SendData_2_Response=atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==7) //装载发送填充值
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          DID_2E_TxFiller = atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+    if(Temp_Value1[i]== 91 && n==8) //获取读取数据DID
+    {
+      Read_2E_DID_Len = 1;
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          Read_2E_DID[Read_2E_DID_Len] = atol(Temp_Value2);
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          Read_2E_DID_Len++;
+          if(Temp_Value1[j]==93)
+          {
+            n++; i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+      }
+    }
+  }
+  /*----------------判断是否需要填充值------------------*/
+  if(Send_1_Input+3 < DID_2E_SendData_1_Len)
+  {
+    for(i=Send_1_Input+3;i<DID_2E_SendData_1_Len;i++)
+      DID_2E_SendData_1[i] = DID_2E_TxFiller;
+  }
+  if(Send_2_Input+3 < DID_2E_SendData_2_Len)
+  {
+    for(i=Send_2_Input+3;i<DID_2E_SendData_2_Len;i++)
+      DID_2E_SendData_2[i] = DID_2E_TxFiller;
+  }
+  if(Read_2E_DID_Len <= 2)
+    Support_Read_2E_DID = -1;
+  else
+    Support_Read_2E_DID = 1;
+}
+
+_get_Str_Traversal(char Str[])//遍历选中字符串的数据
+{
+  char Temp_Value1[2000];
+  char Temp_Value2[50];
+  int i,m,j;
+  snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+  snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+  m=0;j=0;i=0;
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project, Str,"Null",Temp_Value1, 2000, file_name_1);
+  fileClose(GlbHandlefile);
+  for(j=0;j<strlen(Temp_Value1);j++)
+  {
+    if(Temp_Value1[j]==91)
+    {
+      for(i=j+1;i<50;i++)
+      {
+        if(Temp_Value1[i]==93)
+        {
+          Traversal_Count = atol(Temp_Value2);
+          break;
+        }
+        else
+          snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[i]);
+      }
+    }
+    if(Temp_Value1[j]==123)
+    {
+      snprintf(Traversal_DID[0],elCount(Traversal_DID[0]),"");
+      for(i=j+1;i<strlen(Temp_Value1);i++)
+      {
+        if(Temp_Value1[i]==44 || Temp_Value1[i]==125)
+        {
+          m++;
+          snprintf(Traversal_DID[m],elCount(Traversal_DID[m]),"");
+          if(Temp_Value1[i]==125)
+            break;
+        }
+        else
+          snprintf(Traversal_DID[m],elCount(Traversal_DID[m]),"%s%c",Traversal_DID[m],Temp_Value1[i]);
+      }
+    }
+  }
+  testWaitForTimeout(1000);
+}
+
+//从ini文件中获取数据
+void Get_value()
+{
+  char id_string[5000] = ""; 
+  char Temp_Value[5000];
+  char Temp_Value_Range[500];
+  char Temp_Value_Range_2[500];
+  char Temp_2[500];
+  byte Temp_data[5];
+  int i,j,m;
+  i = 0;j=0;m=0;
+  snprintf(id_string,elCount(id_string),"%s","");
+  snprintf(Temp_Value,elCount(Temp_Value),"%s","");
+  snprintf(Temp_Value_Range,elCount(Temp_Value_Range),"%s","");
+  snprintf(Temp_Value_Range_2,elCount(Temp_Value_Range_2),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString("Project_Information", "ECU_project","Null",ECU_project, 200, file_name_1);  
+  /*-----------------------------------其他--------------------------*/
+  Read_Now_Session_BT = getProfileInt(ECU_project,"Read_Now_Session_BT",Read_Now_Session_BT,file_name_1);
+  Support_CAN = getProfileInt(ECU_project,"Support_CAN",Support_CAN,file_name_1);
+  p2cmax = getProfileInt(ECU_project,"p2cmax",p2cmax,file_name_1);
+  P2can_server = getProfileInt(ECU_project,"P2can_server",P2can_server,file_name_1);
+  P2_can_server = getProfileInt(ECU_project,"P2_can_server",P2_can_server,file_name_1);
+  Mask_19 = getProfileInt(ECU_project,"Mask_19",Mask_19,file_name_1);
+  CANFD_Flage = getProfileInt(ECU_project,"CANFD_Flage",CANFD_Flage,file_name_1);
+  Send_filler = getProfileInt(ECU_project,"Send_filler",Send_filler,file_name_1);
+  Fun_NRC13 = getProfileInt(ECU_project,"Fun_NRC13",Fun_NRC13,file_name_1);
+  Set_Battery_RS232 = getProfileInt(ECU_project,"Set_Battery_RS232",Set_Battery_RS232,file_name_1);
+  K15_OFF_Time = getProfileInt(ECU_project,"K15_OFF_Time",K15_OFF_Time,file_name_1);
+  Brushed_Or_Brushless = getProfileInt(ECU_project,"Brushed_Or_Brushless",Brushed_Or_Brushless,file_name_1);
+  HardwareTest_ID = getProfileInt(ECU_project,"HardwareTest_ID",HardwareTest_ID,file_name_1);
+  Burn_in_Board = getProfileInt(ECU_project,"Burn_in_Board",Burn_in_Board,file_name_1);
+  Board_Channel = getProfileInt(ECU_project,"Board_Channel",Board_Channel,file_name_1);
+  Geely_Architecture = getProfileFloat(ECU_project,"Geely_Architecture",Geely_Architecture,file_name_1);
+  if(Board_Channel != 1 && Board_Channel != 2)
+    Board_Channel = 2;
+  if(K15_OFF_Time==0)
+    K15_OFF_Time = 1000;
+  CCP_Stepping = getProfileInt(ECU_project,"CCP_Stepping",CCP_Stepping,file_name_1);
+  Snapshot_Geely_DTC = getProfileInt(ECU_project,"Snapshot_Geely_DTC",Snapshot_Geely_DTC,file_name_1);
+
+  getProfileString(ECU_project, "Cdd_Name","Null",Cdd_Name, 50, file_name_1);
+  getProfileString(ECU_project, "DBC_Name","Null",DBC_Name, 100, file_name_1);
+  
+  getProfileString(ECU_project, "UsgMode_E2E_Sig","Null",UsgMode_E2E_Sig, 50, file_name_1);
+  getProfileString(ECU_project, "CarSpd_E2E_Sig","Null",CarSpd_E2E_Sig, 50, file_name_1);
+  getProfileString(ECU_project, "CarMode_Sig","Null",CarMode_Sig, 50, file_name_1);
+  getProfileString(ECU_project, "PwrLvlElecMai","Null",PwrLvlElecMai_Sig, 50, file_name_1);
+  getProfileString(ECU_project, "PwrLvlElecSubtyp","Null",PwrLvlElecSubtyp_Sig, 50, file_name_1);
+  getProfileString(ECU_project, "SteerSetgSteerMod","Null",SteerSetgSteerMod, 50, file_name_1);
+  getProfileString(ECU_project, "SteerAsscLvl","Null",SteerAsscLvl, 50, file_name_1);
+  getProfileString(ECU_project, "SteerSetg_UB","Null",SteerSetg_UB, 50, file_name_1);
+  getProfileString(ECU_project, "LatCtrlReqSafeLatCtrlModReq","Null",LatCtrlReqSafeLatCtrlModReq, 100, file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------NRC22--------------------------*/
+  NRC22_CarSpd = getProfileFloat(ECU_project,"NRC22_CarSpd",NRC22_CarSpd,file_name_1);
+  NRC22_Battery_Hight =  getProfileFloat(ECU_project,"NRC22_Battery_Hight",NRC22_Battery_Hight,file_name_1);
+  NRC22_Battery_Low =  getProfileFloat(ECU_project,"NRC22_Battery_Low",NRC22_Battery_Low,file_name_1);
+  H_Battery_Time = getProfileInt(ECU_project,"H_Battery_Time",H_Battery_Time,file_name_1);
+  L_Battery_Time = getProfileInt(ECU_project,"L_Battery_Time",L_Battery_Time,file_name_1);
+  NRC22_TasTorque_Fac_Flage = getProfileInt(ECU_project,"NRC22_TasTorque_Fac_Flage",NRC22_TasTorque_Fac_Flage,file_name_1);
+  NRC22_TasTorque =  getProfileFloat(ECU_project,"NRC22_TasTorque",NRC22_TasTorque,file_name_1);
+  NRC22_TasTorque_Fac =  getProfileFloat(ECU_project,"NRC22_TasTorque_Fac",NRC22_TasTorque_Fac,file_name_1);
+  NRC_22_Gears_Normal = getProfileInt(ECU_project,"NRC_22_Gears_Normal",NRC_22_Gears_Normal,file_name_1);
+  Ready_NRC22 = getProfileInt(ECU_project,"Ready_NRC22",Ready_NRC22,file_name_1);
+  Gears_ID = getProfileInt(ECU_project,"Gears_ID",Gears_ID,file_name_1);
+  NRC22_Loop_Serve_31 = getProfileInt(ECU_project,"NRC22_Loop_Serve_31",NRC22_Loop_Serve_31,file_name_1);
+  NRC22_Select_Count = getProfileArray(ECU_project,"NRC22_Select",NRC22_SelectStr,elCount(NRC22_SelectStr),file_name_1);
+  for(i=0;i<NRC22_Select_Count;i++)
+    NRC22_Select[i] = NRC22_SelectStr[i];
+  if(NRC22_Select_Count == 1 && NRC22_Select[0] == 0)
+    NRC22_Select_Count = 0;
+  getProfileString(ECU_project, "Gears_Signal","Null",Gears_Signal, 50, file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  
+  /*-----------------------------------10服务--------------------------*/
+  Serve_10_01_Time_Flage = getProfileInt(ECU_project,"Serve_10_01_Time_Flage",Serve_10_01_Time_Flage,file_name_1);
+  Factory_1060 = getProfileInt(ECU_project,"Factory_1060",Factory_1060,file_name_1);
+  Other_1002 = getProfileInt(ECU_project,"Other_1002",Other_1002,file_name_1);
+  Pre_Programmed_1002 = getProfileInt(ECU_project,"Pre_Programmed_1002",Pre_Programmed_1002,file_name_1);
+  Sub_1002_Time_Flage = getProfileInt(ECU_project,"Sub_1002_Time_Flage",Sub_1002_Time_Flage,file_name_1);
+  Sub_1002_Time = getProfileInt(ECU_project,"Sub_1002_Time",Sub_1002_Time,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------11服务--------------------------*/
+  Wait_Time_11 = getProfileInt(ECU_project,"Wait_Time_11",Wait_Time_11,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------19服务--------------------------*/
+  Node_1904 = getProfileInt(ECU_project,"Node_1904",Node_1904,file_name_1);
+  Unconfigured = getProfileInt(ECU_project,"Unconfigured",Unconfigured,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------22服务--------------------------*/
+  DID_22_Support = getProfileInt(ECU_project,"DID_22_Support",DID_22_Support,file_name_1);
+  Traversal_22 = getProfileInt(ECU_project,"Traversal_22",Traversal_22,file_name_1);
+  
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------2E服务--------------------------*/
+  Traversal_2E = getProfileInt(ECU_project,"Traversal_2E",Traversal_2E,file_name_1);
+  Config_Len = getProfileInt(ECU_project,"Config_Len",Config_Len,file_name_1);
+  Write_Part_number_Special = getProfileInt(ECU_project,"Write_Part_number_Special",Write_Part_number_Special,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------27服务--------------------------*/
+  AES_128 = getProfileInt(ECU_project,"AES_128",AES_128,file_name_1);
+  AES_CMAC_27 = getProfileInt(ECU_project,"AES_CMAC_27",AES_CMAC_27,file_name_1);
+  RequestSeed_27 = getProfileInt(ECU_project,"RequestSeed_27",RequestSeed_27,file_name_1);
+  SendKey_27 = getProfileInt(ECU_project,"SendKey_27",SendKey_27,file_name_1);
+  SendKey_Len = getProfileInt(ECU_project,"SendKey_Len",SendKey_Len,file_name_1);
+  DiagSetPrimitiveByte(reqseed,1,RequestSeed_27);
+  DiagSetPrimitiveByte(sendkey,1,SendKey_27);
+  APP_BT_27_Flage = getProfileInt(ECU_project,"APP_BT_27_Flage",APP_BT_27_Flage,file_name_1);
+  BT_RequestSeed_27 = getProfileInt(ECU_project,"BT_RequestSeed_27",BT_RequestSeed_27,file_name_1);
+  BT_SendKey_27 = getProfileInt(ECU_project,"BT_SendKey_27",BT_SendKey_27,file_name_1);
+  Error_Count = getProfileInt(ECU_project,"Error_Count",Error_Count,file_name_1);
+  Request_Error_Count = getProfileInt(ECU_project,"Request_Error_Count",Request_Error_Count,file_name_1);
+  Request_Seed_Consistency = getProfileInt(ECU_project,"Request_Seed_Consistency",Request_Seed_Consistency,file_name_1);
+  Error_Count_Change = getProfileInt(ECU_project,"Error_Count_Change",Error_Count_Change,file_name_1);
+  Error_Count_Delay = getProfileInt(ECU_project,"Error_Count_Delay",Error_Count_Delay,file_name_1);
+  Error_Count_Delay_Tolerance = getProfileInt(ECU_project,"Error_Count_Delay_Tolerance",Error_Count_Delay_Tolerance,file_name_1);
+  Error_Count_Delay_Reset = getProfileInt(ECU_project,"Error_Count_Delay_Reset",Error_Count_Delay_Reset,file_name_1);
+  Request_Seed_Count = getProfileInt(ECU_project,"Request_Seed_Count",Request_Seed_Count,file_name_1);
+  Request_Unlock_Count = getProfileInt(ECU_project,"Request_Unlock_Count",Request_Unlock_Count,file_name_1);
+  Restoration_Error_Count = getProfileInt(ECU_project,"Restoration_Error_Count",Restoration_Error_Count,file_name_1);
+  Serve_11_Unlock_Count = getProfileInt(ECU_project,"Serve_11_Unlock_Count",Serve_11_Unlock_Count,file_name_1);
+  ReqSeed_Count = getProfileInt(ECU_project,"ReqSeed_Count",ReqSeed_Count,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------28服务--------------------------*/
+  Wait_28H_Time = getProfileInt(ECU_project,"Wait_28H_Time",Wait_28H_Time,file_name_1);
+  Wait_28H_Tx_Time = getProfileInt(ECU_project,"Wait_28H_Tx_Time",Wait_28H_Tx_Time,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  /*-----------------------------------31服务--------------------------*/
+  Serve_31_NRC22 =  getProfileInt(ECU_project,"Serve_31_NRC22",Serve_31_NRC22,file_name_1);
+  Pre_Programmed_UnlockECU =  getProfileInt(ECU_project,"Pre_Programmed_UnlockECU",Pre_Programmed_UnlockECU,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  Ang_NotCal = getProfileInt(ECU_project,"Ang_NotCal",Ang_NotCal,file_name_1);
+  Abnormal_Reset = getProfileInt(ECU_project,"Abnormal_Reset",Abnormal_Reset,file_name_1);
+  EPS_TxID_1 = getProfileInt(ECU_project,"EPS_TxID_1",EPS_TxID_1,file_name_1);
+  CAN_Init_Time = getProfileInt(ECU_project,"CAN_Init_Time",CAN_Init_Time,file_name_1);
+  S3_85_Time = getProfileInt(ECU_project,"S3_85_Time",S3_85_Time,file_name_1);
+  Part_number_Fac = getProfileInt(ECU_project,"Part_number_Fac",Part_number_Fac,file_name_1);
+  
+  /*-----------------------------------TP层服务--------------------------*/
+  TP_filler = getProfileInt(ECU_project,"TP_filler",TP_filler,file_name_1);
+  Response_CanFD = getProfileInt(ECU_project,"Response_CanFD",Response_CanFD,file_name_1);
+  BS = getProfileInt(ECU_project,"BS",BS,file_name_1);
+  STmin = getProfileInt(ECU_project,"STmin",STmin,file_name_1);
+  N_Bs_Time = getProfileInt(ECU_project,"N_Bs_Time",N_Bs_Time,file_name_1);
+  N_Bs_Time_Tolerance = getProfileInt(ECU_project,"N_Bs_Time_Tolerance",N_Bs_Time_Tolerance,file_name_1);
+  N_Br_Time = getProfileInt(ECU_project,"N_Br_Time",N_Br_Time,file_name_1);
+  N_Br_Time_Tolerance = getProfileInt(ECU_project,"N_Br_Time_Tolerance",N_Br_Time_Tolerance,file_name_1);
+  N_Cr_Time = getProfileInt(ECU_project,"N_Cr_Time",N_Cr_Time,file_name_1);
+  N_Cr_Time_Tolerance = getProfileInt(ECU_project,"N_Cr_Time_Tolerance",N_Cr_Time_Tolerance,file_name_1);
+  N_Cs_Time = getProfileInt(ECU_project,"N_Cs_Time",N_Cs_Time,file_name_1);
+  N_Cs_Time_Tolerance = getProfileInt(ECU_project,"N_Cs_Time_Tolerance",N_Cs_Time_Tolerance,file_name_1);
+  TP_LastCFLen = getProfileInt(ECU_project,"TP_LastCFLen",TP_LastCFLen,file_name_1);
+  MF_Phy_SF_RxDisturb = getProfileInt(ECU_project,"MF_Phy_SF_RxDisturb",MF_Phy_SF_RxDisturb,file_name_1);
+  MF_Fun_SF_RxDisturb = getProfileInt(ECU_project,"MF_Fun_SF_RxDisturb",MF_Fun_SF_RxDisturb,file_name_1);
+  MF_Phy_MF_RxDisturb = getProfileInt(ECU_project,"MF_Phy_MF_RxDisturb",MF_Phy_MF_RxDisturb,file_name_1);
+  MF_Fun_MF_RxDisturb = getProfileInt(ECU_project,"MF_Fun_MF_RxDisturb",MF_Fun_MF_RxDisturb,file_name_1);
+  MF_Phy_SF_TxDisturb = getProfileInt(ECU_project,"MF_Phy_SF_TxDisturb",MF_Phy_SF_TxDisturb,file_name_1);
+  MF_Fun_SF_TxDisturb = getProfileInt(ECU_project,"MF_Fun_SF_TxDisturb",MF_Fun_SF_TxDisturb,file_name_1);
+  MF_Phy_MF_TxDisturb = getProfileInt(ECU_project,"MF_Phy_MF_TxDisturb",MF_Phy_MF_TxDisturb,file_name_1);
+  MF_Fun_MF_TxDisturb = getProfileInt(ECU_project,"MF_Fun_MF_TxDisturb",MF_Fun_MF_TxDisturb,file_name_1);
+  H_Disturb = getProfileInt(ECU_project,"H_Disturb",H_Disturb,file_name_1);
+  FF_DL_Max = getProfileInt(ECU_project,"FF_DL_Max",FF_DL_Max,file_name_1);
+  DTC_IsRest = getProfileInt(ECU_project,"DTC_IsRest",DTC_IsRest,file_name_1);
+  N_WFTmax =  getProfileInt(ECU_project,"N_WFTmax",N_WFTmax,file_name_1);
+  /*-----------------------------------分隔符------------------------------*/
+  DTC_Code = getProfileInt(ECU_project,"DTC_Code",DTC_Code,file_name_1);
+  Res_Position = getProfileInt(ECU_project,"Res_Position",Res_Position,file_name_1);
+  Fun_19 = getProfileInt(ECU_project,"Fun_19",Fun_19,file_name_1);
+  Clear_1904 = getProfileInt(ECU_project,"Clear_1904",Clear_1904,file_name_1);
+  LocalTime_Error = getProfileInt(ECU_project,"LocalTime_Error",LocalTime_Error,file_name_1);
+  DTC_19_max = getProfileInt(ECU_project,"DTC_19_max",DTC_19_max,file_name_1);
+  DTC_Aging_Counter_Clear = getProfileInt(ECU_project,"DTC_Aging_Counter_Clear",DTC_Aging_Counter_Clear,file_name_1);
+  Fault_Occurrence_counter_Full = getProfileInt(ECU_project,"Fault_Occurrence_counter_Full",Fault_Occurrence_counter_Full,file_name_1);
+  DTC_Aging_counter_max = getProfileInt(ECU_project,"DTC_Aging_counter_max",DTC_Aging_counter_max,file_name_1);
+  Clear_DTC_Ex = getProfileInt(ECU_project,"Clear_DTC_Ex",Clear_DTC_Ex,file_name_1);
+  DTC_Aged_counter_Full = getProfileInt(ECU_project,"DTC_Aged_counter_Full",DTC_Aged_counter_Full,file_name_1);
+  
+  
+  getProfileString(ECU_project, "NRC_22_Gears_Range","Null",Temp_Value_Range, 500, file_name_1);
+  getProfileString(ECU_project, "ID_Range","Null",Temp_Value_Range_2, 500, file_name_1);
+  getProfileString(ECU_project, "ALL_DTC","Null",Temp_Value, 5000, file_name_1);
+  fileClose(GlbHandlefile);
+  ALL_DTC_Num =0;
+  for(i = 0;i<strlen(Temp_Value);i++)                  //查找INI文件中数组值并返回10进制
+  {
+    if(Temp_Value[i+1] == 48 && Temp_Value[i+2] == 120)
+    {
+      snprintf(Temp_2,elCount(Temp_2),"%s","");
+      for(j=1;j<20;j++)
+      {
+        snprintf(Temp_2,elCount(Temp_2),"%s%c",Temp_2,HexToAsc(Temp_Value[i+j]));
+        if(Temp_Value[i+j] == 44 || Temp_Value[i+j] == 125)
+        {
+          ALL_DTC_Num++;
+          break;
+        }
+      }
+      ALL_DTC[i/9] =  atol(Temp_2);
+    }
+  }
+  @sysvar::DID::funreq_ID=getProfileInt (ECU_project, "funreq_ID",0,file_name_1);
+  funreq_ID = @sysvar::DID::funreq_ID;
+  @sysvar::DID::phyreq_ID=getProfileInt (ECU_project, "phyreq_ID",0,file_name_1);
+  phyreq_ID = @sysvar::DID::phyreq_ID;
+  @sysvar::DID::Response_ID=getProfileInt (ECU_project, "Response_ID",0,file_name_1);
+  Response_ID = @sysvar::DID::Response_ID;
+  _Get_ValueRange("NRC_22_Gears_Range",NRC_22_Gears_Range);
+  _Get_ValueRange("ID_Range",ID_Range);
+  _Get_ValueRange("High_Load_Range",High_Load_Range);
+  Geely3_Flage = 0;
+  if(strstr_off(ECU_project, 0, "Geely3") != -1)
+    Geely3_Flage = 1;
+  _Get_NRC_Mapping(0xFF);
+  _get_Arry("NotNRC78_Serve");
+  NotNRC78_Serve_Count = Arry_Len;
+  for(i=0;i<NotNRC78_Serve_Count;i++)
+    NotNRC78_Serve[i] = Arry_Data[i];
+  testWaitForTimeout(200);
+}
+//从ini文件中获取数据
+void Get_value_For_Power()
+{
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString("Project_Information", "ECU_project","Null",ECU_project, 200, file_name_1); 
+  Burn_in_Board = getProfileInt(ECU_project,"Burn_in_Board",Burn_in_Board,file_name_1);
+  K15_OFF_Time = getProfileInt(ECU_project,"K15_OFF_Time",K15_OFF_Time,file_name_1);
+  Board_Channel = getProfileInt(ECU_project,"Board_Channel",Board_Channel,file_name_1);
+  if(Board_Channel != 1 && Board_Channel != 2)
+    Board_Channel = 2;
+  fileClose(GlbHandlefile);
+  if(K15_OFF_Time==0)
+    K15_OFF_Time = 1000;
+  testWaitForTimeout(200);
+}
+void Get_value_For_NRC22_Loop()
+{
+  int i,Count,j;
+  char Value_Data[1000];
+  char Value_Data_Temp[100];
+  
+  snprintf(Value_Data,elCount(Value_Data),"%s","");
+  snprintf(Value_Data_Temp,elCount(Value_Data_Temp),"%s","");
+  NRC22_Loop_Fun_Count = 0;
+  NRC22_Loop_Rsp_Count = 0;
+  NRC22_Loop_Fun_Pos_Count = 0;
+  
+  _get_Arry("NRC22_Loop_Fun");
+  for(i=0;i<Arry_Len;i++)
+  {
+    NRC22_Loop_Fun[NRC22_Loop_Fun_Count] = Arry_Data[i];
+    NRC22_Loop_Fun_Count++;
+  }
+  _get_Arry("NRC22_Loop_Rsp");
+  for(i=0;i<Arry_Len;i++)
+  {
+    NRC22_Loop_Rsp[NRC22_Loop_Rsp_Count] = Arry_Data[i];
+    NRC22_Loop_Rsp_Count++;
+  }
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project, "NRC22_Loop_Fun_Pos","Null",Value_Data, 1000, file_name_1);
+  fileClose(GlbHandlefile);
+  for(i=0;i<strlen(Value_Data);i++)
+  {
+    if(Value_Data[i] == 91)
+    {
+      Count = 0;
+      for(j=i+1;i<strlen(Value_Data);j++)
+      {
+        if(Value_Data[j] == 44 || Value_Data[j] == 93)
+        {
+          NRC22_Loop_Fun_Pos[NRC22_Loop_Fun_Pos_Count][Count]  = atol(Value_Data_Temp);
+          Count++;
+          snprintf(Value_Data_Temp,elCount(Value_Data_Temp),"%s","");
+          if(Value_Data[j] == 93)
+          {
+            NRC22_Loop_Fun_Pos_Count++; i=j;
+            break;
+          }
+        }
+        else
+          snprintf(Value_Data_Temp,elCount(Value_Data_Temp),"%s%c",Value_Data_Temp,Value_Data[j]);
+      }
+    }
+  }
+  testWaitForTimeout(200);
+}
+
+/*
+    用于获取输入字符串数据，用列表装载数据
+*/
+_Get_ValueRange(char Str[],dword List[])
+{
+  char Temp_Value_Range[500];
+  char Temp_Value[500];
+  int i,j;
+  snprintf(Temp_Value_Range,elCount(Temp_Value_Range),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,Str ,"Null",Temp_Value_Range, 500, file_name_1);
+  fileClose(GlbHandlefile);
+  for(i=0;i<strlen(Temp_Value_Range);i++)     
+  {
+    if(Temp_Value_Range[i]==91)
+    {
+      snprintf(Temp_Value,elCount(Temp_Value),"%s","");
+      for(j=i+1;j<50;j++)
+      {
+        if(Temp_Value_Range[j]==44 ||Temp_Value_Range[j]==93)
+        {
+          if(Temp_Value_Range[j]==44)
+            List[0] = atol(Temp_Value);
+          else
+          {
+            List[1] = atol(Temp_Value);
+            break;
+          }
+          snprintf(Temp_Value,elCount(Temp_Value),"%s","");
+        }
+        else
+          snprintf(Temp_Value,elCount(Temp_Value),"%s%c",Temp_Value,Temp_Value_Range[j]);
+      }
+    }
+  }
+  // testWaitForTimeout(10);
+}
+
+_Get_CarSpd_Engine()
+{
+  _Get_CarSpd_Ready_Config();
+  
+  if(strlen(Struct_CarSpd.CarSpdInvalid_Sig) == 0 || Struct_CarSpd.Invalid_DTC == 0)
+    Struct_CarSpd.Invalid_DTC_Flage = 0;
+  else
+    Struct_CarSpd.Invalid_DTC_Flage = 1;
+  if(Struct_CarSpd.Lost_DTC == 0)
+    Struct_CarSpd.Lost_DTC_Flage = 0;
+  else
+    Struct_CarSpd.Lost_DTC_Flage = 1;
+  
+  if(strlen(Struct_Ready.ReadyInvalid_Sig) == 0 || Struct_Ready.Invalid_DTC == 0)
+    Struct_Ready.Invalid_DTC_Flage = 0;
+  else
+    Struct_Ready.Invalid_DTC_Flage = 1;
+  if(Struct_Ready.Lost_DTC == 0)
+    Struct_Ready.Lost_DTC_Flage = 0;
+  else
+    Struct_Ready.Lost_DTC_Flage = 1;
+}
+
+
+_get_Arry(char srt[])
+{
+  char Temp_Value_0[500];
+  char Temp_Value_2[50];
+  int i,j,m;
+  m = 0;
+  snprintf(Temp_Value_0,elCount(Temp_Value_0),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,srt,"Null",Temp_Value_0, 1000, file_name_1);
+  fileClose(GlbHandlefile);
+  if(strncmp(Temp_Value_0,"Null",strlen(Temp_Value_0)) == 0 && strlen(Temp_Value_0) == strlen("Null"))
+  {
+    Arry_Len = 0;
+    // _WriteEx_and_Report(srt,"未获取到输入数据");
+  }
+  else
+  {
+    Arry_Len = _ceil((strlen(Temp_Value_0)-1)/5.0);
+    for(i = 0;i<strlen(Temp_Value_0);i++)                  
+    {
+      snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+      if(Temp_Value_0[i] == 48 && (Temp_Value_0[i+1] == 120 ||Temp_Value_0[i+1] == 88 ))
+      {
+        for(j=0;j<8;j++)
+        {
+          if(Temp_Value_0[i+j]==44 || i+j==strlen(Temp_Value_0)-1) 
+          {
+            m++; break;
+          }
+          else
+            snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s%c",Temp_Value_2,HexToAsc(Temp_Value_0[i+j]));
+        }
+        Arry_Data[m-1] = atol(Temp_Value_2);
+      }
+    }
+    if(strncmp(srt,"Read_Now_Session",strlen(srt)) == 0 && strlen(srt) == strlen("Read_Now_Session"))
+    {
+      if(Arry_Len>1)
+      {
+        Support_ReadSession = 1;
+        Read_Now_Session[0] = 0x22;
+        Read_Now_Session[1] = Arry_Data[0];
+        Read_Now_Session[2] = Arry_Data[1];
+      }
+    }
+  }
+}
+
+_Get_DTC_19()
+{
+  char Temp_Value_0[5000];
+  char Temp_Value_1[5000];
+  char Temp_Value_2[5000];
+  char Temp_Value_3[5000];
+  char Temp_Value_5[5000];
+  char Temp_Value_6[5000];
+  char Temp_Value_7[5000];
+  char Temp_Value_8[5000];
+  char Temp_Value_9[5000];
+  char Temp_Value_10[5000];
+  char Data_Str[100][100];
+  char Data_Str_[10][300];
+  int i,j,k,Flage_1904;
+  int Flage_1;
+  Flage_1 = 0;
+  k=0;
+  DTC_19_Count = 0;
+  Flage_1904 = 0;
+  mixArray_Len = 0;
+  All_Node_Count = 0;
+  Freeze_Frame_Number_Count = 0;
+  Freeze_Frame_Special_Count = 0;
+  Freeze_Frame_CAN_Error_Count =0;
+  Freeze_Frame_Special_Invalid_Count = 0;
+  ExDataRecord_Count = 0;
+  Node_Invalid_Count = 0;
+  snprintf(Temp_Value_0,elCount(Temp_Value_0),"%s","");
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+  snprintf(Temp_Value_3,elCount(Temp_Value_3),"%s","");
+  snprintf(Temp_Value_5,elCount(Temp_Value_5),"%s","");
+  snprintf(Temp_Value_6,elCount(Temp_Value_6),"%s","");
+  snprintf(Temp_Value_7,elCount(Temp_Value_7),"%s","");
+  snprintf(Temp_Value_8,elCount(Temp_Value_8),"%s","");
+  snprintf(Temp_Value_9,elCount(Temp_Value_9),"%s","");
+  snprintf(Temp_Value_10,elCount(Temp_Value_10),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString("Project_Information", "ECU_project","Null",ECU_project, 100, file_name_1);
+  getProfileString(ECU_project,"DTC_19_Lost","Null",Temp_Value_0, 5000, file_name_1);
+  getProfileString(ECU_project,"DTC_19_Invalid","Null",Temp_Value_6, 5000, file_name_1);
+  getProfileString(ECU_project,"Freeze_Frame","Null",Temp_Value_2, 5000, file_name_1);
+//  getProfileString(ECU_project,"NoDTC_Node","Null",Temp_Value_3, 5000, file_name_1);
+  getProfileString(ECU_project,"DTC_ExtendedDataRecord","Null",Temp_Value_5, 5000, file_name_1);
+  getProfileString(ECU_project,"Freeze_Frame_CAN_Error","Null",Temp_Value_7, 5000, file_name_1);
+  getProfileString(ECU_project,"Freeze_Frame_Special","Null",Temp_Value_8, 5000, file_name_1);
+  getProfileString(ECU_project,"Freeze_Frame_Special_Invalid","Null",Temp_Value_9, 5000, file_name_1);
+  getProfileString(ECU_project,"DTC_Whitelist","Null",Temp_Value_10, 5000, file_name_1);
+  fileClose(GlbHandlefile);
+  /*DTC_19_Lost*/
+  for(i=0;i<strlen(Temp_Value_0);i++)
+  {
+    if(Temp_Value_0[i]== 40)
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value_0[j]==44 || Temp_Value_0[j]==41)
+        {
+          DTC_19[DTC_19_Count][k] = atol(Temp_Value_1);
+          if(k==1)
+            _ALL_DTC_Add(DTC_19[DTC_19_Count][k]);
+          k++;
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+          if(Temp_Value_0[j]==41)
+          {
+            k=0;
+            DTC_19_Count++;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_0[j]);
+      }
+    }
+  }
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  
+  /*DTC_19_Invalid*/
+  for(i=0;i<strlen(Temp_Value_6);i++)
+  {
+    if(Temp_Value_6[i]== 40)
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value_6[j]==44 || Temp_Value_6[j]==41)
+        {
+          if(k==0)
+            Node_Invalid[Node_Invalid_Count].Node = atol(Temp_Value_1);
+          else if(k==1)
+          {
+            Node_Invalid[Node_Invalid_Count].DTC = atol(Temp_Value_1);
+            _ALL_DTC_Add(Node_Invalid[Node_Invalid_Count].DTC);
+          }
+          else if(k==2)
+            Node_Invalid[Node_Invalid_Count].Mask = atol(Temp_Value_1);
+          else if(k==3)
+            Node_Invalid[Node_Invalid_Count].Time = atol(Temp_Value_1);
+          else if(k==4)
+            snprintf(Node_Invalid[Node_Invalid_Count].Signal_Name,elcount(Node_Invalid[Node_Invalid_Count].Signal_Name),"%s",Temp_Value_1);
+          else if(k==5)
+            Node_Invalid[Node_Invalid_Count].Invalid_Value = atol(Temp_Value_1);
+          else if(k==6)
+            Node_Invalid[Node_Invalid_Count].Normal_Value = atol(Temp_Value_1);
+          k++;
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+          if(Temp_Value_6[j]==41)
+          {
+            k=0;
+            Node_Invalid[Node_Invalid_Count].Invalid_Index = 0;
+            Node_Invalid_Count++;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_6[j]);
+      }
+    }
+  }
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  
+  /*Freeze_Frame_Number*/
+  for(i=0;i<strlen(Temp_Value_2);i++)
+  {
+    if(Temp_Value_2[i]==91)
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value_2[j]==93)
+        {
+          snprintf(Data_Str[mixArray_Len],elcount(Temp_Value_1),"%s",Temp_Value_1);
+          mixArray_Len++;
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+          break;
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_2[j]);
+      }
+    }
+  }
+  for(i=0;i<mixArray_Len;i++)
+    _get_1904(Data_Str[i],i);
+  
+  /*19 06*/
+  for(i=0;i<strlen(Temp_Value_5);i++)
+  {
+    if(Temp_Value_5[i]==91)
+    {
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value_5[j]==93)
+        {
+          snprintf(Data_Str_[ExDataRecord_Count],elcount(Temp_Value_1),"%s",Temp_Value_1);
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+          ExDataRecord_Count++;
+          break;
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_5[j]);
+      }
+    }
+  }
+  for(i=0;i<ExDataRecord_Count;i++)
+    _get_1906(Data_Str_[i],i);
+
+  {
+    int Serve_Pos_19,Fun_Pos_04;
+    Serve_Pos_19 = _Check_Serve(0x19,0,0);
+    Fun_Pos_04 = _Check_Serve(0x19,0x04,4);
+    if(Serve_Pos_19!= -1 && Fun_Pos_04!= -1)
+    {
+      for(i=0;i<Serve_Data[Serve_Pos_19].Serve_Para_Count[Fun_Pos_04];i++)
+      {
+        Freeze_Frame_Number[Freeze_Frame_Number_Count]  =Serve_Data[Serve_Pos_19].Serve_Para[Fun_Pos_04][i];
+        Freeze_Frame_Number_Count++;
+      }
+    }
+  }
+  
+  for(i=0;i<DTC_19_Count;i++)
+  {
+    All_Node[i] = DTC_19[i][0];
+    All_Node_Count++;
+  }
+
+  for(i=0;i<strlen(Temp_Value_7);i++)
+  {
+    if(Temp_Value_7[i] == 91)
+    {
+      snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value_7[j]==93)
+        {
+          snprintf(Freeze_Frame_CAN_Error[Freeze_Frame_CAN_Error_Count],elCount(Freeze_Frame_CAN_Error[Freeze_Frame_CAN_Error_Count]),"%s",Temp_Value_1);
+          Freeze_Frame_CAN_Error_Count++;
+          break;
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_7[j]);
+      }
+    }
+  }
+  for(i=0;i<strlen(Temp_Value_8);i++)
+  {
+    if(Temp_Value_8[i] == 91)
+    {
+      snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+      for(j=i+1;j<strlen(Temp_Value_8);j++)
+      {
+        if(Temp_Value_8[j]==93)
+        {
+          snprintf(Freeze_Frame_Special[Freeze_Frame_Special_Count],elCount(Freeze_Frame_Special[Freeze_Frame_Special_Count]),"%s",Temp_Value_1);
+          Freeze_Frame_Special_Count++;
+          break;
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_8[j]);
+      }
+    }
+  }
+  for(i=0;i<strlen(Temp_Value_9);i++)
+  {
+    if(Temp_Value_9[i] == 91)
+    {
+      snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value_8[j]==93)
+        {
+          snprintf(Freeze_Frame_Special_Invalid[Freeze_Frame_Special_Invalid_Count],elCount(Freeze_Frame_Special_Invalid[Freeze_Frame_Special_Invalid_Count]),"%s",Temp_Value_1);
+          Freeze_Frame_Special_Invalid_Count++;
+          break;
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_9[j]);
+      }
+    }
+  }
+  Group_Count = Freeze_Frame_Number_Count -1;
+  
+  /*白名单部分*/
+  DTC_Whitelist_Count =0;
+  for(i=0;i<strlen(Temp_Value_10);i++)
+  {
+    if(Temp_Value_10[i] == 123 )
+    {
+      snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+      for(j=i+1;j<5000;j++)
+      {
+        if(Temp_Value_10[j]==44 || Temp_Value_10[j]==125)
+        {
+          DTC_Whitelist[DTC_Whitelist_Count] = atol(Temp_Value_1);
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+          DTC_Whitelist_Count++;
+          if(Temp_Value_10[j]==125)
+            break;
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_10[j]);
+      }
+    }
+  }
+  if((DTC_Whitelist_Count == 1) && (DTC_Whitelist[0]==0))/*未输入白名单时由于获取结尾符会导致多一个*/
+    DTC_Whitelist_Count = 0;
+  _get_Snapshot_Special();
+  _Get_Advanced_function();
+}
+_get_1904(char str[],dword Possi)
+{
+  int k,n,x,count,flage_0;
+  dword swhere;
+  dword countmax;
+  char time_temp[20];
+  char time_temp_[20];
+  char Temp_Value_00[2000];
+  char Temp_Value_11[2000];
+  snprintf(Temp_Value_00,elCount(Temp_Value_00),"%s","");
+  snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString("Project_Information", "ECU_project","Null",ECU_project, 2000, file_name_1);
+  getProfileString(ECU_project,str,"Null",Temp_Value_00, 2000, file_name_1);
+  fileClose(GlbHandlefile);
+  count = 0;
+  x = 0;
+  flage_0 =0;
+  mixArray[Possi].Sig_Name_Count =0;
+  mixArray[Possi].Snapshot_Loop_Count = 0;
+  mixArray[Possi].InitValueFlage = 0;
+  snprintf(mixArray[Possi].Str_DID_1904,elcount(str),"%s",str);
+  if(strncmp(str,"LocalTime",strlen(str)) == 0 && strlen(str) == strlen("LocalTime"))
+    flage_0 = 1;
+  if(flage_0 == 0)
+  {
+    for(k=0;k<strlen(Temp_Value_00);k++)
+    {
+      if(Temp_Value_00[k]== 40)
+      {
+        for(n=k+1;n<2000;n++)
+        {
+          if(Temp_Value_00[n]==44 || Temp_Value_00[n]==41)
+          {
+            if(count==0) //DID
+            {
+              mixArray[Possi].DID_1904[x] = atol(Temp_Value_11);
+              x++;
+            }
+            else if(count == 1) //长度
+               mixArray[Possi].DID_1904_Len = atol(Temp_Value_11);
+            else if(count == 2) //数据类型
+              snprintf(mixArray[Possi].Symbol,elcount(Temp_Value_11),"%s",Temp_Value_11);
+            else if(count == 3)//精度 + 偏移量 + 容差 + 最小值 + 最大值
+            {
+              if(x == 0)
+                strtod(Temp_Value_11,mixArray[Possi].Factor);
+              else if(x == 1)
+                strtod(Temp_Value_11,mixArray[Possi].Offset);
+              else if(x == 2)
+                strtod(Temp_Value_11,mixArray[Possi].Tolerance);
+              else if(x == 3)
+                strtod(Temp_Value_11,mixArray[Possi].DID_Value_min);
+              else if(x == 4)
+                strtod(Temp_Value_11,mixArray[Possi].DID_Value_max);
+              x++;
+            }
+            else if(count == 4) //无效值
+            {
+              if(strstr(Temp_Value_11,"-1") == -1)
+                mixArray[Possi].Invalid_LastValue = 0;
+              else
+                mixArray[Possi].Invalid_LastValue = 1;
+              mixArray[Possi].Invalid = _HexStrToQword(Temp_Value_11);
+            }
+            else if(count == 5) //初始值
+            {
+              if(strstr(Temp_Value_11,"-1") == -1)
+              {
+                mixArray[Possi].InitValue = _HexStrToQword(Temp_Value_11);
+                mixArray[Possi].InitValueFlage = 1;
+              }
+            }
+            else if(count == 6) //信号名
+            {
+              if(x == 0) //节点 
+              {
+                snprintf(mixArray[Possi].Sig_Name_Node,elcount(Temp_Value_11),"%s",Temp_Value_11);
+                if(strlen(mixArray[Possi].Sig_Name_Node) == 0)   //未输入节点时当做空值处理防止报错
+                  snprintf(mixArray[Possi].Sig_Name_Node,elCount(mixArray[Possi].Sig_Name_Node),"%s","NULL");
+              }
+              else //信号
+              {
+                snprintf(mixArray[Possi].Sig_Name[mixArray[Possi].Sig_Name_Count],elcount(Temp_Value_11),"%s",Temp_Value_11);
+                if(strlen(mixArray[Possi].Sig_Name[mixArray[Possi].Sig_Name_Count]) == 0)   //未输入信号时当做空值处理防止报错
+                  snprintf(mixArray[Possi].Sig_Name[mixArray[Possi].Sig_Name_Count],elCount(mixArray[Possi].Sig_Name[mixArray[Possi].Sig_Name_Count]),"%s","NULL");
+                mixArray[Possi].Sig_Name_Count++;
+              }
+              x++;
+            }
+            else if(count == 7) //4次设置值
+            {
+              if(strstr(Temp_Value_11,"0x") != -1 || strstr(Temp_Value_11,"0X")!= -1)
+                mixArray[Possi].Vaule_Set[x] = atol(Temp_Value_11);
+              else
+                mixArray[Possi].Vaule_Set[x] = atodbl(Temp_Value_11);
+              x++;
+            }
+            else if(count == 8) //遍历值
+            {
+              if(strstr(Temp_Value_11,"0x")!= -1 || strstr(Temp_Value_11,"0X")!= -1)
+                mixArray[Possi].Snapshot_Loop[x] = atol(Temp_Value_11);
+              else
+                mixArray[Possi].Snapshot_Loop[x] = atodbl(Temp_Value_11);
+              if(strlen(Temp_Value_11)!= 0)
+                mixArray[Possi].Snapshot_Loop_Count++;
+              x++;
+            }
+            snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s","");
+            if(Temp_Value_00[n]==41)
+            {
+              x = 0;  count++;  break;
+            }
+          }
+          else
+            snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s%c",Temp_Value_11,Temp_Value_00[n]);
+        }
+      }
+    }
+  }
+  else
+  {
+    snprintf(mixArray[Possi].LocalTime_Value,elCount(mixArray[Possi].LocalTime_Value),"%s","");
+    countmax = 0;
+    for(k=0;k<elcount(Temp_Value_00);k++) //统计多少种数据
+    {
+      if(Temp_Value_00[k]== 40)
+      {
+        for(n=k+1;n<1000;n++)
+        {
+          if(Temp_Value_00[n]==41)
+          {
+            countmax++;
+            break;
+          }
+        }
+      }
+    }
+    for(k=0;k<strlen(Temp_Value_00);k++)
+    {
+      if(Temp_Value_00[k]== 40)
+      {
+        for(n=k+1;n<2000;n++)
+        {
+          if(Temp_Value_00[n]==44 || Temp_Value_00[n]==41)
+          {
+            if(count==0) //DID
+            {
+              mixArray[Possi].DID_1904[x] = atol(Temp_Value_11);
+              x++;
+            }
+            else if(count == 1)//长度
+               mixArray[Possi].DID_1904_Len = atol(Temp_Value_11);
+            else if(count == 2) //节点
+              snprintf(mixArray[Possi].Sig_Name_Node,elcount(Temp_Value_11),"%s",Temp_Value_11);  //节点
+            else if(count == 3)//数据类型
+              snprintf(mixArray[Possi].Symbol,elcount(Temp_Value_11),"%s",Temp_Value_11);
+            else if(count >= 4 && count<countmax-3)
+            {
+              if(x == 0)
+                snprintf(mixArray[Possi].LocalTime_Str[count-4],elcount(Temp_Value_11),"%s",Temp_Value_11);  //解析
+              else if(x==1)
+                snprintf(mixArray[Possi].Sig_Name[mixArray[Possi].Sig_Name_Count],elcount(Temp_Value_11),"%s",Temp_Value_11);  //信号
+              else
+                mixArray[Possi].LocalTime[count-4][x-2] = atol(Temp_Value_11);   //占用字节  -  起始字节  -  偏移  -  初始值
+              if(x == 1)
+                mixArray[Possi].Sig_Name_Count++;
+              if(x == 5)
+              {
+                if(strstr(Temp_Value_11,"-1") == -1)
+                  mixArray[Possi].InitValueFlage = 1;
+              }
+              x++;
+            }
+            else if(count == countmax -3)//无效值
+            {
+              if(strstr(Temp_Value_11,"-1") == -1)
+                mixArray[Possi].Invalid_LastValue = 0;
+              else
+                mixArray[Possi].Invalid_LastValue = 1;
+              mixArray[Possi].Invalid = atol(Temp_Value_11);
+            }
+            else if(count == countmax -2)//4次设置值
+            {
+              snprintf(mixArray[Possi].LocalTime_Set[x],elCount(mixArray[Possi].LocalTime_Set[x]),"%s",Temp_Value_11);
+              snprintf(mixArray[Possi].LocalTime_Value_Set[x],elCount(mixArray[Possi].LocalTime_Value_Set[x]),"%s",Temp_Value_11);
+              x++;
+            }
+            else if(count == countmax -1)//遍历值
+            {
+              snprintf(mixArray[Possi].Time_Snapshot_Loop[x],elCount(mixArray[Possi].Time_Snapshot_Loop[x]),"%s",Temp_Value_11);
+              if(strlen(Temp_Value_11)!= 0)
+                mixArray[Possi].Snapshot_Loop_Count++;
+              x++;
+            }
+            snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s","");
+            if(Temp_Value_00[n]==41)
+            {
+              x = 0;
+              count++;
+              break;
+            }
+          }
+          else
+            snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s%c",Temp_Value_11,Temp_Value_00[n]);
+        }
+      }
+    }
+  }
+  mixArray[Possi].Step_Flage = 0;
+}
+_get_Snapshot_Special() //获取快照中特殊部分数据
+{
+  int i,j,k,n,Pos_Str,Pos_Snapshot;
+  int Temp_p,Len;
+  char Get_Str[3][200];     //共三组数据需获取,获取后统一装载到一个结构体内,需要时进行获取对应数据
+  char Temp_Value_Save[1000];
+  char Temp_Value_Joint[500];
+  Snapshot_Special_Count = 0;
+  snprintf(Get_Str[0],elCount(Get_Str[0]),"Freeze_Frame_CAN_Error_Sig");
+  snprintf(Get_Str[1],elCount(Get_Str[1]),"Freeze_Frame_Special_Sig");
+  snprintf(Get_Str[2],elCount(Get_Str[2]),"Freeze_Frame_Special_Invalid_Sig");
+  for(k=0;k<3;k++)
+  {
+    char Temp_Str[100];
+    int Temp_Pos,Count,Save_Flage;
+    Count = 0;
+    snprintf(Temp_Str,elCount(Temp_Str),"%s","");
+    snprintf(Temp_Value_Save,elCount(Temp_Value_Save),"%s","");
+    snprintf(Temp_Value_Joint,elCount(Temp_Value_Joint),"%s","");
+    GlbHandlefile = OpenFileRead (file_name_1,0);
+    getProfileString(ECU_project,Get_Str[k],"Null",Temp_Value_Save, 1000, file_name_1);
+    snprintf(Temp_Value_Joint,elCount(Temp_Value_Joint),"");
+    fileClose(GlbHandlefile);
+    if(k==0)
+      Count = Freeze_Frame_CAN_Error_Count;
+    else if(k==1)
+      Count = Freeze_Frame_Special_Count;
+    else if(k==2)
+      Count = Freeze_Frame_Special_Invalid_Count;
+    if(strlen(Temp_Value_Save) < 5)//无任何输入,均在DTC中存在(为空时会生成'nan')
+    {
+      for(i=0;i<Count;i++)
+      {
+        if(k==0)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s",Freeze_Frame_CAN_Error[i]);
+        else if(k==1)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s",Freeze_Frame_Special[i]);
+        else if(k==2)
+          snprintf(Temp_Str,elCount(Temp_Str),"%s",Freeze_Frame_Special_Invalid[i]);
+        Temp_Pos = _Check_StrPossion_Res(Temp_Str,1);
+        Save_Flage = 1;
+        for(j=0;j<Snapshot_Special_Count;j++) //判断是否已经存在，若已存在则跳过
+        {
+          if(strncmp(Temp_Str,Snapshot_Special[j].Snapshot,strlen(Temp_Str)) == 0 && strlen(Temp_Str) == strlen(Snapshot_Special[j].Snapshot))
+          {
+            Save_Flage = 0;
+            break;
+          }
+        }
+        if(Save_Flage == 1)  //不存在，进行装载
+        {
+          if(Temp_Pos == -1)
+          {
+//            _WriteEx_and_Report(Temp_Str,"未查询到对应数据");
+          }
+          else
+          {
+            Snapshot_Special[Snapshot_Special_Count].Sig_ID = atol(mixArray[Temp_Pos].Sig_Name_Node);
+            snprintf(Snapshot_Special[Snapshot_Special_Count].Snapshot,elCount(Snapshot_Special[Snapshot_Special_Count].Snapshot),"%s",Temp_Str);
+            for(j=0;j<Node_Invalid_Count;j++)
+            {
+              if(Node_Invalid[j].Node == Snapshot_Special[Snapshot_Special_Count].Sig_ID)
+                break;
+            }
+          }
+          if(j==Node_Invalid_Count)
+          {
+//            write("未查询到对应ID: 0x%03X 的无效DTC数据",Snapshot_Special[Snapshot_Special_Count].Sig_ID);
+          }
+          else
+          {
+            snprintf(Snapshot_Special[Snapshot_Special_Count].Sig_Name,elCount(Snapshot_Special[Snapshot_Special_Count].Sig_Name),"%s",Node_Invalid[j].Signal_Name);
+            Snapshot_Special[Snapshot_Special_Count].Invalid_Value = Node_Invalid[j].Invalid_Value;
+            Snapshot_Special[Snapshot_Special_Count].Normal_Value = Node_Invalid[j].Normal_Value;
+            Snapshot_Special[Snapshot_Special_Count].Invalid_Time = Node_Invalid[j].Time;
+            Snapshot_Special_Count++;
+          }
+        }
+      }
+    }
+    else//存在输入
+    {
+      Pos_Snapshot = 0;
+      Len = 0;
+      for(i=0;i<strlen(Temp_Value_Save);i++)
+      {
+        if(Temp_Value_Save[i]== 91)  //查询到分割符，进行数据存储
+        {
+          Pos_Str = 0;
+          
+          if(k==0)
+            snprintf(Temp_Str,elCount(Temp_Str),"%s",Freeze_Frame_CAN_Error[Pos_Snapshot]);
+          else if(k==1)
+            snprintf(Temp_Str,elCount(Temp_Str),"%s",Freeze_Frame_Special[Pos_Snapshot]);
+          else if(k==2)
+            snprintf(Temp_Str,elCount(Temp_Str),"%s",Freeze_Frame_Special_Invalid[Pos_Snapshot]);
+          Save_Flage = 1;
+          for(j=0;j<Snapshot_Special_Count;j++)  //个数累加不清空
+          {
+            if(strncmp(Temp_Str,Snapshot_Special[j].Snapshot,strlen(Temp_Str)) == 0 && strlen(Temp_Str) == strlen(Snapshot_Special[j].Snapshot)) //查询是否已经装载过
+            {
+//              Save_Flage = 0;
+              break;
+            }
+          }
+          Temp_p = j;
+          Pos_Snapshot++;
+          if(Save_Flage == 1)
+          {
+            snprintf(Snapshot_Special[Temp_p].Snapshot,elCount(Snapshot_Special[Temp_p].Snapshot),"%s",Temp_Str);  //获取当前对应的快照释义
+            for(j=i+1;j<strlen(Temp_Value_Save);j++)
+            {
+              if(Temp_Value_Save[j] == 44 || Temp_Value_Save[j] == 93)
+              {
+                if(Pos_Str == 0 && Len>2) //ID
+                  Snapshot_Special[Temp_p].Sig_ID = atol(Temp_Value_Joint);
+                else if(Pos_Str == 1 && Len > 3 )
+                  snprintf(Snapshot_Special[Temp_p].Sig_Name,elCount(Snapshot_Special[Temp_p].Sig_Name),"%s",Temp_Value_Joint);
+                else if(Pos_Str == 2)
+                {
+                  Snapshot_Special[Temp_p].Invalid_Value = atol(Temp_Value_Joint);
+                  Snapshot_Special[Temp_p].Invalid_Time = 500;/*********************存在未输入时间需使用DTC中时间*/
+                }
+                else if(Pos_Str == 3)
+                  Snapshot_Special[Temp_p].Normal_Value = atol(Temp_Value_Joint);
+                
+                Pos_Str++;
+                Len = 0;
+                snprintf(Temp_Value_Joint,elCount(Temp_Value_Joint),"");
+                if(Temp_Value_Save[j] == 93)
+                {
+                  if(strlen(Snapshot_Special[Temp_p].Sig_Name) == 0 || Snapshot_Special[Temp_p].Sig_ID == 0)
+                  {
+                    int Swhere;
+                    Swhere = _Check_StrPossion_Res(Snapshot_Special[Temp_p].Snapshot,1);
+                    if(Swhere == -1)
+                    {
+//                      _WriteEx_and_Report(Snapshot_Special[Temp_p].Snapshot,"未在快照中查询到对应数据");
+                    }
+                    else
+                    {
+                      Snapshot_Special[Temp_p].Sig_ID = atol(mixArray[Swhere].Sig_Name_Node);
+                      for(n=0;n<Node_Invalid_Count;n++)
+                      {
+                        if(Snapshot_Special[Temp_p].Sig_ID == Node_Invalid[n].Node)
+                        {
+                          snprintf(Snapshot_Special[Temp_p].Sig_Name,elCount(Snapshot_Special[Temp_p].Sig_Name),"%s",Node_Invalid[n].Signal_Name);
+                          Snapshot_Special[Temp_p].Invalid_Value = Node_Invalid[n].Invalid_Value;
+                          Snapshot_Special[Temp_p].Normal_Value = Node_Invalid[n].Normal_Value;
+                          Snapshot_Special[Temp_p].Invalid_Time = Node_Invalid[n].Time;
+                          break;
+                        }
+                      }
+                    }
+                  }
+                  if(Temp_p == Snapshot_Special_Count)
+                    Snapshot_Special_Count++;
+                  i=j;
+                  break;
+                }
+              }
+              else
+              {
+                Len++;
+                snprintf(Temp_Value_Joint,elCount(Temp_Value_Joint),"%s%c",Temp_Value_Joint,Temp_Value_Save[j]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+_get_1906(char str[],dword Possi)
+{
+  int n,k,count,x;
+  char Temp_Value_00[1000];
+  char Temp_Value_11[500];
+  snprintf(Temp_Value_00,elCount(Temp_Value_00),"%s","");
+  snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString("Project_Information", "ECU_project","Null",ECU_project, 2000, file_name_1);
+  getProfileString(ECU_project,str,"Null",Temp_Value_00, 2000, file_name_1);
+  fileClose(GlbHandlefile);
+  count = 0;
+  snprintf(ExDataRecord[Possi].Ex_Data_Record_Str,elCount(ExDataRecord[Possi].Ex_Data_Record_Str),str);
+  for(n=0;n<1000;n++)
+  {
+    if(Temp_Value_00[n]==40)
+    {
+      for(k=n+1;k<500;k++)
+      {
+        if(Temp_Value_00[k]==44 || Temp_Value_00[k]==41)
+        {
+          if(count==0)
+            ExDataRecord[Possi].Ex_Data_Record_Num_Flage = atol(Temp_Value_11);
+          else if(count==1)
+            ExDataRecord[Possi].Ex_Data_Record_Num = atol(Temp_Value_11);
+          else if(count==2)
+            ExDataRecord[Possi].Ex_Data_Record_Len = atol(Temp_Value_11);
+          else
+          {
+            if(x==0)
+              ExDataRecord[Possi].Ex_Data_Record_min = atol(Temp_Value_11);
+            else if(x==1)
+              ExDataRecord[Possi].Ex_Data_Record_max = atol(Temp_Value_11);
+            x++;
+          }
+          snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s","");
+          if(Temp_Value_00[k]==41)
+          {
+            count++;
+            x=0;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value_11,elCount(Temp_Value_11),"%s%c",Temp_Value_11,Temp_Value_00[k]);
+      }
+    }
+  }
+}
+_Get_Advanced_function()
+{
+  char Temp_Value_1[1000];
+  char Temp_Value[100];
+  int i,j,Count,Len;
+  Advanced_function_Count = 0;
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  snprintf(Temp_Value,elCount(Temp_Value),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,"Advanced_function","Null",Temp_Value_1,1000, file_name_1);
+  fileClose(GlbHandlefile);
+  for(i=0;i<strlen(Temp_Value_1);i++)
+  {
+    if(Temp_Value_1[i]==91)
+    {
+      Count = 0;
+      Len = 0;
+      for(j=i+1;j<strlen(Temp_Value_1);j++)
+      {
+        if(Temp_Value_1[j] == 44 || Temp_Value_1[j] == 93)
+        {
+          if(Count == 0)
+            Advanced_function[Advanced_function_Count].Node = atol(Temp_Value);
+          else if(Count == 1)
+          {
+            Advanced_function[Advanced_function_Count].DTC = atol(Temp_Value);
+            if(Len>=1)
+              Advanced_function[Advanced_function_Count].Falge_DTC = 1;
+            else
+              Advanced_function[Advanced_function_Count].Falge_DTC = 0;
+          }
+          else if(Count == 2)
+            Advanced_function[Advanced_function_Count].Fun_Byte = atol(Temp_Value);
+          else if(Count == 3)
+            Advanced_function[Advanced_function_Count].Fun_Bit = atol(Temp_Value);
+          Count++;
+          snprintf(Temp_Value,elCount(Temp_Value),"%s","");
+          if(Temp_Value_1[j] == 93)
+          {
+            Advanced_function_Count++;
+            i=j;
+            break;
+          }
+        }
+        else
+        {
+          if(Count == 1)
+            Len++;
+          snprintf(Temp_Value,elCount(Temp_Value),"%s%c",Temp_Value,Temp_Value_1[j]);
+        }
+      }
+    }
+  }
+  for(i=0;i<Advanced_function_Count;i++)
+  {
+    if(Advanced_function[i].Falge_DTC == 0 && Advanced_function[i].Node != 0)
+    {
+      for(j=0;j<DTC_19_Count;j++)
+      {
+        if(Advanced_function[i].Node == DTC_19[j][0])
+        {
+          Advanced_function[i].DTC = DTC_19[j][1];
+          break;
+        }
+      }
+    }
+  }
+}
+
+_get_28_Case()//获取28测试项次中的车速及对应反馈
+{
+  char Temp_Value1[200];
+  char Temp_Value2[20];
+  int i,m,j,flage;
+  m = 0;
+  j = 0;
+  flage = 0;
+  snprintf(Temp_Value1,elCount(Temp_Value1),"%s","");
+  snprintf(Sig_28_Set,elCount(Sig_28_Set),"%s","");
+  snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,"DID28_Case","Null",Temp_Value1,1000, file_name_1);
+  fileClose(GlbHandlefile);
+  for(i=0;i<strlen(Temp_Value1);i++)
+  {
+    if(Temp_Value1[i]==91)
+    {
+      for(j=i+1;j<100;j++)
+      {
+        if(Temp_Value1[j]==44 || Temp_Value1[j]==93)
+        {
+          if(flage == 1)
+            strtod(Temp_Value2,Factor_28);
+          else if(flage == 2)
+            strtod(Temp_Value2,Offset_28);
+          else if(flage == 3)
+            strtod(Temp_Value2,Tolerance_28);
+          else if(flage==4)
+             DID28_Case_CarSpd_1 = atol(Temp_Value2);
+          else if(flage==5)
+            DID28_Case_CarSpd_Return_1 = atol(Temp_Value2);
+          else if(flage==6)
+            DID28_Sig_Invaild_Value=atol(Temp_Value2);
+          else if(flage==7)
+            DID28_Case_CarSpd_2 = atol(Temp_Value2);
+          else if(flage==8)
+            DID28_Case_CarSpd_Return_2 = atol(Temp_Value2);
+          if(Temp_Value1[j]==93)
+          { m=0; flage++; snprintf(Temp_Value2,elCount(Temp_Value2),"%s",""); break; }
+          else
+            snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+        }
+        else
+        {
+          if(flage == 0 && Temp_Value1[j]!= 93)
+            snprintf(Sig_28_Set,elCount(Sig_28_Set),"%s%c",Sig_28_Set,Temp_Value1[j]);
+          else if(Temp_Value1[j]== 93)
+            snprintf(Temp_Value2,elCount(Temp_Value2),"%s","");
+          else
+            snprintf(Temp_Value2,elCount(Temp_Value2),"%s%c",Temp_Value2,Temp_Value1[j]);
+        }
+      }
+    }
+  }
+  testWaitForTimeout(500);
+}
+int _Get_Read_Plural(char str[])
+{
+  char Temp_Value_0[1000];
+  char Temp_Value_1[100];
+  int i,j,k,Count,Count_Group,Flage;
+  
+  snprintf(Temp_Value_0,elCount(Temp_Value_0),"%s","");
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  DID_Read_Count = 0;
+  Count_Group = 0;
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,str,"Null",Temp_Value_0, 1000, file_name_1);
+  fileClose(GlbHandlefile);
+  if(strlen(Temp_Value_0)<= 5)
+    return -1;
+  else
+  {
+    for(i=0;i<strlen(Temp_Value_0);i++)
+    {
+      if(Temp_Value_0[i] == 91)
+      {
+        Count = 0;
+        for(j=i+1;j<strlen(Temp_Value_0);j++)
+        {
+          if(Temp_Value_0[j] == 44 || Temp_Value_0[j] == 93)
+          {
+            DID_Read[DID_Read_Count].DID_byte[Count] = atol(Temp_Value_1);
+            Count++;
+            snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+            if(Temp_Value_0[j] == 93)
+            {
+              i = j;
+              DID_Read_Count++;
+              Count_Group++;
+              break;
+            }
+          }
+          else
+            snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_0[j]);
+        }
+      }
+    }
+    for(i=0;i<DID_Read_Count;i++)
+      DID_Read[i].DID = ((DID_Read[i].DID_byte[0]<<8) + (DID_Read[i].DID_byte[1]));
+    _get_Str_Traversal("DID_22_Traversal");
+    
+    for(i=0;i<DID_Read_Count;i++)
+    {
+      snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+      snprintf(Temp_Value_1,elCount(Temp_Value_1),"DID_%04X",DID_Read[i].DID);
+      Flage = 0;
+      for(j=0;j<Traversal_Count;j++)
+      {
+        if(strncmp(Traversal_DID[j],Temp_Value_1,strlen(Traversal_DID[j])) == 0 && strlen(Traversal_DID[j]) == strlen(Temp_Value_1))
+        {
+          Flage = 1;
+          _Get_DID(Traversal_DID[j]);
+          DID_Read[i].LenExResp = DID_len_Ex-3;
+          DID_Read[i].Analysis_Read = Analysis;
+          DID_Read[i].Padding = UnUse_Byte;
+          DID_Read[i].ExRspCheck = 1;
+          if(Len_Input == 0)
+          {
+            DID_Read[i].ExRspCheck = 0;
+            break;
+          }
+          if(Analysis == 1)
+          {
+            for(k=0;k<Len_Input;k++)
+              DID_Read[i].ExResp_byte[k] = DID_Data[k];
+            if(Len_Input < DID_len_Ex)
+            {
+              for(k=Len_Input;k<DID_len_Ex-3;k++)  /*减去 22 + DID长度*/
+                DID_Read[i].ExResp_byte[k] = DID_Read[i].Padding;
+            }
+          }
+          else
+          {
+            snprintf(DID_Read[i].ExResp,elCount(DID_Read[i].ExResp),"%s",DID_Data_str);
+            if(Analysis == 2 && Len_Input < DID_len_Ex)
+            {
+              Len_Input = strlen(DID_Read[i].ExResp);
+              for(k=Len_Input;k<DID_len_Ex-3;k++)   /*减去 22 + DID长度*/
+                snprintf(DID_Read[i].ExResp,elCount(DID_Read[i].ExResp),"%s%c",DID_Read[i].ExResp,UnUse_Byte);
+            }
+          }
+          break;
+        }
+      }
+      if(Flage == 0)
+      {
+        DID_Read[i].LenExResp = 0;
+        snprintf(DID_Read[i].ExResp,elCount(DID_Read[i].ExResp),"");
+      }
+    }
+    return 1;
+  }
+}
+
+_Get_ReadPlural()
+{
+  char Temp_Value_0[1000];
+  char Temp_Value_1[500];
+  int i,j;
+  GlbHandlefile = OpenFileRead (file_name_1,0);
+  getProfileString(ECU_project,"Other_Plural_DID","Null",Temp_Value_0, 1000, file_name_1);
+  fileClose(GlbHandlefile);
+  Plural_DID_Count = 0;
+  for(i=0;i<strlen(Temp_Value_0);i++)
+  {
+    if(Temp_Value_0[i]==91)
+    {
+      for(j=i+1;j<strlen(Temp_Value_0);j++)
+      {
+        if(Temp_Value_0[j]==44 || Temp_Value_0[j]==93)
+        {
+          snprintf(Plural_DID[Plural_DID_Count],elCount(Plural_DID[Plural_DID_Count]),"%s",Temp_Value_1);
+          Plural_DID_Count++;
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"");
+          if(Temp_Value_0[j]==93)
+          {
+            i = j; break;
+          }
+        }
+        else
+          snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s%c",Temp_Value_1,Temp_Value_0[j]);
+      }
+    }
+  }
+  if(Plural_DID_Count == 1 && strlen(Plural_DID[0])==0)
+    Plural_DID_Count = 0;
+  fileClose(GlbHandlefile);
+}
+
+
+_Get_ChangAn_FixData()
+{
+  int i,j,k,n,Count;
+  char Temp_Value_1[500];
+  char Temp_Value_2[500];
+  char Temp_Value_3[20][50];
+  char Temp_Value_4[2000];
+  int Count_Sig;
+  
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+  snprintf(Temp_Value_4,elCount(Temp_Value_4),"%s","");
+  getProfileString(ECU_project,"FixDataSave_Traversal","Null",Temp_Value_1, 500, file_name_1);
+  
+  FixDataSave_Count = 0;
+  for(i=0;i<strlen(Temp_Value_1);i++)
+  {
+    if(Temp_Value_1[i] == 91)
+    {
+      for(j=i+1;j<strlen(Temp_Value_1);j++)
+      {
+        if(Temp_Value_1[j] == 44 || Temp_Value_1[j] == 93)
+        {
+          snprintf(Temp_Value_3[FixDataSave_Count],elCount(Temp_Value_3[FixDataSave_Count]),"%s",Temp_Value_2);
+          FixDataSave_Count++;
+          snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+          if(Temp_Value_1[j] == 93)
+          {
+            i = j;break;
+          }
+        }
+        else
+          snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s%c",Temp_Value_2,Temp_Value_1[j]);
+      }
+    }
+  }
+  for(i=0;i<FixDataSave_Count;i++)
+  {
+    int Error_Type_Count;
+    getProfileString(ECU_project,Temp_Value_3[i],"Null",Temp_Value_4, 2000, file_name_1);
+    FixDataSave[i].Error_Type_Count = 0;
+    Error_Type_Count = 0;
+    for(j=0;j<strlen(Temp_Value_4);j++)
+    {
+      if(Temp_Value_4[j] == 91)
+      {
+        for(k=j+1;k<strlen(Temp_Value_4);k++)
+        {
+          if(Temp_Value_4[k] == 93)
+          {
+            FixDataSave[i].Node = atol(Temp_Value_2);
+            snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+            j = k;
+            break;
+          }
+          else
+            snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s%c",Temp_Value_2,Temp_Value_4[k]);
+        }
+      }
+      if(Temp_Value_4[j] == 123)
+      {
+        Count_Sig = 0;
+        for(k=j+1;k<strlen(Temp_Value_4);k++)
+        {
+          if(Temp_Value_4[k] == 91 && Count_Sig == 0)
+          {
+            Count = 0;
+            for(n=k+1;n<strlen(Temp_Value_4);n++)
+            {
+              if(Temp_Value_4[n] == 44 || Temp_Value_4[n] == 93)
+              {
+                if(Count == 0)
+                  FixDataSave[i].DTC[Error_Type_Count] = atol(Temp_Value_2);
+                else if(Count == 1)
+                  snprintf(FixDataSave[i].SigName[Error_Type_Count],elCount(FixDataSave[i].SigName[Error_Type_Count]),"%s",Temp_Value_2);
+                else if(Count == 2)
+                  FixDataSave[i].Invalid_Value[Error_Type_Count] = atol(Temp_Value_2);
+                else if(Count == 3)
+                  FixDataSave[i].Normal_Value[Error_Type_Count] = atol(Temp_Value_2);
+                else if(Count == 4)
+                  FixDataSave[i].Error_FPS[Error_Type_Count] = atol(Temp_Value_2);
+                else if(Count == 5)
+                  snprintf(FixDataSave[i].Error_Type[Error_Type_Count],elCount(FixDataSave[i].Error_Type[Error_Type_Count]),"%s",Temp_Value_2);
+                Count++;
+                snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+                if(Temp_Value_4[n] == 93)
+                {
+                  Count = 0;Count_Sig++;
+                  k=n;break;
+                }
+              }
+              else
+                snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s%c",Temp_Value_2,Temp_Value_4[n]);
+            }
+          }
+          if(Temp_Value_4[k] == 91 && Count_Sig == 1) //多个信号存储
+          {
+            FixDataSave[i].SigSaveCount[Error_Type_Count] = 0;
+            for(n=k+1;n<strlen(Temp_Value_4);n++)
+            {
+              if(Temp_Value_4[n] == 44 || Temp_Value_4[n] == 93)
+              {
+                snprintf(FixDataSave[i].SigSave[Error_Type_Count][FixDataSave[i].SigSaveCount[Error_Type_Count]],elCount(FixDataSave[i].SigSave[Error_Type_Count][FixDataSave[i].SigSaveCount[Error_Type_Count]]),"%s",Temp_Value_2);
+                
+                FixDataSave[i].SigSaveCount[Error_Type_Count]++;
+                snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+                if(Temp_Value_4[n] == 93)
+                {
+                  Count_Sig++;
+                  k=n;break;
+                }
+              }
+              else
+                snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s%c",Temp_Value_2,Temp_Value_4[n]);
+            }
+          }
+          if(Temp_Value_4[k] == 91 && Count_Sig == 2) //多个信号分别占用字节
+          {
+            for(n=k+1;n<strlen(Temp_Value_4);n++)
+            {
+              if(Temp_Value_4[n] == 44 || Temp_Value_4[n] == 93)
+              {
+                FixDataSave[i].OccupancyByte[Error_Type_Count][Count] = atol(Temp_Value_2);
+                Count++;snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s","");
+                if(Temp_Value_4[n] == 93)
+                {
+                  Count = 0;Count_Sig++;
+                  k=n;break;
+                }
+              }
+              else
+                snprintf(Temp_Value_2,elCount(Temp_Value_2),"%s%c",Temp_Value_2,Temp_Value_4[n]);
+            }
+          }
+          if(Temp_Value_4[k] == 125)
+          {
+            Error_Type_Count++;
+            FixDataSave[i].Error_Type_Count = Error_Type_Count;
+            j=k;break;
+          }
+        }
+      }
+    }
+  }
+}
+
+_Get_FunDID_Data()
+{
+  int i,j,Count,k;
+  char Temp_Value_1[1000];
+  char Temp_Value_Temp[50];
+  dword Temp_DID;
+  
+  DID_Function_Count = 0;
+  Count = 0;
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s","");
+  getProfileString(ECU_project,"DID_22_Fun_Traversal","Null",Temp_Value_1, 1000, file_name_1);
+  for(i=0;i<strlen(Temp_Value_1);i++)
+  {
+    if(Temp_Value_1[i]==91)
+    {
+      for(j=i+1;j<strlen(Temp_Value_1);j++)
+      {
+        if(Temp_Value_1[j]==93)
+        {
+          DID_Function_Count = atol(Temp_Value_Temp);
+          snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s","");
+          i = j;
+          break;
+        }
+        else
+          snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s%c",Temp_Value_Temp,Temp_Value_1[j]);
+      }
+    }
+    if(Temp_Value_1[i]==123)
+    {
+      for(j=i+1;j<strlen(Temp_Value_1);j++)
+      {
+        if(Temp_Value_1[j]==44 || Temp_Value_1[j]==125)
+        {
+          snprintf(DID_Function[Count].DID_Index,elCount(DID_Function[Count].DID_Index),"%s",Temp_Value_Temp);
+          Count++;
+          snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s","");
+          if(Temp_Value_1[j]==125)
+          {
+            i = j;
+            break;
+          }
+        }
+        else
+          snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s%c",Temp_Value_Temp,Temp_Value_1[j]);
+      }
+    }
+  }
+  for(i=0;i<DID_Function_Count;i++)
+  {
+    _Get_FunDID_Data_2(i,DID_Function[i].DID_Index);
+    DID_Function[i].Value_Set_Flage = 0;
+    if(DID_Function[i].Time_Flage == 0) //非时间数据
+    {
+      for(j=0;j<mixArray_Len;j++)
+      {
+        if(strlen(DID_Function[i].Sig_Step) == 0)
+        {
+          if(DID_Function[i].DID_Byte[0] == mixArray[j].DID_1904[0]  && DID_Function[i].DID_Byte[1] == mixArray[j].DID_1904[01])
+            snprintf(DID_Function[i].Sig_Step,elCount(DID_Function[i].Sig_Step),"%s",mixArray[j].Str_DID_1904);
+        }
+        if(strncmp(DID_Function[i].Sig_Step,mixArray[j].Str_DID_1904,strlen(DID_Function[i].Sig_Step)) == 0 && strlen(DID_Function[i].Sig_Step) == strlen(mixArray[j].Str_DID_1904))
+        {
+          if(strlen(DID_Function[i].Sig_From) == 0)
+            snprintf(DID_Function[i].Sig_From,elCount(DID_Function[i].Sig_From),"%s",mixArray[j].Sig_Name_Node);
+          if(strlen(DID_Function[i].Sig_Name) == 0)
+            snprintf(DID_Function[i].Sig_Name,elCount(DID_Function[i].Sig_Name),"%s",mixArray[j].Sig_Name[0]);
+          DID_Function[i].Max_Value = mixArray[j].DID_Value_max;
+          DID_Function[i].Invalid = mixArray[j].Invalid;
+          DID_Function[i].Invalid_LastValue = mixArray[j].Invalid_LastValue;
+          break;
+        }
+      }
+      if(DID_Function[i].Factor == 0 && DID_Function[i].Offset == 0 && DID_Function[i].Tolerance == 0) //连续三个数据未输入则修改数据获取来源为1904快照
+      {
+        for(j=0;j<mixArray_Len;j++)
+        {
+          if(strncmp(DID_Function[i].Sig_Step,mixArray[j].Str_DID_1904,strlen(DID_Function[i].Sig_Step)) == 0 && strlen(DID_Function[i].Sig_Step) == strlen(mixArray[j].Str_DID_1904))
+          {
+            DID_Function[i].Factor = mixArray[j].Factor;
+            DID_Function[i].Offset = mixArray[j].Offset;
+            DID_Function[i].Tolerance = mixArray[j].Tolerance;
+            snprintf(DID_Function[i].Sig_Type,elCount(DID_Function[i].Sig_Type),"%s",mixArray[j].Symbol);
+            break;
+          }
+        }
+      }
+    }
+    else
+    {
+      if(strlen(DID_Function[i].LocalTime_SigName[0]) == 0 && strlen(DID_Function[i].LocalTime_SigName[1]) == 0)
+      {
+        if(strlen(DID_Function[i].Sig_Step) == 0)
+          snprintf(DID_Function[i].Sig_Step,elCount(DID_Function[i].Sig_Step),"LocalTime");
+        for(j=0;j<mixArray_Len;j++)
+        {
+          if(strncmp(DID_Function[i].Sig_Step,mixArray[j].Str_DID_1904,strlen(DID_Function[i].Sig_Step)) == 0 && strlen(DID_Function[i].Sig_Step) == strlen(mixArray[j].Str_DID_1904))
+          {
+            snprintf(DID_Function[i].Sig_Type,elCount(DID_Function[i].Sig_Type),"%s",mixArray[j].Symbol);
+            snprintf(DID_Function[i].Sig_From,elCount(DID_Function[i].Sig_From),"%s",mixArray[j].Sig_Name_Node);
+            for(Count = 0;Count<6;Count++)
+            {
+              for(k=0;k<3;k++)
+                DID_Function[i].LocalTime_Config[Count][k] = mixArray[j].LocalTime[Count][k];
+              for(k=0;k<6;k++)
+                snprintf(DID_Function[i].LocalTime_SigDef[k],elCount(DID_Function[i].LocalTime_SigDef[k]),"%s",mixArray[j].LocalTime_Str[k]);
+              for(k=0;k<6;k++)
+                snprintf(DID_Function[i].LocalTime_SigName[k],elCount(DID_Function[i].LocalTime_SigName[k]),"%s",mixArray[j].Sig_Name[k]);
+            }
+            DID_Function[i].Invalid_LastValue = mixArray[j].Invalid_LastValue;
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+_Get_FunDID_Data_2(int Index,char Str_Index[])
+{
+  int i,j,k,Count,Index_Count;
+  char Temp_Value_1[500];
+  char Temp_Value_Temp[50];
+  
+  Count = 0;
+  Index_Count = 0;
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"%s","");
+  snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s","");
+  getProfileString(ECU_project,Str_Index,"Null",Temp_Value_1, 500, file_name_1);
+  for(i=0;i<strlen(Temp_Value_1);i++)
+  {
+    if(Temp_Value_1[i] == 40)
+      Count++;
+  }
+  if(Count>9) //当输入数据过多时默认为时间参数
+    DID_Function[Index].Time_Flage = 1;
+  else
+    DID_Function[Index].Time_Flage = 0;
+  Count = 0;
+  for(i=0;i<strlen(Temp_Value_1);i++)
+  {
+    if(Temp_Value_1[i] == 91)
+    {
+      for(j=i+1;j<strlen(Temp_Value_1);j++)
+      {
+        if(Temp_Value_1[j] == 40)
+        {
+          for(k=j+1;k<strlen(Temp_Value_1);k++)
+          {
+            if(Temp_Value_1[k] == 44 || Temp_Value_1[k] == 41)
+            {
+              if(DID_Function[Index].Time_Flage == 0)//非时间数据处理
+              {
+                switch(Count)
+                {
+                  case 0:DID_Function[Index].ExLen = atol(Temp_Value_Temp);break;
+                  case 1:snprintf(DID_Function[Index].Sig_Step,elCount(DID_Function[Index].Sig_Step),"%s",Temp_Value_Temp);break;
+                  case 2:DID_Function[Index].DID_Byte[Index_Count] = atol(Temp_Value_Temp);break;
+                  case 3: if(Index_Count == 0)//信号类型
+                            snprintf(DID_Function[Index].Sig_Type,elCount(DID_Function[Index].Sig_Type),"%s",Temp_Value_Temp);
+                          else if(Index_Count == 1)//精度
+                            strtod(Temp_Value_Temp,DID_Function[Index].Factor);
+                          else if(Index_Count == 2)//偏移
+                            strtod(Temp_Value_Temp,DID_Function[Index].Offset);
+                          else if(Index_Count == 3)//误差
+                            strtod(Temp_Value_Temp,DID_Function[Index].Tolerance);
+                          break;
+                  case 5: if(Index_Count == 0)//信号来源
+                            snprintf(DID_Function[Index].Sig_From,elCount(DID_Function[Index].Sig_From),"%s",Temp_Value_Temp);
+                          else if(Index_Count == 1)//信号名称
+                            snprintf(DID_Function[Index].Sig_Name,elCount(DID_Function[Index].Sig_Name),"%s",Temp_Value_Temp);
+                          break;
+                  case 6: if(strstr(Temp_Value_Temp,"0x")!= -1 || strstr(Temp_Value_Temp,"0X")!= -1)
+                          {
+                            DID_Function[Index].Value_Set[Index_Count] = atol(Temp_Value_Temp);
+                            DID_Function[Index].Value_Ex[Index_Count] = atol(Temp_Value_Temp);
+                          }
+                          else
+                          {
+                            strtod(Temp_Value_Temp,DID_Function[Index].Value_Set[Index_Count]);//预设值
+                            strtod(Temp_Value_Temp,DID_Function[Index].Value_Ex[Index_Count]);
+                          }
+                          if(strlen(Temp_Value_Temp)>0)
+                            DID_Function[Index].Value_Set_Count++;
+                          break;
+                  case 7: if(Index_Count == 0)//信号无效
+                            snprintf(DID_Function[Index].SigInvalid,elCount(DID_Function[Index].SigInvalid),"%s",Temp_Value_Temp);
+                          else if(Index_Count == 1)//信号无效值
+                            DID_Function[Index].SigInvalidValue = atol(Temp_Value_Temp);
+                          else if(Index_Count == 2)//信号正常值
+                            DID_Function[Index].SigNormalValue = atol(Temp_Value_Temp);
+                          break;
+                  default :break;
+                }
+              }
+              else//时间数据处理
+              {
+                switch(Count)
+                {
+                  case 0:DID_Function[Index].ExLen = atol(Temp_Value_Temp);break;
+                  case 1:snprintf(DID_Function[Index].Sig_Step,elCount(DID_Function[Index].Sig_Step),"%s",Temp_Value_Temp);break;
+                  case 2:DID_Function[Index].DID_Byte[Index_Count] = atol(Temp_Value_Temp);break;
+                  case 3:snprintf(DID_Function[Index].Sig_From,elCount(DID_Function[Index].Sig_From),"%s",Temp_Value_Temp);break;
+                  case 4:snprintf(DID_Function[Index].Sig_Type,elCount(DID_Function[Index].Sig_Type),"%s",Temp_Value_Temp);break; 
+                  case 5: if(Index_Count == 0) //信号解析
+                            snprintf(DID_Function[Index].LocalTime_SigDef[Count-4],elCount(DID_Function[Index].LocalTime_SigDef[Count-4]),"%s",Temp_Value_Temp);
+                          else if(Index_Count == 1) //信号
+                            snprintf(DID_Function[Index].LocalTime_SigName[Count-4],elCount(DID_Function[Index].LocalTime_SigName[Count-4]),"%s",Temp_Value_Temp);
+                          else if(Index_Count == 2) //占用字节
+                            DID_Function[Index].LocalTime_Config[Count-4][0] = atol(Temp_Value_Temp);
+                          else if(Index_Count == 3) //起始字节
+                            DID_Function[Index].LocalTime_Config[Count-4][1] = atol(Temp_Value_Temp);
+                          else if(Index_Count == 4) //偏移
+                            DID_Function[Index].LocalTime_Config[Count-4][2] = atol(Temp_Value_Temp);
+                          break;
+                  case 11: snprintf(DID_Function[Index].LocalTime_Set[Index_Count],elCount(DID_Function[Index].LocalTime_Set[Index_Count]),"%s",Temp_Value_Temp);//预设值
+                          if(strlen(Temp_Value_Temp)>0)
+                          {
+                            _Set_Time(DID_Function[Index].LocalTime_Set[DID_Function[Index].Value_Set_Count],0);
+                            snprintf(DID_Function[Index].LocalTime_Ex[DID_Function[Index].Value_Set_Count],elCount(DID_Function[Index].LocalTime_Ex[DID_Function[Index].Value_Set_Count]),"%s",Time_TempForSave);
+                            DID_Function[Index].Value_Set_Count++;
+                          }
+                          break;
+                  case 12: if(Index_Count == 0)//信号无效
+                            snprintf(DID_Function[Index].SigInvalid,elCount(DID_Function[Index].SigInvalid),"%s",Temp_Value_Temp);
+                          else if(Index_Count == 1)//信号无效值
+                            DID_Function[Index].SigInvalidValue = atol(Temp_Value_Temp);
+                          else if(Index_Count == 2)//信号正常值
+                            DID_Function[Index].SigNormalValue = atol(Temp_Value_Temp);
+                          break;
+                  default :break;
+                }
+              }
+              Index_Count++;
+              snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s","");
+              if(Temp_Value_1[k] == 41)
+              {
+                Count++;
+                Index_Count = 0;
+                j = k;break;
+              }
+            }
+            else
+              snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s%c",Temp_Value_Temp,Temp_Value_1[k]);
+          }
+        }
+      }
+    }
+    if(Temp_Value_1[i] == 93)
+      break;
+  }
+  DID_Function[Index].DID = (DID_Function[Index].DID_Byte[0]<<8) + (DID_Function[Index].DID_Byte[1]);
+}
+
+_Get_NRC_Mapping(byte Serve)
+{
+  int i,Flage_SpecialNRC22;
+  char Str_Serve_Get[500];
+  Flage_SpecialNRC22 = 0;
+  Serve_NRCSpecial_Count = getProfileArray(ECU_project,"Serve_NRCSpecial",Str_Serve_Get,elCount(Str_Serve_Get),file_name_1); //不使用特殊NRC映射服务列表
+  
+  if(Serve != 0xFF) //特殊跳过标志
+  {
+    for(i=0;i<Serve_NRCSpecial_Count;i++)
+    {
+      Serve_NRCSpecial[i] = (Str_Serve_Get[i]&0xFF);
+      if(Serve_NRCSpecial[i] == Serve)
+      {
+        Flage_SpecialNRC22 = 1; break;
+      }
+    }
+    if(Flage_SpecialNRC22 == 1) //不使用映射
+    {
+      CarSpd_Invalid_NRC = 0x22;
+      CarSpd_NRC = 0x22;
+      H_Battery_NRC = 0x22;
+      L_Battery_NRC = 0x22;
+      Ready_NRC = 0x22;
+      Gear_NRC = 0x22;
+      TasTorque_NRC = 0x22;
+    }
+  }
+  if(Flage_SpecialNRC22 == 0)
+  {
+    CarSpd_Invalid_NRC = getProfileInt(ECU_project,"CarSpd_Invalid_NRC",CarSpd_Invalid_NRC,file_name_1);
+    CarSpd_NRC = getProfileInt(ECU_project,"CarSpd_NRC",CarSpd_NRC,file_name_1);
+    H_Battery_NRC = getProfileInt(ECU_project,"H_Battery_NRC",H_Battery_NRC,file_name_1);
+    L_Battery_NRC = getProfileInt(ECU_project,"L_Battery_NRC",L_Battery_NRC,file_name_1);
+    Ready_NRC = getProfileInt(ECU_project,"Ready_NRC",Ready_NRC,file_name_1);
+    Gear_NRC = getProfileInt(ECU_project,"Gear_NRC",Gear_NRC,file_name_1);
+    TasTorque_NRC = getProfileInt(ECU_project,"TasTorque_NRC",TasTorque_NRC,file_name_1);
+    Sensor_NRC = getProfileInt(ECU_project,"Sensor_NRC",Sensor_NRC,file_name_1);
+    if(CarSpd_Invalid_NRC == 0)
+      CarSpd_Invalid_NRC = 0x22;
+    if(CarSpd_NRC == 0)
+      CarSpd_NRC = 0x22;
+    if(H_Battery_NRC == 0)
+      H_Battery_NRC = 0x22;
+    if(L_Battery_NRC == 0)  
+      L_Battery_NRC = 0x22;
+    if(Ready_NRC == 0)
+      Ready_NRC = 0x22;
+    if(Gear_NRC == 0)
+      Gear_NRC = 0x22;
+    if(TasTorque_NRC == 0)
+      TasTorque_NRC = 0x22;
+    if(Sensor_NRC == 0)
+      Sensor_NRC = 0x22;
+  }
+}
+_Get_CarSpd_Ready_Config()
+{
+  char TempStr[200];
+  char TempStrAll[200];
+  int i,j,Count;
+  /*----------------------------------------------车速----------------------------------------------*/
+  getProfileString(ECU_project, "CarSpd_Sig","Null",Struct_CarSpd.CarSpd_Sig, 50, file_name_1);
+  Struct_CarSpd.Invalid_Value_Count = getProfileArray(ECU_project,"CarSpd_InvalidRange",Struct_CarSpd.Invalid_Value,elCount(Struct_CarSpd.Invalid_Value),file_name_1);
+  Struct_CarSpd.Normal_Value_Count = getProfileArray(ECU_project,"CarSpdInvalid_Normal_Range",Struct_CarSpd.Normal_Value,elCount(Struct_CarSpd.Normal_Value),file_name_1);
+  
+  Count = 0;
+  snprintf(TempStrAll,elCount(TempStrAll),"");
+  getProfileString(ECU_project,"CarSpdInvalid_Attribute","Null",TempStrAll, 200, file_name_1);
+  for(i=0;i<strlen(TempStrAll);i++)
+  {
+    if(TempStrAll[i] == 91)
+    {
+      for(j=i+1;j<strlen(TempStrAll);j++)
+      {
+        if(TempStrAll[j] == 44 || TempStrAll[j] == 93)
+        {
+          switch(Count)
+          {
+            case 0:
+              snprintf(Struct_CarSpd.CarSpdInvalid_Sig,elCount(Struct_CarSpd.CarSpdInvalid_Sig),"%s",TempStr);break;
+            case 1:
+              Struct_CarSpd.Invalid_DTC = atol(TempStr);
+              _ALL_DTC_Add(Struct_CarSpd.Invalid_DTC);break;
+            case 2:
+              Struct_CarSpd.Invalid_Time = atol(TempStr);break;
+          }
+          Count++;
+          snprintf(TempStr,elCount(TempStr),"");
+          if(TempStrAll[j] == 93)
+          {
+            i=j; break;
+          }
+        }
+        else
+          snprintf(TempStr,elCount(TempStr),"%s%c",TempStr,TempStrAll[j]);
+      }
+    }
+  }
+  
+  Count = 0;
+  snprintf(TempStrAll,elCount(TempStrAll),"");
+  getProfileString(ECU_project,"CarSpdLost_Attribute","Null",TempStrAll, 200, file_name_1);
+  for(i=0;i<strlen(TempStrAll);i++)
+  {
+    if(TempStrAll[i] == 91)
+    {
+      for(j=i+1;j<strlen(TempStrAll);j++)
+      {
+        if(TempStrAll[j] == 44 || TempStrAll[j] == 93)
+        {
+          switch(Count)
+          {
+            case 0:
+              Struct_CarSpd.Sig_Id = atol(TempStr);break;
+            case 1:
+              Struct_CarSpd.Lost_DTC = atol(TempStr);
+              _ALL_DTC_Add(Struct_CarSpd.Lost_DTC);break;
+            case 2:
+              Struct_CarSpd.Lost_Time = atol(TempStr);break;
+          }
+          Count++;
+          snprintf(TempStr,elCount(TempStr),"");
+          if(TempStrAll[j] == 93)
+          {
+            i=j; break;
+          }
+        }
+        else
+          snprintf(TempStr,elCount(TempStr),"%s%c",TempStr,TempStrAll[j]);
+      }
+    }
+  }
+  Count = 0;
+  snprintf(TempStrAll,elCount(TempStrAll),"");
+  getProfileString(ECU_project,"Auxiliary_Speed","Null",TempStrAll, 200, file_name_1);
+  for(i=0;i<strlen(TempStrAll);i++)
+  {
+    if(TempStrAll[i] == 91)
+    {
+      for(j=i+1;j<strlen(TempStrAll);j++)
+      {
+        if(TempStrAll[j] == 44 || TempStrAll[j] == 93)
+        {
+          switch(Count)
+          {
+            case 0:
+              Struct_CarSpd.Auxiliary_Speed_Node = atol(TempStr);break;
+            case 1:
+              snprintf(Struct_CarSpd.Auxiliary_Speed_Sig,elCount(Struct_CarSpd.Auxiliary_Speed_Sig),"%s",TempStr);break;
+          }
+          Count++;
+          snprintf(TempStr,elCount(TempStr),"");
+        }
+        else
+          snprintf(TempStr,elCount(TempStr),"%s%c",TempStr,TempStrAll[j]);
+      }
+    }
+  }
+  /*----------------------------------------------发动机----------------------------------------------*/
+  getProfileString(ECU_project, "Ready_Sig","Null",Struct_Ready.Ready_Sig, 50, file_name_1);
+  Struct_Ready.Ready_Active = getProfileInt(ECU_project,"Ready_Active",Struct_Ready.Ready_Active,file_name_1);
+  Struct_Ready.Invalid_Value_Count = getProfileArray(ECU_project,"Ready_InvalidRange",Struct_Ready.Invalid_Value,elCount(Struct_Ready.Invalid_Value),file_name_1);
+  Struct_Ready.Normal_Value_Count = getProfileArray(ECU_project,"ReadyInvalid_NormalRange",Struct_Ready.Normal_Value,elCount(Struct_Ready.Normal_Value),file_name_1);
+  Struct_Ready.Ready_ValueRange_Count = getProfileArray(ECU_project,"Ready_Range",Struct_Ready.Ready_ValueRange,elCount(Struct_Ready.Ready_ValueRange),file_name_1);
+  
+  Count = 0;
+  snprintf(TempStrAll,elCount(TempStrAll),"");
+  getProfileString(ECU_project,"ReadyInvalid_Attribute","Null",TempStrAll, 200, file_name_1);
+  for(i=0;i<strlen(TempStrAll);i++)
+  {
+    if(TempStrAll[i] == 91)
+    {
+      for(j=i+1;j<strlen(TempStrAll);j++)
+      {
+        if(TempStrAll[j] == 44 || TempStrAll[j] == 93)
+        {
+          switch(Count)
+          {
+            case 0:
+              snprintf(Struct_Ready.ReadyInvalid_Sig,elCount(Struct_Ready.ReadyInvalid_Sig),"%s",TempStr);break;
+            case 1:
+              Struct_Ready.Invalid_DTC = atol(TempStr);
+              _ALL_DTC_Add(Struct_Ready.Invalid_DTC);break;
+            case 2:
+              Struct_Ready.Invalid_Time = atol(TempStr);break;
+          }
+          Count++;
+          snprintf(TempStr,elCount(TempStr),"");
+          if(TempStrAll[j] == 93)
+          {
+            i=j; break;
+          }
+        }
+        else
+          snprintf(TempStr,elCount(TempStr),"%s%c",TempStr,TempStrAll[j]);
+      }
+    }
+  }
+  
+  Count = 0;
+  snprintf(TempStrAll,elCount(TempStrAll),"");
+  getProfileString(ECU_project,"ReadyLost_Attribute","Null",TempStrAll, 200, file_name_1);
+  for(i=0;i<strlen(TempStrAll);i++)
+  {
+    if(TempStrAll[i] == 91)
+    {
+      for(j=i+1;j<strlen(TempStrAll);j++)
+      {
+        if(TempStrAll[j] == 44 || TempStrAll[j] == 93)
+        {
+          switch(Count)
+          {
+            case 0:
+              Struct_Ready.Sig_Id = atol(TempStr);break;
+            case 1:
+              Struct_Ready.Lost_DTC = atol(TempStr);
+              _ALL_DTC_Add(Struct_Ready.Lost_DTC);break;
+            case 2:
+              Struct_Ready.Lost_Time = atol(TempStr);break;
+          }
+          Count++;
+          snprintf(TempStr,elCount(TempStr),"");
+          if(TempStrAll[j] == 93)
+          {
+            i=j; break;
+          }
+        }
+        else
+          snprintf(TempStr,elCount(TempStr),"%s%c",TempStr,TempStrAll[j]);
+      }
+    }
+  }
+}
+
+_Get_AngleSig()
+{
+  char TempStr[100];
+  snprintf(TempStr,elCount(TempStr),"");
+  getProfileString(ECU_project,"Tx_AngleSig","Null",TempStr, 100, file_name_1);
+  if((strncmp(TempStr,"nan",strlen(TempStr)) == 0 && strlen(TempStr) == 3)|| (strncmp(TempStr,"Null",strlen(TempStr)) == 0 && strlen(TempStr) == 4))
+  {
+    int Sw_temp;
+    Sw_temp = _Check_StrPossion_Res("Angle",1); //检测字符串是否在预期输入快照中位置
+    if(Sw_temp != -1)
+      snprintf(Tx_AngleSig,elCount(Tx_AngleSig),"%s",mixArray[Sw_temp].Sig_Name[0]);
+    else
+    {
+      writeEx(-3,0,"Angle 未查询到,后续测试角度信号检测不可信");
+    }
+  }
+  else
+    snprintf(Tx_AngleSig,elCount(Tx_AngleSig),"%s",TempStr);
+}
+
+void GetFunDID_Data(dword FunDID)
+{
+  char Temp_Value_1[1000];
+  char Temp_Value_Temp[50];
+  char StrData[100];
+  int i,j,m,Count,ValueCount;
+  snprintf(Temp_Value_1,elCount(Temp_Value_1),"");
+  snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"");
+  snprintf(StrData,elCount(StrData),"FunDID%04X",FunDID);
+  getProfileString(ECU_project,StrData,"Null",Temp_Value_1, 1000, file_name_1);
+  FunDID_Read_CCPGroupCount = 0;
+  for(i=0;i<strlen(Temp_Value_1);i++)
+  {
+    if(Temp_Value_1[i] == 40)
+    {
+      Count = 0; ValueCount = 0;
+      for(j=i+1;j<strlen(Temp_Value_1);j++)
+      {
+        if(Temp_Value_1[j] == 91)
+        {
+          for(m=j+1;m<strlen(Temp_Value_1);m++)
+          {
+            if(Temp_Value_1[m]==93 || Temp_Value_1[m]==44)
+            {
+              if(Count == 0)
+              {
+                KeepDigitsOnly(Temp_Value_Temp);
+                FunDID_Read_CCP[FunDID_Read_CCPGroupCount][FunDID_Read_CCPCount[FunDID_Read_CCPGroupCount]] = atol(Temp_Value_Temp);
+                FunDID_Read_CCPCount[FunDID_Read_CCPGroupCount]++;
+              }
+              else if(Count == 1)
+              {
+                FunDID_Read_Vaule[FunDID_Read_CCPGroupCount][ValueCount] = atol(Temp_Value_Temp);
+                ValueCount++;
+              }
+              else if(Count == 2)
+                FunDID_Read_TuningSet[FunDID_Read_CCPGroupCount] = atol(Temp_Value_Temp);
+              snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"");
+              if(Temp_Value_1[m]==93)
+              {
+                j = m; Count++;
+                break;
+              }
+            }
+            else
+              snprintf(Temp_Value_Temp,elCount(Temp_Value_Temp),"%s%c",Temp_Value_Temp,Temp_Value_1[m]);
+          }
+        }
+        if(Count>2)
+        {
+          i = j;break;
+        }
+      }
+    }
+    if(Temp_Value_1[i] == 41)
+      FunDID_Read_CCPGroupCount++;
+  }
+}
+
+/*
+    从VBF文件中获取数据
+*/
+void GetInforMationFromVBF()
+{
+  byte DataTemp[0x1000];//最小范围
+  qword result;
+  char TempForAdd[200];
+  char TempSave[200];
+  char FailePath1[300];
+  char FailePath2[300];
+  int i,j,Type;
+  int Flage_SWP1,Flage_SWP2;
+  int ChangeFlage;
+  Flage_SWP1 = 0;Flage_SWP2 = 0;ChangeFlage = 0;
+  //起始检测一次文件输入
+  {
+    sysGetVariableString(sysvar::DID::SWP1_Path,FailePath1,elCount(FailePath1));
+    if(strlen(FailePath1)>5)
+      Flage_SWP1 = 1;
+    sysGetVariableString(sysvar::DID::SWP2_Path,FailePath2,elCount(FailePath2));
+    if(strlen(FailePath2)>5)
+       Flage_SWP2 = 1;
+    if(Flage_SWP1 == 1 && Flage_SWP2 == 1 && FileInput_Type == 0) //文件存在且第一次读取则标志置为1
+      FileInput_Type = 1;
+    else if(Flage_SWP1 != 1 || Flage_SWP2 != 1) //文件不存在则标志置为 -1
+      FileInput_Type = -1;
+  }
+  if(FileInput_Type == -1) //文件不存在则标志为 -1 ，进行文件输入检测
+  {
+    diagStartTesterPresent(Cdd_Name);
+    openPanel("VBF文件输入");
+    writeEx(-3,0,"文件输入,注意选择非压缩文件,测试时发现软件内部填充为非压缩vbf文件内容");
+    for(Type = 0;Type<100;Type++)
+    {
+      testWaitForTimeout(1000);
+      sysGetVariableString(sysvar::DID::SWP1_Path,FailePath1,elCount(FailePath1));
+      if(strlen(FailePath1)>5)
+        Flage_SWP1 = 1;
+      sysGetVariableString(sysvar::DID::SWP2_Path,FailePath2,elCount(FailePath2));
+      if(strlen(FailePath2)>5)
+        Flage_SWP2 = 1;
+      if(Flage_SWP1 == 1 && Flage_SWP2 == 1)
+      {
+        FileInput_Type = 1;
+        break;
+      }
+    }
+    if(Type>=100)
+    {
+      StopForVBFTest = 1; //用于停止测试标志
+      _WriteEx_and_Report("","未获取到文件输入,后续测试关闭");
+      return;
+    }
+    closePanel("VBF文件输入");
+    diagStopTesterPresent(Cdd_Name);
+    if(strlen(SWP1_Path) == 0)
+      sysGetVariableString(sysvar::DID::SWP1_Path,SWP1_Path,elCount(SWP1_Path));
+    if(strlen(SWP2_Path) == 0)
+      sysGetVariableString(sysvar::DID::SWP2_Path,SWP2_Path,elCount(SWP2_Path));
+  }
+//  writeEx(-3,0,"SWP1存储 %s",SWP1_Path);
+//  writeEx(-3,0,"SWP2存储 %s",SWP2_Path);
+//  writeEx(-3,0,"SWP1获取 %s",FailePath1);
+//  writeEx(-3,0,"SWP2获取 %s",FailePath2);
+  if(strncmp(FailePath1,SWP1_Path,strlen(FailePath1)) != 0  || strncmp(FailePath2,SWP2_Path,strlen(FailePath2)) != 0)
+  {
+    ChangeFlage = 1;
+//    writeEx(-3,0,"文件输入地址变更或用例重新执行");//全局变量在单独执行用例时会被清除
+  }
+  if(FileInput_Type == 1 || ChangeFlage == 1) //文件已输入进行数据获取
+  {
+    char FailePath[300];
+    sysGetVariableString(sysvar::DID::SWP1_Path,SWP1_Path,elCount(SWP1_Path));
+    sysGetVariableString(sysvar::DID::SWP2_Path,SWP2_Path,elCount(SWP2_Path));
+    StopForVBFTest = 0;
+    FileInput_Type++; //自增使下一次不在重新获取
+    for(Type = 0;Type<2;Type++)
+    {
+      if(Type == 0)
+        sysGetVariableString(sysvar::DID::SWP1_Path,FailePath,elCount(FailePath));
+      else
+        sysGetVariableString(sysvar::DID::SWP2_Path,FailePath,elCount(FailePath));
+      snprintf(TempForAdd,elCount(TempForAdd),"%s","");
+      snprintf(TempSave,elCount(TempSave),"%s","");
+      GlbHandlefile = OpenFileRead(FailePath,1);
+      if(GlbHandlefile == -1)
+      {
+        _WriteEx_and_Report("","打开文件错误");
+        return;
+      }
+      result = fileGetBinaryBlock (DataTemp, elCount(DataTemp),GlbHandlefile);
+      fileClose(GlbHandlefile);
+      IndexVBF=Hexandchar_strstr(DataTemp,0,"verification_block_start = 0x");
+      Index_VBF_7D=Hexandchar_strstr(DataTemp,IndexVBF,"}")-1;
+      for(i = 0; i < 255; i++) //取前255个数据
+        Struct_VBF_Addr[Type].DataSave[i] = DataTemp[i+Index_VBF_7D+9];
+      Struct_VBF_Addr[Type].BlockCount = 0;
+      IndexVBF=Hexandchar_strstr(DataTemp,0,"erase = {{");
+      Index_VBF_7D=Hexandchar_strstr(DataTemp,IndexVBF,"}};");
+      if(IndexVBF <= 1)
+      {
+        _WriteEx_and_Report("","读取数据异常");
+        return;
+      }
+      for(i=IndexVBF-1;i<Index_VBF_7D;i++)
+        snprintf(TempForAdd,elCount(TempForAdd),"%s%c",TempForAdd,DataTemp[i]);
+      for(i=0;i<strlen(TempForAdd);i++)
+      {
+        if(TempForAdd[i] == 123)
+        {
+          for(j=i+1;j<strlen(TempForAdd);j++)
+          {
+            if(TempForAdd[j] == 44 || TempForAdd[j] == 125)
+            {
+              strtoul(TempSave,Struct_VBF_Addr[Type].StartAddr[Struct_VBF_Addr[Type].BlockCount]);
+              Struct_VBF_Addr[Type].BlockCount++;
+              snprintf(TempSave,elCount(TempSave),"%s","");
+              i = j;
+              break;
+            }
+            else
+              snprintf(TempSave,elCount(TempSave),"%s%c",TempSave,TempForAdd[j]);
+          }
+        }
+      }
+    }
+  }
+}
+
+/*
+    根据输入的Testcase Title来修改寻址以及会话
+*/
+dword GetInformationFromTitle()
+{
+  char Title[400],TempForTitle[100],Sevre_Str[10];
+  dword ReturnData ;
+  int Title_Index,Count;
+  long Offset;
+  {
+    Count = 0;
+    Offset = 0;
+    getProfileString("Project_Information", "ECU_project","Null",ECU_project, 200, file_name_1);  
+    @sysvar::DID::funreq_ID=getProfileInt (ECU_project, "funreq_ID",0,file_name_1);
+    funreq_ID = @sysvar::DID::funreq_ID;
+    @sysvar::DID::phyreq_ID=getProfileInt (ECU_project, "phyreq_ID",0,file_name_1);
+    phyreq_ID = @sysvar::DID::phyreq_ID;
+    @sysvar::DID::Response_ID=getProfileInt (ECU_project, "Response_ID",0,file_name_1);
+    Response_ID = @sysvar::DID::Response_ID;
+    
+    testGetCurrentTestCaseTitle(Title,400);
+    snprintf(TempForTitle,elcount(TempForTitle),"");
+    snprintf(Sevre_Str,elcount(Sevre_Str),"0x");
+    Offset = strstr(Title,"_");
+    snprintf(TempForTitle,Offset+2+4,"%s",Title); //汉字占用两字节
+    //writeEx(-3,0,"%s",TempForTitle);
+    if(strstr(TempForTitle,"物理")!= -1)
+      ID_From_Title = phyreq_ID;
+    else
+      ID_From_Title = funreq_ID;
+    if(strstr(TempForTitle,"默认")!= -1)
+      Session_From_Title = defsession;
+    else
+      Session_From_Title = exsession;
+    for(Count=3;Count<5;Count++)
+      snprintf(Sevre_Str,elcount(Sevre_Str),"%s%c",Sevre_Str,TempForTitle[Count]);
+    Serve_Form_Title = atol(Sevre_Str);
+    //writeEx(-3,0,"%X , %d , %X",ID_From_Title,Session_From_Title,Serve_Form_Title);
+    snprintf(TempForTitle,elcount(TempForTitle),"");
+    Offset = strstr(Title,"_");
+    SubString(Title,TempForTitle,Offset+1,4);
+    snprintf(TempForTitle,elcount(TempForTitle),"0x%s",TempForTitle);
+    DID_From_Title = atol(TempForTitle);
+    
+    snprintf(TempForTitle,elcount(TempForTitle),"");
+    Offset = strstr(Title,"(");
+    SubString(Title,TempForTitle,Offset+1,4);
+    snprintf(TempForTitle,elcount(TempForTitle),"0x%s",TempForTitle);
+    ReturnData = atol(TempForTitle);
+  }
+  return ReturnData;
+}

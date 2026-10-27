@@ -1,0 +1,2013 @@
+/*@!Encoding:936*/
+includes
+{
+  #include "CCP_Change.cin"
+}
+
+variables
+{
+  message * CCPMsg={dlc=8};   //CCP装载MSG
+  
+  byte Value_All[1000][255];//装载全部有效数据
+  
+  dword Send_Invaild_CCP[500][2]; // 装载无效CCP以及无效值 例Send_Invaild_CCP[0][0]为无效CCP号 Send_Invaild_CCP[0][1]为无效值
+  dword Send_Invaild_CCP_Count; // 装载无效CCP个数
+  
+  dword Send_Invaild_CCP_Plural[500][2]; // 装载复数个无效CCP
+  dword Send_Invaild_CCP_Plural_Count; // 装载无效CCP个数
+  
+  dword Send_Vaild_CCP_Plural[500][2]; // 装载复数个有效CCP
+  dword Send_Vaild_CCP_Plural_Count; // 装载有效CCP个数
+  
+  byte Max_Invaild_CCP_Count = 10;
+  
+  int CCP_Error_ID;
+  
+  int Off_Set_CCP,Off_Set_ExtCCP;
+  int Max_Frame,Invaid_CCP_UB,Invaid_ExtCCP_UB;
+  int Send_CCP_Count,Send_ExtCCP_Count;
+  
+  byte Blockid[2][50];     //装载发送CCP的byte0
+  int     Blocksize[2];     //装载发送的Msg数量
+  char Str_OutPut_InValidCCP[500];
+  
+  const UB_FlagePos = 24;
+}
+
+setLogFile(char name[],char path[])
+{ 
+  char logpath[500];
+  
+  snprintf(logpath,elCount(logpath),"%s%s",path,name);
+  setLogFileName(logpath);  
+//  snprintf(logpath,elCount(logpath),".\\Logging\\%s",name);
+//  testReportFileName(logpath);
+  startLogging();   
+}
+
+CCP_ValidList(word ccpid)
+{
+  int i,j;
+  dword DTC_CCP[5];
+  char name[200];
+  snprintf(name,elCount(name),"CCP%d_ValidList",ccpid);
+  setLogFile(name,".\\Logging\\CCP_有效值\\");
+  testWaitForTimeout(500);
+
+  DTC_CCP[0] = 0xE30055;
+  DTC_CCP[1] = 0xE30056;
+  _Clear_CCP_Config();
+  
+  for(i=0;i<CCPlen(ccpid);i++)
+  { 
+    writeEx(-3,0,"当前测试CCP%d有效值为0x%02X",ccpid,ValidValue(ccpid,i));
+    teststep("CCP有效值测试","当前测试CCP%d有效值为0x%02X",ccpid,ValidValue(ccpid,i));
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(20000);
+    sendccp(ccpid,ValidValue(ccpid,i));
+    testWaitForTimeout(CCP_Time-20000); 
+    E103(0,i+1,ValidValue(ccpid,i));
+    _Check_DTC_Res_NowOrHis(9,1,1,DTC_CCP);
+  }
+  stopLogging();
+}
+
+CCP_InValidList(word ccpid)
+{
+  int i;
+  char name[200];
+  byte Invalid_;
+  int InValidCount;
+  int Error_Count;
+  snprintf(name,elCount(name),"CCP%d_InValidList",ccpid);
+  setLogFile(name,".\\Logging\\CCP_无效值\\");
+  testWaitForTimeout(500);
+
+  _Clear_CCP_Config();
+  InValidCount = 0;
+  for(i=0;i<(256-CCPlen(ccpid));i++)
+  { 
+    Invalid_ = InValidValue(ccpid,i);
+    writeEx(-3,0,"当前测试CCP%d无效值为0x%02X",ccpid,Invalid_);
+    teststep("CCP有效值测试","当前测试CCP%d无效值为0x%02X",ccpid,Invalid_);
+    _Set_Ready(0);
+    testWaitForTimeout(1000);
+    _Set_Ready(Struct_Ready.Ready_Active);
+    testWaitForTimeout(24000);    
+
+    sendccp(ccpid,Invalid_);
+    testWaitForTimeout(CCP_Time-24000); 
+    if(CCP_Stepping == 0)
+      InValidCount = 1;
+    else
+      InValidCount += 1;
+    Error_Count = E103(ccpid,InValidCount,Invalid_);
+    if(Error_Count == -1 && CCP_Error_ID == 0) //程序出错处理，错误的将无效值当做有效值导致错误计数被清除，重新开始叠加
+      InValidCount = 0;
+    _Check_DTC_InNow_NotInNowAndHis(9,0xE30056,0xE30055);
+  }
+  stopLogging();
+}
+/*
+  发送CCP报文
+  Type == 0：正常发送全部有效值
+  Type == 1：缺失部分Msg信号，未获取完整信号(当前仅在CCP<=504中生效)
+  Type == 2：所有CCP均发送无效值
+  Type == 3：某个CCP无效
+  Type == 4：发送过程中断电
+  Type == 5：发送过程中高压
+  Type == 6：发送过程中低压
+  Type == 0x08：CCP发送全0x00
+  Type == 0x09：CCP发送全0xFF
+  Type == 0x0A：CCP发送全0xAA
+  Type == 0x82：所有CCP均发送无效值但不清除无效计数,测试无效CCP累加最大值
+  Type == 0x14：无效发送过程中断电
+  Type == 0x15：无效发送过程中高压
+  Type == 0x16：无效发送过程中低压
+  Type == 0x88：CCP发送全0x00,但不清除无效CCP计数
+  Type == 0x89：CCP发送全0xFF,但不清除无效CCP计数
+  Type == 0x8A：CCP发送全0xAA,但不清除无效CCP计数
+*/
+Sendccp(byte Type)
+{
+  int i,j;
+  byte CCP_Pos_;
+  byte Lost_Msg_ID;
+  dword Invalid_CCP_ID;
+  int Flage;
+  byte Invaild_Va;
+  byte Invaild_VaTemp;
+  if((Type&0x80) != 0x80)
+    Send_Invaild_CCP_Count = 0;
+  
+  Init_For_BlockID();
+  if(Type == 1 || (Type&0x0F) == 4 || (Type&0x0F) == 5 || (Type&0x0F) == 6)
+  {
+    do{
+      Lost_Msg_ID = random(256);
+    }while((Lost_Msg_ID <=1 ) || (_Check_Dword_in_Num(Lost_Msg_ID,Blockid[0],Blocksize[0]) == -1));
+  }
+  else if(Type == 3)
+  {
+    do{
+      Invalid_CCP_ID = random(ccpNums[elCount(ccpNums)-1]+1);
+    }while(_Check_Dword_in_Num(Invalid_CCP_ID,ccpNums,ccpNumscount) == -1);
+  }
+  else if((Type&0x0F) == 0x08)
+    Invaild_Va = 0x00;
+  else if((Type&0x0F) == 0x09)
+    Invaild_Va = 0xFF;
+  else if((Type&0x0F) == 0x0A)
+    Invaild_Va = 0xAA;
+  
+  if((Type&0x0F) == 5 ) // 实现发送过程中高压
+  {
+    int Time;
+    Time = _Set_Battery(19);
+    if(Time == 0)
+      testWaitForTimeout(H_Battery_Time*1.1);
+  }
+  else if((Type&0x0F) == 6) // 实现发送过程中低压
+  {
+    int Time;
+    Time = _Set_Battery(7);
+    if(Time == 0)
+      testWaitForTimeout(L_Battery_Time*1.1);
+  }
+  
+  if(Geely_Architecture == 4 )
+  {
+    Send_CCP_Count = 0; Send_ExtCCP_Count = 0;
+    Max_Frame = _max(Blocksize[0],Blocksize[1]);
+    CCPMsg.byte(UB_FlagePos) = 0xC0;  //将UB位置设置为有效 
+    for(i=0;i<Max_Frame;i++)
+    {
+      initCCP();
+      if(Send_CCP_Count<Blocksize[0])
+      {
+        OutPut_CCP_Specify(0,Type,Blockid[0][i],Lost_Msg_ID,Invalid_CCP_ID,Invaild_Va);
+        Send_CCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0x7F;
+      
+      if(Send_ExtCCP_Count<Blocksize[1])
+      {
+        OutPut_CCP_Specify(1,Type,Blockid[1][i],Lost_Msg_ID,Invalid_CCP_ID,Invaild_Va);
+        Send_ExtCCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0xBF;
+      
+      if((Type == 1) && (CCPMsg.byte(0 + Off_Set_CCP) == Lost_Msg_ID)) // 实现不发送完整的VCP信号
+      {
+        _WriteEx_and_Report("","缺失BlockID为0x%02X的Msg",Lost_Msg_ID);
+        continue;
+      }
+      else if(((Type&0x0F) == 4) && (CCPMsg.byte(0 + Off_Set_CCP) == Lost_Msg_ID)) // 实现发送过程中断电
+      {
+        _K30_OFF();
+        testWaitForTimeout(1000);
+      }
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+    if(Type == 2)
+      _Sort_InPut_Arry(Send_Invaild_CCP,Send_Invaild_CCP_Count,elcount(Send_Invaild_CCP));
+  }
+  else
+  {
+    for(i=0;i<Blocksize[0];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x250;
+      OutPut_CCP_Specify(0,Type,Blockid[0][i],Lost_Msg_ID,Invalid_CCP_ID,Invaild_Va);
+      if((Type == 1) && (CCPMsg.byte(0) == Lost_Msg_ID)) // 实现不发送完整的VCP信号
+      {
+        _WriteEx_and_Report("","缺失BlockID为0x%02X的Msg",Lost_Msg_ID);
+        continue;
+      }
+      else if(((Type&0x0F) == 4) && (CCPMsg.byte(0) == Lost_Msg_ID)) // 实现发送过程中断电
+      {
+        _K30_OFF();
+        testWaitForTimeout(1000);
+      }
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+    for(i=0;i<Blocksize[1];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x3F7;
+      OutPut_CCP_Specify(1,Type,Blockid[1][i],Lost_Msg_ID,Invalid_CCP_ID,Invaild_Va);
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+  }
+  if((Type&0x0F) == 4) // 实现发送过程中断电恢复
+  {
+    _K30_ON();
+    testWaitForTimeout(1000);
+  }  
+  else if(((Type&0x0F) == 5) || ((Type&0x0F) == 6)) // 实现发送过程中电压恢复
+    _Set_Battery(12);
+}
+
+/*
+    指定CCP_ID数组进行丢失或无效
+    CCP_Set[0]：装载丢失CCP号
+    CCP_Set[1]：装载无效CCP号
+    Lost_Len：共丢失CCP个数
+    Invalid_Len：共无效CCP个数
+    Type = 0：无效值均采用随机值
+    Type = 1：无效值使用Invalid_Set值
+*/
+Sendccp(dword CCP_Set[][],byte Lost_Len,byte Invalid_Len,byte Type,dword Invalid_Set[])
+{
+  int i,j,n;
+  byte CCP_Pos_;
+  dword Invaild_Va;
+  int Flage_Send;
+  
+  Send_Invaild_CCP_Count = 0;
+  Init_For_BlockID();
+  if(Geely_Architecture == 4)
+  {
+    Send_CCP_Count = 0; Send_ExtCCP_Count = 0;
+    Max_Frame = _max(Blocksize[0],Blocksize[1]);
+    CCPMsg.byte(UB_FlagePos) = 0xC0;  //将UB位置设置为有效 
+    for(i=0;i<Max_Frame;i++)
+    {
+      initCCP();
+      Flage_Send = 1;
+      if(Send_CCP_Count<Blocksize[0])
+      {
+        CCPMsg.byte(0 + Off_Set_CCP)= Blockid[0][i];
+        for(j=0;j<ccpNumscount;j++)
+        { 
+          if((Blockid[0][i]==(int)((ccpNums[j] + 6) / 7)) && (ccpNums[j]<=504))
+          {
+            CCP_Pos_ = (ccpNums[j] - (((int)((ccpNums[j] + 6) / 7)) * 7 - 6) + 1) + Off_Set_CCP;
+            CCPMsg.byte(CCP_Pos_) = defaultValue(ccpNums[j]);
+            for(n=0;n<Invalid_Len;n++)
+            {
+              if(ccpNums[j] == CCP_Set[1][n])
+              {
+                Invaild_Va = (Type == 0) ? InValid_Value(ccpNums[j]) : Invalid_Set[n];
+                CCPMsg.byte(CCP_Pos_) = Invaild_Va;
+                if(_Check_Dword_in_Num(Invaild_Va,Value_All[ccpNums[j]],CCPlen(ccpNums[j]))== -1)
+                {
+                  writeEx(-3,0,"无效CCP_%d为BlockID：%d的Byte_%d,无效值为0x%02X",ccpNums[j],Blockid[0][i],CCP_Pos_,Invaild_Va);
+                  Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+                  Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+                  Send_Invaild_CCP_Count++;
+                }
+              }
+            }
+          }
+        }
+        Send_CCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0x7F; 
+      
+      if(Send_ExtCCP_Count<Blocksize[1])
+      {
+        CCPMsg.byte(0 + Off_Set_ExtCCP)= Blockid[1][i];
+        for(j=0;j<ccpNumscount;j++)
+        { 
+          if((Blockid[1][i]==(int)((ccpNums[j] - 504 + 6) / 7)) && (ccpNums[j]>504))
+          {
+            CCP_Pos_ = (ccpNums[j] -504- (((int)((ccpNums[j] - 504 + 6) / 7)) * 7 - 6) + 1) + Off_Set_ExtCCP;
+            CCPMsg.byte(CCP_Pos_) = defaultValue(ccpNums[j]);
+            for(n=0;n<Invalid_Len;n++)
+            {
+              if(ccpNums[j] == CCP_Set[1][n])
+              {
+                Invaild_Va = (Type == 0) ? InValid_Value(ccpNums[j]) : Invalid_Set[n];
+                CCPMsg.byte(CCP_Pos_) = Invaild_Va;
+                if(_Check_Dword_in_Num(Invaild_Va,Value_All[ccpNums[j]],CCPlen(ccpNums[j]))== -1)
+                {
+                  writeEx(-3,0,"无效CCP_%d为BlockID：%d的Byte_%d,无效值为0x%02X",ccpNums[j],Blockid[0][i],CCP_Pos_,Invaild_Va);
+                  Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+                  Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+                  Send_Invaild_CCP_Count++;
+                }
+              }
+            }
+          }
+        }
+        Send_ExtCCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0xBF; 
+      
+      for(j=0;j<Lost_Len;j++)
+      {
+        int CCP_Calculate;
+        if(CCP_Set[0][j] <= 504)
+        {
+          CCP_Calculate  = (int)((CCP_Set[0][j] + 6) / 7);
+          if(Blockid[0][i] == CCP_Calculate)
+          {
+            Flage_Send = 0;
+            _WriteEx_and_Report("","缺失BlockID为0x%02X的Msg",CCP_Calculate);
+            break;
+          }
+        }
+        else if(CCP_Set[0][j] > 504)
+        {
+          CCP_Calculate  = (int)((CCP_Set[0][j] - 504 + 6) / 7);
+          if(Blockid[1][i] == CCP_Calculate)
+          {
+            Flage_Send = 0;
+            _WriteEx_and_Report("","缺失BlockID为0x%02X的Msg",CCP_Calculate);
+            break;
+          }
+        }
+      }
+      if(Flage_Send == 1)
+      {
+        output(CCPMsg);
+        testWaitForTimeout(125);
+      }
+      else
+        testWaitForTimeout(20);
+    }
+  }
+  else
+  {
+    for(i=0;i<Blocksize[0];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x250;
+      CCPMsg.byte(0)= Blockid[0][i];
+      Flage_Send = 1;
+      for(j=0;j<ccpNumscount;j++)
+      { 
+        if((Blockid[0][i]==(int)((ccpNums[j] + 6) / 7)) && (ccpNums[j]<=504))
+        {
+          CCP_Pos_ = (ccpNums[j] - (((int)((ccpNums[j] + 6) / 7)) * 7 - 6) + 1) + Off_Set_CCP;
+          CCPMsg.byte(CCP_Pos_) = defaultValue(ccpNums[j]);
+          for(n=0;n<Invalid_Len;n++)
+          {
+            if(ccpNums[j] == CCP_Set[1][n])
+            {
+              Invaild_Va = (Type == 0) ? InValid_Value(ccpNums[j]) : Invalid_Set[n];
+              
+              CCPMsg.byte(CCP_Pos_) = Invaild_Va;
+              if(_Check_Dword_in_Num(Invaild_Va,Value_All[ccpNums[j]],CCPlen(ccpNums[j]))== -1)
+              {
+                writeEx(-3,0,"无效CCP_%d为BlockID：%d的Byte_%d,无效值为0x%02X",ccpNums[j],Blockid[0][i],CCP_Pos_,Invaild_Va);
+                Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+                Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+                Send_Invaild_CCP_Count++;
+              }
+            }
+          }
+        }
+      }
+      for(j=0;j<Lost_Len;j++)
+      {
+        int CCP_Calculate;
+        if(CCP_Set[0][j] <= 504)
+        {
+          CCP_Calculate  = (int)((CCP_Set[0][j] + 6) / 7);
+          if(Blockid[0][i] == CCP_Calculate)
+          {
+            Flage_Send = 0;
+            _WriteEx_and_Report("","缺失BlockID为0x%02X的Msg",CCP_Calculate);
+            break;
+          }
+        }
+      }
+      if(Flage_Send == 1)
+      {
+        output(CCPMsg);
+        testWaitForTimeout(125);
+      }
+      else
+        testWaitForTimeout(20);
+    }
+    for(i=0;i<Blocksize[1];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x3F7;
+      CCPMsg.byte(0)= Blockid[1][i];
+      for(j=0;j<ccpNumscount;j++)
+      { 
+        if((Blockid[1][i]==(int)((ccpNums[j] - 504 + 6) / 7)) && (ccpNums[j]>504))
+        {
+          CCP_Pos_ = (ccpNums[j] -504- (((int)((ccpNums[j] - 504 + 6) / 7)) * 7 - 6) + 1) + Off_Set_ExtCCP;
+          CCPMsg.byte(CCP_Pos_) = defaultValue(ccpNums[j]);
+          for(n=0;n<Invalid_Len;n++)
+          {
+            if(ccpNums[j] == CCP_Set[1][n])
+            {
+              Invaild_Va = (Type == 0) ? InValid_Value(ccpNums[j]) : Invalid_Set[n];
+              CCPMsg.byte(CCP_Pos_) = Invaild_Va;
+              if(_Check_Dword_in_Num(Invaild_Va,Value_All[ccpNums[j]],CCPlen(ccpNums[j]))== -1)
+              {
+                writeEx(-3,0,"无效CCP_%d为BlockID：%d的Byte_%d,无效值为0x%02X",ccpNums[j],Blockid[0][i],CCP_Pos_,Invaild_Va);
+                Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+                Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+                Send_Invaild_CCP_Count++;
+              }
+            }
+          }
+        }
+      }
+      for(j=0;j<Lost_Len;j++)
+      {
+        int CCP_Calculate;
+        if(CCP_Set[0][j] > 504)
+        {
+          CCP_Calculate  = (int)((CCP_Set[0][j]-504 + 6) / 7);
+          if(Blockid[0][i] == CCP_Calculate)
+          {
+            Flage_Send = 0;
+            _WriteEx_and_Report("","缺失BlockID为0x%02X的Msg",CCP_Calculate);
+            break;
+          }
+        }
+      }
+      if(Flage_Send == 1)
+      {
+        output(CCPMsg);
+        testWaitForTimeout(125);
+      }
+      else
+        testWaitForTimeout(20);
+    }
+  }
+}
+
+/*
+    指定CCP_ID发送指定值
+*/
+Sendccp(word CCPid,byte Value)
+{
+  int i,j;
+  
+  Init_For_BlockID();
+  
+  Send_CCP_Count = 0; Send_ExtCCP_Count = 0;
+  if(Geely_Architecture == 4)
+  {
+    Max_Frame = _max(Blocksize[0],Blocksize[1]);
+    CCPMsg.byte(UB_FlagePos) = 0xC0;  //将UB位置设置为有效 
+    for(i=0;i<Max_Frame;i++)
+    {
+      initCCP();
+      if(Send_CCP_Count<Blocksize[0])
+      {
+        OutPut_CCP_Specify(0,Blockid,i,CCPid,Value);
+        Send_CCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0x7F; 
+      
+      if(Send_ExtCCP_Count<Blocksize[1])
+      {
+        OutPut_CCP_Specify(1,Blockid,i,CCPid,Value);
+        Send_ExtCCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0xBF; 
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+  }
+  else
+  {
+    for(i=0;i<Blocksize[0];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x250;
+      OutPut_CCP_Specify(0,Blockid,i,CCPid,Value);
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+    for(i=0;i<Blocksize[1];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x3F7;
+      OutPut_CCP_Specify(1,Blockid,i,CCPid,Value);
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+  }
+}
+
+/*
+    指定CCP_ID范围发送指定值
+*/
+Sendccp(dword CCPid[],byte Value[],int Len)
+{
+  int i,j;
+  Init_For_BlockID();
+  Send_CCP_Count = 0; Send_ExtCCP_Count = 0;
+  if(Geely_Architecture == 4)
+  {
+    Max_Frame = _max(Blocksize[0],Blocksize[1]);
+    CCPMsg.byte(UB_FlagePos) = 0xC0;  //将UB位置设置为有效 
+    for(i=0;i<Max_Frame;i++)
+    {
+      initCCP();
+      if(Send_CCP_Count<Blocksize[0])
+      {
+        OutPut_CCP_Specify(0,Blockid,i,CCPid,Value,Len);
+        Send_CCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0x7F; 
+      
+      if(Send_ExtCCP_Count<Blocksize[1])
+      {
+        OutPut_CCP_Specify(1,Blockid,i,CCPid,Value,Len);
+        Send_ExtCCP_Count++;
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0xBF; 
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+  }
+  else
+  {
+    for(i=0;i<Blocksize[0];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x250;
+      OutPut_CCP_Specify(0,Blockid,i,CCPid,Value,Len);
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+    for(i=0;i<Blocksize[1];i++)
+    { 
+      initCCP();
+      CCPMsg.id=0x3F7;
+      OutPut_CCP_Specify(1,Blockid,i,CCPid,Value,Len);
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+  }
+}
+
+/*
+    乱序发送全部CCP
+    Type == 0：乱序发送默认值
+    Type == 1：发送无效值
+    Type == 2：发送无效值(仅10个，且0x250/0x3F7中均存在部分)
+    Type == 3：发送无效值(大于10个，且0x250/0x3F7中均存在部分)
+*/
+SendccpRandom(byte Type)
+{
+  int i;
+  dword Save_Msg[100][2];   //[byte0,MsgID]
+  dword OutPut_Msg[100][2]; //[byte0,MsgID]
+  byte BlocksizeCCP[30],BlocksizeExtCCP[30];
+  byte All_Len;
+  int All_Count,Count_250,Count_3F7,min_0x3F7;
+  int Random_Count,All_Count_250,All_Count_3F7;
+  dword InValid_CCP_ExSend[30];
+  
+  snprintf(Str_OutPut_InValidCCP,elCount(Str_OutPut_InValidCCP),"无效CCP数据:");
+  Init_For_BlockID();
+  All_Len = 0;
+  for(i=0;i<Blocksize[0];i++)
+  {
+    Save_Msg[i][0] = Blockid[0][i];
+    Save_Msg[i][1] = 0x250;
+    All_Len++;
+  }
+  for(i=0;i<Blocksize[1];i++)
+  {
+    Save_Msg[Blocksize[0] + i][0] = Blockid[1][i];
+    Save_Msg[Blocksize[0] + i][1] = 0x3F7;
+    All_Len++;
+  }//装载全部数据的byte0以及ID
+  if(Type == 2 || Type == 3)
+  {
+    if(Type == 2)
+      All_Count = Max_Invaild_CCP_Count;
+    else if(Type == 3)
+    {
+      do{
+        All_Count = random(ccpNumscount);
+      }while(All_Count<Max_Invaild_CCP_Count+2 || All_Count>(ccpNumscount-3));
+    }
+    Random_Count = 0;
+    All_Count_250 = 0;
+    All_Count_3F7 = 0;
+    min_0x3F7 = Blocksize[1];
+    if(min_0x3F7>2)
+      min_0x3F7 = 2;
+    for(i=0;i<ccpNumscount;i++)
+    {
+      if(ccpNums[i]<504)
+        All_Count_250++;
+      else
+        All_Count_3F7++;
+    }
+    do{
+      Count_250 = random(All_Count_250);
+      Count_3F7 = All_Count - Count_250;
+    }while(Count_3F7 < min_0x3F7 || Count_3F7 > Blocksize[1]);
+    writeEx(-3,0,"当前无效ID为0x250的CCP个数为%d,0x3F7无效个数为%d",Count_250,Count_3F7);
+    teststep("","当前无效ID为0x250的CCP个数为%d,0x3F7无效个数为%d",Count_250,Count_3F7);
+    for(i=0;i<Count_250;i++)
+    {
+      do{
+        InValid_CCP_ExSend[Random_Count] = ccpNums[random(All_Count_250)];
+      }while(_Check_Dword_in_Num(InValid_CCP_ExSend[Random_Count],InValid_CCP_ExSend,Random_Count) != -1);
+      Random_Count++;
+    }
+    for(i=0;i<Count_3F7;i++)
+    {
+      int Num;
+      do{
+        Num = random(ccpNumscount);
+        InValid_CCP_ExSend[Random_Count] = ccpNums[Num];
+      }while(_Check_Dword_in_Num(InValid_CCP_ExSend[Random_Count],InValid_CCP_ExSend,Random_Count) != -1 || Num<All_Count_250);
+      Random_Count++;
+    }
+  }
+  if(Geely_Architecture == 4)
+  {
+    Max_Frame = _max(Blocksize[0],Blocksize[1]);
+    _Shuffle_And_Load_Msg(Max_Frame,Blockid[0],BlocksizeCCP);
+    _Shuffle_And_Load_Msg(Max_Frame,Blockid[1],BlocksizeExtCCP);
+    Send_CCP_Count = 0; Send_ExtCCP_Count = 0;
+    CCPMsg.byte(UB_FlagePos) = 0xC0;  //将UB位置设置为有效 
+    for(i=0;i<Max_Frame;i++)
+    {
+      initCCP();
+      if(Send_CCP_Count<Blocksize[0] && (BlocksizeCCP[i] != 0))
+      {
+        CCPMsg.byte(0 + Off_Set_CCP) = BlocksizeCCP[i];
+        OutPut_CCP_Specify(0,Type,BlocksizeCCP[i],InValid_CCP_ExSend,Random_Count);
+        Send_CCP_Count++;
+        CCPMsg.byte(UB_FlagePos) |= 0x80; 
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0x7F; 
+      
+      if(Send_ExtCCP_Count<Blocksize[1] && (BlocksizeExtCCP[i] != 0))
+      {
+        CCPMsg.byte(0 + Off_Set_ExtCCP) = BlocksizeExtCCP[i];
+        OutPut_CCP_Specify(1,Type,BlocksizeExtCCP[i],InValid_CCP_ExSend,Random_Count);
+        Send_ExtCCP_Count++;
+        CCPMsg.byte(UB_FlagePos) |= 0x40; 
+      }
+      else
+        CCPMsg.byte(UB_FlagePos) &= 0xBF; 
+      
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+  }
+  else
+  {
+    _Shuffle_And_Load_Msg(All_Len,Save_Msg,OutPut_Msg);
+    for(i=0;i<All_Len;i++)
+    {
+      initCCP();
+      CCPMsg.id=OutPut_Msg[i][1];
+      CCPMsg.byte(0)= OutPut_Msg[i][0];
+      if(OutPut_Msg[i][1] == 0x250)
+        OutPut_CCP_Specify(0,Type,OutPut_Msg[i][0],InValid_CCP_ExSend,Random_Count);
+      else
+        OutPut_CCP_Specify(1,Type,OutPut_Msg[i][0],InValid_CCP_ExSend,Random_Count);
+      output(CCPMsg);
+      testWaitForTimeout(125);
+    }
+  }
+  if(Type == 2 || Type == 3)
+  {
+    writeEx(-3,0,"%s",Str_OutPut_InValidCCP);
+    testStep("",Str_OutPut_InValidCCP);
+  }
+}
+
+/*
+    获取对应CCP的默认值
+*/
+byte defaultValue(word ccpNum)
+{
+  byte value;
+  int ii ;
+  for(ii=0;ii<elcount(defaultValue[0]);ii++)
+  { 
+    if(ccpNum==defaultValue[0][ii])
+    {
+      value=defaultValue[1][ii];
+      break;
+    }
+  }
+  return value;
+}
+/*
+    获取对应CCP的随机无效值
+*/
+byte InValid_Value(word ccpNum)
+{
+  
+  byte value;
+  do{
+    value = random(0xFF+1);
+  }while(_Check_Dword_in_Num(value,Value_All[ccpNum],CCPlen(ccpNum))!= -1);
+  
+  return value;
+}
+
+SetdefaultValue(word ccpNum[][])
+{
+  int i,ii ;
+  for(i=0;i<elcount(ccpNum);i++)
+  {
+    for(ii=0;ii<elcount(defaultValue[0]);ii++)
+    {
+      if(ccpNum[i][0]==defaultValue[0][ii])
+      {
+         defaultValue[1][ii]=ccpNum[i][1];
+        break;
+      }
+    }
+  }
+}
+
+
+byte InValidValue(word ccpNum,int len)
+{
+  byte CCPvalue;
+  int i,j;
+  int found,found1;
+  found=0;
+  switch(ccpNum)
+  {
+     case 1:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value1);j++)
+        { 
+          if(i==value1[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 3:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value3);j++)
+        { 
+          if(i==value3[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 13:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value13);j++)
+        { 
+          if(i==value13[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 16:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value16);j++)
+        { 
+          if(i==value16[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 17:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value17);j++)
+        { 
+          if(i==value17[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 50:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value50);j++)
+        { 
+          if(i==value50[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 57:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value57);j++)
+        { 
+          if(i==value57[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 58:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value58);j++)
+        { 
+          if(i==value58[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 62:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value62);j++)
+        { 
+          if(i==value62[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 100:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value100);j++)
+        { 
+          if(i==value100[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 142:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value142);j++)
+        { 
+          if(i==value142[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 150:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value150);j++)
+        { 
+          if(i==value150[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 316:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value316);j++)
+        { 
+          if(i==value316[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 317:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value317);j++)
+        { 
+          if(i==value317[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 494:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value494);j++)
+        { 
+          if(i==value494[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 540:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value540);j++)
+        { 
+          if(i==value540[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 547:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value547);j++)
+        { 
+          if(i==value547[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 565:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value565);j++)
+        { 
+          if(i==value565[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 566:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value566);j++)
+        { 
+          if(i==value566[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;     
+    case 615:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value615);j++)
+        { 
+          if(i==value615[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;    
+    case 639:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value639);j++)
+        { 
+          if(i==value639[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 640:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value640);j++)
+        { 
+          if(i==value640[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 695:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value695);j++)
+        { 
+          if(i==value695[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 773:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value773);j++)
+        { 
+          if(i==value773[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 784:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value784);j++)
+        { 
+          if(i==value784[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 798:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value798);j++)
+        { 
+          if(i==value798[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 829:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value829);j++)
+        { 
+          if(i==value829[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 1260:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value1260);j++)
+        { 
+          if(i==value1260[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+    case 1261:
+      for(i=0;i<256;i++)
+      { 
+        for(j=0;j<elCount(value1261);j++)
+        { 
+          if(i==value1261[j])
+          { found+=1;break;}
+        }
+        if(found+len == i  )
+        { CCPvalue = i;break;}       
+      }     
+      break;
+  }
+  return CCPvalue;
+}
+
+void initCCP()
+{  
+  int i,Max_Len;
+  Max_Len = 8;
+  Off_Set_CCP = 0; Off_Set_ExtCCP = 0;
+  Invaid_CCP_UB = 1; Invaid_ExtCCP_UB = 1;
+  if(Geely_Architecture == 4)
+  {
+    Max_Len = 64;
+    Off_Set_CCP = 8;
+    Off_Set_ExtCCP = 16;
+    CCPMsg.FDF = 1;    CCPMsg.BRS = 1;
+    CCPMsg.dlc = 64;   CCPMsg.id = 0x251;
+  }
+  else
+  {
+    CCPMsg.dlc = 8;
+  }
+  for(i=0;i<Max_Len;i++)
+  {
+    if(i==UB_FlagePos)
+      continue;
+    CCPMsg.byte(i) = 0;
+  }
+}
+
+void init_CCP_ALL()
+{
+  dword i,j;
+  for(i=0;i<1000;i++)
+  {
+    if(_Check_Dword_in_Num(i,ccpNums,(word)elCount(ccpNums))!= -1)
+    {
+      for(j=0;j<CCPlen(i);j++)
+      {
+        Value_All[i][j] = ValidValue(i,j);
+      }
+    }
+  }
+}
+
+void _Check_E103_ALL_0()
+{
+  int Res_Len,i,Flage;
+  _Send_Diag(3,phyreq_ID,Get_CCP);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Flage = 0;
+  Res_Len = DiagGetRespPrimitiveSize(SendData);
+  if(Res_Len != Max_Invaild_CCP_Count*3+4)
+    testStepFail("","返回长度异常,期望为%d ，实际为%d",Max_Invaild_CCP_Count*3+4,Res_Len);
+  for(i=3;i<Res_Len;i++)
+  {
+    if(DiagGetRespPrimitiveByte(SendData,i) != 0 )
+    {
+      Flage = 1;
+      break;
+    }
+  }
+  if(Flage == 1)
+    testStepFail("","反馈值非全0");
+  else
+    testStepPass("","返回值与预期一致为全0");
+  testWaitForTimeout(500);
+}
+/*
+   Type = 1：用于检测CCP值为无效,取值为Send_Invaild_CCP
+   Type = 2：多次发送无效值后判断CCP返回状态,取值为Send_Invaild_CCP_Plural
+*/
+void _Check_E103_Invalid(byte Type)
+{
+  int Res_Len,i,Flage;
+  byte Rx_Invaild_CCP_Count;
+  dword Rx_Invaild_CCP[500][2]; //0装载CCP号，1装载无效值
+  byte Data_Invalid_CCP_Count;
+  
+  dword Send_Invaild_CCP_Compare[500][2]; 
+  dword Send_Invaild_CCP_Compare_Count; 
+  dword Send_Invaild_CCP_Compare_Count_; /*装载排除全0的CCP数据*/
+  
+  Send_Invaild_CCP_Compare_Count_ = 0;
+  _Send_Diag(3,phyreq_ID,Get_CCP);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Data_Invalid_CCP_Count = 0;
+  Res_Len = DiagGetRespPrimitiveSize(SendData);
+  if(diagGetLastResponseCode(SendData) == -1)
+  {
+    Rx_Invaild_CCP_Count = DiagGetRespPrimitiveByte(SendData,3);
+    if(Res_Len != Max_Invaild_CCP_Count*3+4)
+    {
+      testStepFail("","返回长度异常,期望为%d ，实际为%d",Max_Invaild_CCP_Count*3+4,Res_Len);
+      return;
+    }
+    if(Type == 1)
+    {
+      Send_Invaild_CCP_Compare_Count = Send_Invaild_CCP_Count;
+      for(i=0;i<Send_Invaild_CCP_Count;i++)
+      {
+        if((Send_Invaild_CCP[i][0] == 0) && (Send_Invaild_CCP[i][1] == 0))
+          continue;
+        Send_Invaild_CCP_Compare[Send_Invaild_CCP_Compare_Count_][0] = Send_Invaild_CCP[i][0];
+        Send_Invaild_CCP_Compare[Send_Invaild_CCP_Compare_Count_][1] = Send_Invaild_CCP[i][1];
+        Send_Invaild_CCP_Compare_Count_++;
+      }
+    }
+    else if(Type == 2)
+    {
+      Send_Invaild_CCP_Compare_Count = Send_Invaild_CCP_Plural_Count;
+      for(i=0;i<Send_Invaild_CCP_Plural_Count;i++)
+      {
+        if((Send_Invaild_CCP_Plural[i][0] == 0) && (Send_Invaild_CCP_Plural[i][1] == 0))
+          continue;
+        Send_Invaild_CCP_Compare[Send_Invaild_CCP_Compare_Count_][0] = Send_Invaild_CCP_Plural[i][0];
+        Send_Invaild_CCP_Compare[Send_Invaild_CCP_Compare_Count_][1] = Send_Invaild_CCP_Plural[i][1];
+        Send_Invaild_CCP_Compare_Count_++;
+      }
+    }
+    if(Send_Invaild_CCP_Compare_Count<=0xFF)
+    {
+      if(Rx_Invaild_CCP_Count != Send_Invaild_CCP_Compare_Count)
+        testStepFail("","无效CCP个数与预期无效个数不匹配，期望为%d ，实际为%d ",Send_Invaild_CCP_Compare_Count,Rx_Invaild_CCP_Count);
+      else
+        testStepPass("","无效CCP个数与预期一致为%d",Send_Invaild_CCP_Compare_Count);
+    }
+    else
+    {
+      if(Rx_Invaild_CCP_Count != 0xFF)
+        testStepFail("","无效CCP个数超过255，期望最大个数为%d ，实际为%d ",0xFF,Rx_Invaild_CCP_Count);
+      else
+        testStepPass("","无效CCP个数与预期一致为%d",0xFF);
+    }
+    for(i=0;i<Max_Invaild_CCP_Count;i++)
+    {
+      Rx_Invaild_CCP[Data_Invalid_CCP_Count][0] = ((DiagGetRespPrimitiveByte(SendData,i*3+4)<<8)|(DiagGetRespPrimitiveByte(SendData,i*3+4+1)));
+      Rx_Invaild_CCP[Data_Invalid_CCP_Count][1] = (DiagGetRespPrimitiveByte(SendData,i*3+4+2));
+      if(Rx_Invaild_CCP[Data_Invalid_CCP_Count][0]==0)
+      {
+        _WriteEx_and_Report("","实际收到数据中无效CCP个数 %d",i);
+        break;
+      }
+      Data_Invalid_CCP_Count++;
+    }
+    
+    Flage = 0;
+    for(i=0;i<Data_Invalid_CCP_Count;i++)
+    {
+      if(Rx_Invaild_CCP[i][0] != Send_Invaild_CCP_Compare[i][0])
+      {
+        Flage = 1;
+        testStepFail("","预期无效CCP号为%d ，实际无效CCP号为%d",Send_Invaild_CCP_Compare[i][0],Rx_Invaild_CCP[i][0]);
+      }
+      if(Rx_Invaild_CCP[i][1] != Send_Invaild_CCP_Compare[i][1])
+      {
+        Flage = 1;
+        testStepFail("","预期无效CCP%d值为%d ，实际无效CCP%d值为%d",Send_Invaild_CCP_Compare[i][0],Send_Invaild_CCP_Compare[i][1],Rx_Invaild_CCP[i][0],Rx_Invaild_CCP[i][1]);
+      }
+    }
+    if(Flage == 1)
+      testStepPass("","返回值与预期一致");
+  }
+}
+
+/*
+    mask：诊断当前或者全部故障
+    Type == 0: 判断输入DTC数组中所有DTC均在反馈中
+    Type == 1: 判断输入DTC数组中所有DTC均不在反馈中
+    DTCEx待判断DTC数组
+*/
+void _Check_DTC_Res(byte mask,byte Type,dword DTCEx[])
+{
+  dword DTC_Res[100],DTC_Ex[100];
+  byte DTC_Res_Count,Get_DTC[3];
+  byte Byte_H,Byte_M,Byte_L;
+  byte DTCEx_Count;
+  int i,size,Flage;
+  Get_DTC[0] = 0x19;
+  Get_DTC[1] = 0x02;
+  Get_DTC[2] = mask;
+  _Send_Diag(3,phyreq_ID,Get_DTC);
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,2000);
+  if(diagGetLastResponseCode(SendData) == -1)
+  {
+    DTCEx_Count = 0;
+    for(i=0;i<elcount(DTCEx);i++)
+    {
+      if(DTCEx[i] == 0)
+        continue;
+      else
+      {
+        DTC_Ex[DTCEx_Count] = DTCEx[i];
+        DTCEx_Count++;
+      }
+    }
+    size = DiagGetRespPrimitiveSize(SendData);
+    DTC_Res_Count = (size-3)/4;
+    testStep("DTC","共%d个DTC",DTC_Res_Count);
+    for(i = 0;i< DTC_Res_Count ; i ++) 
+    {      
+       Byte_H = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 0);
+       Byte_M = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 1);
+       Byte_L = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 2);
+       DTC_Res[i] = Byte_H<<16 | Byte_M<<8 | Byte_L ;    
+       testStep("DTC","第%d个DTC为 0x%06X",i,DTC_Res[i]);
+    }
+    if(Type == 1)
+    {
+      for(i=0;i<DTCEx_Count;i++)
+      {
+        Flage = 0;
+        Flage = _Check_Dword_in_Num(DTC_Ex[i],DTC_Res,DTC_Res_Count);
+        if(Flage != -1)
+          testStepFail("","DTC: 0x%06X ,期望不存在,实际存在",DTC_Ex[i]);
+      }
+    }
+    else if(Type == 0)
+    {
+      for(i=0;i<DTCEx_Count;i++)
+      {
+        Flage = 0;
+        Flage = _Check_Dword_in_Num(DTC_Ex[i],DTC_Res,DTC_Res_Count);
+        if(Flage == -1)
+          testStepFail("","DTC: 0x%06X ,期望存在,实际不存在",DTC_Ex[i]);
+        else
+          testStepPass("","DTC: 0x%06X ,已收到",DTC_Ex[i]);
+      }
+    }
+  }
+  else
+    _WriteEx_and_Report("","未收到正响应");
+}
+
+/*
+    发送读取故障
+    判断DTC是否存在/不存在
+    存在时必须为当前故障，不存在的DTC不存在于当前与历史
+*/
+void _Check_DTC_InNow_NotInNowAndHis(byte mask,dword DTCEx_In,dword DTCEx_Not)
+{
+  dword DTC_Res[100];
+  byte DTC_Res_Mask[100];
+  byte DTC_Res_Count,Get_DTC[3];
+  byte Byte_H,Byte_M,Byte_L;
+  int i,size,Flage;
+  Get_DTC[0] = 0x19;
+  Get_DTC[1] = 0x02;
+  Get_DTC[2] = mask;
+  _Send_Diag(3,phyreq_ID,Get_DTC);
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,2000);
+  if(diagGetLastResponseCode(SendData) == -1)
+  {
+    size = DiagGetRespPrimitiveSize(SendData);
+    DTC_Res_Count = (size-3)/4;
+    testStep("DTC","共%d个DTC",DTC_Res_Count);
+    for(i = 0;i< DTC_Res_Count ; i ++) 
+    {      
+       Byte_H = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 0);
+       Byte_M = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 1);
+       Byte_L = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 2);
+       DTC_Res[i] = Byte_H<<16 | Byte_M<<8 | Byte_L ;   
+       DTC_Res_Mask[i] =  (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 3);
+       testStep("DTC","第%d个DTC为 0x%06X",i,DTC_Res[i]);
+    }
+    Flage = 0;
+    if(DTCEx_In != 0 )
+    {
+      Flage = _Check_Dword_in_Num(DTCEx_In,DTC_Res,DTC_Res_Count);
+      if(Flage == -1)
+        testStepFail("","DTC: 0x%06X ,期望存在,实际不存在",DTCEx_In);
+      else
+      {
+        if((DTC_Res_Mask[Flage] & 1) == 1)
+          testStepPass("","DTC: 0x%06X ,已收到且为当前故障",DTCEx_In);
+        else
+          testStepFail("","DTC: 0x%06X ,已收到但不为当前故障",DTCEx_In);
+      }
+    }
+    if(DTCEx_Not != 0)
+    {
+      Flage = _Check_Dword_in_Num(DTCEx_Not,DTC_Res,DTC_Res_Count);
+      if(Flage != -1)
+        testStepFail("","DTC: 0x%06X ,期望不存在,实际存在",DTCEx_Not);
+      else
+        testStepPass("","DTC: 0x%06X ,与期望一致,无该DTC",DTCEx_Not);
+    }
+  }
+  else
+    _WriteEx_and_Report("","未收到正响应");
+}
+
+/*
+    mask：诊断当前或者全部故障
+    NowOrHis；当前还是历史,  1当前  8历史  9当前与历史(9用于判断无该DTC)
+    Type == 0: 判断输入DTC数组中所有DTC均在反馈中
+    Type == 1: 判断输入DTC数组中所有DTC均不在反馈中
+    DTCEx待判断DTC数组
+*/
+void _Check_DTC_Res_NowOrHis(byte mask,byte NowOrHis,byte Type,dword DTCEx[])
+{
+  dword DTC_Res[100],DTC_Ex[100];
+  byte DTC_Res_Mask[100];
+  byte DTC_Res_Count,Get_DTC[3];
+  byte Byte_H,Byte_M,Byte_L;
+  byte DTCEx_Count;
+  int i,size,Flage;
+  Get_DTC[0] = 0x19;
+  Get_DTC[1] = 0x02;
+  Get_DTC[2] = mask;
+  _Send_Diag(3,phyreq_ID,Get_DTC);
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,2000);
+  if(diagGetLastResponseCode(SendData) == -1)
+  {
+    DTCEx_Count = 0;
+    for(i=0;i<elcount(DTCEx);i++)
+    {
+      if(DTCEx[i] == 0)
+        continue;
+      else
+      {
+        DTC_Ex[DTCEx_Count] = DTCEx[i];
+        DTCEx_Count++;
+      }
+    }
+    size = DiagGetRespPrimitiveSize(SendData);
+    DTC_Res_Count = (size-3)/4;
+    testStep("DTC","共%d个DTC",DTC_Res_Count);
+    for(i = 0;i< DTC_Res_Count ; i ++) 
+    {      
+       Byte_H = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 0);
+       Byte_M = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 1);
+       Byte_L = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 2);
+       DTC_Res[i] = Byte_H<<16 | Byte_M<<8 | Byte_L ;   
+       DTC_Res_Mask[i] = diagGetRespPrimitiveByte(SendData,i*4 + 3 + 3); 
+       testStep("DTC","第%d个DTC为 0x%06X",i,DTC_Res[i]);
+    }
+    if(Type == 1)
+    {
+      for(i=0;i<DTCEx_Count;i++)
+      {
+        Flage = 0;
+        Flage = _Check_Dword_in_Num(DTC_Ex[i],DTC_Res,DTC_Res_Count);
+        if(Flage == -1)
+          testStepPass("","DTC: 0x%06X ,期望不存在,实际不存在",DTC_Ex[i]);
+        else
+        {
+          if(NowOrHis == 9)
+              testStepFail("","DTC: 0x%06X ,期望不存在,实际存在",DTC_Ex[i]);
+          else if(NowOrHis == 1)
+          {
+            if((DTC_Res_Mask[Flage] & 1) != 1)
+              testStepPass("","DTC: 0x%06X ,期望不为当前故障，实际不为当前故障",DTC_Ex[i]);
+            else
+              testStepFail("","DTC: 0x%06X ,存在且为当前故障",DTC_Ex[i]);
+          }
+          else if(NowOrHis == 8)
+          {
+            if((DTC_Res_Mask[Flage] & 8) != 8)
+              testStepPass("","DTC: 0x%06X ,期望不为历史故障，实际不为历史故障",DTC_Ex[i]);
+            else
+              testStepFail("","DTC: 0x%06X ,存在且为历史故障",DTC_Ex[i]);
+          }
+        }
+      }
+    }
+    else if(Type == 0)
+    {
+      for(i=0;i<DTCEx_Count;i++)
+      {
+        Flage = 0;
+        Flage = _Check_Dword_in_Num(DTC_Ex[i],DTC_Res,DTC_Res_Count);
+        if(Flage == -1)
+          testStepFail("","DTC: 0x%06X ,期望存在,实际不存在",DTC_Ex[i]);
+        else
+        {
+          if(NowOrHis == 1)
+          {
+            if((DTC_Res_Mask[Flage] & 1) == 1)
+              testStepPass("","DTC: 0x%06X ,已收到",DTC_Ex[i]);
+            else
+              testStepFail("","DTC: 0x%06X ,已收到但非当前故障",DTC_Ex[i]);
+          }
+          else if(NowOrHis == 8)
+          {
+            if((DTC_Res_Mask[Flage] & 8) == 8)
+              testStepPass("","DTC: 0x%06X ,已收到",DTC_Ex[i]);
+            else
+              testStepFail("","DTC: 0x%06X ,已收到但非历史故障",DTC_Ex[i]);
+          }
+        }
+      }
+    }
+  }
+  else
+    _WriteEx_and_Report("","未收到正响应");
+}
+
+/*
+    mask：诊断当前或者全部故障
+    DTCIn 存在于当前故障
+    DTCNot 不存在
+*/
+void _Check_DTC_Res_InHis_NotNowOrHis(byte mask,dword DTCIn,dword DTCNot)
+{
+  dword DTC_Res[100];
+  byte DTC_Res_Mask[100];
+  byte DTC_Res_Count,Get_DTC[3];
+  byte Byte_H,Byte_M,Byte_L;
+  byte DTCEx_Count;
+  int i,size,Flage;
+  Get_DTC[0] = 0x19;
+  Get_DTC[1] = 0x02;
+  Get_DTC[2] = mask;
+  _Send_Diag(3,phyreq_ID,Get_DTC);
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,2000);
+  if(diagGetLastResponseCode(SendData) == -1)
+  {
+    size = DiagGetRespPrimitiveSize(SendData);
+    DTC_Res_Count = (size-3)/4;
+    testStep("DTC","共%d个DTC",DTC_Res_Count);
+    for(i = 0;i< DTC_Res_Count ; i ++) 
+    {      
+       Byte_H = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 0);
+       Byte_M = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 1);
+       Byte_L = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 2);
+       DTC_Res_Mask[i] = diagGetRespPrimitiveByte(SendData,i*4 + 3 + 3);
+       DTC_Res[i] = Byte_H<<16 | Byte_M<<8 | Byte_L ;    
+       testStep("DTC","第%d个DTC为 0x%06X",i,DTC_Res[i]);
+    }
+    if(DTCNot != 0)
+    {
+      Flage = 0;
+      Flage = _Check_Dword_in_Num(DTCNot,DTC_Res,DTC_Res_Count);
+      if(Flage != -1)
+        testStepFail("","DTC: 0x%06X ,期望不存在,实际存在",DTCNot);
+    }
+    if(DTCIn != 0)
+    {
+      Flage = 0;
+      Flage = _Check_Dword_in_Num(DTCIn,DTC_Res,DTC_Res_Count);
+      if(Flage == -1)
+        testStepFail("","DTC: 0x%06X ,期望存在,实际不存在",DTCIn);
+      else
+      {
+        if((DTC_Res_Mask[Flage] & 8) == 8)
+        {
+          if((DTC_Res_Mask[Flage] & 1) == 1)
+            testStepFail("","期望DTC: 0x%06X 为历史故障，实际为当前故障",DTCIn);
+          else
+            testStepPass("","DTC: 0x%06X ,已收到且为历史故障",DTCIn);
+        }
+      }
+    }
+  }
+  else
+    _WriteEx_and_Report("","未收到正响应");
+}
+
+/*
+    mask：诊断当前或者全部故障
+*/
+void _Check_DTC_Res_InNow_InHis(byte mask,dword DTCNow,dword DTCHis)
+{
+  dword DTC_Res[100];
+  byte DTC_Res_Mask[100];
+  byte DTC_Res_Count,Get_DTC[3];
+  byte Byte_H,Byte_M,Byte_L;
+  byte DTCEx_Count;
+  int i,size,Flage;
+  dword DCT_Input[2];
+  Get_DTC[0] = 0x19;
+  Get_DTC[1] = 0x02;
+  Get_DTC[2] = mask;
+  DCT_Input[0] = DTCNow; DCT_Input[1] = DTCHis;
+  _Send_Diag(3,phyreq_ID,Get_DTC);
+  if(diagGetLastResponseCode(SendData) == 0)
+    testWaitForDiagResponse(SendData,2000);
+  if(diagGetLastResponseCode(SendData) == -1)
+  {
+    size = DiagGetRespPrimitiveSize(SendData);
+    DTC_Res_Count = (size-3)/4;
+    testStep("DTC","共%d个DTC",DTC_Res_Count);
+    for(i = 0;i< DTC_Res_Count ; i ++) 
+    {      
+       Byte_H = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 0);
+       Byte_M = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 1);
+       Byte_L = (dword)diagGetRespPrimitiveByte(SendData,i*4 + 3 + 2);
+       DTC_Res_Mask[i] = diagGetRespPrimitiveByte(SendData,i*4 + 3 + 3);
+       DTC_Res[i] = Byte_H<<16 | Byte_M<<8 | Byte_L ;    
+       testStep("DTC","第%d个DTC为 0x%06X",i,DTC_Res[i]);
+    }
+    for(i=0;i<2;i++)
+    {
+      Flage = 0;
+      Flage = _Check_Dword_in_Num(DCT_Input[i],DTC_Res,DTC_Res_Count);
+      if(Flage == -1)
+        testStepFail("","DTC: 0x%06X ,期望存在,实际不存在",DCT_Input[i]);
+      else
+      {
+        if(i == 0)
+        {
+          if((DTC_Res_Mask[Flage] & 1) == 1)
+            testStepPass("","DTC: 0x%06X ,已收到且为当前故障",DTCNow);
+          else
+            testStepFail("","DTC: 0x%06X ,已收到但不为当前故障",DTCNow);
+        }
+        else if(i == 1)
+        {
+          if((DTC_Res_Mask[Flage] & 1) == 1)
+            testStepFail("","DTC: 0x%06X ,已收到但为当前故障",DTCHis);
+          else if((DTC_Res_Mask[Flage] & 8) == 8)
+            testStepPass("","DTC: 0x%06X ,已收到且为历史故障",DTCHis);
+        }
+      }
+    }
+  }
+  else
+    _WriteEx_and_Report("","未收到正响应");
+}
+/*
+    ccpid:测试CCP号，当ccpid为0时，即没有无效CCP
+    num：错误计数
+    value：无效值
+    返回值：用于无效值遍历测试时，当出现无效值个数被错误清除时，防止后续报错
+*/
+int E103(word ccpid,byte num,byte value)
+{
+  int i;    
+  long retSize ;  
+  int CCP_Num,Return_Value;
+  int CCP_Error_Count;
+  _Send_Diag(3,phyreq_ID,Get_CCP);
+  _TestResult(SendData,phyreq_ID,"",-1);
+  Return_Value = 0;
+  if(diagGetLastResponseCode(SendData) == -1)
+  {
+    retSize = DiagGetRespPrimitiveSize(SendData);
+    if(ccpid==0 )
+    {
+      if( diagGetRespPrimitiveByte(SendData,3)==0)
+        testStepPass("E103","E103没有无效CCP");
+      else
+        testStepFail("E103","E103应没有无效CCP，实际有%d个无效CCP,当前测试CCP值为0x%02X",diagGetRespPrimitiveByte(SendData,3),value);
+    }
+    else
+    {
+      CCP_Error_ID = ((diagGetRespPrimitiveByte(SendData,4)<<8) |diagGetRespPrimitiveByte(SendData,5));
+      CCP_Error_Count = diagGetRespPrimitiveByte(SendData,3);
+      if((diagGetRespPrimitiveByte(SendData,4) == (ccpid>>8)&0xff) &&  ( diagGetRespPrimitiveByte(SendData,5) == (byte)ccpid & 0xff))
+      {
+        if(diagGetRespPrimitiveByte(SendData,3) == num )
+        {
+          if(diagGetRespPrimitiveByte(SendData,6) == value)
+            testStepPass("E103","E103读取CCP%d值为%X ,次数%d",ccpid,diagGetRespPrimitiveByte(SendData,6),num);
+          else
+            testStepFail("E103","E103无效CCPId %d的值错误：应该%d ,实际%d",ccpid,value,diagGetRespPrimitiveByte(SendData,6));
+        }
+        else
+        {
+          if(diagGetRespPrimitiveByte(SendData,6) != value)
+            testStepFail("E103","E103无效CCPId %d的值错误：应该%d ,实际%d",ccpid,value,diagGetRespPrimitiveByte(SendData,6));
+          testStepFail("E103","E103无效CCPId %d次数错误(当前测试无效值0x%02X)：应该%d ,实际%d",ccpid,value,num,diagGetRespPrimitiveByte(SendData,3));
+          if(CCP_Error_Count == 0)
+            Return_Value = -1;
+        }
+      } 
+      else
+      {
+        testStepFail("E103","E103无效CCPId错误，应该%d ,实际%d",ccpid,diagGetRespPrimitiveByte(SendData,4)<<8|diagGetRespPrimitiveByte(SendData,5));
+        if(CCP_Error_Count == 0)
+          Return_Value = -1;
+      }
+    }
+  }
+  return Return_Value;
+}
+
+/*
+    检测数据是否在整形数组中,若存在则原数组剔除相关元素
+    DataInput输入待检测数组
+    InputLen输入长度
+    DataOutput输出数组
+    用于多次输入不同的固定CCP值时出现有效CCP则返回正确的无效CCP数组
+    Send_Vaild_CCP            Send_Invaild_CCP        
+    Send_Vaild_CCP_Count      Send_Invaild_CCP_Count  
+*/
+int _Delete_Array(dword DataInput[][],int InputLen,dword DataOutput[][],dword OutputLen)
+{
+  int flage,n,i;
+  dword Temp[500][2];
+  dword Temp_Len;
+  flage = -1;
+  for(i=0;i<InputLen;i++)
+  {
+    for(n=0;n<OutputLen;n++)
+    {
+      if(DataInput[i][0] == DataOutput[n][0])
+      {
+        DataOutput[n][0] = 0;
+        DataOutput[n][1] = 0;
+        break;
+      }
+    }
+  }
+  Temp_Len = OutputLen;
+  for(i=0;i<OutputLen;i++)
+  {
+    Temp[i][0] = DataOutput[i][0];
+    Temp[i][1] = DataOutput[i][1];
+  }
+  OutputLen = 0;
+  for(i=0;i<Temp_Len;i++)
+  {
+    if((Temp[i][0] == 0) && (Temp[i][1] == 0))
+      continue;
+    DataOutput[OutputLen][0] = Temp[i][0];
+    DataOutput[OutputLen][1] = Temp[i][1];
+    OutputLen++;
+  }
+  return OutputLen;
+}
+
+void Init_For_BlockID()
+{
+  int i,j;
+  Blocksize[0]=0; //  CCP的BlkID个数(帧数)
+  Blocksize[1]=0; //  ExtCCP的ExtBlkID个数(帧数)
+  
+  for(i=0;i<ccpNumscount;i++)
+  {  
+    if(ccpNums[i] <= 504)
+    { 
+      for(j=0;j<Blocksize[0];j++)
+      {
+        if(Blockid[0][j]==(int)((ccpNums[i] + 6) / 7))
+        {break;}
+      }
+      if(j==Blocksize[0])
+      {
+        Blockid[0][Blocksize[0]]=(int)((ccpNums[i] + 6) / 7);Blocksize[0]++;
+      }
+    }
+    else{
+      for(j=0;j<Blocksize[1];j++)
+      {
+        if(Blockid[1][j]== (int)((ccpNums[i] - 504 + 6) / 7))
+        {break;}
+      }
+      if(j==Blocksize[1])
+      {
+        Blockid[1][Blocksize[1]]=(int)((ccpNums[i] - 504 + 6) / 7);Blocksize[1]++;
+      }
+    }
+  }
+}
+
+
+/*
+  ValueFrom = 0:取值范围CCP
+  ValueFrom = 1:取值范围ExtCCP
+  用于Sendccp(word CCPid,byte Value)
+*/
+void OutPut_CCP_Specify(byte ValueFrom,byte Blockid[][],int BlockID,word CCPid,byte Value)
+{
+  int i;
+  byte CCP_Pos_;
+  if(ValueFrom == 0)
+    CCPMsg.byte(0 + Off_Set_CCP)= Blockid[0][BlockID];
+  else if(ValueFrom == 1)
+    CCPMsg.byte(0 + Off_Set_ExtCCP)= Blockid[1][BlockID];
+  for(i=0;i<ccpNumscount;i++)
+  { 
+    if(ValueFrom == 0)
+    {
+      if((Blockid[ValueFrom][BlockID]==(int)((ccpNums[i] + 6) / 7)) && (ccpNums[i]<=504))
+      {
+        CCP_Pos_ = (ccpNums[i] - (((int)((ccpNums[i] + 6) / 7)) * 7 - 6) + 1) + Off_Set_CCP;
+        CCPMsg.byte(CCP_Pos_) = (CCPid==ccpNums[i]) ? Value : defaultValue(ccpNums[i]);
+      }
+    }
+    else if(ValueFrom == 1)
+    {
+      if((Blockid[ValueFrom][BlockID]==(int)((ccpNums[i] - 504 + 6) / 7)) && (ccpNums[i]>504))
+      {
+        CCP_Pos_ = (ccpNums[i] -504- (((int)((ccpNums[i] - 504 + 6) / 7)) * 7 - 6) + 1) + Off_Set_ExtCCP;
+        CCPMsg.byte(CCP_Pos_) = (CCPid==ccpNums[i]) ? Value : defaultValue(ccpNums[i]);
+      }
+    }
+  }
+}
+
+/*
+  ValueFrom = 0:取值范围CCP
+  ValueFrom = 1:取值范围ExtCCP
+  用于Sendccp(dword CCPid[],byte Value[],int Len)
+*/
+void OutPut_CCP_Specify(byte ValueFrom,byte Blockid[][],int BlockID,dword CCPid[],byte Value[],int Len)
+{
+  int i;
+  byte CCP_Pos_;
+  int Flage;
+  if(ValueFrom == 0)
+    CCPMsg.byte(0 + Off_Set_CCP)= Blockid[0][BlockID];
+  else if(ValueFrom == 1)
+    CCPMsg.byte(0 + Off_Set_ExtCCP)= Blockid[1][BlockID];
+  for(i=0;i<ccpNumscount;i++)
+  { 
+    if(ValueFrom == 0)
+    {
+      if((Blockid[ValueFrom][BlockID]==(int)((ccpNums[i] + 6) / 7)) && (ccpNums[i]<=504))
+      {
+        CCP_Pos_ = (ccpNums[i] - (((int)((ccpNums[i] + 6) / 7)) * 7 - 6) + 1) + Off_Set_CCP;
+        Flage = _Check_Dword_in_Num(ccpNums[i],CCPid,Len);
+        CCPMsg.byte(CCP_Pos_) = (Flage == -1) ? defaultValue(ccpNums[i]):Value[Flage];
+      }
+    }
+    else if(ValueFrom == 1)
+    {
+      if((Blockid[ValueFrom][BlockID]==(int)((ccpNums[i] - 504 + 6) / 7)) && (ccpNums[i]>504))
+      {
+        CCP_Pos_ = (ccpNums[i] -504- (((int)((ccpNums[i] - 504 + 6) / 7)) * 7 - 6) + 1) + Off_Set_ExtCCP;
+        Flage = _Check_Dword_in_Num(ccpNums[i],CCPid,Len);
+        CCPMsg.byte(CCP_Pos_) = (Flage == -1) ? defaultValue(ccpNums[i]):Value[Flage];
+      }
+    }
+  }
+}
+
+/*
+  ValueFrom = 0:取值范围CCP
+  ValueFrom = 1:取值范围ExtCCP
+  用于SendccpRandom
+*/
+void OutPut_CCP_Specify(byte ValueFrom,byte Type,int BlockID,dword InValid_CCP_ExSend[],int Random_Count)
+{
+  int i,Flage;
+  byte CCP_Pos_,Invalid_Va;
+  int OffSet,Num_For_Dif,Flage_ForDif;
+  OffSet = (ValueFrom == 0) ? Off_Set_CCP:Off_Set_ExtCCP;
+  Num_For_Dif = (ValueFrom == 0) ? 0:504;
+  
+  for(i=0;i<ccpNumscount;i++)
+  { 
+    Flage = -1;
+    Flage_ForDif = 0;
+    if((ValueFrom == 0) && (ccpNums[i]<=504))
+      Flage_ForDif = 1;
+    else if((ValueFrom == 1) && (ccpNums[i]>504))
+      Flage_ForDif = 1;
+    if((BlockID==(int)((ccpNums[i]- Num_For_Dif + 6) / 7)) && (Flage_ForDif == 1))
+    {
+      CCP_Pos_ = (ccpNums[i] - Num_For_Dif - (((int)((ccpNums[i] - Num_For_Dif + 6) / 7)) * 7 - 6) + 1) + OffSet;
+      CCPMsg.byte(CCP_Pos_) = defaultValue(ccpNums[i]);
+      if(Type == 2 || Type == 3)
+        Flage = _Check_Dword_in_Num(ccpNums[i],InValid_CCP_ExSend,Random_Count);
+      if(Type == 1 || (Type == 2 && Flage != -1) || (Type == 3 && Flage != -1)) 
+      {
+        Invalid_Va = InValid_Value(ccpNums[i]);
+        CCPMsg.byte(CCP_Pos_) = Invalid_Va;
+        snprintf(Str_OutPut_InValidCCP,elCount(Str_OutPut_InValidCCP),"%s [CCP_%d = 0x%02X]",Str_OutPut_InValidCCP,ccpNums[i],Invalid_Va);
+        writeEx(-3,0,"[CCP_%d = 0x%02X]",ccpNums[i],Invalid_Va);
+        Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[i];
+        Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invalid_Va;
+        Send_Invaild_CCP_Count++;
+      }
+    }
+  }
+}
+
+/*
+  ValueFrom = 0:取值范围CCP
+  ValueFrom = 1:取值范围ExtCCP
+  用于Sendccp(byte Type)
+*/
+void OutPut_CCP_Specify(byte ValueFrom,byte Type,int BlockID,byte Lost_Msg_ID,dword Invalid_CCP_ID,byte Invaild_Va)
+{
+  int j,Flage;
+  int OffSet,Num_For_Dif,Flage_ForDif;
+  byte CCP_Pos_,Invaild_VaTemp;
+  
+  OffSet = (ValueFrom == 0) ? Off_Set_CCP:Off_Set_ExtCCP;
+  Num_For_Dif = (ValueFrom == 0) ? 0:504;
+//  writeEx(-3,0,"Invalid_CCP_ID = %d , Lost_Msg_ID = %d",Invalid_CCP_ID,Lost_Msg_ID);
+  CCPMsg.byte(0 + OffSet)= BlockID;
+  for(j=0;j<ccpNumscount;j++)
+  {
+    Flage_ForDif = 0;
+    if((ValueFrom == 0) && (ccpNums[j]<=504))
+      Flage_ForDif = 1;
+    else if((ValueFrom == 1) && (ccpNums[j]>504))
+      Flage_ForDif = 1;
+    if((BlockID ==(int)((ccpNums[j] - Num_For_Dif + 6) / 7)) && (Flage_ForDif == 1)) //BlockID匹配
+    {
+      CCP_Pos_ = (ccpNums[j]- Num_For_Dif - (((int)((ccpNums[j] - Num_For_Dif + 6) / 7)) * 7 - 6) + 1) + OffSet;
+      CCPMsg.byte(CCP_Pos_) = defaultValue(ccpNums[j]);
+      if(((Type&0xF) == 2) ||(Type == 0x14) || (Type == 0x15) || (Type == 0x16))
+      {
+        Invaild_Va = InValid_Value(ccpNums[j]);
+//          writeEx(-3,0,"MSG[0x%02X].Byte[%d],CCP_%d = 0x%02X",Blockid[0][i],CCP_Pos_,ccpNums[j],Invaild_Va);
+        CCPMsg.byte(CCP_Pos_) = Invaild_Va;
+        if(Type == 0x82)
+        {
+          Flage = _Check_Dword_in_Num(ccpNums[j],Send_Invaild_CCP,Send_Invaild_CCP_Count);
+          if(Flage != -1)
+            Send_Invaild_CCP[Flage][1] = Invaild_Va;
+          else
+          {
+            Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+            Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+          }
+          Send_Invaild_CCP_Count++;
+        }
+        else
+        {
+          Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+          Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+          Send_Invaild_CCP_Count++;
+        }
+      }
+      if(Type == 3 && ccpNums[j]==Invalid_CCP_ID)
+      {
+        Invaild_Va = InValid_Value(ccpNums[j]);
+        CCPMsg.byte(CCP_Pos_) = Invaild_Va;
+        Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+        Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+        Send_Invaild_CCP_Count++;
+        writeEx(-3,0,"无效CCP_%d为BlockID：%d的Byte_%d,无效值为0x%02X",Invalid_CCP_ID,BlockID,CCP_Pos_,Invaild_Va);
+      }
+      else if((Type&0x0F) == 0x08 || (Type&0x0F) == 0x09 || (Type&0x0F) == 0x0A )
+      {
+        CCPMsg.byte(CCP_Pos_) =Invaild_Va;
+        if(ccpNums[j] == 1 && Invaild_Va==0xAA)
+        {
+          Invaild_VaTemp = Invaild_Va;
+          Invaild_Va = 0x22;
+          CCPMsg.byte(CCP_Pos_) = Invaild_Va;
+        }
+        if(_Check_Dword_in_Num(Invaild_Va,Value_All[ccpNums[j]],CCPlen(ccpNums[j]))== -1)
+        {
+          if((Type&0xF0) != 0)
+          {
+            Flage = _Check_Dword_in_Num(ccpNums[j],Send_Invaild_CCP,Send_Invaild_CCP_Count);
+            if(Flage != -1)
+              Send_Invaild_CCP[Flage][1] = Invaild_Va;
+            else
+            {
+              Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+              Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+            }
+            Send_Invaild_CCP_Count++;
+          }
+          else
+          {
+            Send_Invaild_CCP[Send_Invaild_CCP_Count][0] = ccpNums[j];
+            Send_Invaild_CCP[Send_Invaild_CCP_Count][1] = Invaild_Va;
+            Send_Invaild_CCP_Count++;
+          }
+        }
+        else /*有效CCP*/
+        {
+          Send_Vaild_CCP_Plural[Send_Vaild_CCP_Plural_Count][0] = ccpNums[j];
+          Send_Vaild_CCP_Plural[Send_Vaild_CCP_Plural_Count][1] = Invaild_Va;
+          Send_Vaild_CCP_Plural_Count++;
+        }
+        if(ccpNums[j] == 1 && Invaild_Va==0x22)
+          Invaild_Va = Invaild_VaTemp;
+      }
+    }
+  }
+}

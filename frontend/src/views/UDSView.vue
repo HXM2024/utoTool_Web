@@ -413,6 +413,7 @@ import DidConfigForm from '@/components/DidConfigForm.vue'
 import { getTree, updateTree, generateUDS } from '@/api/uds'
 import { saveConfig, openFolder } from '@/api/config'
 import { useModuleStore } from '@/stores/modules'
+import { defaultAlgoForOem } from '@/utils/securityAlgo'
 import { useShortcut, isModuleActive } from '@/composables/useShortcuts'
 
 // ===== 类型定义 =====
@@ -969,7 +970,11 @@ function stripUids(nodes: UdsNode[]): any[] {
 async function persistConfig(name: string): Promise<boolean> {
   if (!name) return false
   try {
-    await updateTree(name, { services: stripUids(treeData.value), oem: store.selectedOem })
+    await updateTree(name, {
+      services: stripUids(treeData.value),
+      oem: store.selectedOem,
+      securityAlgo: store.selectedAlgo,
+    })
     return true
   } catch {
     return false
@@ -1006,10 +1011,11 @@ async function onConfigCreate(name: string) {
     await persistConfig(prevName)
   }
   // 有选择配置时使用默认模板，无配置时保留当前数据
-  const dataToSave: { services: UdsNode[]; oem?: string } = hasConfig
+  const dataToSave: { services: UdsNode[]; oem?: string; securityAlgo?: string } = hasConfig
     ? { services: [] }
     : { services: treeData.value || [] }
   dataToSave.oem = store.selectedOem
+  dataToSave.securityAlgo = store.selectedAlgo
   try {
     await saveConfig('uds', name, dataToSave)
     selectedConfig.value = name
@@ -1045,6 +1051,13 @@ async function loadTree(config: string, token: number = configChangeToken) {
     // 回填主机厂选择
     if (data.oem) {
       store.setSelectedOem(data.oem)
+    }
+    // 回填安全算法；历史配置只有 oem 时按该厂默认算法兜底
+    if (data.securityAlgo) {
+      store.setSelectedAlgo(data.securityAlgo)
+    } else if (data.oem) {
+      const fallback = defaultAlgoForOem(data.oem)
+      if (fallback) store.setSelectedAlgo(fallback)
     }
     // 标记内存数据归属该配置，后续切换时据此安全自动保存
     loadedConfig.value = config
@@ -1283,7 +1296,11 @@ async function onSave() {
   saving.value = true
   try {
     const cleanData = stripUids(treeData.value)
-    await updateTree(selectedConfig.value, { services: cleanData, oem: store.selectedOem })
+    await updateTree(selectedConfig.value, {
+      services: cleanData,
+      oem: store.selectedOem,
+      securityAlgo: store.selectedAlgo,
+    })
     loadedConfig.value = selectedConfig.value
     ElMessage.success('树数据保存成功')
   } catch {

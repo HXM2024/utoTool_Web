@@ -1,0 +1,1071 @@
+﻿<testmodule title="BOOT_EM2E_AUTO" version="1.0">
+  <variants>
+    <variant name="All"/>
+    <variant name="BYD"/>
+    <variant name="ChangAn"/>
+    <variant name="Geely1.0"/>
+    <variant name="Geely3.0"/>
+    <variant name="鑫源"/>
+    <variant name="瑞驰"/>
+    <variant name="奇瑞"/>
+    <variant name="五菱"/>
+    <variant name="东风小康"/>
+    <variant name="赛力斯"/>
+    <variant name="广汽"/>
+  </variants>
+
+  <testgroup title="工具验证">
+    <capltestcase name="ToolTest" title="ToolTest" />
+    <capltestcase name="ID_Check" title="快速ID检索" />
+    <capltestcase name="Security_Test" title="安全算法测试" />
+    <capltestcase name="K30ON_Test" title="上总电测试" />
+    <capltestcase name="K30OFF_Test" title="下总电测试" />
+    <capltestcase name="K15ON_Test" title="上点火测试" />
+    <capltestcase name="K15OFF_Test" title="下点火测试" />
+    <capltestcase name="APPValid_Test" title="APP有效性检测" />
+    <capltestcase name="Read_Bin_Test" title="BIN文件数据输出" />
+  </testgroup>
+
+  <testgroup title="正常刷写">
+    <capltestcase name="SOS_Test" title="SOS刷写流程" />
+    <capltestcase name="Normal_Test" title="正常刷写流程" />
+    <capltestcase name="Normal_Test_1000" title="正常刷写1000次" />
+    <capltestcase name="Normal_Test_Cycle" title="循环正常刷写" />  
+    <capltestcase name="APPtoBT" title="APP无效" />
+  </testgroup>
+
+  <testgroup title="通用测试">
+    <capltestcase name="Handshake_After_NRC78" title="NRC78后功能握手测试" />
+    <capltestcase name="Alternate_DownLoad" title="交替刷写" />
+  </testgroup>
+
+  <testgroup title="性能测试">
+    <capltestcase name="Power_Down_Up_Cycle" title="上下电压力测试" />
+    <capltestcase name="BT_AppValid1" title="进入BT后上下电" />
+    <capltestcase name="BT_AppValid2" title="刷写完FF01检查后上下电" />
+    <capltestcase name="BT_AppValid3" title="进入BT后错误密钥后上下电" />
+    <capltestcase name="BT_AppValid4" title="进入BT后11复位上下电" />
+  </testgroup>
+
+  <testgroup title="可靠性测试">
+    <capltestcase name="Powerdown_Before_FF00" title="内存擦除前切断电源测试" />
+    <capltestcase name="Powerdown_In_FF00" title="内存擦除中切断电源测试" />
+    <capltestcase name="Powerdown_After_FF00" title="内存擦除后切断电源测试" />
+    <capltestcase name="Powerdown_After_36A" title="数据块传输后切断电源测试" />
+    <capltestcase name="Powerdown_In_36A" title="数据块传输中切断电源测试" />
+    <capltestcase name="Powerdown_Before_0202A" title="0202检查前切断电源测试" />
+    <capltestcase name="Powerdown_Before_FF01" title="FF01有效性检查前切断电源测试" />
+    <capltestcase name="Powerdown_After_FF01" title="FF01有效性检查后切断电源测试" />
+    <capltestcase name="K15_Before_FF00" title="内存擦除前下点火测试" />
+    <capltestcase name="K15_After_FF00" title="内存擦除后下点火测试" />
+    <capltestcase name="K15_After_36A" title="数据块传输后下点火测试" />  
+    <capltestcase name="K15_In_36A" title="数据块传输中下点火测试" />
+    <capltestcase name="K15_Before_0202A" title="0202检查前下点火测试" />
+    <capltestcase name="K15_Before_FF01" title="FF01有效性检查前下点火测试" />
+    <capltestcase name="K15_After_FF01" title="FF01有效性检查后下点火测试" />
+    <capltestcase name="BusOff_Before_FF00" title="内存擦除前BusOff测试" />
+    <capltestcase name="BusOff_After_FF00" title="内存擦除后BusOff测试" />
+    <capltestcase name="BusOff_After_36A" title="数据块传输后BusOff测试" />
+    <capltestcase name="BusOff_In_36A" title="数据块传输中BusOff测试" />
+    <capltestcase name="BusOff_Before_0202A" title="0202检查前BusOff测试" />
+    <capltestcase name="BusOff_Before_FF01" title="FF01有效性检查前BusOff测试" />
+    <capltestcase name="BusOff_After_FF01" title="FF01有效性检查后BusOff测试" />
+  </testgroup>
+
+  <testgroup title="BYD" variants="BYD All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+      <capltestcase name="APP_36_LowVolt" title="APP传输时_低压" />
+      <capltestcase name="APP_36_HighVolt" title="APP传输时_高压" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">  
+        <capltestcase name="Handshake_FF00" title="擦除FF00时_功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP校验0202时_功能握手" />
+        <capltestcase name="Handshake_FF01" title="一致性校验FF01时_功能握手" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_3600" title="APP_发送3600" />
+        <capltestcase name="Restart_FF00" title="擦除FF00后_物理复位" />
+        <capltestcase name="DefSession_FF00" title="擦除FF00后_默认会话" />
+        <capltestcase name="Restart_0202A" title="APP校验0202后_物理复位" />
+        <capltestcase name="DefSession_0202A" title="APP校验0202后_默认会话" />
+        <capltestcase name="FF00_Length" title="FF00_长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="FF00_FBT" title="FF00_擦除FBT地址" />
+        <capltestcase name="FF00_SBT" title="FF00_擦除SBT地址" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完退出" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash校验0202时_功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash校验0202后_物理复位" />
+        <capltestcase name="DefSession_0202F" title="Flash校验0202后_默认会话" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_请求数据内存大小" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_请求下载地址错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36数据错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_请求数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_请求地址长度格式标识错误" />
+        <capltestcase name="Flash_36_Exit" title="Flash_36未传输完退出" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_0203" title="步骤缺失_更新查询0203" />
+        <capltestcase name="Miss_27_2" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_34F" title="Flash_缺失34" />
+        <capltestcase name="Miss_36F" title="Flash_缺失36" />
+        <capltestcase name="Miss_37F" title="Flash_缺失37" />
+        <capltestcase name="Miss_34_36_37F" title="Flash_缺失34_36_37" />
+        <capltestcase name="Miss_0202F" title="Flash_缺失0202" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_FF00" />
+        <capltestcase name="Miss_34A" title="APP_缺失34" />
+        <capltestcase name="Miss_36A" title="APP_缺失36" />
+        <capltestcase name="Miss_37A" title="APP_缺失37" />
+        <capltestcase name="Miss_34_36_37A" title="APP_缺失34_36_37" />
+        <capltestcase name="Miss_0202A" title="APP_缺失0202" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="ChangAn" variants="ChangAn All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.4V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_8.6V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_16.3V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.6V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.4V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_8.6V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_16.3V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.6V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+      <capltestcase name="APP_36_LowVolt" title="APP传输时_低压" />
+      <capltestcase name="APP_36_HighVolt" title="APP传输时_高压" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_FF00" title="FF00_功能握手" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_3600" title="APP_首块传输_3600" />
+        <capltestcase name="APP_3602" title="APP_首块传输_3602" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续4次传输同一数据块" />
+        <capltestcase name="APP_37_ErrorLen" title="APP_37报文数据过长" />
+        <capltestcase name="Restart_FF00" title="FF00后_功能复位" />
+        <capltestcase name="Restart_0202A" title="FF01后_功能复位" />
+        <capltestcase name="DefSession_FF00" title="FF00后_功能默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP_FF01后功能默认会话" />
+        <capltestcase name="Error_2EF184" title="2EF184_数据错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Continue" title="APP_36传输完成后继续发送一个数据块" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完退出" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash_0202后功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash_0202后功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash_0202后功能默认会话" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_请求内存大小错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_请求地址错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36数据错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_0202地址错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34地址长度格式标识错误" />
+        <capltestcase name="Flash_36_Continue" title="Flash_36传输完成后继续发送一个数据块" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_1002" title="步骤缺失_1002" />
+        <capltestcase name="Miss_27_2" title="步骤缺失_安全访问27" />
+        <capltestcase name="Miss_2E" title="步骤缺失_2EF184" />
+        <capltestcase name="Miss_34F" title="Flash_缺失34" />
+        <capltestcase name="Miss_36F" title="Flash_缺失36" />
+        <capltestcase name="Miss_37F" title="Flash_缺失37" />
+        <capltestcase name="Miss_34_36_37F" title="Flash_缺失34_36_37" />
+        <capltestcase name="Miss_0202F" title="Flash_缺失0202" />
+        <capltestcase name="Miss_FF00" title="APP_缺失FF00" />
+        <capltestcase name="Miss_34A" title="APP_缺失34" />
+        <capltestcase name="Miss_36A" title="APP_缺失36" />
+        <capltestcase name="Miss_37A" title="APP_缺失37" />
+        <capltestcase name="Miss_34_36A" title="APP_缺失34_36" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01" />
+        <capltestcase name="Miss_11" title="步骤缺失_1103" />
+        <capltestcase name="CA_Test_1" title="FF00后1001_缺失2EF184" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  
+  <testgroup title="Geely1.0" variants="Geely1.0 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+      <capltestcase name="APP_36_LowVolt" title="APP传输时_低压" />
+      <capltestcase name="APP_36_HighVolt" title="APP传输时_高压" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_2E" title="2E写数据时_功能握手" />
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_36A" title="APP36传输时_功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP校验0202时_功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01依赖性检测时_功能握手" />
+        <capltestcase name="Restart_2E" title="2E写数据时_功能复位" />
+        <capltestcase name="Restart_FF00" title="FF00擦除时_功能复位" />
+        <capltestcase name="Restart_36A" title="APP36传输时_功能复位" />
+        <capltestcase name="Restart_0202A" title="APP校验0202时_功能复位" />
+        <capltestcase name="DefSession_2E" title="2E写数据时_功能默认会话" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除时_功能默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP校验0202时_功能默认会话" />
+        <capltestcase name="DefSession_FF01" title="FF01依赖性检测时_功能默认会话" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_3600" title="APP_发送3600" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完退出" />
+        <capltestcase name="APP_34_Repeat" title="APP_34请求数据重复" />
+        <capltestcase name="APP_0202_Error" title="APP_CRC校验错误" />
+        <capltestcase name="Error_27" title="APP_发送错误密钥" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash校验0202时_功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash校验0202时_功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash校验0202时_功能默认会话" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_34_内存大小错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_34_内存地址错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36_数据错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34_数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34_地址长度格式标识错误" />
+        <capltestcase name="Flash_36_ReOver" title="Flash_重复数据块5次以上" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC校验错误" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_1003" title="步骤缺失_扩展会话1003" />
+        <capltestcase name="Miss_Pre" title="步骤缺失_整个预编程" />
+        <capltestcase name="Miss_1002" title="步骤缺失_编程会话1002" />
+        <capltestcase name="Miss_27_1" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_2E" title="步骤缺失_2E写数据" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash34请求" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash36传输" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash37退出" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_Flash34_36_37" />
+        <capltestcase name="Miss_0202F" title="步骤缺失_Flash0202校验" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_擦除FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP34请求" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP36传输" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP37退出" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP34_36_37" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP0202校验" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01依赖性检查" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  
+  <testgroup title="Geely3.0" variants="Geely3.0 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+      <capltestcase name="APP_36_LowVolt" title="APP传输时_低压" />
+      <capltestcase name="APP_36_HighVolt" title="APP传输时_高压" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_0301" title="0301时_功能握手" />
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP校验0212时_功能握手" />
+        <capltestcase name="Handshake_0205" title="0205时_功能握手" />
+        <capltestcase name="Restart_0301" title="0301后_功能复位" />
+        <capltestcase name="Restart_FF00" title="FF00擦除后_功能复位" />
+        <capltestcase name="Restart_0202A" title="APP校验0212后_功能复位" />
+        <capltestcase name="Restart_0205" title="0205后_功能复位" />
+        <capltestcase name="DefSession_0301" title="0301后_功能默认会话" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除后_功能默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP校验0212后_功能默认会话" />
+        <capltestcase name="DefSession_0205" title="FF01依赖性检测后_功能默认会话" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3600" title="APP_发送3600" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="Error_27" title="APP_发送错误密钥" />
+        <capltestcase name="Error_0301" title="APP_0301校验错误" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="FF00_FBT" title="FF00_擦除FBT地址" />
+        <capltestcase name="FF00_SBT" title="FF00_擦除SBT地址" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完退出" />
+        <capltestcase name="APP_36_Continue" title="APP_36传输完后继续传输" />
+        <capltestcase name="APP_36_Error" title="APP_36传输数据错误" />
+        <capltestcase name="APP_0202_Error" title="APP_CRC校验错误" />
+        <capltestcase name="APP_0202_Repeat" title="APP_发送两次0212" />
+        <capltestcase name="FF00_Repeat" title="APP_重复请求FF00" />
+        <capltestcase name="APP_3601_Error" title="APP_3601错误数据" />
+        <capltestcase name="APP_0202_FirstError" title="APP_0212先错误再正确" />
+        <capltestcase name="FF00_ReadF1AA" title="FF00后读F1AA" />
+        <capltestcase name="Repeat_0301" title="重复请求0301激活" />
+        <capltestcase name="FF00_0205" title="APP_FF00后直接0205" />
+        <capltestcase name="FF00_K30OFF" title="APP_FF00时断电" />
+        <capltestcase name="APP_36_0205" title="APP_36后0205" />
+        <capltestcase name="APP_BT_1001" title="APP进BT后发送10_01" />
+        <capltestcase name="BT_F186" title="纯BT状态下读22_F1_86" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash校验0202时_功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash校验0202时_功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash校验0202时_功能默认会话" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34_数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34_地址长度格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_34_内存地址错误" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_34_内存大小错误" />
+        <capltestcase name="Flash_36_Exit" title="Flash_36未传输完退出" />
+        <capltestcase name="Flash_36_Continue" title="Flash_36传输完继续传输" />
+        <capltestcase name="Flash_36_Error" title="Flash_36_数据错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC校验错误" />
+        <capltestcase name="Flash_0202_FirstError" title="Flash_0212先错误再正确" />
+        <capltestcase name="Flash_0202_ReadF1A2" title="Flash_0212后读F1A2" />
+        <capltestcase name="Flash_0202_ReadF186" title="Flash_0212后读F186" />
+        <capltestcase name="Flash_37_0205" title="Flash_37后0205" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_1002" title="步骤缺失_编程会话1002" />
+        <capltestcase name="Miss_22" title="步骤缺失_22读数据" />
+        <capltestcase name="Miss_27_1" title="步骤缺失_完全访问" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash34请求" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash36传输" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash37退出" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_Flash34_36_37" />
+        <capltestcase name="Miss_0202F" title="步骤缺失_SBT0212校验" />
+        <capltestcase name="Miss_0301" title="步骤缺失_0301校验" />
+        <capltestcase name="Miss_0202F_0301" title="步骤缺失_SBT0212和0301校验" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_擦除FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP34请求" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP36传输" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP37退出" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP34_36_37" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP0212校验" />
+        <capltestcase name="Miss_0205" title="步骤缺失_0205" />
+        <capltestcase name="Miss_11" title="步骤缺失_11复位重启" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  
+  <testgroup title="鑫源" variants="鑫源 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_16V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.5V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_16V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.5V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+      <capltestcase name="APP_36_LowVolt" title="APP传输时_低压" />
+      <capltestcase name="APP_36_HighVolt" title="APP传输时_高压" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_2E" title="2E写数据时_功能握手" />
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_36A" title="APP36传输时_功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP校验0201时_功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01依赖性检测时_功能握手" />
+        <capltestcase name="Restart_2E" title="2E写数据时_功能复位" />
+        <capltestcase name="Restart_FF00" title="FF00擦除时_功能复位" />
+        <capltestcase name="Restart_36A" title="APP36传输时_功能复位" />
+        <capltestcase name="APP_0202_Error" title="APP_CRC校验错误" />
+        <capltestcase name="Restart_0202A" title="APP校验0201时_功能复位" />
+        <capltestcase name="DefSession_2E" title="2E写数据时_默认会话" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除时_默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP校验0201时_默认会话" />
+        <capltestcase name="DefSession_FF01" title="FF01依赖性检测时_默认会话" />
+        <capltestcase name="Wait_1003" title="1003后_延时超过5S" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash校验0201时_功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash校验0201时_功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash校验0201时_默认会话" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_34_内存大小错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_34_内存地址错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36_数据错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34_数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34_地址长度格式标识错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC校验错误" />
+        <capltestcase name="Flash_36_Exit" title="Flash_36未传输完退出" />
+        <capltestcase name="Flash_3601_3601" title="Flash_3601后3601" />
+        <capltestcase name="Flash_3601_3603" title="Flash_3601后3603" />
+        <capltestcase name="Flash_3602_3601" title="Flash_3602后3601" />
+        <capltestcase name="Flash_3600" title="Flash_3600后3601" />
+        <capltestcase name="Flash_36_Repeat" title="Flash_36_重复数据块5次" />
+        <capltestcase name="Flash_36_ReOver" title="Flash_36_重复数据块5次以上" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_1003" title="步骤缺失_扩展会话1003" />
+        <capltestcase name="Miss_22" title="步骤缺失_22读数据" />
+        <capltestcase name="Miss_Pre" title="步骤缺失_整个预编程" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash34请求数据" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash36数据传输" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash37请求退出" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_Flash_34_36_37" />
+        <capltestcase name="Miss_0202F" title="步骤缺失_Flash_0202" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC校验错误" />
+        <capltestcase name="Miss_2E" title="步骤缺失_2E写数据" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_擦除FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP34请求数据" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP36数据传输" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP37请求退出" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP_34_36_37" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP校验0201" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01依赖性检查" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  
+  <testgroup title="瑞驰" variants="瑞驰 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_16V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+      <capltestcase name="APP_36_LowVolt" title="APP传输时_低压" />
+      <capltestcase name="APP_36_HighVolt" title="APP传输时_高压" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续5次传输同一数据块" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完退出" />
+        <capltestcase name="APP_36_Error" title="APP_36传输数据错误" />
+        <capltestcase name="APP_0202_Error" title="APP_CRC校验错误" />
+        <capltestcase name="Wait_0203" title="F002后_延时超过5S" />
+        <capltestcase name="Pro_0203" title="F002后_请求编程会话" />
+        <capltestcase name="Restart_0203" title="F002后_物理复位" />
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_36A" title="APP_36传输时功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP_校验F001时功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01时功能握手" />
+        <capltestcase name="Restart_FF00" title="FF00擦除后_功能复位" />
+        <capltestcase name="Restart_36A" title="APP_36传输后功能复位" />
+        <capltestcase name="Restart_0202A" title="APP_校验F001后功能复位" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除后_功能默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP_校验F001后功能默认会话" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash_F001时功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash_F001后功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash_F001后功能默认会话" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_请求内存大小错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_请求地址错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36数据错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC校验错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34地址长度格式标识错误" />
+        <capltestcase name="Flash_3601_3601" title="Flash_3601后3601" />
+        <capltestcase name="Flash_3600" title="Flash_3600后3601" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_1003" title="步骤缺失_1003" />
+        <capltestcase name="Miss_0203" title="步骤缺失_F002条件检测" />
+        <capltestcase name="Miss_Pre" title="步骤缺失_整个预编程" />
+        <capltestcase name="Miss_22" title="步骤缺失_22读DID" />
+        <capltestcase name="Miss_27_1" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash_34请求下载" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash_36传输数据" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash_37退出传输" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_整个下载驱动" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_FF00擦除" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP_34请求下载" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP_36传输数据" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP_37退出传输" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP完整性校验" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01兼容性检查" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="奇瑞" variants="奇瑞 All">
+  <testgroup title="奇瑞通用">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+    </testgroup>
+    <testgroup title="上下电测试，需使用程控电源或老化板">
+      <capltestcase name="FF00_PowerOff" title="FF00_肯定响应前下总电" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Error_27" title="27_密钥错误" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="FF00_FBT" title="FF00_擦除FBT地址" />
+        <capltestcase name="Re_FF00" title="3101FF00后3101FF00" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完37退出" />
+        <capltestcase name="APP_36_34" title="APP_36未传输完34请求" />
+        <capltestcase name="APP_36_Continue" title="APP_36数据多传输一块" />
+        <capltestcase name="Re_FF01" title="3101FF01后3101FF01" />
+        <capltestcase name="APP_0202_Error" title="APP_FF01校验错误" />
+        <capltestcase name="Error_DA04" title="APP_DA04校验错误" />
+        <capltestcase name="FF00_DA04" title="FF00擦除后直接DA04依赖性检查" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_3600" title="APP_首次传输3600" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续10次传输同一数据块" />
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01时功能握手" />
+        <capltestcase name="Handshake_DA04" title="DA04时功能握手" />
+        <capltestcase name="Restart_FF00" title="FF00擦除后_功能复位" />
+        <capltestcase name="Restart_FF01" title="APP_校验FF01后功能复位" />
+        <capltestcase name="Restart_DA04" title="DA04依赖性检查后功能复位" />
+        <capltestcase name="FF00_Part" title="FF00缺少某个地址段" />
+        <capltestcase name="FF01_Part" title="FF01缺少某个地址段" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_请求内存大小错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_请求下载地址错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34地址长度格式标识错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36下载数据错误" />
+        <capltestcase name="Flash_36_Continue" title="Flash_36传输完继续发送数据块" />
+        <capltestcase name="Flash_36_Exit" title="Flash_36未传输完退出" />
+        <capltestcase name="FF00_Before_36F" title="Flash_驱动未下载完成FF00擦除" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_27_1" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash_34请求下载" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash_36传输数据" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash_37退出传输" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_Flash_34_36_37" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_31_01_FF_00" />
+        <capltestcase name="Miss_03FF00" title="步骤缺失_31_03_FF_00" />
+        <capltestcase name="Miss_02FF00" title="步骤缺失_31_02_FF_00" />
+        <capltestcase name="Miss_01_03FF00" title="步骤缺失_01FF00和03FF00" />
+        <capltestcase name="Miss_01_02_03FF00" title="步骤缺失_所有FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP_34请求下载" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP_36传输数据" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP_37退出传输" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP_34_36_37" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_31_01_FF_01" />
+        <capltestcase name="Miss_01_03FF01" title="步骤缺失_3101FF01和3103FF01" />
+        <capltestcase name="Miss_03FF01" title="步骤缺失_31_03_FF_01" />
+        <capltestcase name="Miss_02FF01" title="步骤缺失_31_02_FF_01" />
+        <capltestcase name="Miss_01_02_03FF01" title="步骤缺失_所有FF01" />
+        <capltestcase name="Miss_DA04" title="步骤缺失_31_01_DA_04" />
+        <capltestcase name="Miss_01_03DA04" title="步骤缺失_3101DA04和3103DA04" />
+        <capltestcase name="Miss_03DA04" title="步骤缺失_31_03_DA_04" />
+        <capltestcase name="Miss_02DA04" title="步骤缺失_31_02_DA_04" />
+        <capltestcase name="Miss_01_02_03DA04" title="步骤缺失_所有DA04" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP_34_36_37" />
+        <capltestcase name="APP_0202_Error" title="APP_DD02校验错误" />  
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  <testgroup title="奇瑞5.0">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Restart_FF00" title="FF00擦除后_功能复位" />
+        <capltestcase name="Handshake_36A" title="APP_36传输时功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP_校验DD02时功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01时功能握手" />
+        <capltestcase name="Restart_36A" title="APP36传输后_功能复位" />
+        <capltestcase name="DefSession_36A" title="APP36传输后_默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP_DD02校验后默认会话" />
+        <capltestcase name="DefSession_FF01" title="APP_FF01后默认会话" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_3600" title="APP_首次传输3600" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续5次传输同一数据块" />
+        <capltestcase name="APP_36_RepeatOver" title="APP_连续5次以上传输同一数据块" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Continue" title="APP_36传输完后继续传输一个块" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完37退出" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash校验DD02时_功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash校验DD02时_功能复位" />
+        <capltestcase name="Restart_FF00" title="FF00擦除后_功能复位" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除后_功能默认会话" />
+        <capltestcase name="DefSession_0202F" title="Flash校验DD02后功能默认会话" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34地址长度格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_请求内存大小错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC校验错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36下载数据错误" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_Pre" title="步骤缺失_整个预编程" />
+        <capltestcase name="Miss_27_1" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_2E" title="步骤缺失_2E写数据" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash_34请求下载" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash_36传输数据" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash_37退出传输" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_APP_34_36_37" />
+        <capltestcase name="Miss_0202F" title="步骤缺失_Flash_DD02完整性校验" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP_34请求下载" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP_36传输数据" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP_37退出传输" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP_DD02完整性校验" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  </testgroup>
+
+  <testgroup title="五菱" variants="五菱 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+      <capltestcase name="APP_36_LowVolt" title="APP传输时_低压" />
+      <capltestcase name="APP_36_HighVolt" title="APP传输时_高压" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_36A" title="APP36传输时_功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP_DFFF校验时功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01时功能握手" />
+        <capltestcase name="Restart_FF00" title="FF00擦除后_功能复位" />
+        <capltestcase name="Restart_36A" title="APP36传输时_功能复位" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除后_默认会话" />
+        <capltestcase name="DefSession_36A" title="APP36传输后_默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP_DFFF校验后默认会话" />
+        <capltestcase name="DefSession_FF01" title="APP_FF01后默认会话" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_3600" title="APP_首次传输3600" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续5次传输同一数据块" />
+        <capltestcase name="APP_36_RepeatOver" title="APP_连续5次以上传输同一数据块" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Continue" title="APP_36传输完后继续传输一个块" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完37退出" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash_DFFF时功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash_DFFF后功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash_DFFF后默认会话" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_请求内存大小错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_请求下载地址错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34地址长度格式标识错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_CRC校验错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36下载数据错误" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_22" title="步骤缺失_22读DID" />
+        <capltestcase name="Miss_27_1" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_Pre" title="步骤缺失_整个预编程" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash_34请求下载" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash_36传输数据" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash_37退出传输" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_Flash_34_36_37" />
+        <capltestcase name="Miss_0202F" title="步骤缺失_Flash_DFFF完整性校验" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP_34请求下载" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP_36传输数据" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP_37退出传输" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP_34_36_37" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP_DFFF完整性校验" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01兼容性检查" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  
+  <testgroup title="东风小康" variants="东风小康 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01时功能握手" />
+        <capltestcase name="APP_36_Continue" title="APP_36传输完后继续传输一个块" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续6次传输同一数据块" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完FF01" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorLength" title="APP_34_报文长度错误" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Flash_36_Error" title="Flash_36下载数据错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_34下载地址错误" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_34内存大小错误" />
+        <capltestcase name="Flash_34_ErrorLength" title="Flash_34报文长度错误" />
+        <capltestcase name="Flash_0202_Error" title="Flash_37的CRC校验错误" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_2E" title="步骤缺失_2EF184写数据" />
+        <capltestcase name="Miss_Flash" title="步骤缺失_Flash整个下载流程" />
+        <capltestcase name="Miss_0202F" title="步骤缺失_Flash_0202" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP_34请求下载" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP_36传输数据" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP_37退出传输" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01有效性检查" />
+        <capltestcase name="Miss_0202F_App" title="步骤缺失_Flash37后直接FF01" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+  
+  <testgroup title="赛力斯" variants="赛力斯 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Error_27" title="APP_27_密钥错误" />
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_36A" title="APP36传输时_功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP_DD02时功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01时功能握手" />
+        <capltestcase name="Restart_FF00" title="FF00擦除时_功能复位" />
+        <capltestcase name="Restart_36A" title="APP36传输时_功能复位" />
+        <capltestcase name="Restart_0202A" title="APP_DD02时功能复位" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除时_功能默认会话" />
+        <capltestcase name="DefSession_36A" title="APP_36传输时_功能默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP_DD02时_功能默认会话" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完37退出" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续5次传输同一数据块" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Complete_FF01" title="APP_36传输完后FF01" />
+        <capltestcase name="APP_36_Incomplete_FF01" title="APP_36未传输完后FF01" />
+        <capltestcase name="APP_0202_Error" title="APP_DD02CRC校验错误" />
+        <capltestcase name="Error_22_DID" title="22_读取不支持的DID" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash_DD02时功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash_DD02时功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash_DD02时功能默认会话" />
+        <capltestcase name="Flash_3601_3601" title="Flash_3601后3601" />
+        <capltestcase name="Flash_3600" title="Flash_3600后3601" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_34下载地址错误" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_34内存大小错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34地址长度格式标识错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36下载数据错误" />
+        <capltestcase name="Flash_36_FF01" title="Flash_36传输完后FF01" />
+        <capltestcase name="Flash_0202_Error" title="Flash_DD02CRC校验错误" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_1003" title="步骤缺失_1003" />
+        <capltestcase name="Miss_0203" title="步骤缺失_0203条件检测" />
+        <capltestcase name="Miss_Pre" title="步骤缺失_整个预编程" />
+        <capltestcase name="Miss_1002" title="步骤缺失_1002" />
+        <capltestcase name="Miss_22" title="步骤缺失_22读数据" />
+        <capltestcase name="Miss_27_1" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_2E" title="步骤缺失_2E写数据" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash_34请求下载" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash_36传输数据" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash_37退出传输" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_Flash_34_36_37" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP_34请求下载" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP_36传输数据" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP_37退出传输" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP_34_36_37" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP_DD02安全校验" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01完整兼容性检查" />
+      </testgroup>
+    </testgroup>
+  </testgroup>
+
+  <testgroup title="广汽" variants="广汽 All">
+    <testgroup title="电压测试，需使用程控电源">
+      <capltestcase name="APPInvalid_Volt_1" title="无应用程序时_低压_6V" />
+      <capltestcase name="APPInvalid_Volt_2" title="无应用程序时_低压_8.9V" />
+      <capltestcase name="APPInvalid_Volt_3" title="无应用程序时_低压_9.1V" />
+      <capltestcase name="APPInvalid_Volt_4" title="无应用程序时_正常电压_12V" />
+      <capltestcase name="APPInvalid_Volt_5" title="无应用程序时_高压_15.9V" />
+      <capltestcase name="APPInvalid_Volt_6" title="无应用程序时_高压_16.1V" />
+      <capltestcase name="APPInvalid_Volt_7" title="无应用程序时_高压_18V" />
+      <capltestcase name="APPValid_Volt_1" title="有应用程序时_低压_6V" />
+      <capltestcase name="APPValid_Volt_2" title="有应用程序时_低压_8.9V" />
+      <capltestcase name="APPValid_Volt_3" title="有应用程序时_低压_9.1V" />
+      <capltestcase name="APPValid_Volt_4" title="有应用程序时_正常电压_12V" />
+      <capltestcase name="APPValid_Volt_5" title="有应用程序时_高压_15.9V" />
+      <capltestcase name="APPValid_Volt_6" title="有应用程序时_高压_16.1V" />
+      <capltestcase name="APPValid_Volt_7" title="有应用程序时_高压_18V" />
+    </testgroup>
+    <testgroup title="自动化用例">
+      <testgroup title="APP">
+        <capltestcase name="Handshake_FF00" title="FF00擦除时_功能握手" />
+        <capltestcase name="Handshake_36A" title="APP36传输时_功能握手" />
+        <capltestcase name="Handshake_0202A" title="APP_0202时功能握手" />
+        <capltestcase name="Handshake_FF01" title="FF01时功能握手" />
+        <capltestcase name="Handshake_2E" title="2E写数据时_功能握手" />
+        <capltestcase name="Restart_FF00" title="FF00擦除时_功能复位" />
+        <capltestcase name="Restart_36A" title="APP36传输时_功能复位" />
+        <capltestcase name="Restart_0202A" title="APP_0202时功能复位" />
+        <capltestcase name="Restart_2E" title="2E写数据时_功能复位" />
+        <capltestcase name="DefSession_FF00" title="FF00擦除时_功能默认会话" />
+        <capltestcase name="DefSession_0202A" title="APP_0202时_功能默认会话" />
+        <capltestcase name="DefSession_FF01" title="APP_FF01后默认会话" />
+        <capltestcase name="DefSession_36A" title="APP_36传输时_功能默认会话" />
+        <capltestcase name="APP_0202_Error" title="APP_0202CRC校验错误" />
+        <capltestcase name="DefSession_2E" title="2E写数据时_功能默认会话" />
+        <capltestcase name="APP_36_Less" title="APP_36数据块小于最大长度" />
+        <capltestcase name="APP_36_More" title="APP_36数据块大于最大长度" />
+        <capltestcase name="APP_3601_3601" title="APP_3601后3601" />
+        <capltestcase name="APP_3600" title="APP_发送3600" />
+        <capltestcase name="APP_3601_3603" title="APP_3601后3603" />
+        <capltestcase name="APP_3602_3601" title="APP_3602后3601" />
+        <capltestcase name="APP_36_Repeat" title="APP_连续3次传输同一数据块" />
+        <capltestcase name="FF00_Length" title="FF00_数据长度错误" />
+        <capltestcase name="FF00_Addr" title="FF00_内存地址错误" />
+        <capltestcase name="FF00_AddrSize" title="FF00_内存大小错误" />
+        <capltestcase name="APP_34_Repeat" title="APP_34请求数据重复" />
+        <capltestcase name="APP_34_ErrorAddr" title="APP_34_内存地址错误" />
+        <capltestcase name="APP_34_ErrorAddrSize" title="APP_34_内存大小错误" />
+        <capltestcase name="APP_34_ErrorDataID" title="APP_34_数据格式标识错误" />
+        <capltestcase name="APP_34_ErrorAddrLenID" title="APP_34_地址长度格式标识错误" />
+        <capltestcase name="APP_36_Exit" title="APP_36未传输完37退出" />
+        <capltestcase name="Error_27" title="APP_27_密钥错误" />
+        <capltestcase name="APP_36_Complete_FF01" title="APP_36传输完后FF01" />
+        <capltestcase name="APP_36_Incomplete_FF01" title="APP_36未传输完后FF01" />
+        <capltestcase name="Error_22_DID" title="22_读取不支持的DID" />
+      </testgroup>
+      <testgroup title="Flash">
+        <capltestcase name="Handshake_0202F" title="Flash_0202时功能握手" />
+        <capltestcase name="Restart_0202F" title="Flash_0202时功能复位" />
+        <capltestcase name="DefSession_0202F" title="Flash_0202时功能默认会话" />
+        <capltestcase name="Flash_0202_Error" title="Flash_0202CRC校验错误" />
+        <capltestcase name="Flash_34_ErrorAddr" title="Flash_34下载地址错误" />
+        <capltestcase name="Flash_34_ErrorAddrSize" title="Flash_34内存大小错误" />
+        <capltestcase name="Flash_34_ErrorDataID" title="Flash_34数据格式标识错误" />
+        <capltestcase name="Flash_34_ErrorAddrLenID" title="Flash_34地址长度格式标识错误" />
+        <capltestcase name="Flash_36_Error" title="Flash_36下载数据错误" />
+        <capltestcase name="Flash_3601_3601" title="Flash_3601后3601" />
+        <capltestcase name="Flash_3600" title="Flash_3600后3601" />
+        <capltestcase name="Flash_36_FF01" title="Flash_36传输完后FF01" />
+        <capltestcase name="Flash_36_ReOver" title="Flash_36_重复数据块5次以上" />
+        <capltestcase name="Flash_36_Continue" title="Flash_36传输完成后继续发送一个数据块" />
+      </testgroup>
+      <testgroup title="步骤缺失">
+        <capltestcase name="Miss_1003" title="步骤缺失_1003" />
+        <capltestcase name="Miss_Pre" title="步骤缺失_整个预编程" />
+        <capltestcase name="Miss_1002" title="步骤缺失_1002" />
+        <capltestcase name="Miss_27_1" title="步骤缺失_安全访问" />
+        <capltestcase name="Miss_2E" title="步骤缺失_2E写数据" />
+        <capltestcase name="Miss_34F" title="步骤缺失_Flash_34请求下载" />
+        <capltestcase name="Miss_36F" title="步骤缺失_Flash_36传输数据" />
+        <capltestcase name="Miss_37F" title="步骤缺失_Flash_37退出传输" />
+        <capltestcase name="Miss_34_36_37F" title="步骤缺失_Flash_34_36_37" />
+        <capltestcase name="Miss_0202A" title="步骤缺失_APP_0202安全校验" />
+        <capltestcase name="Miss_FF00" title="步骤缺失_FF00" />
+        <capltestcase name="Miss_34A" title="步骤缺失_APP_34请求下载" />
+        <capltestcase name="Miss_36A" title="步骤缺失_APP_36传输数据" />
+        <capltestcase name="Miss_37A" title="步骤缺失_APP_37退出传输" />
+        <capltestcase name="Miss_34_36_37A" title="步骤缺失_APP_34_36_37" />
+        <capltestcase name="Miss_0202F" title="Flash_缺失0202" />
+        <capltestcase name="Miss_FF01" title="步骤缺失_FF01完整兼容性检查" />
+      </testgroup>
+    </testgroup>
+    <testgroup title="诊断会话管理测试">
+      <capltestcase name="Case_BT_Manager_01" title="无编程请求APP有效" />
+      <capltestcase name="Case_BT_Manager_02" title="有编程请求" />
+      <capltestcase name="Case_BT_Manager_03" title="无编程请求 APP无效" />
+      <capltestcase name="Case_BT_Manager_04" title="默认会话发送1101复位后有编程请求" />
+      <capltestcase name="Case_BT_Manager_05" title="默认会话发送1101复位响应后断电" />
+      <capltestcase name="Case_BT_Manager_06" title="扩展会话发送编程请求后断电" />
+      <capltestcase name="Case_BT_Manager_07" title="默认会话发送1101复位后有编程请求" />
+      <capltestcase name="Case_BT_Manager_08" title="默认会话发送1101复位响应后断电" />
+      <capltestcase name="Case_BT_Manager_09" title="扩展会话发送编程请求后断电" />
+    </testgroup>
+  </testgroup>
+
+
+</testmodule>

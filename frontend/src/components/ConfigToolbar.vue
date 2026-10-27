@@ -95,23 +95,12 @@
     >
       <div class="remote-desc">
         {{ remoteMode === 'pull'
-          ? '从共享盘拉取配置到本地。可拉取「最新」或按时间戳选择历史版本；本地同名配置会被直接覆盖。'
+          ? '从共享盘拉取配置到本地。树中根节点为「最新配置」，展开可看到各历史版本；勾选后拉取，本地同名配置会被直接覆盖。'
           : '把勾选的配置项上传到共享盘并生成新版本（不覆盖服务端已存在的同名配置），可填写备注便于追溯。' }}
       </div>
 
-      <!-- 拉取模式：最新 / 历史版本 切换 -->
-      <el-radio-group
-        v-if="remoteMode === 'pull'"
-        v-model="pullSource"
-        class="remote-source"
-        @change="onPullSourceChange"
-      >
-        <el-radio-button label="latest">最新配置</el-radio-button>
-        <el-radio-button label="version">历史版本</el-radio-button>
-      </el-radio-group>
-
-      <!-- 历史版本：按时间戳筛选 -->
-      <div v-if="remoteMode === 'pull' && pullSource === 'version'" class="remote-filter">
+      <!-- 拉取：时间戳筛选（过滤后仅展示范围内的历史版本子节点） -->
+      <div v-if="remoteMode === 'pull'" class="remote-filter">
         <span class="remote-filter-label">时间戳筛选：</span>
         <el-date-picker
           v-model="versionRange"
@@ -121,10 +110,10 @@
           start-placeholder="起始时间"
           end-placeholder="结束时间"
           size="default"
-          @change="loadVersionList"
+          @change="loadVersionTree"
         />
-        <el-button link type="primary" :icon="Refresh" :loading="versionLoading" @click="loadVersionList">
-          刷新版本
+        <el-button link type="primary" :icon="Refresh" :loading="versionLoading" @click="loadVersionTree">
+          刷新
         </el-button>
       </div>
 
@@ -138,13 +127,19 @@
         />
       </div>
 
-      <template v-if="remoteMode === 'pull' && pullSource === 'version'">
-        <!-- 历史版本列表 -->
+      <template v-if="remoteMode === 'pull'">
+        <!-- 树形图：根节点=最新配置，展开=历史版本 -->
         <div class="remote-toolbar">
-          <span class="remote-count">共 {{ versionTotal }} 个历史版本（单选拉取）</span>
+          <span class="remote-count">共 {{ versionTotal }} 个配置 / {{ versionLeafCount }} 个历史版本（可多选）</span>
           <div class="remote-toolbar-right">
-            <el-button link type="primary" :icon="Refresh" :loading="versionLoading" @click="loadVersionList">
-              刷新
+            <el-button link type="primary" :disabled="!versionTree.length" @click="toggleExpandAll">
+              {{ allExpanded ? '折叠全部' : '展开全部' }}
+            </el-button>
+            <el-button link type="primary" :disabled="!versionTree.length" @click="selectAllVersions">
+              全选
+            </el-button>
+            <el-button link type="primary" :disabled="!versionTree.length" @click="clearSelectedVersions">
+              清空
             </el-button>
           </div>
         </div>
@@ -157,21 +152,32 @@
           class="remote-alert"
         />
         <div v-loading="versionLoading" class="remote-list">
-          <el-radio-group v-model="selectedVersionKey" class="version-group">
-            <el-radio
-              v-for="item in versionItems"
-              :key="item.key"
-              :value="item.key"
-              class="remote-item version-item"
-            >
-              <span class="version-name">{{ item.name }}</span>
-              <el-tag size="small" type="info" effect="plain">{{ item.timestamp }}</el-tag>
-              <span v-if="item.remark" class="version-remark">备注：{{ item.remark }}</span>
-              <span v-if="item.user" class="version-user">by {{ item.user }}</span>
-            </el-radio>
-          </el-radio-group>
-          <div v-if="!versionLoading && !versionItems.length" class="remote-empty">
-            所选时间范围内没有历史版本
+          <el-tree
+            ref="versionTreeRef"
+            :data="versionTree"
+            node-key="key"
+            show-checkbox
+            :default-expand-all="false"
+            :expand-on-click-node="false"
+            :check-on-click-node="true"
+            :props="{ label: 'label', children: 'children' }"
+            class="version-tree"
+            @check="onVersionTreeCheck"
+          >
+            <template #default="{ data }">
+              <span v-if="data.isRoot" class="tree-root">
+                <span class="version-name" :title="data.name">{{ data.name }}</span>
+                <span class="version-remark" :title="data.remark">{{ data.remark || '—' }}</span>
+                <el-tag size="small" type="success" effect="plain" class="tree-badge">最新</el-tag>
+              </span>
+              <span v-else class="tree-child">
+                <el-tag size="small" type="info" effect="plain" class="version-timestamp">{{ data.timestamp }}</el-tag>
+                <span class="version-remark" :title="data.remark">{{ data.remark || '—' }}</span>
+              </span>
+            </template>
+          </el-tree>
+          <div v-if="!versionLoading && !versionTree.length" class="remote-empty">
+            共享盘上没有可拉取的配置
           </div>
         </div>
       </template>
@@ -219,7 +225,7 @@
             </el-checkbox>
           </el-checkbox-group>
           <div v-if="!remoteLoading && !remoteItems.length" class="remote-empty">
-            {{ remoteMode === 'pull' ? '共享盘上没有可拉取的配置项' : '本地没有可推送的配置项' }}
+            本地没有可推送的配置项
           </div>
         </div>
       </template>
@@ -453,24 +459,30 @@ const remoteItems = ref<RemoteItem[]>([])
 // 推送备注（写入版本元数据）
 const pushRemark = ref('')
 
-// 拉取来源：最新配置 / 历史版本
-const pullSource = ref<'latest' | 'version'>('latest')
-// 历史版本
-interface VersionItem {
-  key: string
+// 拉取：树形图（根节点=最新配置，子节点=历史版本）
+interface VersionTreeNode {
+  key: string          // 唯一键：root 用 `cfg::<name>`；子节点用 `<name>::<version>`
+  label: string
   name: string
-  version: string
+  version: string      // 最新节点为空（表示拉取最新）
   timestamp: string
   remark: string
-  user: string
+  isRoot: boolean
+  children?: VersionTreeNode[]
 }
 const versionLoading = ref(false)
 const versionWarn = ref('')
-const versionItems = ref<VersionItem[]>([])
-const selectedVersionKey = ref('')
+const versionTree = ref<VersionTreeNode[]>([])
 const versionRange = ref<[string, string] | null>(null)
+const versionTreeRef = ref<any>(null)
+const allExpanded = ref(false)
+/** 已勾选的节点 key 集合（由 el-tree 的 getCheckedNodes 同步） */
+const versionCheckedKeys = ref<string[]>([])
 
-const versionTotal = computed(() => versionItems.value.length)
+const versionTotal = computed(() => versionTree.value.length)
+const versionLeafCount = computed(() =>
+  versionTree.value.reduce((sum, n) => sum + (n.children?.length || 0), 0)
+)
 
 const remoteAllChecked = computed(
   () => remoteItems.value.length > 0 && remoteChecked.value.length === remoteItems.value.length
@@ -479,10 +491,10 @@ const remoteIndeterminate = computed(
   () => remoteChecked.value.length > 0 && remoteChecked.value.length < remoteItems.value.length
 )
 
-// 确定按钮是否禁用：历史版本模式需选中一个版本；否则需勾选至少一个配置项
+// 确定按钮是否禁用：拉取需至少勾选一个节点；推送需勾选至少一个配置项
 const remoteSubmitDisabled = computed(() => {
-  if (remoteMode.value === 'pull' && pullSource.value === 'version') {
-    return !selectedVersionKey.value
+  if (remoteMode.value === 'pull') {
+    return !versionCheckedKeys.value.length
   }
   return !remoteChecked.value.length
 })
@@ -495,22 +507,19 @@ function openRemoteDialog(mode: RemoteMode) {
   remoteItems.value = []
   remoteWarn.value = ''
   pushRemark.value = ''
-  pullSource.value = 'latest'
-  versionItems.value = []
-  selectedVersionKey.value = ''
+  versionTree.value = []
   versionRange.value = null
   versionWarn.value = ''
-  loadRemoteList()
-}
-
-/** 切换拉取来源：最新 / 历史版本 */
-function onPullSourceChange(val: string | number | boolean | undefined) {
-  if (val === 'version') {
-    loadVersionList()
+  versionCheckedKeys.value = []
+  allExpanded.value = false
+  if (mode === 'pull') {
+    loadVersionTree()
+  } else {
+    loadRemoteList()
   }
 }
 
-/** 加载可勾选项：拉取=远程已有的配置项；推送=本地已有的配置项 */
+/** 加载可勾选项（推送=本地已有的配置项） */
 async function loadRemoteList() {
   remoteLoading.value = true
   remoteWarn.value = ''
@@ -523,29 +532,16 @@ async function loadRemoteList() {
     const localNames: string[] = data.local_configs?.length ? data.local_configs : configList.value
     const sortNames = (arr: string[]) => [...arr].sort((a, b) => a.localeCompare(b, 'zh-CN'))
 
-    if (remoteMode.value === 'pull') {
-      remoteItems.value = sortNames(remoteNames).map((name) => ({
-        name,
-        tagText: localNames.includes(name) ? '本地已有（合并）' : '本地新增',
-        tagType: localNames.includes(name) ? 'warning' : 'success',
-      }))
-      // 拉取默认全选，便于一次取回全部
-      remoteChecked.value = remoteItems.value.map((i) => i.name)
-      if (!remoteAvailable.value) {
-        remoteWarn.value = '共享盘不可访问，或远程还没有该模块的配置文件，无法拉取'
-      }
-    } else {
-      remoteItems.value = sortNames(localNames).map((name) => ({
-        name,
-        tagText: remoteNames.includes(name) ? '覆盖远程' : '远程新增',
-        tagType: remoteNames.includes(name) ? 'warning' : 'success',
-      }))
-      // 推送默认只勾选当前配置，避免误推全部
-      const cur = selectedConfig.value
-      remoteChecked.value = cur && localNames.includes(cur) ? [cur] : []
-      if (!remoteAvailable.value) {
-        remoteWarn.value = '共享盘不可访问，或远程还没有该模块的配置文件（推送将新建远程文件）'
-      }
+    remoteItems.value = sortNames(localNames).map((name) => ({
+      name,
+      tagText: remoteNames.includes(name) ? '覆盖远程' : '远程新增',
+      tagType: remoteNames.includes(name) ? 'warning' : 'success',
+    }))
+    // 推送默认只勾选当前配置，避免误推全部
+    const cur = selectedConfig.value
+    remoteChecked.value = cur && localNames.includes(cur) ? [cur] : []
+    if (!remoteAvailable.value) {
+      remoteWarn.value = '共享盘不可访问，或远程还没有该模块的配置文件（推送将新建远程文件）'
     }
   } catch {
     remoteItems.value = []
@@ -565,11 +561,11 @@ function invertRemoteChecked() {
   remoteChecked.value = remoteItems.value.filter((i) => !checked.has(i.name)).map((i) => i.name)
 }
 
-/** 加载历史版本列表（按时间戳范围筛选） */
-async function loadVersionList() {
+/** 加载拉取树：每个配置一个根节点（最新），子节点为历史版本 */
+async function loadVersionTree() {
   versionLoading.value = true
   versionWarn.value = ''
-  selectedVersionKey.value = ''
+  versionCheckedKeys.value = []
   try {
     const opts: { since?: string; until?: string } = {}
     if (versionRange.value && versionRange.value.length === 2) {
@@ -581,57 +577,125 @@ async function loadVersionList() {
     remoteSharePath.value = data.share_path || remoteSharePath.value
     const versionsMap: Record<string, any[]> = data.versions || {}
 
-    const items: VersionItem[] = []
-    Object.keys(versionsMap).forEach((name) => {
-      (versionsMap[name] || []).forEach((v) => {
-        const version = String(v.version || v.timestamp || '')
-        if (!version) return
-        items.push({
-          key: `${name}::${version}`,
+    const nodes: VersionTreeNode[] = Object.keys(versionsMap)
+      .sort((a, b) => a.localeCompare(b, 'zh-CN'))
+      .map((name) => {
+        const versions = [...(versionsMap[name] || [])]
+          .map((v) => ({
+            key: `${name}::${String(v.version || v.timestamp || '')}`,
+            label: String(v.timestamp || v.version || ''),
+            name,
+            version: String(v.version || v.timestamp || ''),
+            timestamp: String(v.timestamp || v.version || ''),
+            remark: v.remark || '',
+            isRoot: false,
+          }))
+          .filter((v) => v.version)
+          .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+
+        const latest = versions[0]
+        return {
+          key: `cfg::${name}`,
+          label: name,
           name,
-          version,
-          timestamp: String(v.timestamp || version),
-          remark: v.remark || '',
-          user: v.user || '',
-        })
+          version: '', // 空表示拉取「最新」
+          timestamp: latest ? latest.timestamp : '',
+          remark: latest ? latest.remark : '',
+          isRoot: true,
+          children: versions,
+        }
       })
-    })
-    // 按时间戳倒序（最新在前）
-    items.sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
-    versionItems.value = items
-    if (!items.length) {
+
+    versionTree.value = nodes
+    if (!nodes.length) {
       versionWarn.value = data.available === false
-        ? '共享盘不可访问，或该模块还没有任何历史版本'
-        : '所选时间范围内没有历史版本'
+        ? '共享盘不可访问，或该模块还没有任何配置版本'
+        : '所选时间范围内没有可拉取的配置版本'
     }
   } catch {
-    versionItems.value = []
-    versionWarn.value = '获取历史版本失败，请检查共享盘是否可访问'
+    versionTree.value = []
+    versionWarn.value = '获取远程配置版本失败，请检查共享盘是否可访问'
   } finally {
     versionLoading.value = false
   }
+}
+
+/** 树勾选变化：记录已勾选的节点 key（含最新根与历史子节点） */
+function onVersionTreeCheck() {
+  const nodes = versionTreeRef.value?.getCheckedNodes?.() || []
+  versionCheckedKeys.value = nodes.map((n: VersionTreeNode) => n.key)
+}
+
+/** 展开 / 折叠全部 */
+function toggleExpandAll() {
+  allExpanded.value = !allExpanded.value
+  const root = versionTreeRef.value?.store?.root
+  if (!root) return
+  const walk = (node: any) => {
+    node.expanded = allExpanded.value
+    ;(node.childNodes || []).forEach(walk)
+  }
+  ;(root.childNodes || []).forEach(walk)
+}
+
+/** 全选：勾选所有根与其子节点 */
+function selectAllVersions() {
+  const allKeys: string[] = []
+  versionTree.value.forEach((n) => {
+    allKeys.push(n.key)
+    ;(n.children || []).forEach((c) => allKeys.push(c.key))
+  })
+  versionTreeRef.value?.setCheckedKeys?.(allKeys)
+  onVersionTreeCheck()
+}
+
+function clearSelectedVersions() {
+  versionTreeRef.value?.setCheckedKeys?.([])
+  versionCheckedKeys.value = []
 }
 
 /** 确认拉取 / 推送 */
 async function confirmRemote() {
   const isPull = remoteMode.value === 'pull'
 
-  // 拉取历史版本：单选，按版本号拉取
-  if (isPull && pullSource.value === 'version') {
-    if (!selectedVersionKey.value) {
-      ElMessage.warning('请选择一个历史版本')
+  // 拉取：按勾选的树节点逐项拉取（根节点=最新配置；子节点=指定历史版本）
+  if (isPull) {
+    const checked = [...versionCheckedKeys.value]
+    if (!checked.length) {
+      ElMessage.warning('请至少勾选一个要拉取的配置或版本')
       return
     }
-    const [name, version] = selectedVersionKey.value.split('::')
+    // 解析为「配置名 -> 指定版本（空=最新）」，同一配置取最具体的选择（子节点优先）
+    const plan = new Map<string, string>()
+    checked.forEach((key) => {
+      if (key.startsWith('cfg::')) {
+        const name = key.slice(5)
+        if (!plan.has(name)) plan.set(name, '')
+      } else {
+        const [name, version] = key.split('::')
+        plan.set(name, version) // 子节点覆盖根节点的「最新」选择
+      }
+    })
+
     remoteSubmitting.value = true
     try {
-      const res: any = await pullConfigVersion(props.moduleName, name, version)
-      ElMessage.success(res?.message || `已拉取 ${name} @ ${version}`)
+      let lastMessage = ''
+      for (const [name, version] of plan) {
+        const res: any = version
+          ? await pullConfigVersion(props.moduleName, name, version)
+          : await pullConfig(props.moduleName, [name], true)
+        lastMessage = res?.message || lastMessage
+      }
+      ElMessage.success(lastMessage || `已拉取 ${plan.size} 项配置`)
       remoteVisible.value = false
       await loadConfigs()
-      if (configList.value.includes(name)) {
-        selectedConfig.value = name
-        emit('config-change', name)
+      const firstName = [...plan.keys()][0]
+      if (firstName && configList.value.includes(firstName)) {
+        selectedConfig.value = firstName
+        emit('config-change', firstName)
+      } else if (configList.value.length > 0) {
+        selectedConfig.value = configList.value[0]
+        emit('config-change', selectedConfig.value)
       }
     } catch {
       // 错误提示已由请求拦截器统一弹出
@@ -641,7 +705,7 @@ async function confirmRemote() {
     return
   }
 
-  // 最新配置拉取 / 推送：多选
+  // 推送：多选本地配置项
   const names = [...remoteChecked.value]
   if (!names.length) {
     ElMessage.warning('请至少选择一个配置项')
@@ -649,21 +713,10 @@ async function confirmRemote() {
   }
   remoteSubmitting.value = true
   try {
-    const res: any = isPull
-      ? await pullConfig(props.moduleName, names, true)
-      : await pushConfig(props.moduleName, names, true, pushRemark.value.trim())
-    ElMessage.success(res?.message || (isPull ? '拉取成功' : '推送成功'))
+    const res: any = await pushConfig(props.moduleName, names, true, pushRemark.value.trim())
+    ElMessage.success(res?.message || '推送成功')
     remoteVisible.value = false
     await loadConfigs()
-    // 拉取后列表可能新增配置项，保持原选中，否则选第一个
-    if (isPull) {
-      if (selectedConfig.value && configList.value.includes(selectedConfig.value)) {
-        emit('config-change', selectedConfig.value)
-      } else if (configList.value.length > 0) {
-        selectedConfig.value = configList.value[0]
-        emit('config-change', selectedConfig.value)
-      }
-    }
   } catch {
     // 错误提示已由请求拦截器统一弹出
   } finally {
@@ -765,11 +818,6 @@ defineExpose({ loadConfigs, refreshAndSelect, selectedConfig, configList })
   margin-top: 10px;
 }
 
-/* 拉取来源切换（最新 / 历史版本） */
-.remote-source {
-  margin-bottom: 12px;
-}
-
 /* 历史版本时间戳筛选 / 推送备注行 */
 .remote-filter,
 .remote-remark {
@@ -791,44 +839,76 @@ defineExpose({ loadConfigs, refreshAndSelect, selectedConfig, configList })
   min-width: 240px;
 }
 
-/* 历史版本单选列表 */
-.version-group {
-  display: flex;
-  flex-direction: column;
+/* 拉取树形图 */
+.version-tree {
   width: 100%;
-}
+  --el-tree-node-hover-bg-color: var(--bg-hover, #f5f7fa);
 
-.version-item {
-  height: auto;
-  margin-right: 0;
+  :deep(.el-tree-node__content) {
+    height: auto;
+    min-height: 30px;
+    padding-top: 2px;
+    padding-bottom: 2px;
+  }
 
-  :deep(.el-radio__label) {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+  /* 让节点内容横向铺满，便于备注与时间戳对齐 */
+  :deep(.el-tree-node__label) {
     flex: 1;
+    min-width: 0;
     overflow: hidden;
   }
 }
 
+/* 根节点行（最新配置）：配置名 + 备注 + 最新标记 */
+.tree-root {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+/* 子节点行（历史版本）：时间戳 + 备注 */
+.tree-child {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  min-width: 0;
+}
+
+.tree-badge {
+  flex: 0 0 auto;
+}
+
+/* 配置名：自适应宽度，并限制在 [120px, 220px] 之间 */
 .version-name {
+  flex: 0 1 auto;
+  min-width: 120px;
+  max-width: 220px;
   font-weight: 600;
   white-space: nowrap;
-}
-
-.version-remark {
-  color: var(--text-secondary);
-  font-size: 12px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
-.version-user {
+/* 备注：占据中间剩余空间并左对齐，超长省略 */
+.version-remark {
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--text-secondary);
   font-size: 12px;
+  text-align: left;
   white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 时间戳：固定在最右端 */
+.version-timestamp {
+  flex: 0 0 auto;
   margin-left: auto;
+  font-variant-numeric: tabular-nums;
 }
 
 .remote-list {

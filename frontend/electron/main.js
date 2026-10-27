@@ -1,6 +1,6 @@
 import { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, nativeImage } from 'electron'
 import { fileURLToPath } from 'url'
-import { dirname, join } from 'path'
+import { dirname, join, basename } from 'path'
 import { spawn, exec } from 'child_process'
 import { existsSync, writeFileSync, readdirSync, readFileSync, statSync, mkdirSync, createReadStream, createWriteStream, copyFileSync } from 'fs'
 import http from 'http'
@@ -58,15 +58,14 @@ function killBackendProcessTree() {
     backendProcess.kill()
     // Windows 上兜底：通过 taskkill 终止整个进程树，确保 onefile 的 bootloader+Python 子进程全清理
     if (process.platform === 'win32' && backendProcess.pid) {
-      exec(`taskkill /T /F /PID ${backendProcess.pid}`, () => {
+      exec(`taskkill /T /F /PID ${backendProcess.pid}`, { windowsHide: true }, () => {
         // 忽略执行失败（进程可能已不存在）
       })
     }
-    // 兜底遍历：向所有同名 #Excel2Case#V1.0.00.exe 进程发 tree kill，
-    // 防止 startBackend 失败后 pid 未正确关联导致的残留
-    if (process.platform === 'win32') {
-      exec(`taskkill /T /F /IM "#Excel2Case#V1.0.00.exe"`, () => {})
-    }
+    // 注意：这里不能按镜像名杀（taskkill /IM "#Excel2Case#V1.0.00.exe"）。
+    // 后端 exe 与 Electron 主进程同名，按名杀会连自己一起杀掉，
+    // 导致 quit 流程半途中断、进程残留（安装器会一直判定「程序未关闭」）。
+    // 只按 pid 做树杀，已能覆盖 PyInstaller onefile 的 bootloader + Python 子进程。
   } catch (e) {
     console.error('[Backend] killBackendProcessTree 失败:', e.message)
   }
@@ -697,6 +696,80 @@ function backupUserData() {
   }
 }
 
+// 退出本程序后再启动安装器。
+// 直接 shell.openPath 会让安装器与本程序同时存在：安装器按进程名检测
+// 「程序正在运行」→ 提示用户关闭 → 用户关闭主窗口只是最小化到托盘
+// （见 win.on('close')），进程仍在 → 安装器反复弹同一个窗口。
+// 因此改为用一个临时 VBS：等待本进程退出后再启动安装包，本进程立即 app.quit() 让位。
+//
+// 为什么全用 VBS、不再用 cmd 批处理：
+// 1) spawn('cmd.exe', ..., {detached:true}) 在 Windows 上会给子进程新建独立控制台窗口，
+//    detached 优先于 windowsHide，隐藏不掉 → 更新时一直挂着黑窗；
+// 2) 旧的 `tasklist | find` 轮询在现场出现过 find 挂住不返回，循环走不到次数上限，
+//    黑窗关不掉、安装器也永远不启动。VBS 的 WMI 查询不依赖外部进程，且有明确次数上限。
+function launchInstallerAfterExit(setupPath) {
+  const exeName = process.platform === 'win32'
+    ? '#Excel2Case#V1.0.00.exe'
+    : basename(process.execPath)
+  const dir = join(app.getPath('temp'), '#Excel2Case#Update')
+  const vbsPath = join(dir, 'launch-installer.vbs')
+  const logPath = join(dir, 'launch-installer.log')
+
+  // VBS 字符串里的双引号用 "" 转义："""C:\path\x.exe""" → "C:\path\x.exe"
+  // 流程：固定等 3 秒 → 最多 10 次（每次 0.5 秒，共 5 秒）确认同名进程已退出
+  //       → 无论结果如何都启动安装器（最坏 8 秒内一定拉起）
+  const vbs = [
+    'On Error Resume Next',
+    'Dim sh, fso, f, svc, col, i, n',
+    'Set sh = CreateObject("WScript.Shell")',
+    'Set fso = CreateObject("Scripting.FileSystemObject")',
+    // 第 4 个参数 -1 = 以 Unicode 写日志，记事本打开中文不乱码
+    `Set f = fso.OpenTextFile("${logPath}", 8, True, -1)`,
+    'f.WriteLine Now & " 开始等待主程序退出"',
+    'WScript.Sleep 3000',
+    'Set svc = GetObject("winmgmts:\\\\.\\root\\cimv2")',
+    'If Err.Number = 0 Then',
+    '  For i = 1 To 10',
+    `    Set col = svc.ExecQuery("SELECT ProcessId FROM Win32_Process WHERE Name='${exeName}'")`,
+    '    If Err.Number <> 0 Then Exit For',
+    '    n = 0',
+    '    If Not col Is Nothing Then n = col.Count',
+    '    If n = 0 Then Exit For',
+    '    WScript.Sleep 500',
+    '  Next',
+    'End If',
+    'Err.Clear',
+    'f.WriteLine Now & " 启动安装程序"',
+    'f.Close',
+    `sh.Run """${setupPath}""", 1, False`,
+    ''
+  ].join('\r\n')
+
+  try {
+    mkdirSync(dir, { recursive: true })
+    // 用带 BOM 的 UTF-16LE：wscript 能正确解析，且安装包路径含中文用户名时不会乱码
+    writeFileSync(vbsPath, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(vbs, 'utf16le')]))
+    // detached：脱离本进程独立运行，本进程退出不会连带结束它
+    // //B = 批处理模式：脚本出错时不弹模态错误框（避免隐藏进程卡在对话框上）
+    const child = spawn('wscript.exe', ['//B', vbsPath], {
+      detached: true,
+      stdio: 'ignore',
+      windowsHide: true
+    })
+    child.unref()
+    console.log('[Update] 已启动延时安装脚本:', vbsPath)
+  } catch (err) {
+    console.error('[Update] 写安装脚本失败:', err.message)
+    // 兜底：退化为直接打开安装包，至少不让更新中断
+    shell.openPath(setupPath)
+  }
+
+  // 让位给安装器：标记为真正退出（绕过 close 拦截），并清理后端进程树
+  isQuitting = true
+  killBackendProcessTree()
+  setTimeout(() => app.quit(), 300)
+}
+
 async function startSelfUpdate(setupName) {
   const parent = mainWindow && !mainWindow.isDestroyed() ? mainWindow : undefined
   createUpdateProgressWindow()
@@ -713,9 +786,9 @@ async function startSelfUpdate(setupName) {
       type: 'info',
       title: '更新',
       message: '更新包下载完成',
-      detail: '即将启动安装程序，请按提示完成安装。'
+      detail: '点击确定后将自动关闭本程序并启动安装程序，请按提示完成安装。'
     })
-    shell.openPath(dest)
+    launchInstallerAfterExit(dest)
   } catch (err) {
     if (updateProgressWindow && !updateProgressWindow.isDestroyed()) {
       updateProgressWindow.close()
@@ -960,6 +1033,8 @@ function createWindow(backendReady = true) {
   // 点击关闭按钮时最小化到托盘，而不是退出
   // 必须绑定「本窗口」实例（win），不能用全局 mainWindow：
   // 打开「新建窗口」后 mainWindow 已指向新窗口，用它隐藏的是新窗口，原窗口点关闭就没反应。
+  // 例外：自更新时 isQuitting 已置 true，此时必须真正退出，否则安装器
+  // 会一直检测到本进程仍在运行而反复弹「请先关闭程序」。
   win.on('close', (event) => {
     if (!isQuitting) {
       event.preventDefault()

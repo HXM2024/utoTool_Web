@@ -1,0 +1,890 @@
+/*@!Encoding:936*/
+includes
+{
+  
+}
+
+variables
+{
+  char ECU_platform[400];
+  long ECU;
+  message 0x11 IGON = {dlc=8};
+  message *Relaymsg={dlc=8};
+  
+  char file_name_0[200] = ".\\Testmodule\\Testmodule_UDS\\information\\UDSinfo.ini";
+
+  char Hardware_version[400];
+  char Hardware_number[400];
+  char Calibrate_version[400];
+  char SVN_Revision[400];
+  char Software_version[400];
+  char FBT[400];
+  char SBT[400];
+  char Hardware_Test[400];
+  char ECU_Number[400];
+  char SW[400];
+  char HW[400];
+ /*******************比亚迪部分DID*******************/
+  char DID_F084[400];
+  char DID_F180[400];
+  char DID_F184[400];
+  char DID_F185[400];
+  char DID_F187[400];
+  char DID_F193[400];
+  char DID_F194[400];
+  char DID_F195_Ver[400];
+  char DID_F195_Time[400];
+  
+  long DID_F084_Len;
+  long DID_F180_Len;
+  long DID_F184_Len;
+  long DID_F185_Len;
+  long DID_F187_Len;
+  long DID_F193_Len;
+  long DID_F194_Len;
+  long DID_F195_Ver_Len;
+  long DID_F195_Time_Len;  
+
+ /*******************长安部分DID*******************/
+  char DID_F189[400];
+  char DID_F089[400];
+  char DID_F18A[400];
+  char DID_F170[400];
+  char DID_F171[400];
+  char DID_F123[400];
+  char DID_F188[400];
+  char DID_F120[400];
+  char DID_F121[400];
+  char DID_F122[400];
+  char DID_F1F6[400];
+  
+  long DID_F189_Len;
+  long DID_F089_Len;
+  long DID_F18A_Len;
+  long DID_F170_Len;
+  long DID_F171_Len;
+  long DID_F123_Len;
+  long DID_F188_Len;
+  long DID_F120_Len;
+  long DID_F121_Len;
+  long DID_F122_Len;
+  long DID_F1F6_Len;
+ /*******************瑞驰部分DID*******************/
+  char DID_F197[400];
+  char DID_0216[400];
+  char DID_F195[400];
+    
+  long DID_F197_Len;
+  long DID_0216_Len;
+  long DID_F195_Len;
+ /*******************五菱部分DID*******************/
+  char DID_F186[400];
+  char DID_F17A[400];
+  char DID_F18B[400];
+  char DID_F190[400];
+  char DID_F192[400];
+  char DID_F1B2[400];
+  char DID_F1CB[400];
+  char DID_F1C1[400];
+  
+  long DID_F186_Len;
+  long DID_F17A_Len;
+  long DID_F18B_Len;
+  long DID_F192_Len;
+  long DID_F190_Len;
+  long DID_F1B2_Len;
+  long DID_F1CB_Len;
+  long DID_F1C1_Len;
+  
+ /*******************奇瑞部分DID*******************/
+  char DID_F191[400];
+  char DID_3011[400];
+  char DID_F201[400];
+
+  long DID_F191_Len;
+  long DID_3011_Len;
+  long DID_F201_Len;
+  
+ /*******************老化板*******************/
+  char file_name_1[200] = ".\\Testmodule\\Testmodule_UDS\\UDS_Main_info.ini";
+  char ECU_project[50];
+  int Burn_in_Board,Board_Channel;
+  int LHB_State_New = 0x03;
+  int LHB_State = 0;
+}
+
+/*****************新老化板******************/
+//RelayON(端口X) ：端口X 黑色接口-黄色接口
+//RelayOFF(端口X)：端口X 黑色接口-绿色接口
+void RelayON(byte Ctr_state)
+{
+  Relaymsg.id=0x101;
+  Relaymsg.can = Board_Channel;
+  if(Burn_in_Board==2)
+    LHB_State = LHB_State_New;
+  switch(Ctr_state)
+  {//置为0
+    case 1:@sysvar::DID::LHB_State &=0xFE;break;
+    case 2:@sysvar::DID::LHB_State &=0xFD;break;
+    case 3:@sysvar::DID::LHB_State &=0xFB;break;
+    case 4:@sysvar::DID::LHB_State &=0xF7;break;
+  }
+  LHB_State_New = LHB_State;
+  Relaymsg.byte(0)= @sysvar::DID::LHB_State ;
+  output(Relaymsg);
+}
+void RelayOFF(byte Ctr_state)
+{ 
+  Relaymsg.id=0x101;
+  Relaymsg.can = Board_Channel;
+  if(Burn_in_Board==2)
+    LHB_State = LHB_State_New;
+  switch(Ctr_state)
+  {//置为1
+    case 1:@sysvar::DID::LHB_State |=1; break;
+    case 2:@sysvar::DID::LHB_State |=2;break;
+    case 3:@sysvar::DID::LHB_State |=4;break;
+    case 4:@sysvar::DID::LHB_State |=8;break;
+  }
+  LHB_State_New = LHB_State;
+  Relaymsg.byte(0)= @sysvar::DID::LHB_State ;
+  output(Relaymsg);
+}
+
+on key '1'
+{
+  if(Burn_in_Board==2)
+    RelayOFF(1);
+  else
+    RelayON(1);
+  writeEx(-3,0,"上K30电");
+}
+on key '2'
+{
+  if(Burn_in_Board==2)
+    RelayOFF(2);
+  else
+    RelayON(2);
+  writeEx(-3,0,"上K15电");
+}
+on key '3'
+{
+  if(Burn_in_Board==2)
+    RelayON(1);
+  else
+    RelayOFF(1);
+  writeEx(-3,0,"下K30电");
+}
+on key '4'
+{
+  if(Burn_in_Board==2)
+    RelayON(2);
+  else
+    RelayOFF(2);
+  writeEx(-3,0,"下K15电");
+}
+on sysvar sysvar::DID::ClearPath
+{
+  if(@sysvar::DID::ClearPath == 1)
+  {
+    sysSetVariableString(sysvar::DID::SWP1_Path,"");
+    sysSetVariableString(sysvar::DID::SWP2_Path,"");
+    writeEx(-3,0,"清除文件输入");
+  }
+}
+on prestart
+{
+//  setFilePath (file_path_0,2);
+  getProfileString("Version_Information", "ECU_platform","Null",ECU_platform, 1000, file_name_0);
+  @sysvar::DID::ECU_platform=sysGetVariableValueForDescription(sysvar::DID::ECU_platform, ECU_platform, ECU);
+ 
+  getProfileString(ECU_platform, "Hardware_version","Null",Hardware_version, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Hardware_version,Hardware_version);
+  getProfileString(ECU_platform, "Hardware_number","Null",Hardware_number, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Hardware_number,Hardware_number);
+  getProfileString(ECU_platform, "Calibrate_version","Null",Calibrate_version, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Calibrate_version,Calibrate_version);
+  getProfileString(ECU_platform, "SVN_Revision","Null",SVN_Revision, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::SVN_Revision,SVN_Revision);
+  getProfileString(ECU_platform, "Software_version","Null",Software_version, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Software_version,Software_version);
+  getProfileString(ECU_platform, "FBT","Null",FBT, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::FBT,FBT);
+  getProfileString(ECU_platform, "SBT","Null",SBT, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::SBT,SBT);
+  getProfileString(ECU_platform, "Hardware_Test","Null",Hardware_Test, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Hardware_Test,Hardware_Test);
+  getProfileString(ECU_platform, "ECU_Number","Null",ECU_Number, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::ECU_Number,ECU_Number);
+  getProfileString(ECU_platform, "SW","Null",SW, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::SW,SW);
+  getProfileString(ECU_platform, "HW","Null",HW, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::HW,HW);
+  
+ /********************************比亚迪部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F084","Null",DID_F084, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F084,DID_F084);
+  getProfileString(ECU_platform, "DID_F180","Null",DID_F180, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F180,DID_F180);
+  getProfileString(ECU_platform, "DID_F184","Null",DID_F184, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F184,DID_F184);
+  getProfileString(ECU_platform, "DID_F185","Null",DID_F185, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F185,DID_F185);
+  getProfileString(ECU_platform, "DID_F187","Null",DID_F187, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F187,DID_F187);
+  getProfileString(ECU_platform, "DID_F193","Null",DID_F193, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F193,DID_F193);
+  getProfileString(ECU_platform, "DID_F194","Null",DID_F194, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F194,DID_F194);
+  getProfileString(ECU_platform, "DID_F195_Ver","Null",DID_F195_Ver, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F195_Ver,DID_F195_Ver);
+  getProfileString(ECU_platform, "DID_F195_Time","Null",DID_F195_Time, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F195_Time,DID_F195_Time);
+  @sysvar::DID::DID_F084_Len=getProfileInt (ECU_platform, "DID_F084_Len",0,file_name_0);
+  @sysvar::DID::DID_F180_Len=getProfileInt (ECU_platform, "DID_F180_Len",0,file_name_0);
+  @sysvar::DID::DID_F184_Len=getProfileInt (ECU_platform, "DID_F184_Len",0,file_name_0);
+  @sysvar::DID::DID_F185_Len=getProfileInt (ECU_platform, "DID_F185_Len",0,file_name_0);
+  @sysvar::DID::DID_F187_Len=getProfileInt (ECU_platform, "DID_F187_Len",0,file_name_0);
+  @sysvar::DID::DID_F193_Len=getProfileInt (ECU_platform, "DID_F193_Len",0,file_name_0);
+  @sysvar::DID::DID_F194_Len=getProfileInt (ECU_platform, "DID_F194_Len",0,file_name_0);
+  @sysvar::DID::DID_F195_Ver_Len=getProfileInt (ECU_platform, "DID_F195_Ver_Len",0,file_name_0);
+  @sysvar::DID::DID_F195_Time_Len=getProfileInt (ECU_platform, "DID_F195_Time_Len",0,file_name_0);
+  /*****************************************************************************/
+ /********************************长安部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F189","Null",DID_F189, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F189,DID_F189);
+  getProfileString(ECU_platform, "DID_F089","Null",DID_F089, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F089,DID_F089);
+  getProfileString(ECU_platform, "DID_F18A","Null",DID_F18A, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F18A,DID_F18A);
+  getProfileString(ECU_platform, "DID_F170","Null",DID_F170, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F170,DID_F170);
+  getProfileString(ECU_platform, "DID_F171","Null",DID_F171, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F171,DID_F171);
+  getProfileString(ECU_platform, "DID_F123","Null",DID_F123, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F123,DID_F123);
+  getProfileString(ECU_platform, "DID_F188","Null",DID_F188, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F188,DID_F188);
+  getProfileString(ECU_platform, "DID_F120","Null",DID_F120, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F120,DID_F120);
+  getProfileString(ECU_platform, "DID_F121","Null",DID_F121, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F121,DID_F121);
+  getProfileString(ECU_platform, "DID_F122","Null",DID_F122, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F122,DID_F122);
+  getProfileString(ECU_platform, "DID_F1F6","Null",DID_F1F6, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1F6,DID_F1F6);
+  @sysvar::DID::DID_F189_Len=getProfileInt (ECU_platform, "DID_F189_Len",0,file_name_0);
+  @sysvar::DID::DID_F089_Len=getProfileInt (ECU_platform, "DID_F089_Len",0,file_name_0);
+  @sysvar::DID::DID_F18A_Len=getProfileInt (ECU_platform, "DID_F18A_Len",0,file_name_0);
+  @sysvar::DID::DID_F170_Len=getProfileInt (ECU_platform, "DID_F170_Len",0,file_name_0);
+  @sysvar::DID::DID_F171_Len=getProfileInt (ECU_platform, "DID_F171_Len",0,file_name_0);
+  @sysvar::DID::DID_F123_Len=getProfileInt (ECU_platform, "DID_F123_Len",0,file_name_0);
+  @sysvar::DID::DID_F188_Len=getProfileInt (ECU_platform, "DID_F188_Len",0,file_name_0);
+  @sysvar::DID::DID_F120_Len=getProfileInt (ECU_platform, "DID_F120_Len",0,file_name_0);
+  @sysvar::DID::DID_F121_Len=getProfileInt (ECU_platform, "DID_F121_Len",0,file_name_0);
+  @sysvar::DID::DID_F122_Len=getProfileInt (ECU_platform, "DID_F122_Len",0,file_name_0);
+  @sysvar::DID::DID_F1F6_Len=getProfileInt (ECU_platform, "DID_F1F6_Len",0,file_name_0);
+  /*****************************************************************************/
+ /********************************瑞驰部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F197","Null",DID_F197, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F197,DID_F197);
+  getProfileString(ECU_platform, "DID_0216","Null",DID_0216, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_0216,DID_0216);
+  getProfileString(ECU_platform, "DID_F195","Null",DID_F195, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F195,DID_F195);
+  @sysvar::DID::DID_F197_Len=getProfileInt (ECU_platform, "DID_F197_Len",0,file_name_0);
+  @sysvar::DID::DID_0216_Len=getProfileInt (ECU_platform, "DID_0216_Len",0,file_name_0);
+  @sysvar::DID::DID_F195_Len=getProfileInt (ECU_platform, "DID_F195_Len",0,file_name_0);
+ /******************************************************************************/
+ /********************************五菱部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F186","Null",DID_F186, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F186,DID_F186);
+  getProfileString(ECU_platform, "DID_F17A","Null",DID_F17A, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F17A,DID_F17A);
+  getProfileString(ECU_platform, "DID_F18B","Null",DID_F18B, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F18B,DID_F18B);
+  getProfileString(ECU_platform, "DID_F190","Null",DID_F190, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F190,DID_F190);
+  getProfileString(ECU_platform, "DID_F192","Null",DID_F192, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F192,DID_F192);
+  getProfileString(ECU_platform, "DID_F1B2","Null",DID_F1B2, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1B2,DID_F1B2);
+  getProfileString(ECU_platform, "DID_F1CB","Null",DID_F1CB, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1CB,DID_F1CB);
+  getProfileString(ECU_platform, "DID_F1C1","Null",DID_F1C1, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1C1,DID_F1C1);
+  @sysvar::DID::DID_F186_Len=getProfileInt (ECU_platform, "DID_F186_Len",0,file_name_0);
+  @sysvar::DID::DID_F17A_Len=getProfileInt (ECU_platform, "DID_F17A_Len",0,file_name_0);
+  @sysvar::DID::DID_F18B_Len=getProfileInt (ECU_platform, "DID_F18B_Len",0,file_name_0);
+  @sysvar::DID::DID_F190_Len=getProfileInt (ECU_platform, "DID_F190_Len",0,file_name_0);
+  @sysvar::DID::DID_F192_Len=getProfileInt (ECU_platform, "DID_F192_Len",0,file_name_0);
+  @sysvar::DID::DID_F1B2_Len=getProfileInt (ECU_platform, "DID_F1B2_Len",0,file_name_0);
+  @sysvar::DID::DID_F1CB_Len=getProfileInt (ECU_platform, "DID_F1CB_Len",0,file_name_0);
+  @sysvar::DID::DID_F1C1_Len=getProfileInt (ECU_platform, "DID_F1C1_Len",0,file_name_0);
+  /*****************************************************************************/
+ /********************************奇瑞部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F191","Null",DID_F191, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F191,DID_F191);
+  getProfileString(ECU_platform, "DID_3011","Null",DID_3011, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_3011,DID_3011);
+  getProfileString(ECU_platform, "DID_F201","Null",DID_F201, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F201,DID_F201);
+  @sysvar::DID::DID_F191_Len=getProfileInt (ECU_platform, "DID_F191_Len",0,file_name_0);
+  @sysvar::DID::DID_3011_Len=getProfileInt (ECU_platform, "DID_3011_Len",0,file_name_0);
+  @sysvar::DID::DID_F201_Len=getProfileInt (ECU_platform, "DID_F201_Len",0,file_name_0);
+  /*****************************************************************************/  
+  @sysvar::Prog_power::K30 = 0;
+  @sysvar::Prog_power::K30 = 1;
+  /*****************************************************************************/  
+  getProfileString("Project_Information", "ECU_project","Null",ECU_project, 200, file_name_1);  
+  Board_Channel = getProfileInt(ECU_project,"Board_Channel",Board_Channel,file_name_1);
+  Burn_in_Board = getProfileInt(ECU_project,"Burn_in_Board",Burn_in_Board,file_name_1);
+}
+
+on sysvar DID::ECU_platform
+{
+  sysGetVariableDescriptionForValue(sysvar::DID::ECU_platform,@sysvar::DID::ECU_platform,ECU_platform,elcount(ECU_platform));
+  writeProfileString("Version_Information", "ECU_platform", ECU_platform, file_name_0);
+  getProfileString(ECU_platform, "Hardware_version","Null",Hardware_version, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Hardware_version,Hardware_version);
+  getProfileString(ECU_platform, "Hardware_number","Null",Hardware_number, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Hardware_number,Hardware_number);
+  getProfileString(ECU_platform, "Calibrate_version","Null",Calibrate_version, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Calibrate_version,Calibrate_version);
+  getProfileString(ECU_platform, "SVN_Revision","Null",SVN_Revision, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::SVN_Revision,SVN_Revision);
+  getProfileString(ECU_platform, "Software_version","Null",Software_version, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Software_version,Software_version);
+  getProfileString(ECU_platform, "FBT","Null",FBT, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::FBT,FBT);
+  getProfileString(ECU_platform, "SBT","Null",SBT, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::SBT,SBT);
+  getProfileString(ECU_platform, "Hardware_Test","Null",Hardware_Test, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::Hardware_Test,Hardware_Test);
+  getProfileString(ECU_platform, "ECU_Number","Null",ECU_Number, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::ECU_Number,ECU_Number);
+  getProfileString(ECU_platform, "SW","Null",SW, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::SW,SW);
+  getProfileString(ECU_platform, "HW","Null",HW, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::HW,HW);
+  
+ /********************************比亚迪部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F084","Null",DID_F084, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F084,DID_F084);
+  getProfileString(ECU_platform, "DID_F180","Null",DID_F180, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F180,DID_F180);
+  getProfileString(ECU_platform, "DID_F184","Null",DID_F184, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F184,DID_F184);
+  getProfileString(ECU_platform, "DID_F185","Null",DID_F185, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F185,DID_F185);
+  getProfileString(ECU_platform, "DID_F187","Null",DID_F187, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F187,DID_F187);
+  getProfileString(ECU_platform, "DID_F193","Null",DID_F193, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F193,DID_F193);
+  getProfileString(ECU_platform, "DID_F194","Null",DID_F194, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F194,DID_F194);
+  getProfileString(ECU_platform, "DID_F195_Ver","Null",DID_F195_Ver, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F195_Ver,DID_F195_Ver);
+  getProfileString(ECU_platform, "DID_F195_Time","Null",DID_F195_Time, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F195_Time,DID_F195_Time);
+  @sysvar::DID::DID_F084_Len=getProfileInt (ECU_platform, "DID_F084_Len",0,file_name_0);
+  @sysvar::DID::DID_F180_Len=getProfileInt (ECU_platform, "DID_F180_Len",0,file_name_0);
+  @sysvar::DID::DID_F184_Len=getProfileInt (ECU_platform, "DID_F184_Len",0,file_name_0);
+  @sysvar::DID::DID_F185_Len=getProfileInt (ECU_platform, "DID_F185_Len",0,file_name_0);
+  @sysvar::DID::DID_F187_Len=getProfileInt (ECU_platform, "DID_F187_Len",0,file_name_0);
+  @sysvar::DID::DID_F193_Len=getProfileInt (ECU_platform, "DID_F193_Len",0,file_name_0);
+  @sysvar::DID::DID_F194_Len=getProfileInt (ECU_platform, "DID_F194_Len",0,file_name_0);
+  @sysvar::DID::DID_F195_Ver_Len=getProfileInt (ECU_platform, "DID_F195_Ver_Len",0,file_name_0);
+  @sysvar::DID::DID_F195_Time_Len=getProfileInt (ECU_platform, "DID_F195_Time_Len",0,file_name_0);
+  /*****************************************************************************/
+ /********************************长安部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F189","Null",DID_F189, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F189,DID_F189);
+  getProfileString(ECU_platform, "DID_F089","Null",DID_F089, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F089,DID_F089);
+  getProfileString(ECU_platform, "DID_F18A","Null",DID_F18A, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F18A,DID_F18A);
+  getProfileString(ECU_platform, "DID_F170","Null",DID_F170, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F170,DID_F170);
+  getProfileString(ECU_platform, "DID_F171","Null",DID_F171, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F171,DID_F171);
+  getProfileString(ECU_platform, "DID_F123","Null",DID_F123, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F123,DID_F123);
+  getProfileString(ECU_platform, "DID_F188","Null",DID_F188, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F188,DID_F188);
+  getProfileString(ECU_platform, "DID_F120","Null",DID_F120, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F120,DID_F120);
+  getProfileString(ECU_platform, "DID_F121","Null",DID_F121, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F121,DID_F121);
+  getProfileString(ECU_platform, "DID_F122","Null",DID_F122, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F122,DID_F122);
+  getProfileString(ECU_platform, "DID_F1F6","Null",DID_F1F6, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1F6,DID_F1F6);
+  @sysvar::DID::DID_F189_Len=getProfileInt (ECU_platform, "DID_F189_Len",0,file_name_0);
+  @sysvar::DID::DID_F089_Len=getProfileInt (ECU_platform, "DID_F089_Len",0,file_name_0);
+  @sysvar::DID::DID_F18A_Len=getProfileInt (ECU_platform, "DID_F18A_Len",0,file_name_0);
+  @sysvar::DID::DID_F170_Len=getProfileInt (ECU_platform, "DID_F170_Len",0,file_name_0);
+  @sysvar::DID::DID_F171_Len=getProfileInt (ECU_platform, "DID_F171_Len",0,file_name_0);
+  @sysvar::DID::DID_F123_Len=getProfileInt (ECU_platform, "DID_F123_Len",0,file_name_0);
+  @sysvar::DID::DID_F188_Len=getProfileInt (ECU_platform, "DID_F188_Len",0,file_name_0);
+  @sysvar::DID::DID_F120_Len=getProfileInt (ECU_platform, "DID_F120_Len",0,file_name_0);
+  @sysvar::DID::DID_F121_Len=getProfileInt (ECU_platform, "DID_F121_Len",0,file_name_0);
+  @sysvar::DID::DID_F122_Len=getProfileInt (ECU_platform, "DID_F122_Len",0,file_name_0);
+  @sysvar::DID::DID_F1F6_Len=getProfileInt (ECU_platform, "DID_F1F6_Len",0,file_name_0);
+  /*****************************************************************************/
+ /********************************瑞驰部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F197","Null",DID_F197, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F197,DID_F197);
+  getProfileString(ECU_platform, "DID_0216","Null",DID_0216, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_0216,DID_0216);
+  getProfileString(ECU_platform, "DID_F195","Null",DID_F195, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F195,DID_F195);
+  @sysvar::DID::DID_F197_Len=getProfileInt (ECU_platform, "DID_F197_Len",0,file_name_0);
+  @sysvar::DID::DID_0216_Len=getProfileInt (ECU_platform, "DID_0216_Len",0,file_name_0);
+  @sysvar::DID::DID_F195_Len=getProfileInt (ECU_platform, "DID_F195_Len",0,file_name_0);
+  /*****************************************************************************/
+ /********************************五菱部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F186","Null",DID_F186, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F186,DID_F186);
+  getProfileString(ECU_platform, "DID_F17A","Null",DID_F17A, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F17A,DID_F17A);
+  getProfileString(ECU_platform, "DID_F18B","Null",DID_F18B, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F18B,DID_F18B);
+  getProfileString(ECU_platform, "DID_F190","Null",DID_F190, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F190,DID_F190);
+  getProfileString(ECU_platform, "DID_F192","Null",DID_F192, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F192,DID_F192);
+  getProfileString(ECU_platform, "DID_F1B2","Null",DID_F1B2, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1B2,DID_F1B2);
+  getProfileString(ECU_platform, "DID_F1CB","Null",DID_F1CB, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1CB,DID_F1CB);
+  getProfileString(ECU_platform, "DID_F1C1","Null",DID_F1C1, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F1C1,DID_F1C1);
+  @sysvar::DID::DID_F186_Len=getProfileInt (ECU_platform, "DID_F186_Len",0,file_name_0);
+  @sysvar::DID::DID_F17A_Len=getProfileInt (ECU_platform, "DID_F17A_Len",0,file_name_0);
+  @sysvar::DID::DID_F18B_Len=getProfileInt (ECU_platform, "DID_F18B_Len",0,file_name_0);
+  @sysvar::DID::DID_F190_Len=getProfileInt (ECU_platform, "DID_F190_Len",0,file_name_0);
+  @sysvar::DID::DID_F192_Len=getProfileInt (ECU_platform, "DID_F192_Len",0,file_name_0);
+  @sysvar::DID::DID_F1B2_Len=getProfileInt (ECU_platform, "DID_F1B2_Len",0,file_name_0);
+  @sysvar::DID::DID_F1CB_Len=getProfileInt (ECU_platform, "DID_F1CB_Len",0,file_name_0);
+  @sysvar::DID::DID_F1C1_Len=getProfileInt (ECU_platform, "DID_F1C1_Len",0,file_name_0);
+  /*****************************************************************************/
+ /********************************奇瑞部分DID***********************************/
+  getProfileString(ECU_platform, "DID_F191","Null",DID_F191, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F191,DID_F191);
+  getProfileString(ECU_platform, "DID_3011","Null",DID_3011, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_3011,DID_3011);
+  getProfileString(ECU_platform, "DID_F201","Null",DID_F201, 1000, file_name_0);
+  syssetVariableString(sysvar::DID::DID_F201,DID_F201);
+  @sysvar::DID::DID_F191_Len=getProfileInt (ECU_platform, "DID_F191_Len",0,file_name_0);
+  @sysvar::DID::DID_3011_Len=getProfileInt (ECU_platform, "DID_3011_Len",0,file_name_0);
+  @sysvar::DID::DID_F201_Len=getProfileInt (ECU_platform, "DID_F201_Len",0,file_name_0);
+  /*****************************************************************************/
+}
+
+on sysvar DID::Hardware_version
+{
+ sysGetVariableString(sysvar::DID::Hardware_version,Hardware_version, elcount(Hardware_version));
+ writeProfileString(ECU_platform, "Hardware_version", Hardware_version, file_name_0);
+}
+on sysvar DID::Hardware_number
+{
+ sysGetVariableString(sysvar::DID::Hardware_number,Hardware_number, elcount(Hardware_number));
+ writeProfileString(ECU_platform, "Hardware_number", Hardware_number, file_name_0);
+}
+on sysvar DID::Calibrate_version
+{
+ sysGetVariableString(sysvar::DID::Calibrate_version,Calibrate_version, elcount(Calibrate_version));
+ writeProfileString(ECU_platform, "Calibrate_version", Calibrate_version, file_name_0);
+}
+on sysvar DID::SVN_Revision
+{
+ sysGetVariableString(sysvar::DID::SVN_Revision,SVN_Revision, elcount(SVN_Revision));
+ writeProfileString(ECU_platform, "SVN_Revision", SVN_Revision, file_name_0); 
+}
+on sysvar DID::Software_version
+{
+ sysGetVariableString(sysvar::DID::Software_version,Software_version, elcount(Software_version));
+ writeProfileString(ECU_platform, "Software_version", Software_version, file_name_0);
+}
+on sysvar DID::FBT
+{
+ sysGetVariableString(sysvar::DID::FBT,FBT, elcount(FBT));
+ writeProfileString(ECU_platform, "FBT", FBT, file_name_0);
+}
+on sysvar DID::SBT
+{
+ sysGetVariableString(sysvar::DID::SBT,SBT, elcount(SBT));
+ writeProfileString(ECU_platform, "SBT", SBT, file_name_0);
+}
+on sysvar DID::Hardware_Test
+{
+ sysGetVariableString(sysvar::DID::Hardware_Test,Hardware_Test, elcount(Hardware_Test));
+ writeProfileString(ECU_platform, "Hardware_Test", Hardware_Test, file_name_0);
+}
+on sysvar DID::ECU_Number
+{
+ sysGetVariableString(sysvar::DID::ECU_Number,ECU_Number, elcount(ECU_Number));
+ writeProfileString(ECU_platform, "ECU_Number", ECU_Number, file_name_0);
+}
+on sysvar DID::SW
+{
+ sysGetVariableString(sysvar::DID::SW,SW, elcount(SW));
+ writeProfileString(ECU_platform, "SW", SW, file_name_0);
+}
+on sysvar DID::HW
+{
+ sysGetVariableString(sysvar::DID::HW,HW, elcount(HW));
+ writeProfileString(ECU_platform, "HW", HW, file_name_0);
+}
+
+ /********************************比亚迪部分DID***********************************/
+on sysvar DID::DID_F084
+{
+ sysGetVariableString(sysvar::DID::DID_F084,DID_F084, elcount(DID_F084));
+ writeProfileString(ECU_platform, "DID_F084", DID_F084, file_name_0);
+}
+on sysvar DID::DID_F180
+{
+ sysGetVariableString(sysvar::DID::DID_F180,DID_F180, elcount(DID_F180));
+ writeProfileString(ECU_platform, "DID_F180", DID_F180, file_name_0);
+}
+on sysvar DID::DID_F184
+{
+ sysGetVariableString(sysvar::DID::DID_F184,DID_F184, elcount(DID_F184));
+ writeProfileString(ECU_platform, "DID_F184", DID_F184, file_name_0);
+}
+on sysvar DID::DID_F185
+{
+ sysGetVariableString(sysvar::DID::DID_F185,DID_F185, elcount(DID_F185));
+ writeProfileString(ECU_platform, "DID_F185", DID_F185, file_name_0);
+}
+on sysvar DID::DID_F187
+{
+ sysGetVariableString(sysvar::DID::DID_F187,DID_F187, elcount(DID_F187));
+ writeProfileString(ECU_platform, "DID_F187", DID_F187, file_name_0);
+}
+on sysvar DID::DID_F193
+{
+ sysGetVariableString(sysvar::DID::DID_F193,DID_F193, elcount(DID_F193));
+ writeProfileString(ECU_platform, "DID_F193", DID_F193, file_name_0);
+}
+on sysvar DID::DID_F194
+{
+ sysGetVariableString(sysvar::DID::DID_F194,DID_F194, elcount(DID_F194));
+ writeProfileString(ECU_platform, "DID_F194", DID_F194, file_name_0);
+}
+on sysvar DID::DID_F195_Ver
+{
+ sysGetVariableString(sysvar::DID::DID_F195_Ver,DID_F195_Ver, elcount(DID_F195_Ver));
+ writeProfileString(ECU_platform, "DID_F195_Ver", DID_F195_Ver, file_name_0);
+}
+on sysvar DID::DID_F195_Time
+{
+ sysGetVariableString(sysvar::DID::DID_F195_Time,DID_F195_Time, elcount(DID_F195_Time));
+ writeProfileString(ECU_platform, "DID_F195_Time", DID_F195_Time, file_name_0);
+}
+on sysvar DID::DID_F084_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F084_Len,DID_F084_Len);
+ writeProfileInt (ECU_platform, "DID_F084_Len",DID_F084_Len, file_name_0);
+}
+on sysvar DID::DID_F180_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F180_Len,DID_F180_Len);
+ writeProfileInt (ECU_platform, "DID_F180_Len",DID_F180_Len, file_name_0);
+}
+on sysvar DID::DID_F184_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F184_Len,DID_F184_Len);
+ writeProfileInt (ECU_platform, "DID_F184_Len",DID_F184_Len, file_name_0);
+}
+on sysvar DID::DID_F185_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F185_Len,DID_F185_Len);
+ writeProfileInt (ECU_platform, "DID_F185_Len",DID_F185_Len, file_name_0);
+}
+on sysvar DID::DID_F187_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F187_Len,DID_F187_Len);
+ writeProfileInt (ECU_platform, "DID_F187_Len",DID_F187_Len, file_name_0);
+}
+on sysvar DID::DID_F193_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F193_Len,DID_F193_Len);
+ writeProfileInt (ECU_platform, "DID_F193_Len",DID_F193_Len, file_name_0);
+}
+on sysvar DID::DID_F194_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F194_Len,DID_F194_Len);
+ writeProfileInt (ECU_platform, "DID_F194_Len",DID_F194_Len, file_name_0);
+}
+on sysvar DID::DID_F195_Ver_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F195_Ver_Len,DID_F195_Ver_Len);
+ writeProfileInt (ECU_platform, "DID_F195_Ver_Len",DID_F195_Ver_Len, file_name_0);
+}
+on sysvar DID::DID_F195_Time_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F195_Time_Len,DID_F195_Time_Len);
+ writeProfileInt (ECU_platform, "DID_F195_Time_Len",DID_F195_Time_Len, file_name_0);
+}
+  /*****************************************************************************/
+ /********************************长安部分DID***********************************/
+on sysvar DID::DID_F189
+{
+ sysGetVariableString(sysvar::DID::DID_F189,DID_F189, elcount(DID_F189));
+ writeProfileString(ECU_platform, "DID_F189", DID_F189, file_name_0);
+}
+on sysvar DID::DID_F089
+{
+ sysGetVariableString(sysvar::DID::DID_F089,DID_F089, elcount(DID_F089));
+ writeProfileString(ECU_platform, "DID_F089", DID_F089, file_name_0);
+}
+on sysvar DID::DID_F18A
+{
+ sysGetVariableString(sysvar::DID::DID_F18A,DID_F18A, elcount(DID_F18A));
+ writeProfileString(ECU_platform, "DID_F18A", DID_F18A, file_name_0);
+}
+on sysvar DID::DID_F170
+{
+ sysGetVariableString(sysvar::DID::DID_F170,DID_F170, elcount(DID_F170));
+ writeProfileString(ECU_platform, "DID_F170", DID_F170, file_name_0);
+}
+on sysvar DID::DID_F171
+{
+ sysGetVariableString(sysvar::DID::DID_F171,DID_F171, elcount(DID_F171));
+ writeProfileString(ECU_platform, "DID_F171", DID_F171, file_name_0);
+}
+on sysvar DID::DID_F123
+{
+ sysGetVariableString(sysvar::DID::DID_F123,DID_F123, elcount(DID_F123));
+ writeProfileString(ECU_platform, "DID_F123", DID_F123, file_name_0);
+}
+on sysvar DID::DID_F188
+{
+ sysGetVariableString(sysvar::DID::DID_F188,DID_F188, elcount(DID_F188));
+ writeProfileString(ECU_platform, "DID_F188", DID_F188, file_name_0);
+}
+on sysvar DID::DID_F120
+{
+ sysGetVariableString(sysvar::DID::DID_F120,DID_F120, elcount(DID_F120));
+ writeProfileString(ECU_platform, "DID_F120", DID_F120, file_name_0);
+}
+on sysvar DID::DID_F121
+{
+ sysGetVariableString(sysvar::DID::DID_F121,DID_F121, elcount(DID_F121));
+ writeProfileString(ECU_platform, "DID_F121", DID_F121, file_name_0);
+}
+on sysvar DID::DID_F122
+{
+ sysGetVariableString(sysvar::DID::DID_F122,DID_F122, elcount(DID_F122));
+ writeProfileString(ECU_platform, "DID_F122", DID_F122, file_name_0);
+}
+on sysvar DID::DID_F1F6
+{
+ sysGetVariableString(sysvar::DID::DID_F1F6,DID_F1F6, elcount(DID_F1F6));
+ writeProfileString(ECU_platform, "DID_F1F6", DID_F1F6, file_name_0);
+}
+on sysvar DID::DID_F189_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F189_Len,DID_F189_Len);
+ writeProfileInt (ECU_platform, "DID_F189_Len",DID_F189_Len, file_name_0);
+}
+on sysvar DID::DID_F089_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F089_Len,DID_F089_Len);
+ writeProfileInt (ECU_platform, "DID_F089_Len",DID_F089_Len, file_name_0);
+}
+on sysvar DID::DID_F18A_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F18A_Len,DID_F18A_Len);
+ writeProfileInt (ECU_platform, "DID_F18A_Len",DID_F18A_Len, file_name_0);
+}
+on sysvar DID::DID_F170_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F170_Len,DID_F170_Len);
+ writeProfileInt (ECU_platform, "DID_F170_Len",DID_F170_Len, file_name_0);
+}
+on sysvar DID::DID_F171_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F171_Len,DID_F171_Len);
+ writeProfileInt (ECU_platform, "DID_F171_Len",DID_F171_Len, file_name_0);
+}
+on sysvar DID::DID_F123_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F123_Len,DID_F123_Len);
+ writeProfileInt (ECU_platform, "DID_F123_Len",DID_F123_Len, file_name_0);
+}
+on sysvar DID::DID_F188_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F188_Len,DID_F188_Len);
+ writeProfileInt (ECU_platform, "DID_F188_Len",DID_F188_Len, file_name_0);
+}
+on sysvar DID::DID_F120_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F120_Len,DID_F120_Len);
+ writeProfileInt (ECU_platform, "DID_F120_Len",DID_F120_Len, file_name_0);
+}
+on sysvar DID::DID_F121_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F121_Len,DID_F121_Len);
+ writeProfileInt (ECU_platform, "DID_F121_Len",DID_F121_Len, file_name_0);
+}
+on sysvar DID::DID_F122_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F122_Len,DID_F122_Len);
+ writeProfileInt (ECU_platform, "DID_F122_Len",DID_F122_Len, file_name_0);
+}
+on sysvar DID::DID_F1F6_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F1F6_Len,DID_F1F6_Len);
+ writeProfileInt (ECU_platform, "DID_F1F6_Len",DID_F1F6_Len, file_name_0);
+}
+  /*****************************************************************************/
+ /********************************瑞驰部分DID***********************************/
+on sysvar DID::DID_F197
+{
+ sysGetVariableString(sysvar::DID::DID_F197,DID_F197, elcount(DID_F197));
+ writeProfileString(ECU_platform, "DID_F197", DID_F197, file_name_0);
+}
+on sysvar DID::DID_0216
+{
+ sysGetVariableString(sysvar::DID::DID_0216,DID_0216, elcount(DID_0216));
+ writeProfileString(ECU_platform, "DID_0216", DID_0216, file_name_0);
+}
+on sysvar DID::DID_F195
+{
+ sysGetVariableString(sysvar::DID::DID_F195,DID_F195, elcount(DID_F195));
+ writeProfileString(ECU_platform, "DID_F195", DID_F195, file_name_0);
+}
+on sysvar DID::DID_F197_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F197_Len,DID_F197_Len);
+ writeProfileInt (ECU_platform, "DID_F197_Len",DID_F197_Len, file_name_0);
+}
+on sysvar DID::DID_0216_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_0216_Len,DID_0216_Len);
+ writeProfileInt (ECU_platform, "DID_0216_Len",DID_0216_Len, file_name_0);
+}
+on sysvar DID::DID_F195_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F195_Len,DID_F195_Len);
+ writeProfileInt (ECU_platform, "DID_F195_Len",DID_F195_Len, file_name_0);
+}
+  /*****************************************************************************/
+ /********************************五菱部分DID***********************************/
+on sysvar DID::DID_F186
+{
+ sysGetVariableString(sysvar::DID::DID_F186,DID_F186, elcount(DID_F186));
+ writeProfileString(ECU_platform, "DID_F186", DID_F186, file_name_0);
+}
+on sysvar DID::DID_F17A
+{
+ sysGetVariableString(sysvar::DID::DID_F17A,DID_F17A, elcount(DID_F17A));
+ writeProfileString(ECU_platform, "DID_F17A", DID_F17A, file_name_0);
+}
+on sysvar DID::DID_F18B
+{
+ sysGetVariableString(sysvar::DID::DID_F18B,DID_F18B, elcount(DID_F18B));
+ writeProfileString(ECU_platform, "DID_F18B", DID_F18B, file_name_0);
+}
+on sysvar DID::DID_F190
+{
+ sysGetVariableString(sysvar::DID::DID_F190,DID_F190, elcount(DID_F190));
+ writeProfileString(ECU_platform, "DID_F190", DID_F190, file_name_0);
+}
+on sysvar DID::DID_F192
+{
+ sysGetVariableString(sysvar::DID::DID_F192,DID_F192, elcount(DID_F192));
+ writeProfileString(ECU_platform, "DID_F192", DID_F192, file_name_0);
+}
+on sysvar DID::DID_F1B2
+{
+ sysGetVariableString(sysvar::DID::DID_F1B2,DID_F1B2, elcount(DID_F1B2));
+ writeProfileString(ECU_platform, "DID_F1B2", DID_F1B2, file_name_0);
+}
+on sysvar DID::DID_F1CB
+{
+ sysGetVariableString(sysvar::DID::DID_F1CB,DID_F1CB, elcount(DID_F1CB));
+ writeProfileString(ECU_platform, "DID_F1CB", DID_F1CB, file_name_0);
+}
+on sysvar DID::DID_F1C1
+{
+ sysGetVariableString(sysvar::DID::DID_F1C1,DID_F1C1, elcount(DID_F1C1));
+ writeProfileString(ECU_platform, "DID_F1C1", DID_F1C1, file_name_0);
+}
+on sysvar DID::DID_F186_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F186_Len,DID_F186_Len);
+ writeProfileInt (ECU_platform, "DID_F186_Len",DID_F186_Len, file_name_0);
+}
+on sysvar DID::DID_F17A_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F17A_Len,DID_F17A_Len);
+ writeProfileInt (ECU_platform, "DID_F17A_Len",DID_F17A_Len, file_name_0);
+}
+on sysvar DID::DID_F18B_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F18B_Len,DID_F18B_Len);
+ writeProfileInt (ECU_platform, "DID_F18B_Len",DID_F18B_Len, file_name_0);
+}
+on sysvar DID::DID_F190_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F190_Len,DID_F190_Len);
+ writeProfileInt (ECU_platform, "DID_F190_Len",DID_F190_Len, file_name_0);
+}
+on sysvar DID::DID_F192_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F192_Len,DID_F192_Len);
+ writeProfileInt (ECU_platform, "DID_F192_Len",DID_F192_Len, file_name_0);
+}
+on sysvar DID::DID_F1B2_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F1B2_Len,DID_F1B2_Len);
+ writeProfileInt (ECU_platform, "DID_F1B2_Len",DID_F1B2_Len, file_name_0);
+}
+on sysvar DID::DID_F1CB_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F1CB_Len,DID_F1CB_Len);
+ writeProfileInt (ECU_platform, "DID_F1CB_Len",DID_F1CB_Len, file_name_0);
+}
+on sysvar DID::DID_F1C1_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F1C1_Len,DID_F1C1_Len);
+ writeProfileInt (ECU_platform, "DID_F1C1_Len",DID_F1C1_Len, file_name_0);
+}
+  /*****************************************************************************/
+ /********************************奇瑞部分DID***********************************/
+on sysvar DID::DID_F191
+{
+ sysGetVariableString(sysvar::DID::DID_F191,DID_F191, elcount(DID_F191));
+ writeProfileString(ECU_platform, "DID_F191", DID_F191, file_name_0);
+}
+on sysvar DID::DID_3011
+{
+ sysGetVariableString(sysvar::DID::DID_3011,DID_3011, elcount(DID_3011));
+ writeProfileString(ECU_platform, "DID_3011", DID_3011, file_name_0);
+}
+on sysvar DID::DID_F201
+{
+ sysGetVariableString(sysvar::DID::DID_F201,DID_F201, elcount(DID_F201));
+ writeProfileString(ECU_platform, "DID_F201", DID_F201, file_name_0);
+}
+on sysvar DID::DID_F191_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F191_Len,DID_F191_Len);
+ writeProfileInt (ECU_platform, "DID_F191_Len",DID_F191_Len, file_name_0);
+}
+on sysvar DID::DID_3011_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_3011_Len,DID_3011_Len);
+ writeProfileInt (ECU_platform, "DID_3011_Len",DID_3011_Len, file_name_0);
+}
+on sysvar DID::DID_F201_Len
+{
+ sysGetVariableInt(sysvar::DID::DID_F201_Len,DID_F201_Len);
+ writeProfileInt (ECU_platform, "DID_F201_Len",DID_F201_Len, file_name_0);
+}
+  /*****************************************************************************/
