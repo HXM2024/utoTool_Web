@@ -468,7 +468,7 @@
         <template v-else>
           <div class="grp-row">
             <span class="grp-label">文件</span>
-            <el-button size="small" :icon="Document" @click="pickGroupFile">选择分组文件…</el-button>
+            <el-button size="small" :icon="Document" @click="pickGroupFile">选择分组文件…（可多选）</el-button>
             <span v-if="fileImportName" class="grp-file-name">{{ fileImportName }}</span>
           </div>
           <div class="grp-row grp-row-top">
@@ -483,10 +483,10 @@
               <div v-if="!fileImportGroups.length" class="grp-empty">请先选择分组文件</div>
             </div>
           </div>
-          <template v-if="fileImportDeps">
+          <template v-if="fileImportDepsList.length">
             <div class="grp-row">
               <span class="grp-label">依赖</span>
-              <span class="grp-meta">{{ depSummary(fileImportDeps) }}</span>
+              <span class="grp-meta">{{ fileImportDepsText }}</span>
             </div>
             <div class="grp-hint">
               <el-checkbox v-model="fileImportApplyDeps">
@@ -495,7 +495,7 @@
             </div>
           </template>
           <div class="grp-hint">
-            导入后在当前配置新增分组（重名自动加「_来自&lt;来源&gt;」后缀）；改动需点「保存」落盘。
+            导入后在当前配置新增分组（重名自动加「_来自&lt;来源&gt;」后缀）；可一次选择多个文件，改动需点「保存」落盘。
           </div>
         </template>
       </div>
@@ -1793,14 +1793,24 @@ const fileExportGroups = ref<CaseGroup[]>([])
 const fileExportSelected = ref<string[]>([])
 /** 导出时是否把「依赖」一并打包（函数库 + 配置参数 + CCP 类型表 + 主机厂 / 安全算法） */
 const fileExportWithDeps = ref(false)
-const fileImportGroups = ref<CaseGroup[]>([])
-const fileImportName = ref('')
-/** 导入来源标签（文件里的源配置名，或文件名），用于组名后缀 */
-const fileImportFrom = ref('')
-/** 分组文件里携带的依赖（老文件没有这个字段 → 为 null） */
-const fileImportDeps = ref<GroupFileDeps | null>(null)
+/** 已选文件的解析结果：每个文件一个批次，各自保留「来源」用于重名后缀 */
+const fileImportBatches = ref<{ from: string; groups: CaseGroup[] }[]>([])
+/** 合并后的待导入分组（模板展示 / 按钮可用性判断） */
+const fileImportGroups = computed<CaseGroup[]>(() => fileImportBatches.value.flatMap((b) => b.groups))
+/** 已选文件名（多个用「、」连接） */
+const fileImportNames = ref<string[]>([])
+const fileImportName = computed(() => fileImportNames.value.join('、'))
+/** 各文件携带的依赖（按选择顺序；老文件没有该字段 → 不入列表） */
+const fileImportDepsList = ref<{ name: string; deps: GroupFileDeps }[]>([])
 /** 导入时是否一并应用依赖（默认不勾：会覆盖本机配置参数、函数库写入全局库） */
 const fileImportApplyDeps = ref(false)
+/** 依赖摘要文案：单文件显示细项，多文件只列文件名（应用时按选择顺序依次覆盖） */
+const fileImportDepsText = computed(() => {
+  const list = fileImportDepsList.value
+  if (!list.length) return ''
+  if (list.length === 1) return depSummary(list[0].deps)
+  return `${list.length} 个文件携带依赖：${list.map((d) => d.name).join('、')}（应用时按选择顺序依次覆盖）`
+})
 
 /** 分组文件里的「依赖」段：函数库 + 配置级参数 */
 interface GroupFileDeps {
@@ -1825,10 +1835,9 @@ function openFileTransferDialog(group?: CaseGroup) {
   fileExportSelected.value =
     group && fileExportGroups.value.some((g) => g.id === group.id) ? [group.id] : []
   fileExportWithDeps.value = false
-  fileImportGroups.value = []
-  fileImportName.value = ''
-  fileImportFrom.value = ''
-  fileImportDeps.value = null
+  fileImportBatches.value = []
+  fileImportNames.value = []
+  fileImportDepsList.value = []
   fileImportApplyDeps.value = false
 }
 
@@ -1839,25 +1848,29 @@ function toggleFileExportAll() {
       : fileExportGroups.value.map((g) => g.id)
 }
 
-/** 弹出系统文件选择框，选择分组导出文件（Electron 与浏览器均可用） */
-function pickJsonFile(): Promise<File | null> {
+/** 弹出系统文件选择框，选择分组导出文件（multiple=true 支持多选；Electron 与浏览器均可用） */
+function pickJsonFiles(multiple = false): Promise<File[]> {
   return new Promise((resolve) => {
     const input = document.createElement('input')
     input.type = 'file'
     input.accept = '.json'
+    if (multiple) input.multiple = true
     input.style.display = 'none'
-    input.addEventListener('change', () => {
-      resolve(input.files?.[0] || null)
+    let settled = false
+    const done = (files: File[]) => {
+      if (settled) return
+      settled = true
+      resolve(files)
       input.remove()
+    }
+    input.addEventListener('change', () => {
+      done(Array.from(input.files || []))
     })
     // 用户取消时 change 不触发：兜底在窗口重新聚焦后判定
     window.addEventListener(
       'focus',
       () => setTimeout(() => {
-        if (!input.files?.length) {
-          resolve(null)
-          input.remove()
-        }
+        if (!input.files?.length) done([])
       }, 300),
       { once: true },
     )
@@ -1879,40 +1892,51 @@ function downloadTextFile(text: string, filename: string) {
   URL.revokeObjectURL(url)
 }
 
-/** 选择并解析分组文件（校验 type / version） */
+/** 选择并解析分组文件（支持多选；逐文件校验 type / version，非法文件跳过并提示） */
 async function pickGroupFile() {
-  const file = await pickJsonFile()
-  if (!file) return
-  try {
-    const text = await file.text()
-    const parsed = JSON.parse(text)
-    if (
-      !parsed ||
-      typeof parsed !== 'object' ||
-      parsed.type !== GROUP_FILE_TYPE ||
-      !Array.isArray(parsed.groups)
-    ) {
-      ElMessage.error('文件格式不正确：不是本工具导出的「分组文件」')
-      return
+  const files = await pickJsonFiles(true)
+  if (!files.length) return
+  const batches: { from: string; groups: CaseGroup[] }[] = []
+  const names: string[] = []
+  const depsList: { name: string; deps: GroupFileDeps }[] = []
+  const errors: string[] = []
+  for (const file of files) {
+    try {
+      const text = await file.text()
+      const parsed = JSON.parse(text)
+      if (
+        !parsed ||
+        typeof parsed !== 'object' ||
+        parsed.type !== GROUP_FILE_TYPE ||
+        !Array.isArray(parsed.groups)
+      ) {
+        errors.push(`${file.name}：不是本工具导出的「分组文件」`)
+        continue
+      }
+      if (Number(parsed.version || 0) > GROUP_FILE_VERSION) {
+        ElMessage.warning(
+          `${file.name} 的版本（${parsed.version}）高于当前支持的版本（${GROUP_FILE_VERSION}），将尝试导入`,
+        )
+      }
+      names.push(file.name)
+      batches.push({
+        from: String(parsed.source_config || '').trim() || file.name.replace(/\.json$/i, ''),
+        groups: parsed.groups,
+      })
+      // 依赖段是可选新增字段：老文件没有 → 不计入
+      if (parsed.dependencies && typeof parsed.dependencies === 'object') {
+        depsList.push({ name: file.name, deps: parsed.dependencies as GroupFileDeps })
+      }
+    } catch (e: any) {
+      errors.push(`${file.name}：${e?.message || String(e)}`)
     }
-    if (Number(parsed.version || 0) > GROUP_FILE_VERSION) {
-      ElMessage.warning(
-        `文件版本（${parsed.version}）高于当前支持的版本（${GROUP_FILE_VERSION}），将尝试导入`,
-      )
-    }
-    fileImportGroups.value = parsed.groups
-    fileImportName.value = file.name
-    fileImportFrom.value =
-      String(parsed.source_config || '').trim() || file.name.replace(/\.json$/i, '')
-    // 依赖段是可选新增字段：老文件没有 → 不显示「一并应用依赖」
-    fileImportDeps.value =
-      parsed.dependencies && typeof parsed.dependencies === 'object'
-        ? (parsed.dependencies as GroupFileDeps)
-        : null
-    fileImportApplyDeps.value = false
-  } catch (e: any) {
-    ElMessage.error('读取文件失败：' + (e?.message || String(e)))
   }
+  if (errors.length) ElMessage.error('以下文件未能读取：' + errors.join('；'))
+  if (!batches.length) return
+  fileImportBatches.value = batches
+  fileImportNames.value = names
+  fileImportDepsList.value = depsList
+  fileImportApplyDeps.value = false
 }
 
 /** 依赖摘要（导入面板展示：这个文件里带了哪些依赖） */
@@ -2029,18 +2053,25 @@ async function applyImportDependencies(deps: GroupFileDeps): Promise<string[]> {
   return applied
 }
 
-/** 确认：从文件导入分组（追加到当前配置，不写盘） */
+/** 确认：从文件导入分组（支持多文件；追加到当前配置，不写盘） */
 async function confirmFileImport() {
-  if (!fileImportGroups.value.length) {
+  const batches = fileImportBatches.value
+  if (!batches.length) {
     ElMessage.warning('请先选择要导入的分组文件')
     return
   }
-  const from = fileImportFrom.value || '文件'
-  const withDeps = !!(fileImportDeps.value && fileImportApplyDeps.value)
-  const depApplied = withDeps && fileImportDeps.value
-    ? await applyImportDependencies(fileImportDeps.value)
-    : []
-  const added = appendGroupsToCurrent(fileImportGroups.value, from)
+  const depsList = fileImportDepsList.value
+  const withDeps = depsList.length > 0 && fileImportApplyDeps.value
+  const depApplied: string[] = []
+  if (withDeps) {
+    // 多文件时按选择顺序依次应用，后者覆盖前者（与依赖摘要里的说明一致）
+    for (const item of depsList) {
+      const got = await applyImportDependencies(item.deps)
+      for (const label of got) if (!depApplied.includes(label)) depApplied.push(label)
+    }
+  }
+  const added: string[] = []
+  for (const b of batches) added.push(...appendGroupsToCurrent(b.groups, b.from))
   fileTransferVisible.value = false
   await refreshCasePreview()
   const depTip = withDeps

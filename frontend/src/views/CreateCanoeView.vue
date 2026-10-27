@@ -160,13 +160,13 @@
                     <!-- 新增 E2E 算法需要按信号填写 DateID（十六进制，如 0x1122） -->
                     <el-input
                       v-if="isDateIdAlgo(data.genSigFuncType)"
-                      :model-value="data.dataId"
+                      v-model="data.dataId"
                       class="sig-dataid-input"
                       size="small"
                       placeholder="DateID 如 0x1122"
                       @click.stop
                       @keydown.stop
-                      @update:model-value="(v: string) => onNodeDateIdInput(data, v)"
+                      @input="(v: string) => onNodeDateIdInput(data, v)"
                       @change="(v: string) => onNodeDateIdCommit(data, v)"
                     />
                   </div>

@@ -244,10 +244,10 @@
                   <template v-else-if="selectedTestParam && DATEID_CRC_ALGOS.includes(selectedTestParam.value)">
                     <div class="param-card">
                       <el-input
-                        :model-value="selectedTestParam.params.dataId"
+                        v-model="selectedTestParam.params.dataId"
                         placeholder="请输入DateID（如 0x1122）"
                         size="large"
-                        @update:model-value="onPanelDateIdInput"
+                        @input="onPanelDateIdInput"
                         @change="onPanelDateIdCommit"
                       />
                     </div>
@@ -1662,10 +1662,10 @@
       <template v-else-if="DATEID_CRC_ALGOS.includes(editingCardValue)">
         <div class="param-card">
           <el-input
-            :model-value="cardConfigForm.dataId"
+            v-model="cardConfigForm.dataId"
             placeholder="请输入DateID（如 0x1122）"
             size="large"
-            @update:model-value="onCardDateIdInput"
+            @input="onCardDateIdInput"
             @change="onCardDateIdCommit"
           />
         </div>
@@ -1867,6 +1867,14 @@ function normalizeDateId(raw: any): string {
 
 // EPS 测试参数卡片 = Counter + CRC 算法（与 Create CANoe 的 GenSigFuncType 一致）
 const crcAlgorithms = ref<Array<{ name: string; code: string }>>([])
+
+/** 取 EPS 参数对应的 DateID：信号自身填写优先，未填时回退到算法卡片上的配置。
+ *  两条序列化分支（信号挂在报文下 / 信号与报文同级）共用。 */
+function _resolveDateId(param: any): string {
+  const own = normalizeDateId(param?.params?.dataId)
+  if (own) return own
+  return normalizeDateId(testParamCardConfig.value[param?.value]?.dataId)
+}
 
 async function loadCrcAlgorithms() {
   try {
@@ -5269,11 +5277,15 @@ function buildTreeFromDict(raw: Record<string, any>): any[] {
           }
           // EPS 信号：从 et 恢复 EPS 类型为测试参数（target === 'eps'）
           if (isEps && sigData.et) {
+            // DateID：优先用信号自己的 did；缺失时回退到算法卡片配置（DateIDConfig），
+            // 保证切换配置再切回来时仍能回显
+            const epsDid = normalizeDateId(
+              sigData.did || testParamCardConfig.value[sigData.et]?.dataId)
             sigTestParams = [...sigTestParams, {
               value: sigData.et,
               label: sigData.et,
               target: 'eps',
-              params: sigData.did ? { dataId: normalizeDateId(sigData.did) } : {},
+              params: epsDid ? { dataId: epsDid } : {},
             }]
           }
 
@@ -6355,19 +6367,65 @@ function pasteTestParamToSelectedNode() {
   addTestParamToNode(node, testParamClipboard.value)
 }
 
-/** 信号配置面板的 DateID 输入：边输入过滤非法字符，失焦统一补 0x */
-function onPanelDateIdInput(value: string) {
+/** 信号配置面板的 DateID 输入：边输入过滤非法字符，失焦统一补 0x。
+ *  输入过程只写当前参数与真实节点；卡片配置在失焦/保存时同步一次，
+ *  避免每次按键都触发整页重渲染而导致输入框失去响应。
+ *  提交时还要写回 testParamMap：树重建/参数合并都以 map 为准，
+ *  只写节点的话，一次合并就会把刚填的 DateID 抹掉。 */
+function _writePanelDateId(raw: any, commit: boolean) {
+  const keyInfo = selectedTestParamKey.value
   const param = selectedTestParam.value
   if (!param) return
+  const value = commit ? normalizeDateId(raw) : sanitizeDateIdTyping(raw)
+
   if (!param.params) param.params = {}
-  param.params.dataId = sanitizeDateIdTyping(value)
+  param.params.dataId = value
+
+  if (keyInfo) {
+    const node = findNodeInTree(treeData.value, keyInfo.msgName, keyInfo.signalName)
+    const eps = node?.testParams?.find((p: any) => p.target === 'eps')
+    if (eps) {
+      if (!eps.params) eps.params = {}
+      eps.params.dataId = value
+    }
+    // 提交时按 key 写回 testParamMap：树重建 / mergeTestParamsIntoTree 以 map 为准，
+    // 只写节点会被下一次合并抹掉（表现为输入框失焦后日期又清空）。
+    if (commit) {
+      const key = getTestParamsKey(keyInfo.msgName, keyInfo.signalName)
+      const list = (testParamMap.value.get(key) || []).map((p: any) => ({ ...p }))
+      const idx = list.findIndex((p: any) => p.value === param.value)
+      if (idx >= 0) {
+        list[idx].params = { ...(list[idx].params || {}), dataId: value }
+      } else {
+        list.push({
+          value: param.value,
+          label: param.label,
+          target: param.target || 'signal',
+          params: { ...(param.params || {}), dataId: value },
+        })
+      }
+      testParamMap.value = new Map(testParamMap.value)
+      testParamMap.value.set(key, list)
+    }
+  }
+
+  if (commit && DATEID_CRC_ALGOS.includes(param.value)) {
+    testParamCardConfig.value = {
+      ...testParamCardConfig.value,
+      [param.value]: {
+        ...(testParamCardConfig.value[param.value] || {}),
+        dataId: value,
+      },
+    }
+  }
+}
+
+function onPanelDateIdInput(value: string) {
+  _writePanelDateId(value, false)
 }
 
 function onPanelDateIdCommit(value: string) {
-  const param = selectedTestParam.value
-  if (!param) return
-  if (!param.params) param.params = {}
-  param.params.dataId = normalizeDateId(value)
+  _writePanelDateId(value, true)
 }
 
 /** 卡片配置弹窗的 DateID 输入 */
@@ -7182,11 +7240,7 @@ function buildDbcRawFromSignalRows(): any {
             const epsParam = sigNode.testParams?.find((p: any) => p.target === 'eps')
             if (epsParam) {
               sigData.et = epsParam.value
-              // DateID：新增 E2E 算法按信号独立保存；信号未填时回退到卡片上的配置
-              let didVal = normalizeDateId(epsParam.params?.dataId)
-              if (!didVal) {
-                didVal = normalizeDateId(testParamCardConfig.value[epsParam.value]?.dataId)
-              }
+              const didVal = _resolveDateId(epsParam)
               if (didVal) sigData.did = didVal
             }
             if (sigNode.testParams?.length) {
@@ -7241,7 +7295,11 @@ function buildDbcRawFromSignalRows(): any {
 
         // EPS 类型（target === 'eps'）写回 et，其余测试参数写回 tp
         const epsParam = child.testParams?.find((p: any) => p.target === 'eps')
-        if (epsParam) sigData.et = epsParam.value
+        if (epsParam) {
+          sigData.et = epsParam.value
+          const didVal = _resolveDateId(epsParam)
+          if (didVal) sigData.did = didVal
+        }
         if (child.testParams?.length) {
           const tpObj: Record<string, any> = {}
           for (const p of child.testParams) {
@@ -7584,6 +7642,22 @@ function applyConfigurationData(raw: any, merge = false) {
 }
 
 function applyConfigData(data: any, syncChart: boolean = true) {
+  // DateID：算法卡片级配置（DateIDConfig）随配置保存/回显。
+  // 必须在写 jsonDbcRaw 之前恢复，树构建时会用它对没有 did 的信号做回填。
+  const dateIdCfg = data['DateIDConfig'] || data['date_id_config']
+  if (dateIdCfg && typeof dateIdCfg === 'object') {
+    const restored: Record<string, Record<string, any>> = {}
+    for (const [k, v] of Object.entries(dateIdCfg as Record<string, any>)) {
+      if (!DATEID_CRC_ALGOS.includes(k)) continue
+      const did = normalizeDateId((v as any)?.dataId ?? v)
+      if (did) restored[k] = { dataId: did }
+    }
+    testParamCardConfig.value = restored
+  } else {
+    // 老配置没有该字段：清空，避免上一个配置的 DateID 串到当前配置
+    testParamCardConfig.value = {}
+  }
+
   // Json 配置中的 DBC 写入 jsonDbcRaw（不覆盖用户上传的 dbcRaw）
   const cfgDbc = data['DBC Canmatrix'] || data['DBC'] || null
   jsonDbcRaw.value = cfgDbc
@@ -7803,6 +7877,28 @@ function collectConfigData(): any {
     return { ...raw, rows }
   })()
 
+  // DateID：算法卡片级配置（每个算法一份），随配置保存/回显。
+  // 同时从树节点收集一次，避免面板对象与卡片配置不同步时漏存。
+  const dateIdConfig: Record<string, any> = {}
+  const collectNodeDateId = (nodes: any[]) => {
+    for (const node of nodes) {
+      if (node.type === 'signal') {
+        const eps = node.testParams?.find((p: any) => p.target === 'eps')
+        if (eps && DATEID_CRC_ALGOS.includes(eps.value)) {
+          const did = normalizeDateId(eps.params?.dataId)
+          if (did) dateIdConfig[eps.value] = { dataId: did }
+        }
+      }
+      if (node.children?.length) collectNodeDateId(node.children)
+    }
+  }
+  collectNodeDateId(treeData.value)
+  for (const [algo, value] of Object.entries(testParamCardConfig.value)) {
+    if (!DATEID_CRC_ALGOS.includes(algo)) continue
+    const did = normalizeDateId((value as any)?.dataId)
+    if (did) dateIdConfig[algo] = { dataId: did }
+  }
+
   return {
     'DBC Canmatrix': treeData.value.length ? buildDbcRawFromSignalRows() : (dbcRaw.value || jsonDbcRaw.value),
     'DataLinkLayer': dllTreeData.value.length ? buildDllRawFromTree() : dllRaw.value,
@@ -7810,6 +7906,7 @@ function collectConfigData(): any {
     'Other': mergedOther,
     'OtherCheckboxes': checkboxClean,
     'Configuration': cfg,
+    ...(Object.keys(dateIdConfig).length ? { DateIDConfig: dateIdConfig } : {}),
     'Volt': {
       communication: { ...commParams.value },
       diagnostic: { ...diagParams.value },

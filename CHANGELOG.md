@@ -12,6 +12,117 @@
 
 ---
 
+## [1.0.39] - 2026-10-27
+
+**版本号**：`1.0.39`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.39.exe`（172,556,344 字节，SHA256 `0CB9E1C07D727031EB7AE9F6E15D59A9B496BA8C2842BBD5E642F9AC63B8DF95`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.39",
+  "release_notes": "本版本更新：\n- 修复 Function 生成时 TxMessageId / RxMessageId 声明重复（空占位数组未被清理）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.39.exe"
+}
+```
+
+**发布状态**：已发布到共享盘（version 1.0.39）
+
+---
+
+### [1.0.39] - 2026-10-27
+
+**会话主题**：修复 Function 模块 TestFunction.cin 中 `TxMessageId` 声明重复
+
+**问题**：生成的代码里会出现两条 `TxMessageId` 声明——一条带初值、一条是 `word TxMessageId[1];`，CANoe 编译报重复定义；若只保留占位那份，数组长度 1 还会让 `TxMessageId[i]`（i>0）越界。
+
+**根因**：`backend/core/function_module.py` 的注入逻辑是「先删旧声明、再注入一份」，但清理用的正则要求声明必须带初值：
+
+```python
+r"^\s*word (RxMessageId|TxMessageId)\s*\[\d+\]\s*=.*?;\s*$"
+```
+
+而某一侧报文为空时，`_format_message_id_decls()` 写出的是**不带初值的占位数组** `word X[1];`，匹配不上、删不掉。于是「先按空生成（占位）→ 内容随配置保存 → 后续 DBC 解析出报文再生成（真实数组）」就变成两份并存。
+
+**变更内容**：
+
+1. **清理正则同时匹配占位形式**（`backend/core/function_module.py`）：把 `=` 改为可选分组 `(?:=[^;]*)?`，`word X[1];` 与 `word X[N] = {...};` 都能被删除，注入保持幂等。
+2. **不改生成格式**：占位数组仍按原样输出（CAPL 不支持 0 长度数组），只是重复声明会被正确清掉。
+
+**验证**：
+
+- 占位 `[1];` → 注入真实 `[6] = {...}`：`RxMessageId` / `TxMessageId` 各只剩 1 条声明，占位已删除。
+- 连续再注入 3 次：仍各 1 条（幂等），不再累积。
+- 反向「有值 → 变空」：正确替换为 `word TxMessageId[1];`，同样只有 1 条。
+- `python -m py_compile backend/core/function_module.py` 通过。
+
+**相关文件**：
+
+- `backend/core/function_module.py`
+
+**遗留**：`frontend/package.json` 版本 1.0.38 → 1.0.39；`version.json` 的 `release_notes` / `setup_name` / SHA256 打包后回填。
+
+---
+
+## [1.0.38] - 2026-10-27
+
+**版本号**：`1.0.38`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.38.exe`（172,685,658 字节，SHA256 `4CF434EEE1C0AEA9D787E08368D3BB7C8E94DCF0FA319E3B11CE2271F03BF33F`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.38",
+  "release_notes": "本版本更新：\n- CAN / Creat CANoe 新增 E2E CRC 算法（E2E_1D_ID_CRC8 / E2E_1021_CRC16_ID，带 DateID）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.38.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**发布状态**：已发布到共享盘（version 1.0.38）
+
+---
+
+### [1.0.38] - 2026-10-27
+
+**会话主题**：CAN / Creat CANoe 新增 E2E CRC 算法（E2E_1D_ID_CRC8 / E2E_1021_CRC16_ID，带 DateID）
+
+**背景**：主机厂 E2E 校验需要在 CRC 计算中混入报文 DateID。原有 `CRC8_1D_All` / `CRC16_All` 只对数据区求校验，无法覆盖 DataID；同时配置界面没有填写 DateID 的入口，生成结果恒为 `0x0000`。
+
+**变更内容**：
+
+1. **新增两种 E2E CRC 算法**：`backend/templates/crc_algorithms.py` 作为唯一权威新增 `E2E_1D_ID_CRC8`（把 DateID 低字节、高字节按小端插到校验数组**最前端**，再逐字节 XOR/移位）与 `E2E_1021_CRC16_ID`（在原数组之后**末尾追加** DateID 低/高字节，再按 0x1021 多项式计算），`CRC_CHECK_ORDER`、`_looks_like_crc`、派生段（`TESTDLL.cin` / `TestFunction.cin`）随之包含。
+2. **老配置算法表自动补齐**：`backend/api/crc_routes.py` 加载 `configs/global/crc_algorithms.json` 时，缺失的两条内置算法自动补入并落盘本地（幂等，不动用户自定义算法）。
+3. **CAN 模块后端**：6 处 CRC 调用模板追加 DataID 实参；`ExcelProcessor._crc_data_id_arg()` 按信号 `did` 生成 `,0xXXXX`，未配置时记 warning 并按 `0x0000` 生成。
+4. **CAN 模块前端**：信号配置面板与卡片配置新增 DateID 输入框（与 losttest 参数输入框同款样式），输入时过滤非十六进制字符、最多 4 位，失焦/回车统一补 `0x` 并大写；信号级 `did` + 顶层 `DateIDConfig` 双份持久化，切换配置可回显。
+5. **Creat CANoe 模块**：`GenSigFuncType` 枚举与 DBC 属性定义新增两种算法；新增信号属性 `GenSigDataID`（INT 0~65535），信号节点可直接填写 DateID 并写入 DBC，`CaplGenerator` 生成 `CRC=xxx(data,bit,len,0xXXXX)`。
+6. **修复（DateID 相关三处）**：① 信号与报文同级序列化分支漏写 `did`，导致配置里只有 `et`、生成恒为 `0x0000`；② DateID 提交后触发参数合并，值被回退清空；③ 显示层兜底回填导致输入框删不干净。现统一由 `_resolveDateId()` 取值（信号自身优先、回退算法卡片），提交时同时写回 `testParamMap`。
+7. **单元测试**：新增 `tests/test_crc_e2e_data_id.py`，覆盖算法注册、与参考实现逐字节比对、小端序、DateID 敏感性与 0 值、CAN / CANoe 两侧集成、老配置迁移。
+
+**相关文件**：
+
+- `backend/templates/crc_algorithms.py`
+- `backend/api/crc_routes.py`
+- `backend/templates/capl.py`
+- `backend/processors/excel_processor.py`
+- `backend/templates/canoe_capl.py`
+- `backend/core/canoe_config/dbc_excel_converter.py`
+- `frontend/src/views/CANView.vue`
+- `frontend/src/views/CreateCanoeView.vue`
+- `tests/test_crc_e2e_data_id.py`
+
+**验证**：
+
+- `tests/test_crc_e2e_data_id.py` 27 例全部通过；全量 `python -m unittest discover -s tests` 129 例通过。
+- 算法与独立参考实现交叉比对：`did=0x1122`、`data=[01,02,03,04,AA,55]`、跳过字节 `{0,5}` → CRC8 `0x23`、CRC16 `0xB9BA`。
+- `/api/crc/algorithms` 返回 14 条（含两条新增算法）。
+- `vue-tsc --noEmit` 与 `npm run build` 通过。
+- 待界面复核：保存后后端日志 `[SAVE] ... E2E DateID` 应显示 `('E2E_1D_ID_CRC8', '0x1122')`，生成代码为 `CRC=E2E_1D_ID_CRC8(data,bit,len,0x1122);`。
+
+**发布状态**：已发布到共享盘（version 1.0.38）
+
+---
+
 ## [1.0.37] - 2026-10-26
 
 **版本号**：`1.0.37`（`frontend/package.json` 的 `version`）
