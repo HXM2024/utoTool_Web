@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, shell, Tray, Menu, nativeImage } from 'electron'
 import { fileURLToPath } from 'url'
 import { dirname, join, basename } from 'path'
-import { spawn, exec } from 'child_process'
+import { spawn, exec, execSync } from 'child_process'
 import { existsSync, writeFileSync, readdirSync, readFileSync, statSync, mkdirSync, createReadStream, createWriteStream, copyFileSync } from 'fs'
 import http from 'http'
 
@@ -42,16 +42,71 @@ let isQuitting = false
 let backendErrorLogs = []
 let backendErrorReason = ''
 let backendPort = null  // 后端实际端口（从 stdout BACKEND_PORT=xxx 解析）
+let backendImageName = ''  // 后端进程的镜像名（用于按端口清理残留进程）
 let updateAvailable = false  // 是否存在可用更新（决定「帮助」与「检查更新」菜单项是否显示蓝色圆点）
 let startupUpdateChecked = false  // 启动时的首次更新检测是否已执行（只提示一次）
 
 // 自更新检测间隔：软件打开后半小时检测一次
 const UPDATE_CHECK_INTERVAL = 30 * 60 * 1000
 
+// 后端默认端口（与 backend/config.py 的 BACKEND_PORT 保持一致）
+const DEFAULT_BACKEND_PORT = 18735
+
+// 比较镜像名时忽略 .exe 后缀（dev 模式 spawn 的是 python，tasklist 显示 python.exe）
+function sameImageName(a, b) {
+  const stem = (s) => String(s || '').toLowerCase().replace(/\.exe$/, '')
+  return stem(a) !== '' && stem(a) === stem(b)
+}
+
+// 按端口清理「本程序后端」的残留进程。
+// PyInstaller onefile 的 bootloader 退出后，真正的 Python 子进程会被系统改挂父进程，
+// 此时 backendProcess.pid 对应的进程树已经不存在，taskkill /T 找不到它，
+// 只能按监听端口反查 PID，再按镜像名确认是自己人后结束。
+// 只结束端口上的同名后端，避免误杀其它占用该端口的程序。
+function killStaleBackendOnPort(port, expectedImageName) {
+  if (process.platform !== 'win32' || !port || !expectedImageName) return
+  try {
+    const out = execSync('netstat -ano -p tcp', { windowsHide: true, encoding: 'utf8', timeout: 5000 })
+    const pids = new Set()
+    for (const line of out.split(/\r?\n/)) {
+      const cols = line.trim().split(/\s+/)
+      if (cols.length < 5) continue
+      const [proto, localAddr, , state, pidText] = cols
+      if (!/^TCP$/i.test(proto) || state !== 'LISTENING') continue
+      if (!localAddr.endsWith(':' + port)) continue
+      const pid = parseInt(pidText, 10)
+      if (pid > 0 && pid !== process.pid) pids.add(pid)
+    }
+    for (const pid of pids) {
+      let imageName = ''
+      try {
+        const tl = execSync(`tasklist /FI "PID eq ${pid}" /FO CSV /NH`, {
+          windowsHide: true, encoding: 'utf8', timeout: 5000,
+        })
+        imageName = (tl.split(',')[0] || '').replace(/"/g, '').trim()
+      } catch (e) {
+        continue
+      }
+      if (!sameImageName(imageName, expectedImageName)) continue
+      try {
+        execSync(`taskkill /T /F /PID ${pid}`, { windowsHide: true, timeout: 5000 })
+        console.log(`[Backend] 已清理端口 ${port} 上的残留后端: pid=${pid} (${imageName})`)
+      } catch (e) {
+        console.error(`[Backend] 清理残留后端失败 pid=${pid}:`, e.message)
+      }
+    }
+  } catch (e) {
+    // netstat/tasklist 不可用或超时：忽略，不影响主流程
+  }
+}
+
 // 彻底终止后端进程树：PyInstaller onefile 会产生 bootloader + Python 子进程，
 // 仅 kill() bootloader 会导致 Python 子进程成为孤儿后台残留。
 // Windows 下使用 taskkill /T /F 强制结束整个进程树。
 function killBackendProcessTree() {
+  // 先按端口兜底：onefile 的 Python 子进程可能已脱离 backendProcess 的进程树，
+  // 只按 pid 树杀会漏掉它，这里再按监听端口清理一次。
+  killStaleBackendOnPort(backendPort || DEFAULT_BACKEND_PORT, backendImageName)
   if (!backendProcess || backendProcess.killed) return
   try {
     // 先优雅关闭（POSIX 风格，Windows 上等效 SIGKILL 但对子进程无树状效果）
@@ -65,7 +120,7 @@ function killBackendProcessTree() {
     // 注意：这里不能按镜像名杀（taskkill /IM "#Excel2Case#V1.0.00.exe"）。
     // 后端 exe 与 Electron 主进程同名，按名杀会连自己一起杀掉，
     // 导致 quit 流程半途中断、进程残留（安装器会一直判定「程序未关闭」）。
-    // 只按 pid 做树杀，已能覆盖 PyInstaller onefile 的 bootloader + Python 子进程。
+    // 因此先按 pid 做树杀，函数开头再按监听端口清理一次（排除自身 pid）。
   } catch (e) {
     console.error('[Backend] killBackendProcessTree 失败:', e.message)
   }
@@ -271,6 +326,10 @@ function startBackend() {
     cwd = projectRoot
     env = { ...process.env, PYTHONPATH: projectRoot, PYTHONUTF8: '1' }
   }
+
+  // 记录后端镜像名，并清理上一次运行遗留的后端（onefile 子进程可能已脱离进程树且仍占用端口）
+  backendImageName = basename(cmd)
+  killStaleBackendOnPort(DEFAULT_BACKEND_PORT, backendImageName)
 
   return new Promise((resolve, reject) => {
     sendSplashProgress(20, '正在启动后端服务...')

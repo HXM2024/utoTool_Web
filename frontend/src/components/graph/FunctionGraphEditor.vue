@@ -2182,7 +2182,7 @@ function funcKeyOf(f: any): string {
   const types = params.map((p: any) => String(p?.type || '').replace(/\s+/g, ''))
   return `${name}|${types.join(',')}`
 }
-/** 列出「与内置函数同名同参」的自定义函数名并提示：这些函数生成时不会被追加（内置优先） */
+/** 列出与内置**共用**函数同名同参的自定义函数并提示：这些函数会与 ArrayFuncTest.cin / Relay 重复定义 */
 async function reportBuiltinConflicts(list: any[]) {
   const keys = await loadBuiltinFuncKeys()
   if (!keys) return
@@ -2191,7 +2191,7 @@ async function reportBuiltinConflicts(list: any[]) {
   ].filter(Boolean)
   if (!names.length) return
   ElMessage.warning({
-    message: `函数库中的 ${names.join('、')} 与内置函数同名同参，生成时不会被采用（以内置模板为准）。`,
+    message: `函数库中的 ${names.join('、')} 与内置共用函数（ArrayFuncTest.cin / Relay）同名同参，编译时会重复定义，请改用别的函数名（或改参数）。`,
     duration: 8000,
     showClose: true,
   })

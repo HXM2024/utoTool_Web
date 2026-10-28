@@ -12,6 +12,192 @@
 
 ---
 
+## [1.0.42] - 2026-10-28
+
+**版本号**：`1.0.42`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.42.exe`（172,457,854 字节，SHA256 `4466DFB92054A64D89871DBB5196D80D29B83F65962DD53161B0C4E60C1E8D3A`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.42",
+  "release_notes": "本版本更新：\n- CDD 诊断目标名改为从 CDD 内 ECU qualifier 读取，修复 Unlock 解锁找不到诊断目标\n- 修复 CDD 中 UUDT 与物理响应 ID 重复导致的 CANoe 冲突告警\n- SecurityAlgo 的 Unlock 入口改为 testcase\n- DBC 的 GenSigFuncType 枚举索引还原为标签，加载到信号矩阵\n- 修复退出应用后后端进程残留占用端口",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.42.exe"
+}
+```
+
+**发布状态**：已发布到共享盘（version 1.0.42）
+
+---
+
+### [1.0.42] - 2026-10-28
+
+**会话主题**：CDD 诊断目标名取 CDD 内 ECU qualifier、UUDT 冲突归一化、Unlock 改为 testcase、DBC GenSigFuncType 加载到信号矩阵、后端残留进程清理
+
+**问题**：
+
+1. Creat CANoe 生成的 `SecurityAlgo.can` 里 `Xxx_Unlock("ChangAn")` 找不到诊断目标（CDD_qualifier 没设置成功）。
+2. 导入 ChangAn CDD 后 CANoe 的 Diagnostics/ISO TP 配置中，`UUDT from ECU` 与 `Response from ECU` 同为 `0x78D`，报冲突告警。
+3. `Unlock()` 是普通 `void` 函数，在 Test Module 里无法单独作为用例呈现。
+4. 打开已有 DBC 时，信号矩阵的 `GenSigFuncType` 列拿不到值（如 `6`/`1` 这种数字被丢弃），只能靠信号名关键字猜。
+5. 关闭（退出）App 后，已安装版的后端 exe 仍残留并占用 18735 端口。
+
+**根因**：
+
+1. CANoe 的诊断目标名取自 CDD 内部的 ECU qualifier，`DiagDescriptions.Add(Network, FilePath, ecuIdentifier)` 的第三个参数不会改写它。实测 `DiagDescriptions(1).Name/.Qualifier` = `UDS_GreatWall_V1_0`（ChangAn.cdd），而生成侧一直用主机厂标签 `ChangAn` 当 target。
+2. `ChangAn.cdd` 中 `CAN.UudtResCanId` 与 `CAN.ResCanId` 同为 `1933`（0x78D），属厂商 CDD 内容，CANoe 只告警。
+3. 模板里的入口固定写成 `void Unlock()`。
+4. DBC 里 `GenSigFuncType` 是 ENUM 属性，存的是索引；cantools 读回的 `attr.value` 是整数，原代码 `str(sft.value)` 直接得到 `"0"/"1"/"6"`，前端匹配不到枚举卡片，被当作无效值丢弃。
+5. 打包后端为 PyInstaller onefile：Electron spawn 到的是 bootloader，bootloader 解包后再 fork 真正的 Python 进程并退出。`backendProcess.pid` 指向已退出的 bootloader，`taskkill /T /F /PID` 找不到真正的子进程，子进程脱树后继续占用端口。
+
+**变更内容**：
+
+1. **CDD qualifier 取值改为 CDD 优先**：`cfg_parser` 新增 `read_cdd_ecu_qualifier()`（解析 CDD `<ECU>` 块内首个 `<QUAL>`）；`resolve_cdd_qualifier()` 改为「CDD 可读 → CDD 的 ECU qualifier；否则 oem」。
+2. **导入后读回实际目标名**：`_task_add_cdd_dll` 增加 `target_desc.Qualifier` 读回，写入返回值的 `qualifier` 并在与解析值不一致时告警。
+3. **生成链路传递 qualifier**：`config_generator.generate_full_config()` 新增 `cdd_qualifier` 入参，`SecurityAlgo.can` 的 target 优先使用它；`great_canoe_module` 两条生成路径把「复制 CDD/DLL」提前到生成文件之前，先解析出 qualifier 再生成，避免生成时读不到 CDD。
+4. **UUDT 冲突归一化**：新增 `_normalize_cdd_uudt()`，复制 CDD 时按同层比较，仅当 `UudtResCanId == ResCanId` 时把 UUDT 置 `0`（等同不启用）；UUDT 使用独立 ID 的 CDD 字节不变。
+5. **Unlock 改为 testcase**：`build_security_algo_test_can()` 在替换 `/*Unlock_Algo*/` 后，只把入口定义行 `void Unlock()` 改成 `testcase Unlock()`（不命中上方注释文字），`MainTest()` 内的 `Unlock();` 保持不变；Function / CAN 模块仍用 `void Unlock()`。
+6. **DBC GenSigFuncType 还原标签**：`can_routes` 新增 `_enum_attr_label()`，按属性定义的 `choices` 顺序把索引还原为标签（兼容 list / dict / 已返回标签的 cantools 版本）；`_parse_dbc_file()` 改用该函数，`NoFunction` 仍按无功能留空。
+7. **前端补齐 GenSigFuncType 枚举**：`CreateCanoeView.vue` 的 `GENSIG_OPTS` 增加 `E2E_1D_ID_CRC8`、`E2E_1021_CRC16_ID`（后端原本支持，前端缺失会被丢弃）。
+8. **后端残留进程清理**：`main.js` 新增 `DEFAULT_BACKEND_PORT`、`backendImageName` 与 `killStaleBackendOnPort()`（netstat 查端口 → tasklist 校验镜像名 → taskkill 进程树，排除自身 pid）；`startBackend()` spawn 前清理一次，`killBackendProcessTree()` 开头按端口再兜底一次。dev 同步模式不下发清理，不会误杀 run.py 启动的后端。
+
+**相关文件**：
+
+- `backend/utils/cfg_parser.py`
+- `backend/utils/canoe_cfg_parser.py`
+- `backend/core/canoe_config/config_generator.py`
+- `backend/core/great_canoe_module.py`
+- `backend/templates/capl.py`
+- `backend/api/can_routes.py`
+- `frontend/src/views/CreateCanoeView.vue`
+- `frontend/electron/main.js`
+- `frontend/package.json`
+
+**验证**：
+
+- `resolve_cdd_qualifier` 实测：`ChangAn.cdd → UDS_GreatWall_V1_0`、`BYD/CheRy/GEEA_1.0/GEEA_3.0/SGWM → ABS_ESP`、无 CDD 时回退 oem。
+- 生成文本：`testcase Unlock() { ChangAn_SeedKey_Unlock("UDS_GreatWall_V1_0"); }`。
+- `_normalize_cdd_uudt` 实测：ChangAn 的 `CAN.UudtResCanId` 由 `1933` 改为 `0`，`ResCanId` 保持 `1933`；BYD / SGWM 无 UUDT 字段，字节不变。
+- 用 `LR927(E22H).dbc` 实测 `_parse_dbc_file`：`6 → CRC8_2F_All`、`1 → Counter`，修改前为 `"6"/"1"`。
+- CANoe COM 读回（运行中的 LRA31D-CK 工程）：`DiagDescriptions(1).Name/.Qualifier = UDS_GreatWall_V1_0`，`Information` 中 `Multiple responses: UUDT ID=0x78d`。
+- `python -m py_compile` 通过（`cfg_parser` / `canoe_cfg_parser` / `config_generator` / `great_canoe_module` / `can_routes`）；`node --check electron/main.js` 通过。
+- 源码后端 `python -m backend.app` 启动后 `/api/health` 返回 `{"code":200,"data":{"status":"ok"}}`。
+
+---
+
+## [1.0.41] - 2026-10-28
+
+**版本号**：`1.0.41`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.41.exe`（172,454,627 字节，SHA256 `D114321738FB891C535FF2511C5E7AAA0D8719781CE426B8FC25CBA8152338B8`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.41",
+  "release_notes": "本版本更新：\n- CAN 模块 DBC 测试参数「自动遍历」改为最小→最大步长 1 全区间取值；修复测试值 0/1 被生成成 false/true",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.41.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**发布状态**：已发布到共享盘（version 1.0.41）
+
+---
+
+### [1.0.41] - 2026-10-28
+
+**会话主题**：CAN 模块 DBC 测试参数「自动遍历」改为最小→最大步长 1 全区间取值；修复测试值 0/1 被生成成 false/true
+
+**问题**：
+
+1. 信号测试参数里勾了「自动遍历（从最小值到最大值）」，实际只生成两条用例（最小值、最大值），中间值全没测。
+2. 物理最小值/最大值是 `0`/`1` 时，生成的 CAPL 里出现 `false` / `true`（用例名也变成 `信号_True`）。
+
+**根因**（均在 `backend/processors/excel_processor.py`）：
+
+1. `_gen_rx_sig_testcases` 的 FactorTest 自动遍历分支直接取 `test_values = [signal_info['min'], signal_info['max']]`，只取两个端点，没有任何步进。
+2. 信号上下限用 `_parse_number()` 解析，而该函数把字符串 `'0'`/`'1'` 归入布尔分支，返回 `False`/`True`；再拼进 `_signalfactor(...)` 模板与 EPS 检查模板就成了 `false`/`true`。
+
+**变更内容**：
+
+1. **新增 `_parse_sig_number()`**：解析信号物理最小/最大值后，把布尔统一转回 `0`/`1`；`signal_info['min']` / `['max']` 改走该方法（`_gen_tx_sig_testcases` 的 EPS 检查上下限随之修好）。
+2. **新增 `_auto_range_values()`**：从最小值按步长 1 递增到最大值（含端点）；整数用 `range` 精确生成，小数按 1.0 步长并保留 6 位；任一端缺失/非数值/上下限颠倒时退回端点取值。
+3. **自动遍历分支改调 `_auto_range_values()`**：原先直接取端点数组的两行替换掉；DBC 无效值过滤逻辑保留。
+4. **新增取值上限 `AUTO_RANGE_MAX_VALUES = 1000`**：`0~65535` 这类信号避免一次生成上万条用例，超出时记 warning 并只取前 1000 条。
+
+**验证**：
+
+- `0~7` → `[0,1,2,3,4,5,6,7]`；`-3~2` → `[-3,-2,-1,0,1,2]`；`0.5~2.5` → `[0.5,1.5,2.5]`；`min=None,max=1` → `[1]`。
+- `_parse_sig_number('0')` → `0`、`'1'` → `1`（int），不再是 `False`/`True`。
+- `0~65535` 触发上限：warning 一条，取值 1000 条（0~999）。
+- `python -m unittest discover -s tests` 129 例全部通过。
+
+**相关文件**：
+
+- `backend/processors/excel_processor.py`
+
+**发布状态**：已发布到共享盘（version 1.0.41）
+
+---
+
+## [1.0.40] - 2026-10-28
+
+**版本号**：`1.0.40`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.40.exe`（172,453,514 字节，SHA256 `26FB7F647A757E30BC6F54D04BF51AD6BED0945AF85E4917D442F0B4913C1884`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.40",
+  "release_notes": "本版本更新：\n- Function 模块 `TestFunction.cin` 数据源收敛到前端函数库；修复 Logging/Testreport 路径反斜杠转义",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.40.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**发布状态**：已发布到共享盘（version 1.0.40）
+
+---
+
+### [1.0.40] - 2026-10-28
+
+**会话主题**：Function 模块 `TestFunction.cin` 数据源收敛到前端函数库；修复 Logging/Testreport 路径反斜杠转义
+
+**背景**：
+
+1. 在「函数库」源码视图里改 `GetCaseName`（或新增自定义函数）后，生成结果不变，并提示「函数库与内置模板冲突，本次生成已以内置模板为准」——生成基底实际是配置里保存的 `test_function` 快照，库里同名同参函数被丢弃。
+2. 生成的 `GetCaseName` 里 `"Logging\\%s"` 只有 1 个反斜杠（CAPL 中 `\\` 才表示 1 个真实反斜杠），期望 2 个；且模板里写 `\\\` 或 `\\\\` 生成结果相同，改模板无效。
+3. 配置 `cfgDir` 为空（未选 CFG 目录）时，`RxMessageId` / `TxMessageId` 的定义在生成结果里整个消失。
+
+**变更内容**：
+
+1. **数据源唯一化**（`backend/core/function_module.py`）：`TestFunction.cin` 一律由前端函数库生成 —— `configs/function/Function_global_library.json` 的 `function_library` + `step_library` 自定义卡片；仅当函数库为空（新建配置 / 首次安装）才回退内置模板 `FuncTestFunction`。不再以配置里的 `test_function` 快照为基底，也不再走「模板为基 + 追加库函数」的合并，改了函数库即时生效。
+2. **删除失效的合并逻辑**：`_append_library_functions()` / `_fn_key()` / `_norm_src()` / `_CAN_ONLY_NAME_RE` 一并移除（已无调用者），生成路径的 `function_conflicts` 恒为空。
+3. **内置签名表收窄**（`builtin_function_signatures()`）：不再解析 `FuncTestFunction` 模板，只返回与 `TestFunction.cin` 同工程编译的内置共用函数（`ArrayFuncTest.cin` 数组/工具函数 + 内置 Relay），共 29 个。保存函数库时不再对模板函数（如 `GetCaseName`）报冲突；前端提示文案改为「与内置共用函数同名同参，编译时会重复定义」（`frontend/src/components/graph/FunctionGraphEditor.vue`）。
+4. **路径反斜杠归一化**：新增 `_normalize_path_prefix()`，生成时把 `Logging` / `Testreport` **前后**的反斜杠统一为 2 个（`"Logging\\%s"`、`".\\Logging\\%s"`、`"Testreport\\%s"`），幂等（1→2、2→2、3→2）。修复首版单正则 `(\\+)(Logging|Testreport)|(Logging|Testreport)(\\+)(?=%)` 的分支互斥 bug（前导分支吞掉函数名后，后缀分支永远匹配不到）。
+5. **报文 ID 声明保留**：`_inject_message_id_decls()` 在 `decls` 为空（`cfgDir` 为空 / 无 DBC）时直接返回原文，不再「先删旧声明、又补不上」，避免 `RxMessageId` / `TxMessageId` 定义被清空。
+
+**验证**：
+
+- 生成 `ChangAn`（`save_Function`）：`TestFunction.cin` 的 `GetCaseName` 两行输出 `".\\Logging\\%s"` / `".\\Logging\\%s_%s"`（各 2 个反斜杠），来源为函数库（70,594 字符，含 `GetCaseName`）。
+- 后端 `/api/function/generate` 实测返回的 `test_function` 同为 2 个反斜杠。
+- 归一化幂等性：1 个 / 2 个 / 3 个反斜杠输入，输出均为 2 个且重复执行不变。
+- 内置共用函数 29 个，不含 `GetCaseName`；生成 `function_conflicts` 为空。
+- `python -m py_compile backend/core/function_module.py` 通过；`python -m unittest discover -s tests` 129 例全部通过。
+
+**相关文件**：
+
+- `backend/core/function_module.py`
+- `frontend/src/components/graph/FunctionGraphEditor.vue`
+
+**遗留**：
+
+- `frontend/package.json` 版本 1.0.39 → 1.0.40；`version.json` 的 `release_notes` / `setup_name` / SHA256 打包后回填。
+- 配置里已保存的 `test_function` 快照仍是旧内容（单斜杠），需在页面上点一次「生成」+「保存配置」才会刷新；前端预览在未生成时展示的即这份快照。
+- 函数库源码（JSON 纯文本）内的反斜杠建议直接写 2 个；现有 3 个由生成时归一化兜底。
+- 打包版 `%APPDATA%\Excel2Case\configs\function\Function_global_library.json` 与源码目录下的是两份独立文件，需分别同步。
+
+---
+
 ## [1.0.39] - 2026-10-27
 
 **版本号**：`1.0.39`（`frontend/package.json` 的 `version`）

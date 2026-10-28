@@ -1102,6 +1102,7 @@ function buildTreeFromData(type: string, data: any) {
     const GENSIG_OPTS = [
       'NoFunction', 'Counter', 'CRC_Hig_xor_low', 'CRC_Xor_FF', 'CRC_CheckSum',
       'CRC8_1D_All', 'CRC8_2F_All', 'CRC8_1D_Cutoff', 'CRC8_2F_Cutoff', 'CRC16_All', 'CRC16_Cutoff',
+      'E2E_1D_ID_CRC8', 'E2E_1021_CRC16_ID',
     ]
     const SIGNAL_TYPE_MAP: Record<string, string> = {
       CRC: 'CRC_Hig_xor_low',
