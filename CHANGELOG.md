@@ -12,10 +12,295 @@
 
 ---
 
+## [1.0.48] - 2026-10-29
+
+**版本号**：`1.0.48`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.48.exe`（172,580,912 字节，SHA256 `33A0ED0CC1C5A1F1BDB2F1F953212BB55D388808520943D46658DEF9F29A2823`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.48",
+  "release_notes": "本版本更新：\n- 背景检测断言细分：每个断言都有「出现即通过」（ChkXxx）与「全程保持」（ChkXxxKeep）两种口径\n- TSL 两个互补区间检查即可表达全程语义，去掉 10ms 采样定时器，逐帧判定不漏检\n- 修正 ChkOutRange 语义为「期间出现过越界即通过」；全程在区间外改用 ChkOutRangeKeep\n- 函数库自愈/模板重置会一并升级到新口径版本",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.48.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.48）
+
+---
+
+### [1.0.48] - 2026-10-29
+
+**会话主题**：背景检测断言细分为「出现即通过」与「全程保持」两类（不采样）
+
+**变更内容**（`backend/templates/func_test_function.py`）：
+
+- 统一命名口径：`ChkXxx` = 检测期间**出现过**满足值即通过；`ChkXxxKeep` = 检测期间**全程**满足才通过
+- 新增 `ChkInRangeKeep / ChkEqualKeep / ChkGreaterKeep / ChkLessKeep / ChkOutRangeKeep / ChkNotEqualKeep`，均含 signal / sysvarInt / sysvarFloat 与带 Timeout 重载
+- 修正 `ChkOutRange`：改为「期间出现过越界即通过」（`ChkStart_MsgSignalValueRangeViolation`，期望事件数 > 0）
+- 全程口径改用互补句柄 + 事件数 == 0 判定（如全程在区间外 = 值进入区间的次数为 0），**删除 10ms 采样定时器**及其 `mChkKeeps/mChkViolations/mChkSig0..7` 相关代码
+- 报告：条件列按口径加「全程」前缀，结论列区分「N 次…」与「始终…」
+- 用例卡片同步：`ChkInRange → ChkInRangeKeep`、`ChkEqual → ChkEqualKeep`（长安 LDW 分组 3 张卡）
+- `upgrade_chk_section`：以 `timer_ChkSample` 作为采样版特征、缺 `ChkInRangeKeep` 作为待升级特征；已同步仓库库、客户端库、9 个项目 `test_function` 与当前工程 `TestFunction.cin`
+
+**相关文件**：`backend/templates/func_test_function.py`、`backend/core/function_library_sync.py`、`长安IACC_LDW_测试用例_分组.json`
+
+---
+
+## [1.0.47] - 2026-10-29
+
+**版本号**：`1.0.47`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.47.exe`（172,555,169 字节，SHA256 `04BA1DA03A548B9E15907EBC1AD1F0BCFFC4D818AB3EB1F6EE8C7E4F50D23370`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.47",
+  "release_notes": "本版本更新：\n- 函数库自愈：读取全局库时若背景检测段为旧版（ChkParaSet / ResetChk(char[])），自动用内置模板升级并落盘\n- 新建配置与模板同步时同样走该升级逻辑（幂等）\n- 函数库页新增「从模板重置」按钮，一键用内置模板覆盖函数库源码（卡片/映射/值资源不受影响）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.47.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.47）
+
+---
+
+### [1.0.47] - 2026-10-29
+
+**会话主题**：函数库不再依赖 JSON 里的旧内容（读取自愈 + 模板重置），避免旧库导致编译报错
+
+**背景**：客户端读到的全局函数库可能是旧版（外部加密工具改写临时目录、历史快照等），导致 `ResetChkByName` 缺失、`ResetChk(char[])` 重载报 Error 1155。
+
+**变更内容**：
+
+- A. `backend/api/function_routes.py` `_load_global_library`：读到旧版背景检测段时，用内置模板 `FuncTestFunction` 自动升级并落盘（新建配置 / 函数库页读取都会先自愈）
+- B. `backend/core/function_library_sync.py`：新增 `upgrade_chk_section(saved, tpl)`，`sync_template_functions` 先升级再合并（幂等，只动 Chk 段，其它函数不碰）
+- C. 新增接口 `POST /api/function/global-library/reset-functions`（用模板覆盖 `function_library`，保留卡片/映射/值资源）；函数库页新增「从模板重置」按钮
+
+**相关文件**：`backend/api/function_routes.py`、`backend/core/function_library_sync.py`、`frontend/src/api/function.ts`、`frontend/src/components/FunctionLibrary.vue`
+
+---
+
+## [1.0.46] - 2026-10-29
+
+**版本号**：`1.0.46`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.46.exe`（172,549,629 字节，SHA256 `83373A4431807E2B8B5EA4A93CC94AC88570889BF9F1D8BD6621890DC067699E`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.46",
+  "release_notes": "本版本更新：\n- 修复默认函数库仍是旧版导致生成 TestFunction.cin 缺 ResetChkByName（unknown function / timer 无 on timer）：内置 configs 的 Function_global_library.json 升级为槽位版",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.46.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.46）
+
+---
+
+### [1.0.46] - 2026-10-29
+
+**会话主题**：修复内置默认函数库未同步（生成 TestFunction.cin 缺 ResetChkByName）
+
+**问题**：全局函数库有两份——`%APPDATA%\Excel2Case\configs\function\Function_global_library.json`（客户端读取）与仓库内 `configs/function/Function_global_library.json`（后端源码运行、**打包时随包分发**）。1.0.45 只更新了前者，内置那份仍是单例旧版（且缺 `on timer timer_ChkDestroy`）。生成 `TestFunction.cin` 以全局库为唯一数据源，因此：
+- `Error 1156: unknown function "ResetChkByName"`（实现没生成）
+- `Warning 2010: Timer timer_ChkDestroy has no corresponding 'on timer'`
+
+**变更内容**：
+
+- `configs/function/Function_global_library.json`：Chk 段升级为槽位版（`ChkSlotPush/ChkSlotRemove/ChkReportAt/ResetChk/ResetChkByName`、`on timer`、`mChkIds[]`），`ChkParaSet` 移除
+- 已就地修复当前工程的 `Testmodule\Function\TestFunction.cin`（含错位插入的 `ResetChkByName`）
+
+**相关文件**：`configs/function/Function_global_library.json`
+
+---
+
+## [1.0.45] - 2026-10-29
+
+**版本号**：`1.0.45`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.45.exe`（172,530,490 字节，SHA256 `DBFE7EC8AE9BAAF16D9CB0939BF4D12AB1A25980C4929DAB3ECF034F722E07D5`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.45",
+  "release_notes": "本版本更新：\n- 修复 CAPL 编译报错 Error 1155：按对象名结束背景检测改用独立函数 ResetChkByName（CAPL 不支持「无参 + char[]」重载）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.45.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.45）
+
+---
+
+### [1.0.45] - 2026-10-29
+
+**会话主题**：修复背景检测「按对象名结束」的 CAPL 编译报错（Error 1155）
+
+**问题**：1.0.44 把按名结束写成 `ResetChk(char Name[])` 与无参 `ResetChk()` 重载。CAPL 不支持「无参 + `char[]`」的重载解析，调用 `ResetChk("EPS_24F_AvailabilityStatus")` 时匹配到 0 参版本，报
+`Error 1155 at (100,1): number of parameters do not match`。
+
+**变更内容**：
+
+- `backend/templates/func_test_function.py`：`void ResetChk(char Name[])` → `void ResetChkByName(char Name[])`，两函数并存、不再是重载
+- 全局函数库 `Function_global_library.json` 与 9 个项目 `test_function` 同步改名
+- 用例侧调用统一改为 `ResetChkByName("信号名")`（`ResetChk()` 保持原义：结束全部）
+
+**相关文件**：`backend/templates/func_test_function.py`
+
+---
+
+## [1.0.44] - 2026-10-29
+
+**版本号**：`1.0.44`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.44.exe`（172,528,763 字节，SHA256 `25AB7E09E4981FA9870120F98A08F9943C1B08FA6AD19BCD30B113032D2B4397`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.44",
+  "release_notes": "本版本更新：\n- 卡片库修改同步到用例卡片：库卡片的步骤改动会合并进画布节点，步骤 id 沿用节点原步骤（连线锚点不再重排），{{参数}} 优先用节点实例值\n- 背景检测（Chk）支持多对象并行：内部改为槽位数组（上限 8），ResetChk() 判定全部、ResetChk(对象名) 单独判定；函数库与各项目 test_function 已同步",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.44.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.44）
+
+---
+
+### [1.0.44] - 2026-10-29
+
+**会话主题**：卡片库修改同步到用例卡片（按位置合并步骤，保接线口锚点与实例参数值）
+
+**背景**：`syncCardRef` 原先对「展开副本」节点只用「步骤除 id 外完全一致」时保留节点步骤，只要库里改了内容就整块覆盖库卡片原件，导致：
+① 步骤 id 全部换新 → 锚在这些步骤上的连线（如某组 320 条）被重新锚定；
+② 节点上填的实例参数值丢失 → `{{参数}}` 解析为空 → 空参数步骤被整行丢弃，表现为「步骤丢失」。
+
+**变更内容**：
+
+- `frontend/src/utils/functionGraph.ts`
+  - `syncCardRef`：副本节点改为**按位置合并** —— 步骤内容取库卡片最新版本，步骤 id 沿用节点原步骤（多余步骤用新 id），`{{参数}}` 优先用节点实例值（`nodeParamValues`），空实例值不覆盖占位符；
+  - 新增 `mergeStepFromLibrary` / `fillArgPlaceholder`；
+  - 删除已无调用者的 `sameStepsIgnoringId`。
+
+**相关文件**：`frontend/src/utils/functionGraph.ts`
+
+---
+
+### [1.0.44] - 2026-10-29
+
+**会话主题**：背景检测（Chk）支持多对象并行（槽位数组）
+
+**背景**：原 `Chk*` 系列用全局单变量 `mChkId / mChkCond / mChkName` 记录状态，`ChkParaSet` 每次启动都把 `mChkId` 清零：第二个检测一启动，第一个既不判定也不销毁（句柄泄漏、报告无结论）。TSL 本身允许并存多个 `checkId`，是封装层的限制。
+
+**变更内容**（`backend/templates/func_test_function.py`）：
+
+- 状态改槽位数组：`mChkIds[8] / mChkConds[] / mChkLows[] / mChkHighs[] / mChkExpects[] / mChkNames[][200] / mChkCount`（上限 `CHK_MAX = 8`）
+- 新增 `ChkSlotPush`（追加槽位，满了先结掉最早一个）、`ChkSlotRemove`（移除槽位）
+- `ChkReportAt(idx)` 按槽位判定（原 `ChkReport` 单例版删除，`ChkParaSet` 删除）
+- `ChkRangeCreate` 增加 `Expect` 参数并按槽位启动，不再事后写全局期望标志
+- `ResetChk()` 判定并释放**全部**在跑检测；新增 `ResetChkByName(char Name[])` 按对象名单独判定（信号名或 `namespace::name`）
+  - 注：最初写成 `ResetChk(char Name[])` 重载，CAPL 不支持「无参 + char[]」的重载解析（编译报 `Error 1155 number of parameters do not match`），已改为独立函数名 `ResetChkByName`
+- 定时释放 `on timer timer_ChkDestroy` 仍判全部；不同窗口请用无 Timeout 重载 + `ResetChkByName(名字)`
+- 对外签名不变：`ChkEqual / ChkNotEqual / ChkGreater / ChkLess / ChkInRange / ChkOutRange / ChkKeepValue`（各 3 种对象 × 带/不带 Timeout）无需改动既有用例
+
+**同步**：全局函数库 `Function_global_library.json` 与 9 个项目的 `test_function` 均已补齐/更新（幂等，含变量声明与实现块）。
+
+**相关文件**：`backend/templates/func_test_function.py`
+
+---
+
+## [1.0.43] - 2026-10-29
+
+**版本号**：`1.0.43`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.43.exe`（172,516,665 字节，SHA256 `310282F9C448AB0FECC219DA2F401F7588F3E3EE92E27B3107231266E43A65DF`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.43",
+  "release_notes": "本版本更新：\n- 新增 CAPL 背景检测（Chk）断言库：7 种断言 × 信号/系统变量 × 定时/ResetChk，共 42 个函数\n- 断言重载补齐：系统变量支持区间判定，新增 SignalWaitCheckRate 斜率区间\n- 函数库由 5 组细分为 11 组（信号断言/背景检测/报文检测/时序/上下电/总线/信号操作/诊断/环境配置/共用工具/内部）\n- 图形化配置新增「背景检测」步骤（chk_check），检查卡增加断言下拉\n- 新建配置自动补齐模板新增函数（按签名合并，幂等）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.43.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.43）
+
+---
+
+### [1.0.43] - 2026-10-29
+
+**会话主题**：新增 CAPL 背景检测（Chk）断言库与「背景检测」步骤类型；函数库按 11 组重分类；新建配置自动补齐模板新增函数
+
+**背景**：
+
+1. 需要"在一个时间窗内持续判定"的断言（值在窗口内是否始终满足某条件），原有限时检查 `SignalWaitCheck` 是"等到条件成立即返回"，无法覆盖"窗口内一直成立/一次都不成立"；TSL 的 `Chk*` 背景检查（`ChkStart_MsgSignalValueRangeViolation` / `ChkStart_SignalValueChange`）正好是这种语义，但函数库里没有封装。
+2. `SignalCheck` / `SignalCheckNot` / `SignalWaitCheck` 只对 `signal*` 有区间重载，系统变量只能做单值判定；`SignalWaitCheckRate` 只有"角速度 ≥ 限值"一种写法。
+3. Function 函数库原来只有 5 个分组（FUN/Check/Control/Bus/Common），其中有 21 个函数没有分类标签，还有"检查类标成功能/总线""共用工具标成控制"等错位，UI 里不好找。
+4. 函数库以 `configs/function/Function_global_library.json` 的 `function_library` 为唯一数据源（模板只在库为空时兜底），模板更新后已有工程永远拿不到新函数。
+
+**变更内容**：
+
+1. **背景检测（Chk）函数库**（`backend/templates/func_test_function.py`）：新增 7 个接口 × 3 种对象（`signal*` / `sysvarInt*` / `sysvarFloat*`）× 2 种截止方式（带 `Timeout` 定时释放、不带 `Timeout` 由 `ResetChk()` 截止），共 **42 个函数**；每个函数单独带 `/// <ChkAssert>` 标签。
+   - 断言映射：`ChkEqual` / `ChkNotEqual` / `ChkGreater` / `ChkLess` / `ChkInRange` / `ChkOutRange` / `ChkKeepValue`
+   - 实现：区间内/等于/不等于/大于/小于走 `ChkStart_MsgSignalValueRangeViolation(Signal|sysVar, Min, Max)`；**区间外**走 `ChkStart_MsgSignalValueInvalid(Signal|sysVar, Min, Max)`（该检查的语义是"值应在区间之外、进入区间才记事件"，与区间外断言一致，也用于 DBC `Invalid_Value` 区间检查）；维持不变走 `ChkStart_SignalValueChange(Signal|sysVar, "Cb_ChkValueChange")`；**全部为 TSL 背景检查，不做采样**
+   - 支持并行检测：`CHK_MAX=8` 个槽位（`mChkIds/mChkConds/mChkExpects/mChkLows/mChkHighs/mChkNames` + `mChkCount`），`ResetChk()` 一次判定并释放全部在跑的检测
+   - 内部件：`Cb_ChkValueChange`（回调占位）、`ChkSlotPush` / `ChkSlotRemove`（槽位管理）、`ChkReportAt(idx)`（单槽判定 + 复用 `SignalCheck_addTable` 输出表格，Result 列改为直白中文，如"始终在 [800,3000] 内" / "3 次超出 [800,3000]"）、`ChkReport`、`ResetChk`、`timer_ChkDestroy`、`ChkRangeCreate`×3（RangeViolation）、`ChkInvalidCreate`×3（ValueInvalid）
+   - `variables` 新增：`CHK_HIGH_LIMIT` / `CHK_LOW_LIMIT`（±1.0e15，用于开区间）、`CHK_MAX`、`timer_ChkDestroy`、`mChkIds` / `mChkConds` / `mChkExpects` / `mChkLows` / `mChkHighs` / `mChkNames` / `mChkCount`
+2. **断言重载补齐**（`backend/templates/func_test_function.py`）：
+   - `SignalCheck(sysvarFloat*|sysvarInt*, lo, hi)`、`SignalCheckNot(sysvarFloat*|sysvarInt*, 值)`、`SignalCheckNot(sysvarFloat*|sysvarInt*, lo, hi)`；sysvar 的静态区间用 `@sig` 直接比较，不依赖 `checkSignalInRange` 是否支持系统变量
+   - `SignalWaitCheck(sysvarInt*, lo, hi, time)`
+   - `SignalWaitCheckRate(signal*, timeout, CycleTime, minLimit, maxLimit)`：斜率区间（`|角速度|` 正反方向都判），大于/小于用开区间表达
+3. **函数分组重构**（`backend/templates/func_test_function.py`、`backend/templates/relay.py`、`frontend/src/components/FunctionLibrary.vue`、`frontend/src/components/SanbaoFunctionLibrary.vue`）：由 5 组细分为 **11 组**——`SignalCheck`(信号断言) / `ChkAssert`(背景检测) / `MsgCheck`(报文检测) / `Timing`(时序检测) / `PowerCtl`(上下电控制) / `BusCtl`(总线控制) / `SignalCtl`(信号操作) / `Diag`(诊断) / `EnvCfg`(环境配置) / `Utility`(共用工具) / `Internal`(内部函数)；77 个函数名 / 158 个重载**逐个**打标签（不再"一个标签管多个函数"），清理 4 处悬空/重复标签；`RelayON/RelayOFF` 归 `PowerCtl`、`_out*` 归 `Internal`、`RELAY_FUNCTION_CATEGORY` 由 `Control` 改为 `PowerCtl`；前端两个词典同步补 11 个中文名与标签颜色（旧组名保留，其它模板不受影响）。
+4. **图形化配置新增「背景检测」步骤**（kind=`chk_check`）：与"限时检查"同级，对象行 + 断言下拉（等于/不等于/大于/小于/在区间内/不在区间内/**维持不变**）+ 步骤级「时间」（默认 1000ms）；「检查」卡也新增断言下拉（6 种，无维持）。
+   - 生成规则：`ChkEqual/ChkNotEqual/ChkGreater/ChkLess(obj, 值, 时间)`、`ChkInRange/ChkOutRange(obj, 下限, 上限, 时间)`、`ChkKeepValue(obj, 时间)`；检查卡为 `SignalCheck[Not](obj, 值)`、`SignalCheck[Not](obj, 下限, 上限)`、`SignalCheck(obj, 阈值, CHK_HIGH_LIMIT)` / `(obj, CHK_LOW_LIMIT, 阈值)`
+   - 后端：`_CHK_FUNS`、`_assert_form()`、`_render_chk_check()`；`_render_check()` 支持 not/range/gt/lt；`_ARGS_SKIP_KINDS` 增加 `chk_check`；Excel 导出的 Fun 列按断言取 Chk* 名
+   - 前端：kind 联合类型 + `waitKeep` 字段、`STEP_KIND_LABEL`/`STEP_NUM_FIELDS`/`WAIT_FORMS`(增加"维持不变")/`assertFormsOf()`/`isKeepForm()`/`chkCheckFunOf()`/`isWaitRange()` 扩展、`StepEditor.vue`/`CardEditor.vue`/`CaseFrameCanvas.vue` 的类型下拉、断言下拉、值输入显隐与摘要文案
+5. **新建配置自动补齐模板新增函数**（新增 `backend/core/function_library_sync.py`）：`merge_template_functions()` 按「函数名 + 参数类型序列」比对（数值标量类型统一折叠为 `num`，避免 `SetSignalRate(long)` 与 `float` 版本重载歧义），只追加模板里有、库里没有的函数，并补上新增函数用到但缺失的 `variables` 声明；`sync_template_functions()` 读写全局库并同步网络共享。`FunctionModule.create_config()` 开头调用一次，异常只告警；追加内容落在 `/* 同步自模板的新增函数 begin/end */` 区块，**幂等**，跳过生成期注入的 `RelayON/RelayOFF/_out*`。
+
+**验证**：
+
+- Chk 库：模板导入无 diagnostics、花括号配平；重载数 `ChkEqual/ChkNotEqual/ChkGreater/ChkLess/ChkInRange/ChkOutRange/ChkKeepValue` 各 6、`ResetChk` 1。
+- 分组：解析结果 11 组全部命中、无"未分类"、无残留旧标签（FUN/Check/Control/Bus/Common 均为 0）、同函数无相邻双标签、花括号净增量 0。
+- 图形化渲染（`render_step_to_capl` 实测）：`ChkEqual(S, 800, 2000)`、`ChkInRange(S, 800, 3000, 2000)`、`ChkGreater(S, 500, 2000)`、`ChkLess(S, -5, 2000)`、`ChkKeepValue(S, 2000)`、`SignalCheck(S, 5, CHK_HIGH_LIMIT)`、`SignalCheckNot(S, 1, 5)` 等 12 种组合输出正确；Excel 导出 Fun 列 `ChkGreater/ChkKeepValue/SignalCheckNot` 正确。
+- 自动补齐：以旧库（无 Chk）模拟新建配置 → 自动补入 60 个函数、注入 Chk 变量、不引入 `SetSignalRate` float 歧义版本；第二次新建配置内容零变化（幂等）；现有库判定 `up_to_date` 不写文件。
+- 前端：`npx vue-tsc --noEmit` 通过（exit 0）。
+- 数据：源码目录全局库合并后 171 个函数（Chk* 各 6 重载）；打包版 `%APPDATA%\Excel2Case` 那份补齐 58 个函数。
+
+**相关文件**：
+
+- `backend/templates/func_test_function.py`
+- `backend/templates/relay.py`
+- `backend/services/function_graph.py`
+- `backend/services/function_case_excel.py`
+- `backend/core/function_library_sync.py`（新增）
+- `backend/core/function_module.py`
+- `frontend/src/types/functionGraph.ts`
+- `frontend/src/utils/functionGraph.ts`
+- `frontend/src/components/graph/StepEditor.vue`
+- `frontend/src/components/graph/CardEditor.vue`
+- `frontend/src/components/graph/CaseFrameCanvas.vue`
+- `frontend/src/components/FunctionLibrary.vue`
+- `frontend/src/components/SanbaoFunctionLibrary.vue`
+- `configs/function/Function_global_library.json`（按签名合并模板新增函数）
+
+**打包**：会话中途曾用本地 1.0.40 打包验证（后端 exe 77.71 MB、安装包 164.52 MB，未推送、未生成 `version.json`）；当时共享盘已发布到 1.0.42，**1.0.43 尚未打包**，发布前需先把 `frontend/package.json` 从 1.0.40 bump 到 1.0.43。
+
+**遗留**：
+
+1. 打包版 `configs` 是随 exe 打包的快照，与 `%APPDATA%\Excel2Case\configs` 是两份独立文件；本次包内快照仍是旧库（且带透明加密头 `%TSD-Header-###%`），启动后接口返回的是旧函数库，只能通过应用自身 `POST /api/function/global-library` 写入才生效（已实测重启后保持）。**新机器首次启动仍会出现"函数库是旧模板"**，建议增加"启动时按签名合并包内模板库"的兜底（本次未实现）。
+2. `SignalCheck` 的 大于/小于 生成依赖 `CHK_HIGH_LIMIT` / `CHK_LOW_LIMIT`，需重新生成 `TestFunction.cin` 才带进工程。
+3. 「背景检测」只对信号 / 系统变量有效（Chk 库没有"按名字传环境变量"的重载），环境变量需用系统变量或改用其它断言。
+4. `.trae/documents/Function模块前端需求文档.md`、`Function分组文件_JSON解析经验.md`、`.trae/skills/testcase-to-function-group/SKILL.md` 里的 kind 清单仍为 14 种，未补 `chk_check`。
+
+---
+
 ## [1.0.42] - 2026-10-28
 
-**版本号**：`1.0.42`（`frontend/package.json` 的 `version`）
-**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.42.exe`（172,457,854 字节，SHA256 `4466DFB92054A64D89871DBB5196D80D29B83F65962DD53161B0C4E60C1E8D3A`）
+**版本号**：`1.0.42`
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.42.exe`（164.5 MB，2026-10-28 15:12）
 **共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
 
 **更新配置**（`version.json`）：
@@ -29,131 +314,30 @@
 
 **发布状态**：已发布到共享盘（version 1.0.42）
 
----
+**变更内容**（取自共享盘 `version.json` 的 `release_notes`；该版本由其它机器发布，本仓库无对应会话明细）：
 
-### [1.0.42] - 2026-10-28
-
-**会话主题**：CDD 诊断目标名取 CDD 内 ECU qualifier、UUDT 冲突归一化、Unlock 改为 testcase、DBC GenSigFuncType 加载到信号矩阵、后端残留进程清理
-
-**问题**：
-
-1. Creat CANoe 生成的 `SecurityAlgo.can` 里 `Xxx_Unlock("ChangAn")` 找不到诊断目标（CDD_qualifier 没设置成功）。
-2. 导入 ChangAn CDD 后 CANoe 的 Diagnostics/ISO TP 配置中，`UUDT from ECU` 与 `Response from ECU` 同为 `0x78D`，报冲突告警。
-3. `Unlock()` 是普通 `void` 函数，在 Test Module 里无法单独作为用例呈现。
-4. 打开已有 DBC 时，信号矩阵的 `GenSigFuncType` 列拿不到值（如 `6`/`1` 这种数字被丢弃），只能靠信号名关键字猜。
-5. 关闭（退出）App 后，已安装版的后端 exe 仍残留并占用 18735 端口。
-
-**根因**：
-
-1. CANoe 的诊断目标名取自 CDD 内部的 ECU qualifier，`DiagDescriptions.Add(Network, FilePath, ecuIdentifier)` 的第三个参数不会改写它。实测 `DiagDescriptions(1).Name/.Qualifier` = `UDS_GreatWall_V1_0`（ChangAn.cdd），而生成侧一直用主机厂标签 `ChangAn` 当 target。
-2. `ChangAn.cdd` 中 `CAN.UudtResCanId` 与 `CAN.ResCanId` 同为 `1933`（0x78D），属厂商 CDD 内容，CANoe 只告警。
-3. 模板里的入口固定写成 `void Unlock()`。
-4. DBC 里 `GenSigFuncType` 是 ENUM 属性，存的是索引；cantools 读回的 `attr.value` 是整数，原代码 `str(sft.value)` 直接得到 `"0"/"1"/"6"`，前端匹配不到枚举卡片，被当作无效值丢弃。
-5. 打包后端为 PyInstaller onefile：Electron spawn 到的是 bootloader，bootloader 解包后再 fork 真正的 Python 进程并退出。`backendProcess.pid` 指向已退出的 bootloader，`taskkill /T /F /PID` 找不到真正的子进程，子进程脱树后继续占用端口。
-
-**变更内容**：
-
-1. **CDD qualifier 取值改为 CDD 优先**：`cfg_parser` 新增 `read_cdd_ecu_qualifier()`（解析 CDD `<ECU>` 块内首个 `<QUAL>`）；`resolve_cdd_qualifier()` 改为「CDD 可读 → CDD 的 ECU qualifier；否则 oem」。
-2. **导入后读回实际目标名**：`_task_add_cdd_dll` 增加 `target_desc.Qualifier` 读回，写入返回值的 `qualifier` 并在与解析值不一致时告警。
-3. **生成链路传递 qualifier**：`config_generator.generate_full_config()` 新增 `cdd_qualifier` 入参，`SecurityAlgo.can` 的 target 优先使用它；`great_canoe_module` 两条生成路径把「复制 CDD/DLL」提前到生成文件之前，先解析出 qualifier 再生成，避免生成时读不到 CDD。
-4. **UUDT 冲突归一化**：新增 `_normalize_cdd_uudt()`，复制 CDD 时按同层比较，仅当 `UudtResCanId == ResCanId` 时把 UUDT 置 `0`（等同不启用）；UUDT 使用独立 ID 的 CDD 字节不变。
-5. **Unlock 改为 testcase**：`build_security_algo_test_can()` 在替换 `/*Unlock_Algo*/` 后，只把入口定义行 `void Unlock()` 改成 `testcase Unlock()`（不命中上方注释文字），`MainTest()` 内的 `Unlock();` 保持不变；Function / CAN 模块仍用 `void Unlock()`。
-6. **DBC GenSigFuncType 还原标签**：`can_routes` 新增 `_enum_attr_label()`，按属性定义的 `choices` 顺序把索引还原为标签（兼容 list / dict / 已返回标签的 cantools 版本）；`_parse_dbc_file()` 改用该函数，`NoFunction` 仍按无功能留空。
-7. **前端补齐 GenSigFuncType 枚举**：`CreateCanoeView.vue` 的 `GENSIG_OPTS` 增加 `E2E_1D_ID_CRC8`、`E2E_1021_CRC16_ID`（后端原本支持，前端缺失会被丢弃）。
-8. **后端残留进程清理**：`main.js` 新增 `DEFAULT_BACKEND_PORT`、`backendImageName` 与 `killStaleBackendOnPort()`（netstat 查端口 → tasklist 校验镜像名 → taskkill 进程树，排除自身 pid）；`startBackend()` spawn 前清理一次，`killBackendProcessTree()` 开头按端口再兜底一次。dev 同步模式不下发清理，不会误杀 run.py 启动的后端。
-
-**相关文件**：
-
-- `backend/utils/cfg_parser.py`
-- `backend/utils/canoe_cfg_parser.py`
-- `backend/core/canoe_config/config_generator.py`
-- `backend/core/great_canoe_module.py`
-- `backend/templates/capl.py`
-- `backend/api/can_routes.py`
-- `frontend/src/views/CreateCanoeView.vue`
-- `frontend/electron/main.js`
-- `frontend/package.json`
-
-**验证**：
-
-- `resolve_cdd_qualifier` 实测：`ChangAn.cdd → UDS_GreatWall_V1_0`、`BYD/CheRy/GEEA_1.0/GEEA_3.0/SGWM → ABS_ESP`、无 CDD 时回退 oem。
-- 生成文本：`testcase Unlock() { ChangAn_SeedKey_Unlock("UDS_GreatWall_V1_0"); }`。
-- `_normalize_cdd_uudt` 实测：ChangAn 的 `CAN.UudtResCanId` 由 `1933` 改为 `0`，`ResCanId` 保持 `1933`；BYD / SGWM 无 UUDT 字段，字节不变。
-- 用 `LR927(E22H).dbc` 实测 `_parse_dbc_file`：`6 → CRC8_2F_All`、`1 → Counter`，修改前为 `"6"/"1"`。
-- CANoe COM 读回（运行中的 LRA31D-CK 工程）：`DiagDescriptions(1).Name/.Qualifier = UDS_GreatWall_V1_0`，`Information` 中 `Multiple responses: UUDT ID=0x78d`。
-- `python -m py_compile` 通过（`cfg_parser` / `canoe_cfg_parser` / `config_generator` / `great_canoe_module` / `can_routes`）；`node --check electron/main.js` 通过。
-- 源码后端 `python -m backend.app` 启动后 `/api/health` 返回 `{"code":200,"data":{"status":"ok"}}`。
+1. CDD 诊断目标名改为从 CDD 内 ECU qualifier 读取，修复 Unlock 解锁找不到诊断目标。
+2. 修复 CDD 中 UUDT 与物理响应 ID 重复导致的 CANoe 冲突告警。
+3. SecurityAlgo 的 Unlock 入口改为 testcase。
+4. DBC 的 GenSigFuncType 枚举索引还原为标签，加载到信号矩阵。
+5. 修复退出应用后后端进程残留占用端口。
 
 ---
 
 ## [1.0.41] - 2026-10-28
 
-**版本号**：`1.0.41`（`frontend/package.json` 的 `version`）
-**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.41.exe`（172,454,627 字节，SHA256 `D114321738FB891C535FF2511C5E7AAA0D8719781CE426B8FC25CBA8152338B8`）
-
-**更新配置**（`version.json`）：
-```json
-{
-  "version": "1.0.41",
-  "release_notes": "本版本更新：\n- CAN 模块 DBC 测试参数「自动遍历」改为最小→最大步长 1 全区间取值；修复测试值 0/1 被生成成 false/true",
-  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.41.exe"
-}
-```
-**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**版本号**：`1.0.41`
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.41.exe`（164.5 MB，2026-10-28 12:31）
 **发布状态**：已发布到共享盘（version 1.0.41）
 
----
-
-### [1.0.41] - 2026-10-28
-
-**会话主题**：CAN 模块 DBC 测试参数「自动遍历」改为最小→最大步长 1 全区间取值；修复测试值 0/1 被生成成 false/true
-
-**问题**：
-
-1. 信号测试参数里勾了「自动遍历（从最小值到最大值）」，实际只生成两条用例（最小值、最大值），中间值全没测。
-2. 物理最小值/最大值是 `0`/`1` 时，生成的 CAPL 里出现 `false` / `true`（用例名也变成 `信号_True`）。
-
-**根因**（均在 `backend/processors/excel_processor.py`）：
-
-1. `_gen_rx_sig_testcases` 的 FactorTest 自动遍历分支直接取 `test_values = [signal_info['min'], signal_info['max']]`，只取两个端点，没有任何步进。
-2. 信号上下限用 `_parse_number()` 解析，而该函数把字符串 `'0'`/`'1'` 归入布尔分支，返回 `False`/`True`；再拼进 `_signalfactor(...)` 模板与 EPS 检查模板就成了 `false`/`true`。
-
-**变更内容**：
-
-1. **新增 `_parse_sig_number()`**：解析信号物理最小/最大值后，把布尔统一转回 `0`/`1`；`signal_info['min']` / `['max']` 改走该方法（`_gen_tx_sig_testcases` 的 EPS 检查上下限随之修好）。
-2. **新增 `_auto_range_values()`**：从最小值按步长 1 递增到最大值（含端点）；整数用 `range` 精确生成，小数按 1.0 步长并保留 6 位；任一端缺失/非数值/上下限颠倒时退回端点取值。
-3. **自动遍历分支改调 `_auto_range_values()`**：原先直接取端点数组的两行替换掉；DBC 无效值过滤逻辑保留。
-4. **新增取值上限 `AUTO_RANGE_MAX_VALUES = 1000`**：`0~65535` 这类信号避免一次生成上万条用例，超出时记 warning 并只取前 1000 条。
-
-**验证**：
-
-- `0~7` → `[0,1,2,3,4,5,6,7]`；`-3~2` → `[-3,-2,-1,0,1,2]`；`0.5~2.5` → `[0.5,1.5,2.5]`；`min=None,max=1` → `[1]`。
-- `_parse_sig_number('0')` → `0`、`'1'` → `1`（int），不再是 `False`/`True`。
-- `0~65535` 触发上限：warning 一条，取值 1000 条（0~999）。
-- `python -m unittest discover -s tests` 129 例全部通过。
-
-**相关文件**：
-
-- `backend/processors/excel_processor.py`
-
-**发布状态**：已发布到共享盘（version 1.0.41）
+**说明**：该版本由其它机器发布，本仓库无该版本的变更明细与会话记录（共享盘只保留安装包，`version.json` 已被 1.0.42 覆盖）。如需补全，请从发布机器的 CHANGELOG 回填。
 
 ---
 
 ## [1.0.40] - 2026-10-28
 
-**版本号**：`1.0.40`（`frontend/package.json` 的 `version`）
-**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.40.exe`（172,453,514 字节，SHA256 `26FB7F647A757E30BC6F54D04BF51AD6BED0945AF85E4917D442F0B4913C1884`）
-
-**更新配置**（`version.json`）：
-```json
-{
-  "version": "1.0.40",
-  "release_notes": "本版本更新：\n- Function 模块 `TestFunction.cin` 数据源收敛到前端函数库；修复 Logging/Testreport 路径反斜杠转义",
-  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.40.exe"
-}
-```
-**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**版本号**：`1.0.40`
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.40.exe`（164.5 MB，2026-10-28 10:58）
 **发布状态**：已发布到共享盘（version 1.0.40）
 
 ---

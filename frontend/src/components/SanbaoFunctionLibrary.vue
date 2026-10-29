@@ -236,6 +236,10 @@ function categoryLabel(c: string) {
   const map: Record<string, string> = {
     FUN: '功能', Check: '检查', Control: '控制', Bus: '总线',
     arraryFunc: '数组工具', ReadDTCFunc: '读DTC',
+    SignalCheck: '信号断言', ChkAssert: '背景检测', MsgCheck: '报文检测',
+    Timing: '时序检测', PowerCtl: '上下电控制', BusCtl: '总线控制',
+    SignalCtl: '信号操作', Diag: '诊断', EnvCfg: '环境配置',
+    Utility: '共用工具', Internal: '内部函数',
   }
   return map[c] ?? c
 }
@@ -243,6 +247,10 @@ function categoryTagType(c: string): '' | 'success' | 'warning' | 'danger' | 'in
   const map: Record<string, any> = {
     FUN: 'success', Check: 'danger', Control: 'primary', Bus: 'warning',
     arraryFunc: 'info', ReadDTCFunc: 'warning',
+    SignalCheck: 'danger', ChkAssert: 'danger', MsgCheck: 'warning',
+    Timing: 'warning', PowerCtl: 'primary', BusCtl: 'warning',
+    SignalCtl: 'primary', Diag: 'info', EnvCfg: 'success',
+    Utility: 'info', Internal: 'info',
   }
   return map[c] ?? 'info'
 }

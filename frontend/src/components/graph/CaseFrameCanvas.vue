@@ -1796,6 +1796,7 @@ function stepKindLabel(s: Card['steps'][number]): string {
     case 'wait': return '等待'
     case 'check': return '检查'
     case 'wait_check': return '限时检查'
+    case 'chk_check': return '背景检测'
     case 'set': return '设置'
     case 'reset': return '恢复'
     case 'reset_all': return '恢复全部'
@@ -1828,6 +1829,21 @@ function stepLabel(s: Card['steps'][number]): string {
       )
       const time = s.time ? ` 时间${s.time}` : ''
       return `${head} ${parts.join(', ') || '(空)'}${time}`
+    }
+    case 'chk_check': {
+      const forms: Record<string, string> = {
+        eq: '等于', ne: '不等于', in: '区间内', out: '区间外', gt: '大于', lt: '小于', keep: '维持不变',
+      }
+      const form = s.waitKeep
+        ? 'keep'
+        : s.waitCmp || (s.waitRange ? (s.waitNot ? 'out' : 'in') : (s.waitNot ? 'ne' : 'eq'))
+      const parts = (s.args || []).map((a) =>
+        s.waitRange
+          ? `${a.key}=${a.value ?? ''}~${a.value2 ?? ''}`
+          : s.waitKeep ? a.key : (a.value ? `${a.key}=${a.value}` : a.key),
+      )
+      const time = s.time ? ` 时间${s.time}` : ''
+      return `背景检测(${forms[form] || '等于'}) ${parts.join(', ') || '(空)'}${time}`
     }
     case 'reset_all':
       return '恢复全部'

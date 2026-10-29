@@ -92,6 +92,7 @@ export const STEP_KIND_LABEL: Record<CardStep['kind'], string> = {
   wait: '等待',
   check: '检查',
   wait_check: '限时检查',
+  chk_check: '背景检测',
   rate: '斜率请求',
   ramp: '斜率请求(同步)',
   tester_prompt: '弹窗提示',
@@ -124,6 +125,9 @@ export const STEP_NUM_FIELDS: Partial<Record<CardStep['kind'], StepNumField[]>> 
   wait_check: [
     { key: 'time', label: '时间', placeholder: '1000', title: '超时时间(ms)，SignalWaitCheck 的第 3 个参数（留空按 1000 生成）' },
   ],
+  chk_check: [
+    { key: 'time', label: '时间', placeholder: '1000', title: '检测窗口(ms)，Chk* 的 Timeout（留空按 1000 生成，到时自动判定）' },
+  ],
   tester_prompt: [
     { key: 'time', label: '超时', placeholder: '60000', title: '等待确认超时(ms)，testWaitForTesterConfirmation 的第 2 个参数（留空按 60000 生成）' },
   ],
@@ -137,12 +141,14 @@ export function stepNumFieldsOf(kind: CardStep['kind']): StepNumField[] {
  *  在/不在区间内      → SignalWaitCheck[Not](sig, RangeValue1, RangeValue2, time)
  *  大于/小于期望值    → 同样走区间形式，上下限按「两倍预期值」自动填入（见 fillWaitCmpBounds） */
 export interface WaitFormOption {
-  value: 'eq' | 'ne' | 'in' | 'out' | 'gt' | 'lt'
+  value: 'eq' | 'ne' | 'in' | 'out' | 'gt' | 'lt' | 'keep'
   label: string
   not: boolean
   range: boolean
   /** 大于/小于：比较方向标记（落到 step.waitCmp，仅用于回显） */
   cmp?: 'gt' | 'lt'
+  /** 维持不变：只对「背景检测」开放（落到 step.waitKeep，生成 ChkKeepValue） */
+  keep?: boolean
 }
 export const WAIT_FORMS: WaitFormOption[] = [
   { value: 'eq', label: '等于期望值', not: false, range: false },
@@ -151,7 +157,12 @@ export const WAIT_FORMS: WaitFormOption[] = [
   { value: 'out', label: '不在区间内', not: true, range: true },
   { value: 'gt', label: '大于期望值', not: false, range: true, cmp: 'gt' },
   { value: 'lt', label: '小于期望值', not: false, range: true, cmp: 'lt' },
+  { value: 'keep', label: '维持不变', not: false, range: false, keep: true },
 ]
+/** 某步骤类型可选的断言方式：维持不变只对「背景检测」开放 */
+export function assertFormsOf(kind: CardStep['kind']): WaitFormOption[] {
+  return WAIT_FORMS.filter((f) => !f.keep || kind === 'chk_check')
+}
 /** 数值化：能解析成有限数字才返回，否则 null（占位符 / 别名 / 空值等一律跳过） */
 function toFiniteNumber(v: unknown): number | null {
   if (typeof v === 'number') return Number.isFinite(v) ? v : null
@@ -179,30 +190,55 @@ function fillWaitCmpBounds(step: CardStep, cmp: 'gt' | 'lt') {
     arg.value2 = fmtNum(Math.max(a, b))
   }
 }
-/** 当前步骤的判定方式 value（用于下拉回显）：大于/小于优先按 waitCmp 回显 */
+/** 当前步骤的判定方式 value（用于下拉回显）：维持不变优先，其次大于/小于 */
 export function waitFormOf(step: CardStep): WaitFormOption['value'] {
+  if (step.waitKeep) return 'keep'
   if (step.waitCmp === 'gt' || step.waitCmp === 'lt') return step.waitCmp
-  const hit = WAIT_FORMS.find((f) => !f.cmp && f.not === !!step.waitNot && f.range === !!step.waitRange)
+  const hit = WAIT_FORMS.find((f) => !f.cmp && !f.keep && f.not === !!step.waitNot && f.range === !!step.waitRange)
   return hit ? hit.value : 'eq'
 }
-/** 写入判定方式（落到 waitNot / waitRange 两个标记上；大于/小于另存 waitCmp 并自动填入上下限） */
+/** 写入判定方式（落到 waitNot / waitRange / waitCmp / waitKeep 四个标记上）。
+ *  「检查」与「背景检测」没有「两倍期望值」补边界的写法（大于/小于 直接生成单边开区间），
+ *  因此这两类的 gt/lt 不置区间、也不自动填上下限。 */
 export function applyWaitForm(step: CardStep, value: WaitFormOption['value']) {
   const hit = WAIT_FORMS.find((f) => f.value === value)
   if (!hit) return
   const prevCmp = step.waitCmp
+  const singleSide = step.kind === 'check' || step.kind === 'chk_check'
   step.waitNot = hit.not
-  step.waitRange = hit.range
+  step.waitRange = singleSide ? !!hit.range && !hit.cmp : hit.range
   step.waitCmp = hit.cmp
+  step.waitKeep = hit.keep ? true : undefined
   // 仅在实际切换方向时重算，避免重复点同一项把区间越缩越小
-  if (hit.cmp && prevCmp !== hit.cmp) fillWaitCmpBounds(step, hit.cmp)
+  if (!singleSide && hit.cmp && prevCmp !== hit.cmp) fillWaitCmpBounds(step, hit.cmp)
 }
-/** 限时检查当前判定方式是否需要区间（两个值） */
+/** 当前判定方式是否需要区间（两个值）：检查 / 限时检查 / 背景检测 通用 */
 export function isWaitRange(step: CardStep): boolean {
-  return step.kind === 'wait_check' && !!step.waitRange
+  return (
+    (step.kind === 'wait_check' || step.kind === 'check' || step.kind === 'chk_check') &&
+    !!step.waitRange
+  )
+}
+/** 当前判定方式是否「维持不变」（只有对象，没有期望值） */
+export function isKeepForm(step: CardStep): boolean {
+  return step.kind === 'chk_check' && !!step.waitKeep
 }
 /** 限时检查要生成的 CAPL 函数名 */
 export function waitCheckFunOf(step: CardStep): string {
   return step.waitNot ? 'SignalWaitCheckNot' : 'SignalWaitCheck'
+}
+/** 背景检测要生成的 CAPL 函数名（按判定方式定，与后端 _CHK_FUNS 一致） */
+export function chkCheckFunOf(step: CardStep): string {
+  const map: Record<string, string> = {
+    eq: 'ChkEqual',
+    ne: 'ChkNotEqual',
+    in: 'ChkInRange',
+    out: 'ChkOutRange',
+    gt: 'ChkGreater',
+    lt: 'ChkLess',
+    keep: 'ChkKeepValue',
+  }
+  return map[waitFormOf(step)] || 'ChkEqual'
 }
 
 /** 新建空白步骤 */
@@ -212,11 +248,11 @@ export function newStep(kind: CardStep['kind'] = 'call'): CardStep {
     id: genId('step'),
     kind,
     fun: withFun ? '' : undefined,
-    args: kind === 'check' || kind === 'wait_check' ? [{ key: '', value: '' }] : [],
+    args: kind === 'check' || kind === 'wait_check' || kind === 'chk_check' ? [{ key: '', value: '' }] : [],
     raw: kind === 'raw' ? '' : undefined,
     rate: kind === 'rate' || kind === 'ramp' ? '10' : undefined,
     cycleTime: kind === 'ramp' ? '10' : undefined,
-    time: kind === 'wait_check' ? '1000' : kind === 'tester_prompt' ? '60000' : undefined,
+    time: kind === 'wait_check' || kind === 'chk_check' ? '1000' : kind === 'tester_prompt' ? '60000' : undefined,
     prompt: kind === 'tester_prompt' ? '' : undefined,
     waitNot: kind === 'wait_check' ? false : undefined,
     waitRange: kind === 'wait_check' ? false : undefined,
@@ -377,19 +413,47 @@ export function syncCardRef(card: Card, src: Card): Card {
   // 节点自己的参数值不能被库卡片覆盖：整块覆盖会把节点上填好的默认值回滚成库卡片的值
   // （经常是空），界面随即退回显示参数名/占位符，像是「填了值没生效」。
   // 参数声明仍以库卡片为准，只保留节点上的同名参数（含默认值/显示名）。
+  //
+  // 步骤按「位置合并」同步库卡片的改动：内容取库卡片最新版本（这样库里改参数名、
+  // 改判定函数、加删参数都能落到画布上），但
+  //   ① 步骤 id 优先沿用节点原步骤的 —— 步骤 id 是接线口锚点（seq:<seqId>@<stepId>）的落点，
+  //      整体换成库卡片的 id 会把锚在这些步骤上的连线全部打成悬空；
+  //   ② `{{参数}}` 占位符优先用节点实例值（节点 params 的 default，其次旧步骤里的实参），
+  //      保证「改了库默认值」不会把各用例已填的实例值冲掉。
+  const values = nodeParamValues(card)
+  const oldSteps = card.steps ?? []
   const next: Card = {
     ...src,
     id: card.id,
     refId: card.refId,
     params: mergeCardParams(card.params, src.params),
+    steps: (src.steps ?? []).map((s, i) => mergeStepFromLibrary(s, oldSteps[i], values)),
     // 「全局卡片」是卡片库条目的作用域标记，不该带到工况节点副本上
     global: undefined,
   }
-  // 步骤内容与库卡片逐字段一致（只差步骤 id）时保留节点自己的 steps：步骤 id 是序列接线口
-  // 锚点（seq:<seqId>@<stepId>）的落点，仅因 id 不同就把整份步骤换成库卡片的，会把锚在这些
-  // 步骤上的连线全部打成悬空（画不出来、也不参与用例展开）。这种情况只同步名称 / 参数。
-  if (sameStepsIgnoringId(card.steps, src.steps)) next.steps = card.steps
   return JSON.stringify(next) !== JSON.stringify(card) ? next : card
+}
+
+/** 库卡片的步骤 → 节点步骤：保留节点原步骤 id，`{{参数}}` 换成节点实例值。
+ *  整串就是占位符时替换为实例值；实例值缺失保留占位符，由后端按卡片默认值解析。 */
+function mergeStepFromLibrary(src: CardStep, old: CardStep | undefined,
+                              values: Record<string, string>): CardStep {
+  const args = (src.args ?? []).map((a) => ({ ...a, value: fillArgPlaceholder(a.value, values) }))
+  return { ...src, id: old?.id ?? genId('step'), args }
+}
+
+function fillArgPlaceholder(value: string, values: Record<string, string>): string {
+  if (typeof value !== 'string' || !value.includes('{{')) return value
+  const whole = value.match(/^\{\{\s*([^{}]+?)\s*\}\}$/)
+  if (whole) {
+    const v = values[whole[1].trim()]
+    // 空实例值不覆盖占位符：留给后端按卡片默认值解析，避免渲染成空参数被整行丢弃
+    return v === undefined || v === '' ? value : v
+  }
+  return value.replace(/\{\{\s*([^{}]+?)\s*\}\}/g, (m, name: string) => {
+    const v = values[String(name).trim()]
+    return v ? v : m
+  })
 }
 
 export function syncGraphRefs(
@@ -451,15 +515,6 @@ export function syncGraphRefs(
 /** 步骤签名：忽略步骤 id（每个副本各自生成 id），其余字段逐字段比较 */
 function stepSignature(step: CardStep): string {
   return JSON.stringify({ ...step, id: '' })
-}
-
-/** 两组步骤是否逐字段一致（忽略步骤 id）。步骤 id 是接线口锚点的落点，
- *  仅 id 不同不算内容变化——把这种「变化」当成内容更新会打断锚点。 */
-function sameStepsIgnoringId(a?: CardStep[], b?: CardStep[]): boolean {
-  const x = a ?? []
-  const y = b ?? []
-  if (x.length !== y.length) return false
-  return x.every((s, i) => stepSignature(s) === stepSignature(y[i]))
 }
 
 /** 节点是否只是库卡片的一份整份副本（步骤逐条一致）→ 换成卡片引用后生成结果不变。
@@ -1831,7 +1886,7 @@ function cardParamValues(ref: Card, refStep: CardStep): Record<string, string> {
 
 /** 空值跳过：解析为空串的参数行可单独丢弃的步骤类型（与后端 _ARGS_SKIP_KINDS 一致） */
 const ARGS_SKIP_KINDS = new Set<CardStep['kind']>([
-  'check', 'wait_check', 'set', 'reset', 'rate', 'ramp',
+  'check', 'chk_check', 'wait_check', 'set', 'reset', 'rate', 'ramp',
 ])
 
 /** 替换文本里的 {{参数}}，并返回是否出现了「解析为空」的参数。

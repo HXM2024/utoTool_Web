@@ -27,6 +27,11 @@
           :loading="parsing"
           @click="doParse"
         >重新解析</el-button>
+        <el-button
+          size="small"
+          :loading="resetting"
+          @click="onResetFromTemplate"
+        >从模板重置</el-button>
       </div>
     </div>
 
@@ -217,7 +222,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { Check, RefreshRight, Search, Plus, Close } from '@element-plus/icons-vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { getGlobalLibrary, saveGlobalLibrary, parseFunctions } from '@/api/function'
+import { getGlobalLibrary, saveGlobalLibrary, parseFunctions, resetGlobalFunctions } from '@/api/function'
 import { genId, FUNC_CARD_MIME } from '@/types/functionGraph'
 import type { Card } from '@/types/functionGraph'
 
@@ -254,6 +259,7 @@ const emit = defineEmits<{
 const viewMode = ref<'cards' | 'source'>('cards')
 const code = ref('')
 const saving = ref(false)
+const resetting = ref(false)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const gutterRef = ref<HTMLElement | null>(null)
 
@@ -347,6 +353,10 @@ function categoryLabel(c: string) {
   const map: Record<string, string> = {
     FUN: '功能', Check: '检查', Control: '控制', Bus: '总线',
     arraryFunc: '数组工具', ReadDTCFunc: '读DTC', Common: '共用',
+    SignalCheck: '信号断言', ChkAssert: '背景检测', MsgCheck: '报文检测',
+    Timing: '时序检测', PowerCtl: '上下电控制', BusCtl: '总线控制',
+    SignalCtl: '信号操作', Diag: '诊断', EnvCfg: '环境配置',
+    Utility: '共用工具', Internal: '内部函数',
   }
   return map[c] ?? c
 }
@@ -354,6 +364,10 @@ function categoryTagType(c: string): '' | 'success' | 'warning' | 'danger' | 'in
   const map: Record<string, any> = {
     FUN: 'success', Check: 'danger', Control: 'primary', Bus: 'warning',
     arraryFunc: 'info', ReadDTCFunc: 'warning', Common: 'primary',
+    SignalCheck: 'danger', ChkAssert: 'danger', MsgCheck: 'warning',
+    Timing: 'warning', PowerCtl: 'primary', BusCtl: 'warning',
+    SignalCtl: 'primary', Diag: 'info', EnvCfg: 'success',
+    Utility: 'info', Internal: 'info',
   }
   return map[c] ?? 'info'
 }
@@ -376,6 +390,31 @@ const filteredFunctions = computed(() => {
 })
 
 // ==================== 加载全局库 ====================
+/** 用后端内置模板覆盖函数库源码（卡片 / 映射 / 值资源不受影响） */
+async function onResetFromTemplate() {
+  try {
+    await ElMessageBox.confirm(
+      '将用软件内置模板覆盖当前函数库源码（卡片库、映射表、值资源不受影响），确认继续？',
+      '从模板重置',
+      { type: 'warning' },
+    )
+  } catch {
+    return
+  }
+  resetting.value = true
+  try {
+    await resetGlobalFunctions()
+    await loadGlobalLibrary()
+    emit('update:code', code.value)
+    await doParse()
+    ElMessage.success('函数库已按内置模板重置')
+  } catch (e: any) {
+    ElMessage.error('重置失败：' + (e?.message || String(e)))
+  } finally {
+    resetting.value = false
+  }
+}
+
 async function loadGlobalLibrary() {
   try {
     const res: any = await getGlobalLibrary()

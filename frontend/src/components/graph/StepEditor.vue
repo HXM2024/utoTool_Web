@@ -183,16 +183,16 @@
                      既看不到全部类型，也回不到函数/弹窗提示/Loop/卡片引用/自定义 -->
                 <el-option v-for="k in STEP_KINDS" :key="k.value" :label="k.label" :value="k.value" />
               </el-select>
-              <!-- 限时检查：判定方式（等于/不等于期望值、在/不在区间内、大于/小于期望值） -->
+              <!-- 判定方式：限时检查（SignalWaitCheck 系列）/ 检查（SignalCheck 系列）/ 背景检测（Chk 系列） -->
               <el-select
-                v-if="step.kind === 'wait_check'"
+                v-if="step.kind === 'wait_check' || step.kind === 'check' || step.kind === 'chk_check'"
                 :model-value="waitFormOf(step)"
                 size="small"
                 class="wait-form-select"
-                title="判定方式，决定生成 SignalWaitCheck / SignalWaitCheckNot 的 3 或 4 参数重载"
+                title="判定方式：限时检查生成 SignalWaitCheck 系列，检查生成 SignalCheck 系列，背景检测生成 Chk 系列"
                 @change="(v: any) => applyWaitForm(step, v)"
               >
-                <el-option v-for="f in WAIT_FORMS" :key="f.value" :label="f.label" :value="f.value" />
+                <el-option v-for="f in assertFormsOf(step.kind)" :key="f.value" :label="f.label" :value="f.value" />
               </el-select>
               <template v-for="nf in numFieldsOf(step.kind)" :key="nf.key">
                 <span class="rate-label">{{ nf.label }}</span>
@@ -228,7 +228,7 @@
                   />
                 </div>
                 <div
-                  v-if="needsObjectValue(step.kind)"
+                  v-if="needsObjectValue(step.kind) && !isKeepForm(step)"
                   class="arg-value fill-drop"
                   :class="{ 'fill-over': fillOver === `value-${i}-${ai}` }"
                   @dragover.prevent
@@ -621,11 +621,13 @@ import {
   CARD_TYPE_LABEL,
   buildCardLookup,
   stepNumFieldsOf as numFieldsOf,
-  WAIT_FORMS,
+  assertFormsOf,
   waitFormOf,
   applyWaitForm,
   isWaitRange,
+  isKeepForm,
   waitCheckFunOf,
+  chkCheckFunOf,
   paramNameError,
 } from '@/utils/functionGraph'
 import type { StepNumField, WaitFormOption } from '@/utils/functionGraph'
@@ -697,6 +699,7 @@ const STEP_KINDS: Array<{ value: CardStep['kind']; label: string }> = [
   { value: 'set', label: '设置' },
   { value: 'check', label: '检查' },
   { value: 'wait_check', label: '限时检查' },
+  { value: 'chk_check', label: '背景检测' },
   { value: 'rate', label: '斜率请求' },
   { value: 'ramp', label: '斜率请求(同步)' },
   { value: 'tester_prompt', label: '弹窗提示' },
@@ -715,6 +718,7 @@ const OBJECT_KINDS: Array<{ value: CardStep['kind']; label: string }> = [
   { value: 'set', label: '设置' },
   { value: 'check', label: '检查' },
   { value: 'wait_check', label: '限时检查' },
+  { value: 'chk_check', label: '背景检测' },
   { value: 'rate', label: '斜率请求' },
   { value: 'ramp', label: '斜率请求(同步)' },
   { value: 'reset', label: '恢复' },
@@ -748,8 +752,8 @@ function isRateKind(kind: CardStep['kind']): boolean {
 
 /** 对象行「值」输入框的占位文案 */
 function objectValuePlaceholder(step: CardStep): string {
-  if (step.kind === 'wait_check') return step.waitRange ? '下限' : '期望值'
-  if (step.kind === 'check') return '期望值'
+  if (step.kind === 'wait_check' || step.kind === 'chk_check') return step.waitRange ? '下限' : '期望值'
+  if (step.kind === 'check') return step.waitRange ? '下限' : '期望值'
   if (step.kind === 'rate') return '目标值'
   if (step.kind === 'ramp') return '最大值'
   return '设置值'
@@ -769,7 +773,21 @@ function typeLabel(t?: CardStepArg['argType']): string {
 function objectKindHint(step: CardStep): string {
   const kind = step.kind
   if (kind === 'set') return '拖拽对象到下方参数行，填写设置值'
-  if (kind === 'check') return '拖拽信号到下方参数行，填写期望值（生成 SignalCheck）'
+  if (kind === 'check') {
+    const fun = step.waitNot ? 'SignalCheckNot' : 'SignalCheck'
+    if (step.waitCmp === 'gt') return '拖拽信号到下方参数行填阈值（生成 SignalCheck(信号, 阈值, CHK_HIGH_LIMIT) 开区间）'
+    if (step.waitCmp === 'lt') return '拖拽信号到下方参数行填阈值（生成 SignalCheck(信号, CHK_LOW_LIMIT, 阈值) 开区间）'
+    return step.waitRange
+      ? `拖拽信号到下方参数行，填下限 / 上限（生成 ${fun} 区间形式）`
+      : `拖拽信号到下方参数行，填期望值（生成 ${fun}）`
+  }
+  if (kind === 'chk_check') {
+    const fun = chkCheckFunOf(step)
+    if (step.waitKeep) return `拖拽信号 / 系统变量到下方参数行（生成 ${fun}，窗口由「时间」控制：值一变化即判失败）`
+    return step.waitRange
+      ? `拖拽信号 / 系统变量到下方参数行，填下限 / 上限（生成 ${fun}，窗口由「时间」控制）`
+      : `拖拽信号 / 系统变量到下方参数行，填期望值（生成 ${fun}，窗口由「时间」控制）`
+  }
   if (kind === 'wait_check') {
     const fun = waitCheckFunOf(step)
     if (step.waitCmp) {
@@ -1101,6 +1119,16 @@ function onKindChange(step: CardStep, kind: CardStep['kind']) {
       step.cardType = undefined
       step.cardName = undefined
     } else if (kind === 'wait_check') {
+      step.fun = undefined
+      if (step.args && step.args.length) step.args = step.args
+      else step.args = [{ key: '', value: '' }]
+      if (step.time === undefined || step.time === '') step.time = '1000'
+      if (step.waitNot === undefined) step.waitNot = false
+      if (step.waitRange === undefined) step.waitRange = false
+      step.cardId = undefined
+      step.cardType = undefined
+      step.cardName = undefined
+    } else if (kind === 'chk_check') {
       step.fun = undefined
       if (step.args && step.args.length) step.args = step.args
       else step.args = [{ key: '', value: '' }]
@@ -1580,6 +1608,7 @@ const draggingStepLabel = computed(() => {
   if (s.kind === 'set') return '设置'
   if (s.kind === 'check') return '检查'
   if (s.kind === 'wait_check') return '限时检查'
+  if (s.kind === 'chk_check') return '背景检测'
   if (s.kind === 'rate') return '斜率请求'
   if (s.kind === 'ramp') return '斜率请求(同步)'
   if (s.kind === 'tester_prompt') return '弹窗提示'

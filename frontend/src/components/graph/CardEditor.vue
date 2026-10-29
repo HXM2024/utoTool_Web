@@ -318,16 +318,16 @@
                 @setText="(v: string) => (step.prompt = v)"
               />
             </template>
-            <!-- 限时检查：判定方式（等于/不等于期望值、在/不在区间内、大于/小于期望值） -->
+            <!-- 判定方式：限时检查（SignalWaitCheck 系列）/ 检查（SignalCheck 系列）/ 背景检测（Chk 系列） -->
             <el-select
-              v-if="step.kind === 'wait_check'"
+              v-if="step.kind === 'wait_check' || step.kind === 'check' || step.kind === 'chk_check'"
               :model-value="waitFormOf(step)"
               size="small"
               style="width: 118px"
-              title="判定方式，决定生成 SignalWaitCheck / SignalWaitCheckNot 的 3 或 4 参数重载"
+              title="判定方式：限时检查生成 SignalWaitCheck 系列，检查生成 SignalCheck 系列，背景检测生成 Chk 系列"
               @change="(v: any) => applyWaitForm(step, v)"
             >
-              <el-option v-for="f in WAIT_FORMS" :key="f.value" :label="f.label" :value="f.value" />
+              <el-option v-for="f in assertFormsOf(step.kind)" :key="f.value" :label="f.label" :value="f.value" />
             </el-select>
             <template v-for="nf in numFieldsOf(step.kind)" :key="nf.key">
               <span class="ce-rate-label">{{ nf.label }}</span>
@@ -439,6 +439,7 @@
               />
             </span>
             <span
+              v-if="!isKeepForm(step)"
               class="arg-field arg-field-value"
               @dragover.prevent
               @drop.stop.prevent="onArgFieldDrop($event, arg, 'value')"
@@ -529,11 +530,13 @@ import {
   CARD_TYPE_LABEL,
   buildCardLookup,
   stepNumFieldsOf,
-  WAIT_FORMS,
+  assertFormsOf,
   waitFormOf,
   applyWaitForm,
   isWaitRange,
+  isKeepForm,
   waitCheckFunOf,
+  chkCheckFunOf,
   collectStepParamNames,
   paramNameError,
 } from '@/utils/functionGraph'
@@ -1123,7 +1126,21 @@ function cardTypeLabel(t?: CardType): string {
 function stepKindHint(step: CardStep): string {
   const kind = step.kind
   if (kind === 'set') return '设置：下方参数行填写 对象 + 设置值'
-  if (kind === 'check') return '检查：下方参数行填写 信号 + 期望值'
+  if (kind === 'check') {
+    if (step.waitCmp === 'gt') return '检查：下方参数行填 信号 + 阈值（生成 SignalCheck 开区间：CHK_HIGH_LIMIT 作上限）'
+    if (step.waitCmp === 'lt') return '检查：下方参数行填 信号 + 阈值（生成 SignalCheck 开区间：CHK_LOW_LIMIT 作下限）'
+    const fun = step.waitNot ? 'SignalCheckNot' : 'SignalCheck'
+    return step.waitRange
+      ? `检查：下方参数行填写 信号 + 下限 / 上限（生成 ${fun} 区间形式）`
+      : `检查：下方参数行填写 信号 + 期望值（生成 ${fun}）`
+  }
+  if (kind === 'chk_check') {
+    const fun = chkCheckFunOf(step)
+    if (step.waitKeep) return `背景检测：下方参数行填写 对象（生成 ${fun}，窗口由「时间」控制，值变化即失败）`
+    return step.waitRange
+      ? `背景检测：下方参数行填写 对象 + 下限 / 上限（生成 ${fun}，窗口由「时间」控制）`
+      : `背景检测：下方参数行填写 对象 + 期望值（生成 ${fun}，窗口由「时间」控制）`
+  }
   if (kind === 'wait_check') {
     const fun = waitCheckFunOf(step)
     if (step.waitCmp) {
@@ -1152,7 +1169,7 @@ function setStepNum(step: CardStep, key: StepNumField['key'], v: string) {
   step[key] = v
 }
 function stepHasArgs(step: CardStep): boolean {
-  return step.kind === 'call' || step.kind === 'wait' || step.kind === 'set' || step.kind === 'check' || step.kind === 'wait_check' || step.kind === 'reset' || isRateKind(step.kind) || step.kind === 'loop_start'
+  return step.kind === 'call' || step.kind === 'wait' || step.kind === 'set' || step.kind === 'check' || step.kind === 'wait_check' || step.kind === 'chk_check' || step.kind === 'reset' || isRateKind(step.kind) || step.kind === 'loop_start'
 }
 // 切换步骤类型时重置结构字段，避免残留旧字段
 function onKindChange(step: CardStep, kind: CardStep['kind']) {
@@ -1189,6 +1206,15 @@ function onKindChange(step: CardStep, kind: CardStep['kind']) {
       step.cardType = undefined
       step.cardName = undefined
     } else if (kind === 'wait_check') {
+      step.fun = undefined
+      step.args = step.args && step.args.length ? step.args : [{ key: '', value: '' }]
+      if (step.time === undefined || step.time === '') step.time = '1000'
+      if (step.waitNot === undefined) step.waitNot = false
+      if (step.waitRange === undefined) step.waitRange = false
+      step.cardId = undefined
+      step.cardType = undefined
+      step.cardName = undefined
+    } else if (kind === 'chk_check') {
       step.fun = undefined
       step.args = step.args && step.args.length ? step.args : [{ key: '', value: '' }]
       if (step.time === undefined || step.time === '') step.time = '1000'

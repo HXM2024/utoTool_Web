@@ -66,6 +66,10 @@ export const getGlobalLibrary = () =>
 export const saveGlobalLibrary = (data: Partial<GlobalLibraryData>) =>
   client.post('/function/global-library', data)
 
+/** 用后端内置模板重置全局函数库源码（保留卡片库 / 映射表 / 值资源库） */
+export const resetGlobalFunctions = () =>
+  client.post('/function/global-library/reset-functions', {})
+
 /** 全局库内容（前端字段名归一：value_library → valueLibrary） */
 export interface GlobalSections {
   cards: { inject: Card[]; sequence: Card[]; result: Card[] }

@@ -37,6 +37,8 @@ export interface CardStep {
     | 'check'
     /** 限时检查：SignalWaitCheck(信号, 期望值, 时间) */
     | 'wait_check'
+    /** 背景检测：Chk* 系列（检测窗口内是否…，到时自动判定），如 ChkInRange(对象, 下限, 上限, 时间) */
+    | 'chk_check'
     /** 斜率请求：SetSignalRate(信号, 步长, 目标值) */
     | 'rate'
     /** 斜率请求(同步)：SetSignalRamp(信号, 周期时间, 步长, 最大值) */
@@ -68,6 +70,8 @@ export interface CardStep {
   /** 限时检查：大于 / 小于期望值标记（仅用于下拉回显）。
    *  生成仍走区间形式（waitRange=true），上下限由 applyWaitForm 按「两倍预期值」自动填入。 */
   waitCmp?: 'gt' | 'lt'
+  /** 背景检测：维持不变（生成 ChkKeepValue(对象, 时间)，值变化即违规） */
+  waitKeep?: boolean
   /** 缩进层级（循环体） */
   indent?: number
   /** 循环类型（loop_start 使用）：for=次数可控，while=条件满足退出；默认 for */
