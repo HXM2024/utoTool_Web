@@ -12,6 +12,54 @@
 
 ---
 
+## [1.0.49] - 2026-10-30
+
+**版本号**：`1.0.49`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.49.exe`（172,582,683 字节，SHA256 `43012E5F1FE4EA8C490132A85EF3D9C01EA997DAEE4BFCD693793671D18A8658`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**发布状态**：已发布到共享盘（version 1.0.49）
+
+**更新配置**（发布时由 `publish.py` 写入 `version.json`）：
+```json
+{
+  "version": "1.0.49",
+  "release_notes": "本版本更新：\n- 背景检测：手动/定时两种截止彻底分离，定时检测各记各的到期时刻、到期各自收口，多个定时检测互不干扰\n- ResetChk / ResetChkByName 只收口手动检测，不再误释放定时检测；新增 ResetChkAll 用于用例中途退出/收尾强制清理\n- 图形化配置：背景检测步骤新增 6 种「全程保持」断言（生成 ChkXxxKeep），断言下拉共 13 项\n- 步骤卡片提示与画布摘要同步区分「出现即通过 / 全程保持」口径",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.49.exe"
+}
+```
+
+---
+
+### [1.0.49] - 2026-10-30
+
+**会话主题**：背景检测「手动截止 / 定时截止」分离；图形化配置补齐「全程保持」断言
+
+**变更内容**：
+
+1. **背景检测截止方式分离**（`backend/templates/func_test_function.py`）：
+   - 槽位新增 `mChkDeadlines[]`（到期时刻，0 = 手动截止）与 `mChkLastIdx`；`ChkSlotPush/ChkSlotRemove` 同步维护（移除槽位时后移、清尾）
+   - 新增 `ChkArmNew(Timeout)`（给刚分配的槽位装订到期时刻）与 `ChkRearmTimer()`（把共用定时器装在"最早到期"的槽位上）；39 个带 `Timeout` 的重载由 `setTimer(timer_ChkDestroy, Timeout)` 改为 `ChkArmNew(Timeout)`
+   - `on timer timer_ChkDestroy` 改为**只结已到期**的槽位，然后按下一个最早到期时刻重新装订（多个定时检测不再互相覆盖）
+   - `ResetChk()` / `ResetChkByName(Name)` 改为**只收口手动检测**（`mChkDeadlines == 0`），定时检测不受影响
+   - 新增 `ResetChkAll()`：判定并释放所有检测（含定时），用于用例中途退出/收尾清理，避免未到期的定时检测残留到下一个用例
+2. **图形化配置补齐「全程保持」断言**：
+   - `frontend/src/types/functionGraph.ts`：`CardStep` 新增 `waitHold`（全程保持标记，与 `waitKeep` 区分）
+   - `frontend/src/utils/functionGraph.ts`：`WaitFormOption` 扩展 `eqk/nek/ink/outk/gtk/ltk` 6 个值与 `hold`/`chkOnly` 标记；`WAIT_FORMS` 增至 13 项；`assertFormsOf()` 改按 `chkOnly` 过滤（「检查/限时检查」仍为 6 项）；`waitFormOf()` 回显 keep 口径；`applyWaitForm()` 写 `waitHold`；`chkCheckFunOf()` 映射 6 个 `ChkXxxKeep`
+   - `StepEditor.vue` / `CardEditor.vue`：提示文案区分「全程保持：窗口内必须全程满足，一次违反即失败」
+   - `CaseFrameCanvas.vue`：画布摘要显示 `背景检测(区间内(全程保持)) …`
+   - `backend/services/function_graph.py`：新增 `_chk_fun_name(form, hold)`（hold 时追加 `Keep` 后缀）；`_render_chk_check()` 增加 `hold` 参数并由调用处传 `step.waitHold`
+   - `backend/services/function_case_excel.py`：Excel 导出的 Fun 列同步（hold 时取 `ChkXxxKeep`）
+
+**验证**：
+
+- 渲染实测：`ChkEqual(obj, 800, 2000)` / `ChkEqualKeep(obj, 800, 2000)` / `ChkInRangeKeep(obj, 100, 3000, 2000)` / `ChkOutRangeKeep(obj, 100, 3000, 2000)` / `ChkGreaterKeep(obj, 500, 2000)` / `ChkKeepValue(obj, 2000)` 均正确
+- 模板花括号平衡；`setTimer(timer_ChkDestroy, Timeout)` 残留 0 处；`ChkArmNew(Timeout)` 调用 39 处；模块可正常导入
+- 旧 JSON 无 `waitHold` 时行为与之前一致，无需迁移
+
+**相关文件**：`backend/templates/func_test_function.py`、`backend/services/function_graph.py`、`backend/services/function_case_excel.py`、`frontend/src/types/functionGraph.ts`、`frontend/src/utils/functionGraph.ts`、`frontend/src/components/graph/StepEditor.vue`、`frontend/src/components/graph/CardEditor.vue`、`frontend/src/components/graph/CaseFrameCanvas.vue`
+
+---
+
 ## [1.0.48] - 2026-10-29
 
 **版本号**：`1.0.48`（`frontend/package.json` 的 `version`）
@@ -246,7 +294,7 @@
 1. **背景检测（Chk）函数库**（`backend/templates/func_test_function.py`）：新增 7 个接口 × 3 种对象（`signal*` / `sysvarInt*` / `sysvarFloat*`）× 2 种截止方式（带 `Timeout` 定时释放、不带 `Timeout` 由 `ResetChk()` 截止），共 **42 个函数**；每个函数单独带 `/// <ChkAssert>` 标签。
    - 断言映射：`ChkEqual` / `ChkNotEqual` / `ChkGreater` / `ChkLess` / `ChkInRange` / `ChkOutRange` / `ChkKeepValue`
    - 实现：区间内/等于/不等于/大于/小于走 `ChkStart_MsgSignalValueRangeViolation(Signal|sysVar, Min, Max)`；**区间外**走 `ChkStart_MsgSignalValueInvalid(Signal|sysVar, Min, Max)`（该检查的语义是"值应在区间之外、进入区间才记事件"，与区间外断言一致，也用于 DBC `Invalid_Value` 区间检查）；维持不变走 `ChkStart_SignalValueChange(Signal|sysVar, "Cb_ChkValueChange")`；**全部为 TSL 背景检查，不做采样**
-   - 支持并行检测：`CHK_MAX=8` 个槽位（`mChkIds/mChkConds/mChkExpects/mChkLows/mChkHighs/mChkNames` + `mChkCount`），`ResetChk()` 一次判定并释放全部在跑的检测
+   - 支持并行检测：`CHK_MAX=8` 个槽位（`mChkIds / mChkConds / mChkExpects / mChkLows / mChkHighs / mChkNames / mChkDeadlines` + `mChkCount`）。**手动检测**（不带 Timeout）由 `ResetChk()` / `ResetChkByName(Name)` 收尾，且只收这类；**定时检测**各记各的到期时刻，共用定时器装在最早到期项上（`ChkArmNew` / `ChkRearmTimer`），到期各自判定收口、互不干扰，`ResetChk` 不会误释放它们；另提供 `ResetChkAll()` 给用例中途退出时强制清理（含定时检测），避免残留到下一个用例。
    - 内部件：`Cb_ChkValueChange`（回调占位）、`ChkSlotPush` / `ChkSlotRemove`（槽位管理）、`ChkReportAt(idx)`（单槽判定 + 复用 `SignalCheck_addTable` 输出表格，Result 列改为直白中文，如"始终在 [800,3000] 内" / "3 次超出 [800,3000]"）、`ChkReport`、`ResetChk`、`timer_ChkDestroy`、`ChkRangeCreate`×3（RangeViolation）、`ChkInvalidCreate`×3（ValueInvalid）
    - `variables` 新增：`CHK_HIGH_LIMIT` / `CHK_LOW_LIMIT`（±1.0e15，用于开区间）、`CHK_MAX`、`timer_ChkDestroy`、`mChkIds` / `mChkConds` / `mChkExpects` / `mChkLows` / `mChkHighs` / `mChkNames` / `mChkCount`
 2. **断言重载补齐**（`backend/templates/func_test_function.py`）：
@@ -254,10 +302,13 @@
    - `SignalWaitCheck(sysvarInt*, lo, hi, time)`
    - `SignalWaitCheckRate(signal*, timeout, CycleTime, minLimit, maxLimit)`：斜率区间（`|角速度|` 正反方向都判），大于/小于用开区间表达
 3. **函数分组重构**（`backend/templates/func_test_function.py`、`backend/templates/relay.py`、`frontend/src/components/FunctionLibrary.vue`、`frontend/src/components/SanbaoFunctionLibrary.vue`）：由 5 组细分为 **11 组**——`SignalCheck`(信号断言) / `ChkAssert`(背景检测) / `MsgCheck`(报文检测) / `Timing`(时序检测) / `PowerCtl`(上下电控制) / `BusCtl`(总线控制) / `SignalCtl`(信号操作) / `Diag`(诊断) / `EnvCfg`(环境配置) / `Utility`(共用工具) / `Internal`(内部函数)；77 个函数名 / 158 个重载**逐个**打标签（不再"一个标签管多个函数"），清理 4 处悬空/重复标签；`RelayON/RelayOFF` 归 `PowerCtl`、`_out*` 归 `Internal`、`RELAY_FUNCTION_CATEGORY` 由 `Control` 改为 `PowerCtl`；前端两个词典同步补 11 个中文名与标签颜色（旧组名保留，其它模板不受影响）。
-4. **图形化配置新增「背景检测」步骤**（kind=`chk_check`）：与"限时检查"同级，对象行 + 断言下拉（等于/不等于/大于/小于/在区间内/不在区间内/**维持不变**）+ 步骤级「时间」（默认 1000ms）；「检查」卡也新增断言下拉（6 种，无维持）。
-   - 生成规则：`ChkEqual/ChkNotEqual/ChkGreater/ChkLess(obj, 值, 时间)`、`ChkInRange/ChkOutRange(obj, 下限, 上限, 时间)`、`ChkKeepValue(obj, 时间)`；检查卡为 `SignalCheck[Not](obj, 值)`、`SignalCheck[Not](obj, 下限, 上限)`、`SignalCheck(obj, 阈值, CHK_HIGH_LIMIT)` / `(obj, CHK_LOW_LIMIT, 阈值)`
-   - 后端：`_CHK_FUNS`、`_assert_form()`、`_render_chk_check()`；`_render_check()` 支持 not/range/gt/lt；`_ARGS_SKIP_KINDS` 增加 `chk_check`；Excel 导出的 Fun 列按断言取 Chk* 名
-   - 前端：kind 联合类型 + `waitKeep` 字段、`STEP_KIND_LABEL`/`STEP_NUM_FIELDS`/`WAIT_FORMS`(增加"维持不变")/`assertFormsOf()`/`isKeepForm()`/`chkCheckFunOf()`/`isWaitRange()` 扩展、`StepEditor.vue`/`CardEditor.vue`/`CaseFrameCanvas.vue` 的类型下拉、断言下拉、值输入显隐与摘要文案
+4. **图形化配置新增「背景检测」步骤**（kind=`chk_check`）：与"限时检查"同级，对象行 + 断言下拉 + 步骤级「时间」（默认 1000ms）。
+   - 断言下拉共 **13 项**：6 种基础口径（等于/不等于/大于/小于/在区间内/不在区间内）+ **6 种「全程保持」口径**（同上条件，生成 `ChkXxxKeep`）+ **维持不变**（`ChkKeepValue`）；「全程保持」与「维持不变」只对背景检测开放
+   - 生成规则：`ChkEqual/ChkNotEqual/ChkGreater/ChkLess(obj, 值, 时间)`、`ChkInRange/ChkOutRange(obj, 下限, 上限, 时间)`、`ChkXxxKeep` 同参数、`ChkKeepValue(obj, 时间)`；「检查」卡为 `SignalCheck[Not](obj, 值)`、`SignalCheck[Not](obj, 下限, 上限)`、`SignalCheck(obj, 阈值, CHK_HIGH_LIMIT)` / `(obj, CHK_LOW_LIMIT, 阈值)`（检查卡只有 6 种基础断言）
+   - 步骤字段：新增 `waitHold`（全程保持标记，与 `waitKeep` 区分）；`WaitFormOption` 增加 `hold` / `chkOnly` 两个标记，`assertFormsOf()` 按 `chkOnly` 过滤
+   - 后端：`_chk_fun_name(form, hold)` 统一出函数名（hold 时追加 `Keep` 后缀）；`_render_chk_check()` 增加 `hold` 参数；Excel 导出的 Fun 列同步
+   - 后端另：`_assert_form()`；`_render_check()` 支持 not/range/gt/lt；`_ARGS_SKIP_KINDS` 增加 `chk_check`
+   - 前端：kind 联合类型 + `waitKeep` / `waitHold` 字段、`STEP_KIND_LABEL`/`STEP_NUM_FIELDS`/`WAIT_FORMS`（新增"维持不变" + 6 种"全程保持"）/`assertFormsOf()`/`isKeepForm()`/`chkCheckFunOf()`/`isWaitRange()` 扩展、`StepEditor.vue`/`CardEditor.vue`/`CaseFrameCanvas.vue` 的类型下拉、断言下拉、值输入显隐与摘要文案（含"全程保持"提示）
 5. **新建配置自动补齐模板新增函数**（新增 `backend/core/function_library_sync.py`）：`merge_template_functions()` 按「函数名 + 参数类型序列」比对（数值标量类型统一折叠为 `num`，避免 `SetSignalRate(long)` 与 `float` 版本重载歧义），只追加模板里有、库里没有的函数，并补上新增函数用到但缺失的 `variables` 声明；`sync_template_functions()` 读写全局库并同步网络共享。`FunctionModule.create_config()` 开头调用一次，异常只告警；追加内容落在 `/* 同步自模板的新增函数 begin/end */` 区块，**幂等**，跳过生成期注入的 `RelayON/RelayOFF/_out*`。
 
 **验证**：

@@ -1833,10 +1833,11 @@ function stepLabel(s: Card['steps'][number]): string {
     case 'chk_check': {
       const forms: Record<string, string> = {
         eq: '等于', ne: '不等于', in: '区间内', out: '区间外', gt: '大于', lt: '小于', keep: '维持不变',
+        eqk: '等于(全程保持)', nek: '不等于(全程保持)', ink: '区间内(全程保持)',
+        outk: '区间外(全程保持)', gtk: '大于(全程保持)', ltk: '小于(全程保持)',
       }
-      const form = s.waitKeep
-        ? 'keep'
-        : s.waitCmp || (s.waitRange ? (s.waitNot ? 'out' : 'in') : (s.waitNot ? 'ne' : 'eq'))
+      const base = s.waitCmp || (s.waitRange ? (s.waitNot ? 'out' : 'in') : (s.waitNot ? 'ne' : 'eq'))
+      const form = s.waitKeep ? 'keep' : s.waitHold ? base + 'k' : base
       const parts = (s.args || []).map((a) =>
         s.waitRange
           ? `${a.key}=${a.value ?? ''}~${a.value2 ?? ''}`

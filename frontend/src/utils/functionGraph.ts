@@ -141,7 +141,20 @@ export function stepNumFieldsOf(kind: CardStep['kind']): StepNumField[] {
  *  在/不在区间内      → SignalWaitCheck[Not](sig, RangeValue1, RangeValue2, time)
  *  大于/小于期望值    → 同样走区间形式，上下限按「两倍预期值」自动填入（见 fillWaitCmpBounds） */
 export interface WaitFormOption {
-  value: 'eq' | 'ne' | 'in' | 'out' | 'gt' | 'lt' | 'keep'
+  value:
+    | 'eq'
+    | 'ne'
+    | 'in'
+    | 'out'
+    | 'gt'
+    | 'lt'
+    | 'keep'
+    | 'eqk'
+    | 'nek'
+    | 'ink'
+    | 'outk'
+    | 'gtk'
+    | 'ltk'
   label: string
   not: boolean
   range: boolean
@@ -149,6 +162,10 @@ export interface WaitFormOption {
   cmp?: 'gt' | 'lt'
   /** 维持不变：只对「背景检测」开放（落到 step.waitKeep，生成 ChkKeepValue） */
   keep?: boolean
+  /** 全程保持：只对「背景检测」开放（落到 step.waitHold，生成 ChkXxxKeep） */
+  hold?: boolean
+  /** 仅「背景检测」可选的断言方式 */
+  chkOnly?: boolean
 }
 export const WAIT_FORMS: WaitFormOption[] = [
   { value: 'eq', label: '等于期望值', not: false, range: false },
@@ -157,11 +174,18 @@ export const WAIT_FORMS: WaitFormOption[] = [
   { value: 'out', label: '不在区间内', not: true, range: true },
   { value: 'gt', label: '大于期望值', not: false, range: true, cmp: 'gt' },
   { value: 'lt', label: '小于期望值', not: false, range: true, cmp: 'lt' },
-  { value: 'keep', label: '维持不变', not: false, range: false, keep: true },
+  // 以下只对「背景检测」开放：keep = 值不变；*k = 该条件在窗口内全程保持
+  { value: 'keep', label: '维持不变', not: false, range: false, keep: true, chkOnly: true },
+  { value: 'eqk', label: '等于（全程保持）', not: false, range: false, hold: true, chkOnly: true },
+  { value: 'nek', label: '不等于（全程保持）', not: true, range: false, hold: true, chkOnly: true },
+  { value: 'ink', label: '区间内（全程保持）', not: false, range: true, hold: true, chkOnly: true },
+  { value: 'outk', label: '区间外（全程保持）', not: true, range: true, hold: true, chkOnly: true },
+  { value: 'gtk', label: '大于（全程保持）', not: false, range: true, cmp: 'gt', hold: true, chkOnly: true },
+  { value: 'ltk', label: '小于（全程保持）', not: false, range: true, cmp: 'lt', hold: true, chkOnly: true },
 ]
-/** 某步骤类型可选的断言方式：维持不变只对「背景检测」开放 */
+/** 某步骤类型可选的断言方式：维持不变 / 全程保持只对「背景检测」开放 */
 export function assertFormsOf(kind: CardStep['kind']): WaitFormOption[] {
-  return WAIT_FORMS.filter((f) => !f.keep || kind === 'chk_check')
+  return WAIT_FORMS.filter((f) => !f.chkOnly || kind === 'chk_check')
 }
 /** 数值化：能解析成有限数字才返回，否则 null（占位符 / 别名 / 空值等一律跳过） */
 function toFiniteNumber(v: unknown): number | null {
@@ -193,9 +217,17 @@ function fillWaitCmpBounds(step: CardStep, cmp: 'gt' | 'lt') {
 /** 当前步骤的判定方式 value（用于下拉回显）：维持不变优先，其次大于/小于 */
 export function waitFormOf(step: CardStep): WaitFormOption['value'] {
   if (step.waitKeep) return 'keep'
-  if (step.waitCmp === 'gt' || step.waitCmp === 'lt') return step.waitCmp
-  const hit = WAIT_FORMS.find((f) => !f.cmp && !f.keep && f.not === !!step.waitNot && f.range === !!step.waitRange)
-  return hit ? hit.value : 'eq'
+  if (step.waitCmp === 'gt' || step.waitCmp === 'lt') {
+    if (step.waitHold) return step.waitCmp === 'gt' ? 'gtk' : 'ltk'
+    return step.waitCmp
+  }
+  const hit = WAIT_FORMS.find(
+    (f) => !f.cmp && !f.keep && !f.hold && f.not === !!step.waitNot && f.range === !!step.waitRange
+  )
+  const base: WaitFormOption['value'] = hit ? hit.value : 'eq'
+  if (!step.waitHold) return base
+  // 全程保持：在基础断言上追加 k（eq→eqk / in→ink / out→outk ...）
+  return (base + 'k') as WaitFormOption['value']
 }
 /** 写入判定方式（落到 waitNot / waitRange / waitCmp / waitKeep 四个标记上）。
  *  「检查」与「背景检测」没有「两倍期望值」补边界的写法（大于/小于 直接生成单边开区间），
@@ -209,6 +241,7 @@ export function applyWaitForm(step: CardStep, value: WaitFormOption['value']) {
   step.waitRange = singleSide ? !!hit.range && !hit.cmp : hit.range
   step.waitCmp = hit.cmp
   step.waitKeep = hit.keep ? true : undefined
+  step.waitHold = hit.hold ? true : undefined
   // 仅在实际切换方向时重算，避免重复点同一项把区间越缩越小
   if (!singleSide && hit.cmp && prevCmp !== hit.cmp) fillWaitCmpBounds(step, hit.cmp)
 }
@@ -227,7 +260,7 @@ export function isKeepForm(step: CardStep): boolean {
 export function waitCheckFunOf(step: CardStep): string {
   return step.waitNot ? 'SignalWaitCheckNot' : 'SignalWaitCheck'
 }
-/** 背景检测要生成的 CAPL 函数名（按判定方式定，与后端 _CHK_FUNS 一致） */
+/** 背景检测要生成的 CAPL 函数名（按判定方式 + 口径定，与后端 _chk_fun_name 一致） */
 export function chkCheckFunOf(step: CardStep): string {
   const map: Record<string, string> = {
     eq: 'ChkEqual',
@@ -237,6 +270,12 @@ export function chkCheckFunOf(step: CardStep): string {
     gt: 'ChkGreater',
     lt: 'ChkLess',
     keep: 'ChkKeepValue',
+    eqk: 'ChkEqualKeep',
+    nek: 'ChkNotEqualKeep',
+    ink: 'ChkInRangeKeep',
+    outk: 'ChkOutRangeKeep',
+    gtk: 'ChkGreaterKeep',
+    ltk: 'ChkLessKeep',
   }
   return map[waitFormOf(step)] || 'ChkEqual'
 }
