@@ -149,6 +149,7 @@ export interface WaitFormOption {
     | 'gt'
     | 'lt'
     | 'keep'
+    | 'change'
     | 'eqk'
     | 'nek'
     | 'ink'
@@ -162,6 +163,8 @@ export interface WaitFormOption {
   cmp?: 'gt' | 'lt'
   /** 维持不变：只对「背景检测」开放（落到 step.waitKeep，生成 ChkKeepValue） */
   keep?: boolean
+  /** 值变化：只对「背景检测」开放（落到 step.waitChange，生成 ChkValueChange） */
+  change?: boolean
   /** 全程保持：只对「背景检测」开放（落到 step.waitHold，生成 ChkXxxKeep） */
   hold?: boolean
   /** 仅「背景检测」可选的断言方式 */
@@ -174,8 +177,9 @@ export const WAIT_FORMS: WaitFormOption[] = [
   { value: 'out', label: '不在区间内', not: true, range: true },
   { value: 'gt', label: '大于期望值', not: false, range: true, cmp: 'gt' },
   { value: 'lt', label: '小于期望值', not: false, range: true, cmp: 'lt' },
-  // 以下只对「背景检测」开放：keep = 值不变；*k = 该条件在窗口内全程保持
+  // 以下只对「背景检测」开放：keep = 值不变；change = 值变化；*k = 该条件在窗口内全程保持
   { value: 'keep', label: '维持不变', not: false, range: false, keep: true, chkOnly: true },
+  { value: 'change', label: '值变化', not: false, range: false, change: true, chkOnly: true },
   { value: 'eqk', label: '等于（全程保持）', not: false, range: false, hold: true, chkOnly: true },
   { value: 'nek', label: '不等于（全程保持）', not: true, range: false, hold: true, chkOnly: true },
   { value: 'ink', label: '区间内（全程保持）', not: false, range: true, hold: true, chkOnly: true },
@@ -214,15 +218,16 @@ function fillWaitCmpBounds(step: CardStep, cmp: 'gt' | 'lt') {
     arg.value2 = fmtNum(Math.max(a, b))
   }
 }
-/** 当前步骤的判定方式 value（用于下拉回显）：维持不变优先，其次大于/小于 */
+/** 当前步骤的判定方式 value（用于下拉回显）：值变化 / 维持不变优先，其次大于/小于 */
 export function waitFormOf(step: CardStep): WaitFormOption['value'] {
+  if (step.waitChange) return 'change'
   if (step.waitKeep) return 'keep'
   if (step.waitCmp === 'gt' || step.waitCmp === 'lt') {
     if (step.waitHold) return step.waitCmp === 'gt' ? 'gtk' : 'ltk'
     return step.waitCmp
   }
   const hit = WAIT_FORMS.find(
-    (f) => !f.cmp && !f.keep && !f.hold && f.not === !!step.waitNot && f.range === !!step.waitRange
+    (f) => !f.cmp && !f.keep && !f.change && !f.hold && f.not === !!step.waitNot && f.range === !!step.waitRange
   )
   const base: WaitFormOption['value'] = hit ? hit.value : 'eq'
   if (!step.waitHold) return base
@@ -241,6 +246,7 @@ export function applyWaitForm(step: CardStep, value: WaitFormOption['value']) {
   step.waitRange = singleSide ? !!hit.range && !hit.cmp : hit.range
   step.waitCmp = hit.cmp
   step.waitKeep = hit.keep ? true : undefined
+  step.waitChange = hit.change ? true : undefined
   step.waitHold = hit.hold ? true : undefined
   // 仅在实际切换方向时重算，避免重复点同一项把区间越缩越小
   if (!singleSide && hit.cmp && prevCmp !== hit.cmp) fillWaitCmpBounds(step, hit.cmp)
@@ -252,9 +258,9 @@ export function isWaitRange(step: CardStep): boolean {
     !!step.waitRange
   )
 }
-/** 当前判定方式是否「维持不变」（只有对象，没有期望值） */
+/** 当前判定方式是否「只需对象」（维持不变 / 值变化，没有期望值） */
 export function isKeepForm(step: CardStep): boolean {
-  return step.kind === 'chk_check' && !!step.waitKeep
+  return step.kind === 'chk_check' && (!!step.waitKeep || !!step.waitChange)
 }
 /** 限时检查要生成的 CAPL 函数名 */
 export function waitCheckFunOf(step: CardStep): string {
@@ -270,6 +276,7 @@ export function chkCheckFunOf(step: CardStep): string {
     gt: 'ChkGreater',
     lt: 'ChkLess',
     keep: 'ChkKeepValue',
+    change: 'ChkValueChange',
     eqk: 'ChkEqualKeep',
     nek: 'ChkNotEqualKeep',
     ink: 'ChkInRangeKeep',

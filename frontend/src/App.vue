@@ -12,6 +12,12 @@
         <el-icon class="tab-icon"><component :is="tab.icon" /></el-icon>
         <span class="tab-label">{{ tab.label }}</span>
       </router-link>
+
+      <!-- 问题反馈入口：Electron 帮助菜单里也有同名项，这里作为常驻快捷入口 -->
+      <button class="feedback-entry" title="问题反馈" @click="feedbackVisible = true">
+        <el-icon><ChatLineSquare /></el-icon>
+        <span>问题反馈</span>
+      </button>
     </nav>
 
     <!-- 主内容区：左侧栏 + 右侧内容 -->
@@ -34,11 +40,14 @@
         </router-view>
       </main>
     </div>
+
+    <!-- 问题反馈弹窗（帮助菜单 / 顶栏入口共用） -->
+    <FeedbackDialog v-model="feedbackVisible" />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useModuleStore } from '@/stores/modules'
 import { useShortcut } from '@/composables/useShortcuts'
@@ -52,14 +61,24 @@ import {
   Promotion,
   Files,
   Tickets,
+  ChatLineSquare,
 } from '@element-plus/icons-vue'
 import GlobalSidebar from '@/components/GlobalSidebar.vue'
 import ResizableSplitter from '@/components/ResizableSplitter.vue'
+import FeedbackDialog from '@/components/FeedbackDialog.vue'
 import { useResizableSize } from '@/composables/useResizableSize'
 
 const route = useRoute()
 const store = useModuleStore()
 const isDark = ref(false)
+const feedbackVisible = ref(false)
+
+// Electron「帮助 → 问题反馈」菜单通过 IPC 打开弹窗；浏览器模式也可用
+// window.dispatchEvent(new CustomEvent('open-feedback')) 触发，方便调试。
+let offOpenFeedback: (() => void) | undefined
+function onOpenFeedbackEvent() {
+  feedbackVisible.value = true
+}
 
 // 参数顺序是 (key, 默认值, 最小值, 最大值)。原来写成 280, 400, 600，
 // 最小值 400 比默认值 280 还大 → 一旦拖动就被夹到 400 以上，再也拉不回 280。
@@ -91,6 +110,18 @@ onMounted(() => {
   // 继电器配置（Function / CAN / 三包 共用的 CAN 通道 + 继电器模块）存后端，
   // 启动时拉一次，避免刷新后回落默认值
   store.loadRelayConfig()
+
+  // 问题反馈入口：Electron 菜单 IPC + 浏览器自定义事件（调试用）
+  const electronAPI = (window as any).electronAPI
+  if (electronAPI?.onOpenFeedback) {
+    offOpenFeedback = electronAPI.onOpenFeedback(onOpenFeedbackEvent)
+  }
+  window.addEventListener('open-feedback', onOpenFeedbackEvent)
+})
+
+onUnmounted(() => {
+  offOpenFeedback?.()
+  window.removeEventListener('open-feedback', onOpenFeedbackEvent)
 })
 
 watch(() => route.path, () => {
@@ -195,6 +226,34 @@ useShortcut({
     color: var(--color-primary);
     border-bottom-color: var(--color-primary);
     font-weight: 600;
+  }
+}
+
+/* ---------- 顶栏问题反馈入口 ---------- */
+.feedback-entry {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--border-color-light);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-base);
+  flex-shrink: 0;
+
+  .el-icon {
+    font-size: 14px;
+  }
+
+  &:hover {
+    color: var(--color-primary);
+    border-color: var(--el-color-primary-light-5);
+    background: var(--el-color-primary-light-9);
   }
 }
 

@@ -949,6 +949,17 @@ async function checkForUpdates() {
   }
 }
 
+// 打开渲染进程里的「问题反馈」弹窗
+function openFeedbackDialog() {
+  const win = BrowserWindow.getFocusedWindow()
+    || (mainWindow && !mainWindow.isDestroyed() ? mainWindow : null)
+  if (!win || win.isDestroyed()) return
+  if (win.isMinimized()) win.restore()
+  win.show()
+  win.focus()
+  win.webContents.send('open-feedback')
+}
+
 // 构建应用菜单（含缩放功能）；存在可用更新时「帮助」与「检查更新」两项都显示蓝色圆点
 function buildAppMenu() {
   const blueDot = updateAvailable ? nativeImage.createFromDataURL(BLUE_DOT_ICON) : undefined
@@ -990,6 +1001,7 @@ function buildAppMenu() {
       icon: blueDot,
       submenu: [
         { label: '检查更新', icon: blueDot, click: () => checkForUpdates() },
+        { label: '问题反馈', click: () => openFeedbackDialog() },
         { type: 'separator' },
         { label: '关于', click: () => { dialog.showMessageBox(mainWindow, { type: 'info', title: '关于', message: `#Excel2Case# V${app.getVersion()}`, detail: 'AutoTool 通信自动化测试工具' }) } }
       ]

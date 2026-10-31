@@ -72,6 +72,8 @@ export interface CardStep {
   waitCmp?: 'gt' | 'lt'
   /** 背景检测：维持不变（生成 ChkKeepValue(对象, 时间)，值变化即违规） */
   waitKeep?: boolean
+  /** 背景检测：值变化（生成 ChkValueChange(对象, 时间)，窗口内出现变化即通过） */
+  waitChange?: boolean
   /** 背景检测：全程保持口径（在基础断言上生成 ChkXxxKeep，窗口内一次都不能违反） */
   waitHold?: boolean
   /** 缩进层级（循环体） */

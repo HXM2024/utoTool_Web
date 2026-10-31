@@ -28,6 +28,9 @@ interface Window {
     // 打开路径
     openPath: (path?: string) => Promise<void>
     
+    // 帮助菜单 → 问题反馈（返回取消监听的函数）
+    onOpenFeedback: (callback: () => void) => () => void
+    
     // 获取应用版本
     getVersion: () => Promise<string>
     

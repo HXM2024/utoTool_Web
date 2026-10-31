@@ -1137,6 +1137,7 @@ function stepKindHint(step: CardStep): string {
   if (kind === 'chk_check') {
     const fun = chkCheckFunOf(step)
     if (step.waitKeep) return `背景检测：下方参数行填写 对象（生成 ${fun}，窗口由「时间」控制，值变化即失败）`
+    if (step.waitChange) return `背景检测：下方参数行填写 对象（生成 ${fun}，窗口由「时间」控制，期间出现变化即通过）`
     if (step.waitHold)
       return step.waitRange
         ? `背景检测：下方参数行填写 对象 + 下限 / 上限（生成 ${fun}，窗口内必须全程满足，一次违反即失败）`

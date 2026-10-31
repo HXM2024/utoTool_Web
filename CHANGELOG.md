@@ -12,6 +12,145 @@
 
 ---
 
+## [1.0.51] - 2026-10-31
+
+**版本号**：`1.0.51`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.51.exe`（172,662,441 字节，SHA256 `4039A7316F67F40BCC179C5A615F7E7706E67A6A42FADA03F0BF4B8C986C9149`）
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.51",
+  "release_notes": "本版本更新：\n- 本地配置保存改为「每套配置一个独立文件夹」（兼容旧单文件，JSON 多行缩进）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.51.exe"
+}
+```
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**发布状态**：已发布到共享盘（version 1.0.51）
+
+---
+
+### [1.0.51] - 2026-10-31
+
+**会话主题**：本地配置保存改为「每套配置一个独立文件夹」（兼容旧单文件，JSON 多行缩进）
+
+**变更内容**：
+
+1. **本地存储结构**（`backend/services/config_service.py`）：
+   - 由 `configs/<Module>/<Module>_configs.json`（多套配置挤在一个 JSON）改为 `configs/<Module>/remote_configs/<配置名>/latest.json`，与共享盘目录结构对齐
+   - 每个配置只写 `latest.json`，统一 `json.dumps(..., indent=2)` 多行缩进；**本地不做版本管理**（不生成 `versions/` 与 `versions.json`）
+   - `_meta` 仅保留 `config_name`（目录名规范化后还原原名）与内容摘要，读取时递归剥离，不污染配置本体
+   - 内容未变时跳过写盘（内存摘要缓存），避免重复大文件读写
+2. **旧格式兼容与迁移**：
+   - 读取顺序：新文件夹优先，旧的单文件兜底补齐缺失配置
+   - 首次保存成功后旧文件改名为 `<Module>_configs.json.bak-legacy-<时间戳>` 留档，不再作为数据源
+   - 删除配置时同步删除其专属文件夹，避免下次加载被读回；整文件覆盖式拉取后清理内存中已不存在的文件夹
+3. **共享盘推拉适配**：
+   - `network_storage` 仍以「单个聚合 JSON」为输入输出，推拉时用临时聚合文件桥接，用完即删，本地目录不残留聚合文件
+   - 按版本拉取、按配置项拉取、整文件拉取均先读回内存，再按新结构落盘；远端版本管理能力不变
+
+**验证**：
+
+- `python -m unittest discover -s tests` 共 129 项全部通过
+- 临时目录实测：旧单文件拆分后生成独立文件夹与 `.bak-legacy` 备份、JSON 多行缩进、内容未变不重写、重载数据一致、删除后重新加载不复活、推送/拉取全流程正常
+
+**相关文件**：`backend/services/config_service.py`
+
+---
+
+## [1.0.50] - 2026-10-31
+
+**版本号**：`1.0.50`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.50.exe`（172,645,562 字节，SHA256 `CF8EAA962430823CA7AA139077FB6D180A0781A95ABCD291F0F49C6FE89B9554`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+**发布状态**：已发布到共享盘（version 1.0.50）
+
+**更新配置**（发布时由 `publish.py` 写入 `version.json`）：
+```json
+{
+  "version": "1.0.50",
+  "release_notes": "本版本更新：\n- 背景检测新增「值在变化」断言 ChkValueChange（signal / sysvarInt / sysvarFloat，含带 Timeout 的重载），用 ChkStart_SignalValueChange 计触发次数判定，不引入采样定时器\n- ChkValueChange 与既有 ChkKeepValue（值维持不变）互为反向变种；报告结果列输出「N 次检测到值变化 / 始终未检测到值变化」\n- 全局函数库升级规则新增 ChkValueChange 缺失检测，打开旧库时自动整段升级\n- 新增「问题反馈」：帮助菜单「检查更新」下与顶栏均可打开，清单支持状态筛选、搜索、排序、详情查看与密钥管理\n- 问题数据统一存共享盘 Excel2Case 目录下的 feedback.json；清单默认「表格序号倒序」，新建问题置顶，已导入历史问题 95 条",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.50.exe"
+}
+```
+
+---
+
+### [1.0.50] - 2026-10-31
+
+**会话主题**：新增「问题反馈」全链路（共享盘 JSON 存储、密钥管理、清单交互优化）
+
+**变更内容**：
+
+1. **后端新增问题反馈路由**（`backend/api/feedback_routes.py`，注册于 `backend/api/__init__.py` 与 `backend/app.py`）：
+   - 5 个接口：`GET /api/feedback/list`、`POST /api/feedback/verify|create|update|delete`
+   - 存储：与「检查更新」同目录的 `feedback.json`（`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`），原子写入（临时文件 + `os.replace`）
+   - 共享盘为唯一写入目标；本地 `configs/global/feedback.json` 仅在共享盘断线时作只读缓存，避免多机数据分叉
+   - 管理密钥默认 `AutoTool2026`，可用环境变量 `AUTOTOOL_FEEDBACK_KEY` 覆盖，`hmac.compare_digest` 校验
+   - 创建时间精确到日、状态默认「打开」、编号 `FB-YYYYMMDD-NN` 均由服务端生成；状态改为「已关闭」自动补当天关闭日期，重新打开自动清空
+2. **前端问题反馈弹窗**（`frontend/src/components/FeedbackDialog.vue`、`frontend/src/api/feedback.ts`）：
+   - 清单 9 列（编号/描述/汇报人/需求来源/创建时间/状态/解决方案/受理人/关闭时间），含状态 chips 计数、搜索、排序、详情弹窗、45 秒静默刷新
+   - 排序支持「表格序号 / 表格序号倒序 / 最新优先 / 最早优先」，默认「表格序号倒序」；无序号的新建问题在倒序时置顶
+   - 新建/编辑：必填校验、`Ctrl + Enter` 提交、未提交内容关闭二次确认；需求来源提示填写用例 ID
+   - 管理模式：右上角「管理」经密钥验证（Enter 提交、错误内联提示）后，行内可编辑/删除，关闭弹窗自动退出管理
+3. **入口接入**（`frontend/electron/main.js`、`frontend/electron/preload.cjs`、`frontend/src/App.vue`、`frontend/src/vite-env.d.ts`）：
+   - 帮助菜单「检查更新」下新增「问题反馈」，经 IPC `open-feedback` 打开弹窗
+   - 顶栏新增常驻「问题反馈」快捷入口
+4. **历史数据导入**：从《修改记录(4)(2).xlsx》导入 95 条问题，按原表行序写入 `seq`；状态映射为已修复→已解决、不是问题/偏离关闭→已关闭、未关闭/空→打开；创建时间取描述中的日期，无日期记导入日
+
+**验证**：
+
+- 接口全链路（列表 / 密钥校验 / 新建 / 修改 / 删除）通过；`vue-tsc --noEmit` 与 `vite build` 通过
+- 界面实测：95 条正确渲染（打开 33 / 已解决 55 / 已关闭 7），默认表格序号倒序，新建问题置顶，密钥错误与正确流程均正常
+
+**相关文件**：`backend/api/feedback_routes.py`、`backend/api/__init__.py`、`backend/app.py`、`frontend/src/api/feedback.ts`、`frontend/src/components/FeedbackDialog.vue`、`frontend/src/App.vue`、`frontend/electron/main.js`、`frontend/electron/preload.cjs`、`frontend/src/vite-env.d.ts`
+
+**待办**：安装版需重新打包后才包含本功能；`frontend/package.json` 版本号在打包时递增至 1.0.50。
+
+---
+
+### [1.0.50] - 2026-10-31
+
+**会话主题**：背景检测新增「值在变化」断言（基于 ChkStart_SignalValueChange 计次，不做采样）
+
+**变更内容**：
+
+1. **模板新增 `ChkValueChange`**（`backend/templates/func_test_function.py`）：
+   - 6 个重载：`signal*` / `sysvarInt*` / `sysvarFloat*` × 带/不带 `Timeout`，与 `ChkKeepValue` 完全对称
+   - 实现：`ChkSlotPush(4, 0, 0, 1, name)` + `ChkStart_SignalValueChange(obj, "Cb_ChkValueChange")`，收尾时 `ChkQuery_NumEvents > 0` 即通过；**未引入任何采样定时器**
+   - 带 `Timeout` 的重载继承 1.0.49 的槽位截止机制（`ChkArmNew`），到期各自收口，互不干扰
+   - `ChkReportAt` 的 cond=4 分支按 `Expect` 区分文案：变化口径输出「N 次检测到值变化 / 始终未检测到值变化」，不变口径保持「值始终未变化 / N 次检测到值变化」
+   - 段首接口说明补充 `ChkValueChange` 一行
+2. **函数库升级规则**（`backend/core/function_library_sync.py`）：
+   - 新增 `needs_change`：库里有 `ChkKeepValue` 但没有 `ChkValueChange` 时整段升级（与已有的 `needs_keep` 叠加，幂等）
+   - `_template_chk_sections` 变量块终点改为 `mChkLastIdx`（原先停在 `mChkCount`，会漏掉 1.0.49 新增的 `mChkDeadlines` / `mChkLastIdx`）
+   - 实现块终点支持延伸到 `ChkValueChange(sysvarFloat*, dword)`，重复升级不会留下重名函数
+3. **两份全局函数库已同步**：`configs/function/Function_global_library.json`（仓库）与 `%APPDATA%\Excel2Case\configs\function\Function_global_library.json`（客户端），备份后缀 `.bak-change-20261031-140722`
+4. **图形化配置支持「值变化」口径**（`backend/services/function_graph.py`）：
+   - `_CHK_FUNS` 增加 `change → ChkValueChange`；`_assert_form()` 识别步骤标记 `waitChange`
+   - `_chk_fun_name()`：`keep` / `change` 不追加 `Keep` 后缀（这两种只有单一口径）
+   - `_render_chk_check()`：`change` 与 `keep` 一样只取对象与时间，生成 `ChkValueChange(obj, 时间)`
+5. **前端「背景检测」下拉新增「值变化」**：
+   - `types/functionGraph.ts`：`CardStep` 新增 `waitChange`
+   - `utils/functionGraph.ts`：`WaitFormOption` 增加 `change` 值与标记；`WAIT_FORMS` 新增「值变化」（仅背景检测可选）；`waitFormOf()` 回显、`applyWaitForm()` 写入 `waitChange`、`isKeepForm()` 视作「只需对象」、`chkCheckFunOf()` 映射 `ChkValueChange`
+   - `StepEditor.vue` / `CardEditor.vue`：提示文案「期间出现变化即通过」
+   - `CaseFrameCanvas.vue`：画布摘要显示 `背景检测(值变化) 对象 时间1000`
+6. **长安 SDA_A91 的 AES/DES 0121 改用新函数**：
+   - 原「拉杆补偿值仍在学习更新」是手写 `raw` 步骤（`double v0 = …; testWaitForTimeout(500); if (… != v0)`），改为背景检测步骤 `chk_check` + `waitChange`，生成 `ChkValueChange(sysvar::XCP::A2L::SenderPorts::PullCompCmd::MtrNm_F32, 1000)`
+   - 两个判定前各补 `Wait(1000)`，让「阶段1 值维持不变（ChkKeepValue）」与「阶段2 值出现变化（ChkValueChange）」的窗口不重叠
+
+**验证**：
+
+- 两份库：`void ChkValueChange` 6 处、`ChkSlotPush(4, 0, 0, 1` 3 处（另 3 个重载委托）、`timer_ChkSample` 0 处、花括号平衡
+- 升级幂等：再跑一次不产生新增函数与重复定义
+- 渲染实测（SDA_A91，573 条用例、ID 唯一、573 个 testcase）：`FUN_AES_0121` / `FUN_DES_0121` 生成顺序为 `Wait(1000) → ChkKeepValue(obj,1000) → Wait(1000) → ChkValueChange(obj,1000) → Wait(1000)`；手写 `double v0 =` 残留 0 处
+
+**相关文件**：`backend/templates/func_test_function.py`、`backend/core/function_library_sync.py`、`backend/services/function_graph.py`、`configs/function/Function_global_library.json`、`frontend/src/types/functionGraph.ts`、`frontend/src/utils/functionGraph.ts`、`frontend/src/components/graph/StepEditor.vue`、`frontend/src/components/graph/CardEditor.vue`、`frontend/src/components/graph/CaseFrameCanvas.vue`
+
+**待办**：安装版需重新打包后才包含前端新选项（`vue-tsc --noEmit` 已通过；后端渲染与旧 JSON 兼容，`waitChange` 未出现时行为不变）。
+
+---
+
 ## [1.0.49] - 2026-10-30
 
 **版本号**：`1.0.49`（`frontend/package.json` 的 `version`）
