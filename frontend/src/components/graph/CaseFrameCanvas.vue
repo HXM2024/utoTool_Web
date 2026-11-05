@@ -13,7 +13,7 @@
           <div class="hint-row"><b>选中</b><span>点击卡片/泳道即选中；<b>Shift+点击</b> = 选中「上次点击的卡片 → 这次点击的卡片」之间的所有卡片（左侧列表里同样适用）；再 Shift+点同一张 = 取消它</span></div>
           <div class="hint-row"><b>排列</b><span>卡片在泳道内按顺序排列，拖到两张卡片之间即插到该位置；拖到「不合法的一侧」时会自动归到合法泳道（按连线判定：入口来源在左、出口目标在右），落在主序列上的非序列卡也会自动归到左右侧</span></div>
           <div class="hint-row"><b>复制</b><span>Ctrl+C / Ctrl+V；按住 Ctrl 拖拽 = 复制到其它泳道/工况</span></div>
-          <div class="hint-row"><b>连线</b><span><b>最快：从输出口按住拖到输入口松手</b>即可成线；也可<b>单击</b>接线口起线（虚线跟随鼠标，再点另一个接线口完成，点空白取消），或按住 <b>Ctrl</b> 依次点击两个端口/卡片；单击连线或序号徽标高亮（选中时起点端显示该线关联的用例 ID）；双击连线删除；双击序号徽标选编号（点选已有编号，Ctrl 多选 / Shift 连选 / 拖拽框选；清空 = 全部，徽标显示 All；也可手填 1,2,5-8）</span></div>
+          <div class="hint-row"><b>连线</b><span><b>最快：从输出口按住拖到输入口松手</b>即可成线；也可<b>单击</b>接线口起线（虚线跟随鼠标，再点另一个接线口完成，点空白取消），或按住 <b>Ctrl</b> 依次点击两个端口/卡片；单击连线或序号徽标高亮（选中时起点端显示该线关联的用例 ID）；双击连线删除；双击序号徽标选编号（点选已有编号，Ctrl 多选 / Shift 连选 / 拖拽框选；清空 = 全部，徽标显示 All；也可手填 1,2,5-8）；<b>多选 ≥2 条连线后右击编号徽标 = 批量改编号</b></span></div>
           <div class="hint-row"><b>编辑</b><span>双击节点编辑</span></div>
           <div class="hint-row"><b>撤销</b><span>Ctrl+Z 撤销 / Ctrl+Y 重做</span></div>
           <div class="hint-row"><b>横看</b><span>泳道超出宽度后，把鼠标停在该工况上 Shift+滚轮左右查看</span></div>
@@ -115,6 +115,7 @@
               class="hit"
               @click.stop="p.explicit && toggleEdgeSel(p.edgeId, $event.ctrlKey || $event.metaKey || $event.shiftKey)"
               @dblclick.stop="p.explicit && removeEdge(f.id, p.edgeId)"
+              @contextmenu.stop.prevent="p.explicit && onEdgeContextMenu(f, p)"
               @mouseenter="p.explicit && setHoverEdge(p.edgeId)"
               @mouseleave="clearHoverEdge"
             />
@@ -141,7 +142,7 @@
                 <span
                   class="label-badge"
                   :class="{ 'badge-selected': isEdgeHighlighted(p, f.id), 'badge-editing': editingEdgeId === p.edgeId }"
-                  title="单击高亮该连线 · Ctrl/Shift+单击多选 · 双击选编号 · 高亮时右击预览该编号用例代码"
+                  title="单击高亮该连线 · Ctrl/Shift+单击多选 · 双击选编号 · 多选后右击批量改编号 · 单条高亮时右击预览该编号用例代码"
                   @mousedown.stop.prevent
                   @click.stop="p.explicit && toggleEdgeSel(p.edgeId, $event.ctrlKey || $event.metaKey || $event.shiftKey)"
                   @dblclick.stop="editEdge(f.id, p.edgeId)"
@@ -153,8 +154,8 @@
               <div class="num-pop">
                 <div class="num-pop-head">
                   <span class="num-pop-title">编号</span>
-                  <span class="num-pop-kind">{{ edgeKindText(f.id, p.edgeId) }}</span>
-                  <span class="num-pop-cur">当前 {{ numsDisplayText(p.nums, frameCaseNums[f.id] || []) }}</span>
+                  <span class="num-pop-kind">{{ batchEdgeIds.length ? `批量 · ${batchEdgeIds.length} 条连线` : edgeKindText(f.id, p.edgeId) }}</span>
+                  <span class="num-pop-cur">当前 {{ batchEdgeIds.length ? batchCurrentText : numsDisplayText(p.nums, frameCaseNums[f.id] || []) }}</span>
                   <span class="num-pop-cur">选择 {{ draftNums.length ? numsDisplayText(draftNums, frameCaseNums[f.id] || []) : '自动' }}</span>
                 </div>
                 <div
@@ -177,7 +178,7 @@
                   <div v-if="numMarquee" class="num-marquee" :style="numMarqueeStyle" />
                 </div>
                 <div class="num-pop-hint">
-                  {{ selectedNumSet.size ? '点选 / Ctrl 多选 / Shift 连选 / 拖拽框选' : '未选编号 = 自动排号 / 继承（要全部请点「清空」）' }}
+                  {{ numPopHint }}
                 </div>
                 <input
                   v-model="editingEdgeValue"
@@ -1540,6 +1541,8 @@ function clearHoverEdge() {
   }, 160)
 }
 const editingEdgeValue = ref('')
+/** 批量改编号的目标连线（空数组 = 单条编辑；≥2 = 多选批量） */
+const batchEdgeIds = ref<string[]>([])
 /**
  * 序号编辑框宽度：按内容长度自适应（最小 9 个字符，保证面板里的 placeholder「如 1,2,5-8」可见）。
  * 全局 `* { box-sizing: border-box }`，所以要把左右内边距 6+6 与左右边框 1+1 一起算进去（14px）。
@@ -3885,18 +3888,43 @@ function numsDisplayText(nums: number[], caseNums: number[]): string {
 }
 
 // ===== 编号选择器（候选编号点选 / 多选 / 框选） =====
-/** 候选编号 = 本工况在用的编号（caseNums）∪ 该线已填的号，升序去重 */
+/** 候选编号 = 本工况在用的编号（caseNums）∪ 选中连线已填的号，升序去重
+ *  批量改号时取所有目标线（batchEdgeIds），单条编辑时只取本条线 */
 function numCandidates(frameId: string, edgeId: string): number[] {
   const f = frames.value.find((x) => x.id === frameId)
-  const e = f && f.edges[edgeId]
-  if (!e) return []
+  if (!f) return []
   const set = new Set<number>(frameCaseNums.value[frameId] || [])
-  for (const n of storedEdgeNums(e)) set.add(n)
+  const ids = batchEdgeIds.value.length ? batchEdgeIds.value : [edgeId]
+  for (const id of ids) {
+    const e = f.edges[id]
+    if (e) for (const n of storedEdgeNums(e)) set.add(n)
+  }
   return Array.from(set).sort((a, b) => a - b)
 }
 /** chips 的选中态没有独立状态：单一真源就是 editingEdgeValue 这个字符串 */
 const draftNums = computed(() => parseEdgeNums(editingEdgeValue.value))
 const selectedNumSet = computed(() => new Set(draftNums.value))
+/** 批量面板「当前」行：所有目标线生效编号一致时展示该组，否则「多条不同」 */
+const batchCurrentText = computed(() => {
+  if (!batchEdgeIds.value.length) return ''
+  const lists: string[] = []
+  for (const id of batchEdgeIds.value) {
+    const p = (edgePathCache.value[editingEdgeFrameId.value] || []).find((x) => x.edgeId === id)
+    lists.push((p?.nums ?? []).join(','))
+  }
+  const first = lists[0] ?? ''
+  if (lists.every((x) => x === first)) {
+    return numsDisplayText(parseEdgeNums(first), frameCaseNums.value[editingEdgeFrameId.value] || [])
+  }
+  return '多条不同'
+})
+const numPopHint = computed(() => {
+  if (selectedNumSet.value.size) return '点选 / Ctrl 多选 / Shift 连选 / 拖拽框选'
+  if (batchEdgeIds.value.length) {
+    return `未选编号 = 各线恢复自动排号 / 全部（将统一写入 ${batchEdgeIds.value.length} 条连线）`
+  }
+  return '未选编号 = 自动排号 / 继承（要全部请点「清空」）'
+})
 /** 打开面板时回填的编号：用来判断「没改动就直接关闭」，避免把自动排号/继承的编号写死成显式编号 */
 let edgeSeedNums: number[] = []
 /** Shift 区间连选的锚点（chips 下标）；打开面板 / 提交 / 取消时复位 */
@@ -4053,6 +4081,7 @@ function editEdge(frameId: string, edgeId: string) {
   if (!e) return
   // 点击序号徽标即高亮这条连线（与点击连线本体一致）：编号相同的分叉线很多，编辑时能看清改的是哪条
   selectedEdgeIds.value = [edgeId]
+  batchEdgeIds.value = []   // 双击 = 单条编辑，退出批量态
   editingEdgeId.value = edgeId
   editingEdgeFrameId.value = frameId
   // 回填「当前生效编号」而不是只回填显式编号：徽标显示 2 的线（自动排号 / 继承得到）双击进来
@@ -4062,21 +4091,44 @@ function editEdge(frameId: string, edgeId: string) {
   editingEdgeValue.value = eff.join(',')
   numAnchorIdx = null
 }
+/** 多选状态下右击某条选中连线：把「当前显式选中且同工况存在」的连线作为批量目标 */
+function openBatchEdgeNum(frameId: string, edgeId: string) {
+  const f = frames.value.find((x) => x.id === frameId)
+  if (!f || !f.edges[edgeId]) return
+  const ids = selectedEdgeIds.value.filter((id) => !!f.edges[id])
+  if (ids.length < 2) return
+  editingEdgeId.value = edgeId              // 面板挂在这条徽标上
+  editingEdgeFrameId.value = frameId
+  batchEdgeIds.value = ids
+  const eff = (edgePathCache.value[frameId] || []).find((p) => p.edgeId === edgeId)?.nums ?? storedEdgeNums(f.edges[edgeId])
+  edgeSeedNums = [...eff]
+  editingEdgeValue.value = eff.join(',')    // 回填锚点线的生效编号；不改就直接关闭
+  numAnchorIdx = null
+}
+/** 提交编号：批量态下把同一组编号写入所有目标线，单条时只写本条；整批只 emitChange 一次 */
 function saveEdgeInline() {
   const f = frames.value.find((x) => x.id === editingEdgeFrameId.value)
-  const e = f && f.edges[editingEdgeId.value]
   const nums = parseEdgeNums(editingEdgeValue.value.trim())
   // 打开后没改动就直接关闭：不要把自动排号 / 继承算出来的编号写死成显式编号
-  if (f && e && nums.join(',') !== edgeSeedNums.join(',')) {
-    if (edgeKind(e) === 'entry') {
-      // 入口编号：支持多个；pair 存多个，seq 保留首个以兼容旧数据
-      e.seq = nums.length ? nums[0] : 0
-      e.pair = nums.length > 1 ? nums : []
-    } else {
-      // 出口编号：支持多个（逗号/空格分隔），留空 = 全部
-      e.pair = nums
+  const changed = nums.join(',') !== edgeSeedNums.join(',')
+  const ids = batchEdgeIds.value.length ? [...batchEdgeIds.value] : [editingEdgeId.value]
+  if (f && changed) {
+    let n = 0
+    for (const id of ids) {
+      const e = f.edges[id]
+      if (!e) continue
+      if (edgeKind(e) === 'entry') {
+        // 入口编号：支持多个；pair 存多个，seq 保留首个以兼容旧数据
+        e.seq = nums.length ? nums[0] : 0
+        e.pair = nums.length > 1 ? nums : []
+      } else {
+        // 出口 / 链式编号：支持多个（逗号/空格分隔），留空 = 全部
+        e.pair = nums
+      }
+      n++
     }
-    emitChange()
+    if (n) emitChange()
+    if (n > 1) ElMessage.success(`已批量更新 ${n} 条连线的编号`)
   }
   cancelEdgeEdit()
   scheduleRecompute()
@@ -4085,6 +4137,7 @@ function cancelEdgeEdit() {
   editingEdgeId.value = ''
   editingEdgeFrameId.value = ''
   editingEdgeValue.value = ''
+  batchEdgeIds.value = []
   edgeSeedNums = []
   numAnchorIdx = null
   detachNumMarquee()
@@ -4306,10 +4359,15 @@ function openCasePreview(f: CaseFrame, row: number) {
 }
 
 /**
- * 右击编号徽标：仅在高亮态（该连线属于这次高亮）下响应 —— 此时「这个编号是哪条用例」才有确定含义。
+ * 右击编号徽标：多选（≥2 条显式选中）且右击的就是选中项 → 批量改编号；
+ * 否则保持原行为 —— 仅在高亮态下预览该编号用例的代码。
  * 徽标上的编号可能不止一个（如 `1,2`）；`All` 徽标的 nums 为空，按本工况全部用例处理。
  */
 function onBadgeContextMenu(f: CaseFrame, p: EdgePath) {
+  if (selectedEdgeIds.value.length >= 2 && selectedEdgeIds.value.includes(p.edgeId)) {
+    openBatchEdgeNum(f.id, p.edgeId)
+    return
+  }
   if (!isEdgeHighlighted(p, f.id)) return
   const caseNums = frameCaseNums.value[f.id] || []
   const nums = p.nums.length ? p.nums : caseNums
@@ -4319,6 +4377,15 @@ function onBadgeContextMenu(f: CaseFrame, p: EdgePath) {
   })
   if (!rows.length) return
   openCasePreviewRows(f, rows)
+}
+/** 右击连线本体：多选时走批量改号；单条时与徽标右键一致，预览用例代码 */
+function onEdgeContextMenu(f: CaseFrame, p: EdgePath) {
+  if (!p.explicit) return
+  if (selectedEdgeIds.value.length >= 2 && selectedEdgeIds.value.includes(p.edgeId)) {
+    openBatchEdgeNum(f.id, p.edgeId)
+    return
+  }
+  onBadgeContextMenu(f, p)
 }
 
 async function openCasePreviewRows(f: CaseFrame, rows: number[]) {

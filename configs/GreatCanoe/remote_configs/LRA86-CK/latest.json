@@ -1,0 +1,738 @@
+{
+  "tree": [
+    {
+      "l": "Node_85",
+      "c": [
+        {
+          "l": "Msg_85",
+          "id": 133,
+          "d": "8",
+          "cy": "10",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "x85_EMS_EngineSpeedRPM",
+              "sb": 3,
+              "bs": 24,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.25,
+              "mx": 16383.25,
+              "iv": "0x0",
+              "u": "RPM",
+              "vd": "0xFFFE：Abnormal_x000D_\n0xFFFF：Invalid",
+              "cm": "Signal from EMS/PowerTrian to indicate Engine RPM",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x85_EMS_EngineRPM_Checksum",
+              "sb": 4,
+              "bs": 32,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Check sum of this message CRC8 Polynomial=0x2F Initial value=0xFF No input data reflected No result data reflected XOR value=0xFF Check data=0xDF Magic check data=0x42",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "CRC_Hig_xor_low"
+            },
+            {
+              "l": "x85_EMS_EngineSpeedRPMInvalid",
+              "sb": 5,
+              "bs": 44,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Valid_x000D_\n0x1：Invalid",
+              "cm": "Invalid flag for EMS_EngineSpeedRPM",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x85_EMS_EngStatus",
+              "sb": 5,
+              "bs": 45,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Engine Stop_x000D_\n0x1：Cranking_x000D_\n0x2：Stopping ( only for PHEV )_x000D_\n0x3：Running_x000D_\n0x4：Reserved_x000D_\n0x5：Reserved_x000D_\n0x6：Abnormal_x000D_\n0x7：Invalid",
+              "cm": "Engine running status",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x85_EMS_EngineRPM_AliveCounter",
+              "sb": 7,
+              "bs": 60,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Message counter for this frame. The counter automatically accumulates, from 0 to 15, and then loops. The initial value is 0, and Counter increases by 1 each time a message is sent; after Busoff is restored, the value before off is increased by 1 and continues to be sent; after ECU Reset, Counter value is cleared to zero.",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "Counter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_E0",
+          "id": 224,
+          "d": "8",
+          "cy": "10",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "xE0_EPS_SteeringAngleValue",
+              "sb": 1,
+              "bs": 8,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "iv": "0x0",
+              "u": "°/bit",
+              "vd": "0x7FFF：Invalid",
+              "cm": "Pinion Angle Value，Positive on the left, negative on the right",
+              "iv2": "0x7FFF",
+              "sst": "Cycle",
+              "dt": "signed"
+            },
+            {
+              "l": "xE0_EPS_SteerWheelRotSpd",
+              "sb": 2,
+              "bs": 16,
+              "bo": "Motorola LSB",
+              "f": 4,
+              "mx": 1016,
+              "iv": "0x0",
+              "u": "°/s",
+              "vd": "0xFF：Invalid",
+              "cm": "Steering wheel rotational speed",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xE0_EPS_CalibrationSts",
+              "sb": 3,
+              "bs": 30,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Sensor not calibrated_x000D_\n0x1：Sensor calibrated",
+              "cm": "EPS calibration status",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xE0_EPS_FailureSts",
+              "sb": 3,
+              "bs": 31,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Invaild, means EPS is in normal mode,failure light off._x000D_\n0x1：Valid, means EPS is in the failure mode,failure light 0n.",
+              "cm": "EPS failure status",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xE0_EPS_SteeringAngleValueInvalid",
+              "sb": 4,
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0：Valid_x000D_\n0x1：Invalid",
+              "cm": "Pinion Angle Value Invalid flag",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xE0_EPS_PosnServoHwAg",
+              "sb": 4,
+              "bs": 35,
+              "ln": 11,
+              "bo": "Motorola LSB",
+              "mn": -1023,
+              "mx": 1023,
+              "iv": "0x0",
+              "u": "°/bit",
+              "cm": "EPS Fusion Angle，EPS PosnServoHwAg(Only EPS2 is sent)",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "signed"
+            },
+            {
+              "l": "xE0_EPS_SystemSts_AliveCounter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Message counter for this frame. The counter automatically accumulates, from 0 to 15, and then loops. The initial value is 0, and Counter increases by 1 each time a message is sent; after Busoff is restored, the value before off is increased by 1 and continues to be sent; after ECU Reset, Counter value is cleared to zero.",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "xE0_EPS_SystemSts_CheckSum",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Check sum of this message CRC8 Polynomial=0x2F Initial value=0xFF No input data reflected No result data reflected XOR value=0xFF Check data=0xDF Magic check data=0x42",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "E2E_1D_ID_CRC8",
+              "did": "0x5566"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_150",
+          "id": 336,
+          "d": "8",
+          "cy": "20",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "x150_EPS_SteeringTorque",
+              "bo": "Motorola LSB",
+              "f": 0.1794,
+              "o": -22.78,
+              "mn": -22.78,
+              "mx": 22.7876,
+              "iv": "0x0",
+              "u": "Nm",
+              "vd": "0xFF：Invalid",
+              "cm": "Steering Torque 方向盘扭矩",
+              "iv2": "0xFF",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x150_EPS_ElectPowerConsumption",
+              "sb": 1,
+              "bs": 8,
+              "bo": "Motorola LSB",
+              "f": 0.5,
+              "mx": 127.5,
+              "iv": "0x0",
+              "u": "A",
+              "vd": "0xFF：Invalid",
+              "cm": "ElectPowerConsumption",
+              "iv2": "0xFF",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x150_EPS_EpasFailed",
+              "sb": 2,
+              "bs": 16,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Not failed,failure light off._x000D_\n0x1：Failed，,failure light on.",
+              "cm": "EpasFailed 助力转向故障位",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x150_EPS_TorsionBarTorqueDir",
+              "sb": 4,
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Positive_x000D_\n0x1：Negative",
+              "cm": "Direction of measured torsion bar torque 转向杆扭矩方向",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x150_EPS_TorsionBarTorqueValid",
+              "sb": 4,
+              "bs": 33,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Valid_x000D_\n0x1：Invalid",
+              "cm": "Validation bit of measured torsion bar torque 转向杆扭矩验证位",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x150_EPS_TorsionBarTorque",
+              "sb": 4,
+              "bs": 38,
+              "ln": 10,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "mx": 8,
+              "iv": "0x0",
+              "u": "Nm",
+              "vd": "0x321~0x3FE：Reserved_x000D_\n0x3FF：Invalid",
+              "cm": "Measired torsion bar torque （Driver hand torque）转向杆扭矩（驾驶员手力矩）",
+              "iv2": "0x3FF",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x150_EPS_LKS_ControlSts",
+              "sb": 5,
+              "bs": 45,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：LKS control not available, no error_x000D_\n0x1：LKS control ready_x000D_\n0x2：LKS control active_x000D_\n0x3：LKS control not available, temporary failure_x000D_\n0x4：LKS control not available, permanent failure_x000D_\n0x5~0x7：Reserved",
+              "cm": "EPS control status for LKS",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x150_EPS_InformSts_AliveCounter",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Message counter for this frame. The counter automatically accumulates, from 0 to 15, and then loops. The initial value is 0, and Counter increases by 1 each time a message is sent; after Busoff is restored, the value before off is increased by 1 and continues to be sent; after ECU Reset, Counter value is cleared to zero.",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x150_EPS_InformSts_CheckSum",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Check sum of this message CRC8 Polynomial=0x2F Initial value=0xFF No input data reflected No result data reflected XOR value=0xFF Check data=0xDF Magic check data=0x42",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "CRC8_2F_All"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_152",
+      "c": [
+        {
+          "l": "Msg_152",
+          "id": 338,
+          "d": "8",
+          "cy": "20",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "x152_ESC_VehicleSpeedInvalid",
+              "sb": 2,
+              "bs": 18,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Valid_x000D_\n0x1：Invalid",
+              "cm": "Signal from ABS_ESC to indicate if VehicleSpeed is valid",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x152_ESC_VehicleSpeed",
+              "sb": 2,
+              "bs": 19,
+              "ln": 13,
+              "bo": "Motorola LSB",
+              "f": 0.05625,
+              "mx": 460.63125,
+              "iv": "0x0",
+              "u": "KPH",
+              "vd": "0x1FFE：Abnormal_x000D_\n0x1FFF：Invalid value",
+              "cm": "Vehicle Speed",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x152_ESC_Status_AliveCounter",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Message counter for this frame. The counter automatically accumulates, from 0 to 15, and then loops. The initial value is 0, and Counter increases by 1 each time a message is sent; after Busoff is restored, the value before off is increased by 1 and continues to be sent; after ECU Reset, Counter value is cleared to zero.",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x152_ESC_Status_CheckSum",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Check sum of this message CRC8 Polynomial=0x2F Initial value=0xFF No input data reflected No result data reflected XOR value=0xFF Check data=0xDF Magic check data=0x42",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "CRC8_2F_All"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_164",
+      "c": [
+        {
+          "l": "Msg_164",
+          "id": 356,
+          "d": "8",
+          "cy": "20",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "x164_VCU_ePTReady",
+              "sb": 3,
+              "bs": 31,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：PTReady Not Active_x000D_\n0x1：PTReady Active",
+              "cm": "Indicates ePT system Ready State",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1B0",
+      "c": [
+        {
+          "l": "Msg_1B0",
+          "id": 432,
+          "d": "8",
+          "cy": "20",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "x1B0_FCS_ALAD_AngleReqAct",
+              "sb": 1,
+              "bs": 12,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "u": "bit",
+              "vd": "0x0：Not Active_x000D_\n0x1：Active",
+              "cm": "TorqueReq Activation of Lane keeping system",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1B0_FCS_ALAD_Status_AliveCounter",
+              "sb": 3,
+              "bs": 28,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Message counter for this frame. The counter automatically accumulates, from 0 to 15, and then loops. The initial value is 0, and Counter increases by 1 each time a message is sent; after Busoff is restored, the value before off is increased by 1 and continues to be sent; after ECU Reset, Counter value is cleared to zero.",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1B0_FCS_ALAD_AngleReq",
+              "sb": 6,
+              "bs": 48,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "iv": "0x0",
+              "u": "°/bit",
+              "vd": "0x7FFF：Invalid",
+              "cm": "LKS angle request",
+              "iv2": "0x7FFF",
+              "sst": "Cycle",
+              "dt": "signed"
+            },
+            {
+              "l": "x1B0_FCS_ALAD_Status_CheckSum",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "iv": "0x0",
+              "u": "bit",
+              "cm": "Check sum of this message CRC8 Polynomial=0x2F Initial value=0xFF No input data reflected No result data reflected XOR value=0xFF Check data=0xDF Magic check data=0x42",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned",
+              "gs": "CRC8_2F_All"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_3F0",
+      "c": [
+        {
+          "l": "Msg_3F0",
+          "id": 1008,
+          "d": "8",
+          "cy": "500",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "x3F0_MDU_Second",
+              "ln": 6,
+              "bo": "Motorola LSB",
+              "mx": 59,
+              "iv": "0x0",
+              "u": "s",
+              "vd": "0x3C~0x3F：Invalid",
+              "cm": "Second 秒",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x3F0_MDU_Minute",
+              "sb": 1,
+              "bs": 8,
+              "ln": 6,
+              "bo": "Motorola LSB",
+              "mx": 59,
+              "iv": "0x0",
+              "u": "m",
+              "vd": "0x3C~0x3F：Invalid",
+              "cm": "Minute 分钟",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x3F0_MDU_Hour",
+              "sb": 2,
+              "bs": 16,
+              "ln": 5,
+              "bo": "Motorola LSB",
+              "mx": 23,
+              "iv": "0x0",
+              "u": "h",
+              "vd": "0x18~0x1F：Invalid",
+              "cm": "Hour 小时",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x3F0_MDU_Day",
+              "sb": 3,
+              "bs": 24,
+              "ln": 5,
+              "bo": "Motorola LSB",
+              "mn": 1,
+              "mx": 31,
+              "iv": "0x1",
+              "u": "d",
+              "cm": "day 天，日",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x3F0_MDU_Month",
+              "sb": 4,
+              "bs": 32,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mn": 1,
+              "mx": 12,
+              "iv": "0x1",
+              "u": "m",
+              "vd": "0xD~0xF：Invalid",
+              "cm": "Month 月",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x3F0_MDU_Year",
+              "sb": 5,
+              "bs": 40,
+              "ln": 7,
+              "bo": "Motorola LSB",
+              "o": 2000,
+              "mn": 2000,
+              "mx": 2099,
+              "iv": "0x0",
+              "u": "y",
+              "cm": "Year 年",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x3F0_MDU_TimeDisplayMode",
+              "sb": 6,
+              "bs": 48,
+              "ln": 6,
+              "bo": "Motorola LSB",
+              "mx": 2,
+              "iv": "0x0",
+              "vd": "0x0：12 hours mode_x000D_\n0x1：24 hours mode",
+              "cm": "MDU and IPK display modes, in 12 hour or 24-hour format",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_3F1",
+      "c": [
+        {
+          "l": "Msg_3F1",
+          "id": 1009,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CAN Standard",
+          "st": "Cycle",
+          "c": [
+            {
+              "l": "x3F1_MDU_MDUTotalOdometer",
+              "sb": 2,
+              "bs": 16,
+              "ln": 24,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "mx": 999999,
+              "iv": "0x0",
+              "u": "km",
+              "vd": "0xFFFFFF：Invalid_x000D_\n0xFFFFFE：Abnormal_x000D_\n0xFFFFFD：Reserved_x000D_\n0x989677：Reserved",
+              "cm": "the total odometer displayed in MDU MDU中显示的总里程数",
+              "iv2": "0x0",
+              "sst": "Cycle",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "x164_VCU_ePTReady",
+    "onValue": "1",
+    "offValue": "0"
+  },
+  "spd": "x152_ESC_VehicleSpeed",
+  "ch": 2,
+  "relay": 2,
+  "dtc": [
+    "511500",
+    "510E16",
+    "510E17",
+    "911716",
+    "911717"
+  ],
+  "oem": "BaoTeng",
+  "securityAlgo": "BaoTeng_SeedKey",
+  "_meta": {
+    "config_name": "LRA86-CK",
+    "digest": "9075d4036676c8dae3e07d1c6077cafd88455c37"
+  }
+}

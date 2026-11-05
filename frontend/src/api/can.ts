@@ -11,10 +11,13 @@ export const parseCAN = (file: File) => {
   })
 }
 
-/** 上传 .dbc 文件解析报文信号数据（multipart/form-data, field: "file"） */
-export const parseDbcFile = (file: File) => {
+/** 上传 .dbc 文件解析报文信号数据（multipart/form-data, field: "file"）
+ *  oem 影响解析策略：吉利 GEEA_3.0 会解析 SIG_GROUP_/GenSigDataID，CRC 信号默认 E2E_CRC
+ */
+export const parseDbcFile = (file: File, oem?: string) => {
   const formData = new FormData()
   formData.append('file', file)
+  if (oem) formData.append('oem', oem)
   return client.post('/can/parse-dbc', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   })
@@ -48,6 +51,25 @@ export const generateCAN = (
     config_name: configName,
     service_object: serviceObject,
     cfg_dir: cfgDir,
+    motor_mode: motorMode,
+    ccp_symbols: ccpSymbols,
+    relay_module: relayModule,
+    can_channel: canChannel,
+  })
+
+/** 读取 DTC_Configuration 的 Fault_array（对象浏览器用）
+ *  下标与生成的 DTC_Configuration.cin 中 Fault_array 下标一一对应 */
+export const fetchFaultArray = (
+  configName: string,
+  serviceObject: string,
+  motorMode: 'brushless' | 'brushed' = 'brushless',
+  ccpSymbols: Record<string, any> = {},
+  relayModule?: number,
+  canChannel?: number,
+) =>
+  client.post('/can/fault-array', {
+    config_name: configName,
+    service_object: serviceObject,
     motor_mode: motorMode,
     ccp_symbols: ccpSymbols,
     relay_module: relayModule,

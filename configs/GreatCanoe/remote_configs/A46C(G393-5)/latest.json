@@ -1,0 +1,1674 @@
+{
+  "tree": [
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_170",
+          "id": 368,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x170_EPS_MaxSafetyTorsionBarTorq",
+              "sb": 3,
+              "bs": 30,
+              "ln": 11,
+              "bo": "Motorola LSB",
+              "f": 0.02,
+              "o": -20.48,
+              "mn": -20.48,
+              "mx": 20.44,
+              "iv": "0x400",
+              "u": "Nm",
+              "vd": "・方向盘左打为正。\n・在EPS ECU 开始助力之前、Initial 值输出为(0)。\n・异常状态（确定故障）的情况下、Invalid 值输出为(0x7FF)。",
+              "iv2": "0x7FF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x170_EPS_MinSafetyTorsionBarTorq",
+              "sb": 4,
+              "bs": 35,
+              "ln": 11,
+              "bo": "Motorola LSB",
+              "f": 0.02,
+              "o": -20.48,
+              "mn": -20.48,
+              "mx": 20.44,
+              "iv": "0x400",
+              "u": "Nm",
+              "vd": "・方向盘左打为正。\n・在EPS ECU 开始助力之前、Initial 值输出为(0)。\n・异常状态（确定故障）的情况下、Invalid 值输出为(0x7FF)。",
+              "iv2": "0x7FF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x170_EPS_ActualTorsionBarTorq",
+              "sb": 5,
+              "bs": 40,
+              "ln": 11,
+              "bo": "Motorola LSB",
+              "f": 0.02,
+              "o": -20.48,
+              "mn": -20.48,
+              "mx": 20.44,
+              "iv": "0x400",
+              "u": "Nm",
+              "vd": "・方向盘左打为正。\n・在EPS ECU 开始助力之前、Initial 值输出为(0)。\n・异常状态（确定故障）的情况下、Invalid 值输出为(0x7FF)。",
+              "iv2": "0x7FF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x170_EPS_RollingCounter_170",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "vd": "rolling counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x170_EPS_CRCCheck_170",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "CRCCheck_SAE_J1850_2001,多项式采用X8+X4+X3+X2+1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            },
+            {
+              "l": "x170_EPS_ActualMotorTorq",
+              "sb": 1,
+              "bs": 12,
+              "ln": 12,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "o": -20.48,
+              "mn": -20.48,
+              "mx": 20.46,
+              "iv": "0x800",
+              "u": "Nm",
+              "vd": "・方向盘左打为正。\n・在EPS ECU 开始助力之前、Initial 值输出为(0)。\n・异常状态（确定故障）的情况下、Invalid 值输出为(0x7FF)。",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x170_EPS_fault_state",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "vd": "0x0=No Fault；\n0x1=Thermal Protection Fault ；\n0x2=Power Limit Fault   ；\n0x3=IMC Result error；\n0x4=Torque Sensor Fault(recoverable with assist)；\n0x5=Angle Sensor Fault(recoverable with assist)；\n0x6=Sensorless Angle Fault(Non recoverable without assist)；\n0x7=Power Supply Fault(Non recoverable)；\n0x8=Motor Sensor Fault(Non recoverable)；\n0x9=FlashRAMNVM Fault(Non recoverable)；\n0xA=Battery Voltage Fault(Recoverable)；\n0xB=ECU ID Fault(Non recoverable)；\n0xC=Other Fault(Non recoverable)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_180",
+          "id": 384,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x180_SAS_SteeringAngleValid",
+              "sb": 3,
+              "bs": 31,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0 =Valid ；   0x1=Invalid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x180_SAS_Calibrated",
+              "sb": 3,
+              "bs": 29,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=Calibrated；   0x1= Not Calibrated",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x180_SAS_SASFailure",
+              "sb": 3,
+              "bs": 30,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=No Failure；    0x1 =Failure",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x180_SAS_SteeringAngle",
+              "sb": 1,
+              "bs": 8,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "mn": -780,
+              "mx": 780,
+              "iv": "0",
+              "u": "degree",
+              "vd": "方向盘往零点左转为正，零点右转为负\nSteering wheel angle (N = value of the message) =\n   = N × 0.1 , for 0 < N ≤ 32767\n   = (N-65536) × 0.1 , for N ＞ 32767\nNote=       that Clockwise rotation is ‘-‘ and anti-Clockwise rotation is ‘+‘",
+              "iv2": "0x7FFF",
+              "sst": "Cyclic",
+              "dt": "Signed"
+            },
+            {
+              "l": "x180_SAS_SteeringAngleSpeed",
+              "sb": 2,
+              "bs": 16,
+              "bo": "Motorola LSB",
+              "f": 4,
+              "mx": 1016,
+              "iv": "0",
+              "u": "degs",
+              "vd": "方向盘往零点左转为正，零点右转为负\n\nSteeringAngleSpeed \n(N = value of the message) =\n   = N × 4 , for 0 < N ≤ 254\n   = error signaled , for N > 254\n",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x180_SAS_RollingCounter",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "vd": "message counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x180_SAS_CRCCheck",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "8 bit CRC after SAE J1850 according to scheme(c-code), is generated over Byte 0 to Byte 6",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            }
+          ]
+        },
+        {
+          "l": "Msg_699",
+          "id": 1689,
+          "d": "8",
+          "cy": "500",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x699_EPS_DTC1_HighByte",
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x699_EPS_DTC1_MiddByte",
+              "sb": 1,
+              "bs": 8,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x699_EPS_DTC1_LowByte",
+              "sb": 2,
+              "bs": 16,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x699_EPS_DTC1_Status",
+              "sb": 3,
+              "bs": 24,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x699_EPS_DTC2_HighByte",
+              "sb": 4,
+              "bs": 32,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x699_EPS_DTC2_MiddByte",
+              "sb": 5,
+              "bs": 40,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x699_EPS_DTC2_LowByte",
+              "sb": 6,
+              "bs": 48,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x699_EPS_DTC2_Status",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_17E",
+          "id": 382,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x17E_EPS_LatCtrlAvailabilityStatus",
+              "sb": 6,
+              "bs": 52,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0x0=not Availability ；\n0x1=Availability；\n0x2=failure；\n0x3=reserved",
+              "iv2": "0x2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_LatCtrlActive",
+              "sb": 6,
+              "bs": 54,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0x0=Not Actived；0x1=Actived；",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_MeasuredTorsionBarTorque",
+              "sb": 1,
+              "bs": 12,
+              "ln": 12,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "o": -20.48,
+              "mn": -20.48,
+              "mx": 20.46,
+              "iv": "0x800",
+              "u": "Nm",
+              "vd": "・算式=(Measured Torsion Bar Torque – 0x800)*0.01\n・方向盘左打为正。\n・在EPS ECU 开始助力之前、Initial 值输出为(0)。\n・异常状态（确定故障）的情况下、Invalid 值输出为(0xFFF)。",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_MeasuredTorsionBarTorqValid",
+              "sb": 5,
+              "bs": 40,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0x0=可用；0x1=不可用",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_RollingCounter_17E",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "vd": "rolling counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x17E_EPS_CRCCheck_17E",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "CRCCheck_SAE_J1850_2001,多项式采用X8+X4+X3+X2+1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            },
+            {
+              "l": "x17E_EPS_Pinionang",
+              "sb": 3,
+              "bs": 24,
+              "ln": 14,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "o": -720,
+              "mn": -720,
+              "mx": 720,
+              "iv": "0x1C20",
+              "u": "degree",
+              "vd": "方向盘往零点左转为正，零点右转为负\n0x384A-3FFF=Reserved",
+              "iv2": "0x3FFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_Handwheel_Relang",
+              "sb": 5,
+              "bs": 41,
+              "ln": 15,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "o": -1080,
+              "mn": -1080,
+              "mx": 1080,
+              "iv": "0x2A30",
+              "u": "degree",
+              "vd": "方向盘往零点逆时针转为正，零点顺时针转为负\n异常状态（确定故障）的情况下)。",
+              "iv2": "0x7FFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_Handwheel_Relang_Valid",
+              "sb": 6,
+              "bs": 55,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0x0=valid；\n0x1=invalid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_Pinionang_Valid",
+              "sb": 2,
+              "bs": 22,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0x0=valid；0x1=invalid",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17E_EPS_ADS_Abortfeedback",
+              "sb": 1,
+              "bs": 8,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "vd": "0x0=No Fault；\n0x1=Adas Speed Invalid；\n0x2=Adas Signal Invalid ；\n0x3=State Mismatch；\n0x4=APA Interrupt；\n0x5=BUS Off；\n0x6=Both Channels CAN down；\n0x7=Adas Chassis CAN Down ；\n0x8=ADAS Internal Error；\n0x9=Speed out of range；\n0xA=AgAmpErr；\n0xB=AgGrdtFlt；\n0xC=Driver Interrupt；\n0xD=ADAS Req Mode Invld；",
+              "iv2": "0xF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_24F",
+          "id": 591,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x24F_EPS_RollingCounter_24F",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "vd": "rolling counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24F_EPS_CRCCheck_24F",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "CRCCheck_SAE_J1850_2001,多项式采用X8+X4+X3+X2+1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            },
+            {
+              "l": "x24F_EPS_ElectPowerConsumption",
+              "bo": "Motorola LSB",
+              "f": 0.5,
+              "mx": 127,
+              "iv": "0x0",
+              "u": "A",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_TorqSensorStatus",
+              "sb": 1,
+              "bs": 8,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=Normal；0x1=Abnormal",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_SteeringTorque",
+              "sb": 2,
+              "bs": 16,
+              "bo": "Motorola LSB",
+              "f": 0.1794,
+              "o": -22.78,
+              "mn": -22.78,
+              "mx": 22.78,
+              "iv": "0x7F",
+              "u": "Nm",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_EPSFailed",
+              "sb": 5,
+              "bs": 40,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "iv": "0x0",
+              "vd": "0x0=No failure；\n0x1=Slight failure；\n0x2=Critical failure；\n0x3=Fatal failure；\n0x4-0x7=Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_ModeSwitchSt",
+              "sb": 1,
+              "bs": 10,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=No judgment；0x1=In judgment",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_TorqueAssistMode",
+              "sb": 6,
+              "bs": 54,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x3",
+              "vd": "0x0=Normal；0x1=light；0x2=heavy； 0x3=unknow",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_SystemSt",
+              "sb": 5,
+              "bs": 43,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "vd": "0x0=disable；0x1=off；\n0x2=enable；\n0x3=warm int；0x4~0xF = Reserved",
+              "iv2": "0xF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_IACC_abortreason",
+              "sb": 3,
+              "bs": 26,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "iv": "0x0",
+              "vd": "0x0=NO_DRIVING_INTERUPTION；0x1=DRIVER_RECOVERY(Over ride)；0x2=VEHICLE_SPEED ERROR；0x3=REQUEST ERROR；0x4=DAE_THERMAL_SECURITY；0x5=OTHER_DEFAULT；0x6=ADAS message Error（CD569项目0x6=Reserved）；0x7=Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_ConcussAvailabilityStatus",
+              "sb": 6,
+              "bs": 52,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x0",
+              "vd": "0x0=Concuss Availability 震动可用但是未震动；0x1=Concuss Active震动激活中；0x2=EPS Concuss failure  EPS震动故障不可用；0x3=reserved",
+              "iv2": "0x2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24F_EPS_LDW_ShakeLevStatus",
+              "sb": 3,
+              "bs": 30,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x0",
+              "vd": "0x0=reserved；0x1=low；0x2=normal；0x3=high",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_244",
+      "c": [
+        {
+          "l": "Msg_244",
+          "id": 580,
+          "d": "64",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x244_ACC_LDWVibrationWarningReq",
+              "sb": 1,
+              "bs": 10,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0x0= No Warning不报警；0x1= Left Warning左报警；0x2=Right Warning右报警；0x3= reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x244_ACC_LDWShakeLevStatus",
+              "sb": 2,
+              "bs": 20,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x2",
+              "vd": "0x0=reserved；0x1=low；0x2=normal；0x3=high",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x244_ADS_CRCCheck_244",
+              "sb": 55,
+              "bs": 440,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "mx": 65535,
+              "vd": "16-bit CCITT-FALSE CRC16，多项式1021h\nRefer to AUTOSAR <Specification of CRC Routines>",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x244_ADS__RollingCounter_244",
+              "sb": 53,
+              "bs": 424,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "Counter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_278",
+      "c": [
+        {
+          "l": "Msg_278",
+          "id": 632,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x278_ESP_CRCCheck_278",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "CRCCheck_SAE_J1850_2001，多项式采用X8+X4+X3+X2+1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            },
+            {
+              "l": "x278_ESP_LatAccel",
+              "sb": 2,
+              "bs": 16,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "o": -12.7,
+              "mn": -12.7,
+              "mx": 12.7,
+              "iv": "0",
+              "u": "ms2",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x278_ESP_RollingCounter_278",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "vd": "Rolling counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x278_ESP_YawRate",
+              "sb": 5,
+              "bs": 40,
+              "ln": 14,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "o": -81.91,
+              "mn": -81.91,
+              "mx": 81.91,
+              "iv": "0",
+              "u": "degrees",
+              "iv2": "0x3FFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x278_ESP_YawRateValid",
+              "sb": 6,
+              "bs": 55,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0x0=Valid；0x1=Invalid；",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_320",
+      "c": [
+        {
+          "l": "Msg_320",
+          "id": 800,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x320_GW_ResetReq",
+              "sb": 3,
+              "bs": 25,
+              "ln": 7,
+              "bo": "Motorola LSB",
+              "mx": 127,
+              "iv": "0",
+              "vd": "0x0 =Valid； 0x1 =THU；0x2 = AMP；  0x3 =ADSADC；0x4= FCLAS；0x5=FRACC； 0x6=FLR；0x7 =FRR；0x8=RLRLCDAL；0x9=RRRLCDAR；0xA=LVSM；0xB=INS；0xC=APA；0xD=BCMLBCM；0xE=GWBCMR；0xF=EMS；0x10=PCU；0x11=BMS；0x12=PEU；0x13=OBC；0x14=TCU；0x15=IPUMP；0x16=ACM；0x17=ESL；0x18=PTS；0x19=ESCL；0x1A=TMSAC；0x1B=DKCRFBTBLEM；0x1C=WLCM；0x1D=EPBI；0x1E=IBCU；0x1F=RBM；0x20=EPS；0x21=EPS2；0x22=DSM；0x23=IP；0x24=SLCM；0x25=HUD；0x26=GPEU；0x27=PDU；0x28=RPEU；0x29=VMC；0x2B=DPEU； \n0x2C=NFC-Enter；0x2D=PATC；0x2E=VMC2；0x2F=RCCS；0x30=TRM；0x31=PDCU； 0x32=BDCR； 0x33=mADC； 0x34=EPB；0x35=EVCC；0x36=HLM；0x37=CTMU；0x38=HRM；0x39=RLM；0x40=PSM；0x41=TBOX；0x42=DCDC；0x43~0x7E=Reserve；0x7F=Invalid；",
+              "iv2": "0x7F",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x320_GW_OTAmode",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "vd": "0x0=OTAinactive；\n0x1=OTAmode1-车内升级安全执行中；\n0x2= OTAmode2-车外升级安全执行中；\n0x3=OTAmode3-Reserved；\n0x4=OTAmode4-车内升级非安全执行中；\n0x5=OTAmode5-车外升级非安全执行中；\n0x6=OTAmode6-车内升级条件检测中；\n0x7=OTAmode7-车外升级条件检测中；\n0x8-0xF=Reserved；",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x320_GW_OTAmode_Cntr",
+              "sb": 2,
+              "bs": 17,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "vd": "GW_OTAmode信号计数器",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x320_GW_OTAmode_Chks",
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "iv": "0",
+              "vd": "GW_OTAmode信号校验和，采用E2E校验，参考《整车 OTA 模式功能需求规范》6.2 E2E 校验方法",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_516",
+      "c": [
+        {
+          "l": "Msg_516",
+          "id": 1302,
+          "d": "32",
+          "cy": "1000",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x516_HU_LocalTimeValid",
+              "sb": 8,
+              "bs": 71,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0x0=Valid； 0x1=Not Valid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x516_HU_LocalTimeMonth",
+              "sb": 9,
+              "bs": 72,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mn": 1,
+              "mx": 12,
+              "iv": "0x1",
+              "u": "month",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x516_HU_LocalTimeYear",
+              "sb": 14,
+              "bs": 112,
+              "bo": "Motorola LSB",
+              "o": 2013,
+              "mn": 2013,
+              "mx": 2268,
+              "iv": "0",
+              "u": "year",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x516_HU_LocalTimeDate",
+              "sb": 10,
+              "bs": 80,
+              "ln": 5,
+              "bo": "Motorola LSB",
+              "mn": 1,
+              "mx": 31,
+              "iv": "0x1",
+              "u": "day",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x516_HU_LocalTimeHour",
+              "sb": 11,
+              "bs": 88,
+              "ln": 5,
+              "bo": "Motorola LSB",
+              "mx": 23,
+              "iv": "0",
+              "u": "hour",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x516_HU_LocalTimeMinute",
+              "sb": 12,
+              "bs": 96,
+              "ln": 6,
+              "bo": "Motorola LSB",
+              "mx": 59,
+              "iv": "0",
+              "u": "minute",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x516_HU_LocalTimeSecond",
+              "sb": 13,
+              "bs": 104,
+              "ln": 6,
+              "bo": "Motorola LSB",
+              "mx": 59,
+              "iv": "0",
+              "u": "second",
+              "iv2": "0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x516_HU_LocalTimeSystem",
+              "sb": 13,
+              "bs": 110,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "vd": "0x0=24h；\n0x1=12h；\n0x2=Reserved；\n0x3=Invalid",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_17A",
+      "c": [
+        {
+          "l": "Msg_17A",
+          "id": 378,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x17A_ESP_VehicleSpeed",
+              "sb": 5,
+              "bs": 40,
+              "ln": 13,
+              "bo": "Motorola LSB",
+              "f": 0.05625,
+              "mx": 360,
+              "iv": "0",
+              "u": "kmh",
+              "vd": "0x0~0x1900=0~360kmh；\n0x1901～0x1FFE=Reserved；\n0x1FFF=Invalid\nAPA2.0接收",
+              "iv2": "0x1FFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x17A_ESP_VehicleSpeedValid",
+              "sb": 4,
+              "bs": 37,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0x0=Valid；0x1=NotValid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x17A_ESP_CRCCheck_17A",
+              "sb": 63,
+              "bs": 504,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "mx": 65535,
+              "vd": "16-bit CCITT-FALSE CRC16，Polynomial 1021h\nRefer to AUTOSAR <Specification of CRC Routines>",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x17A_ESP_RollingCounter_17A",
+              "sb": 61,
+              "bs": 488,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "Counter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_17D",
+      "c": [
+        {
+          "l": "Msg_17D",
+          "id": 381,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x17D_PCU_PwrTrainSts",
+              "sb": 38,
+              "bs": 310,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0x3=预留；0x2=Running；0x1=Crank；0x0=Stop；",
+              "iv2": "0x3",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17D_PCU_PwrIndcdRealTqRearWhl",
+              "sb": 49,
+              "bs": 393,
+              "ln": 15,
+              "bo": "Motorola LSB",
+              "o": -5400,
+              "mn": -5400,
+              "mx": 12000,
+              "iv": "0",
+              "u": "Nm",
+              "vd": "0",
+              "iv2": "0x7FFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17D_PCU_CRCCheck_17D",
+              "sb": 63,
+              "bs": 504,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "mx": 65535,
+              "vd": "16-bit CCITT-FALSE CRC16，Polynomial 1021h\nRefer to AUTOSAR <Specification of CRC Routines>",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x17D_PCU_RollingCounter_17D",
+              "sb": 61,
+              "bs": 488,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "Counter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1AD",
+      "c": [
+        {
+          "l": "Msg_1AD",
+          "id": 429,
+          "d": "8",
+          "cy": "0",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1AD_GW_TripCounter_1AD",
+              "sb": 2,
+              "bs": 18,
+              "ln": 22,
+              "bo": "Motorola LSB",
+              "mx": 4194303,
+              "vd": "见《车端消息认证集成规范》",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1AD_GW_ResetCounter_1AD",
+              "sb": 5,
+              "bs": 42,
+              "ln": 24,
+              "bo": "Motorola LSB",
+              "mx": 16777215,
+              "vd": "见《车端消息认证集成规范》",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1AD_GW_Authernticator_1AD",
+              "sb": 7,
+              "bs": 56,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "mx": 65535,
+              "vd": "见《车端消息认证集成规范》",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1AF",
+      "c": [
+        {
+          "l": "Msg_1AF",
+          "id": 431,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1AF_TCU_GearShiftPosition",
+              "sb": 2,
+              "bs": 20,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0xD",
+              "vd": "0x0=Parking；\n0x1=Reverse；\n0x2=Neutral；\n0x3=D；\n0x4=D3；\n0x5=D2；\n0x6=L；\n0x7=MS；\n0x8=Reserved； \n0xD= Initial value；\n0xE= Unreliable； \n0xF= Invalid",
+              "iv2": "0xF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1BA",
+      "c": [
+        {
+          "l": "Msg_1BA",
+          "id": 442,
+          "d": "32",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1BA_ACC_MotorTorqueMaxLimitRequest",
+              "sb": 1,
+              "bs": 13,
+              "ln": 11,
+              "bo": "Motorola LSB",
+              "f": 0.02,
+              "o": -20.48,
+              "mn": -20.48,
+              "mx": 20.44,
+              "iv": "0x400",
+              "u": "Nm",
+              "vd": "・方向盘左打为正。\n・在EPS ECU 开始助力之前、Initial 值输出为(0)。\n・0x7FF= Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BA_ACC_MotorTorqueMinLimitRequest",
+              "sb": 2,
+              "bs": 18,
+              "ln": 11,
+              "bo": "Motorola LSB",
+              "f": 0.02,
+              "o": -20.48,
+              "mn": -20.48,
+              "mx": 20.44,
+              "iv": "0x400",
+              "u": "Nm",
+              "vd": "・方向盘左打为正。\n・在EPS ECU 开始助力之前、Initial 值输出为(0)。\n・0x7FF= Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BA_ADS_ESSActive",
+              "sb": 4,
+              "bs": 34,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=not active；\n0x1=active",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BA_ACC_RollingCounter_1BA_0",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1BA_ACC_CRCCheck_1BA_0",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "CRCCheck_SAE_J1850_2001,多项式采用X8+X4+X3+X2+1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            },
+            {
+              "l": "x1BA_ACC_RollingCounter_1BA_1",
+              "sb": 14,
+              "bs": 112,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1BA_ACC_CRCCheck_1BA_1",
+              "sb": 15,
+              "bs": 120,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "CRCCheck_SAE_J1850_2001,多项式采用X8+X4+X3+X2+1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            },
+            {
+              "l": "x1BA_ACC_LatAngReq",
+              "sb": 4,
+              "bs": 36,
+              "ln": 14,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "o": -720,
+              "mn": -720,
+              "mx": 720,
+              "iv": "0x1C20",
+              "u": "degree",
+              "vd": "方向盘往零点左转为正，零点右转为负\n0x384A-3FFF=Reserved",
+              "iv2": "0x3FFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BA_ACC_LatAngReqActive",
+              "sb": 4,
+              "bs": 35,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=not Active；\n0x1=Active",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_20B",
+      "c": [
+        {
+          "l": "Msg_20B",
+          "id": 523,
+          "d": "64",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x20B_Wheel_Speed_FL_Data",
+              "sb": 3,
+              "bs": 24,
+              "ln": 13,
+              "bo": "Motorola LSB",
+              "f": 0.05625,
+              "mx": 360,
+              "iv": "0x0",
+              "u": "kmh",
+              "iv2": "0x1FFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FL_Direction",
+              "sb": 2,
+              "bs": 21,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x0",
+              "vd": "0x0=Forward；0x1=backward；0x2=Standstill；0x3=Invalid",
+              "iv2": "0x3",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FL_Pulse",
+              "sb": 26,
+              "bs": 208,
+              "bo": "Motorola LSB",
+              "mx": 254,
+              "iv": "0x0",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FL_Valid_Data",
+              "sb": 2,
+              "bs": 23,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=Valid；0x1=NotValid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FR_Data",
+              "sb": 1,
+              "bs": 8,
+              "ln": 13,
+              "bo": "Motorola LSB",
+              "f": 0.05625,
+              "mx": 360,
+              "iv": "0x0",
+              "u": "kmh",
+              "iv2": "0x1FFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FR_Direction",
+              "bs": 5,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x0",
+              "vd": "0x0=Forward；0x1=backward；0x2=Standstill；0x3=Invalid",
+              "iv2": "0x3",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FR_Pulse",
+              "sb": 27,
+              "bs": 216,
+              "bo": "Motorola LSB",
+              "mx": 254,
+              "iv": "0x0",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FR_Valid_Data",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=Valid；0x1=NotValid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RL_Data",
+              "sb": 11,
+              "bs": 88,
+              "ln": 13,
+              "bo": "Motorola LSB",
+              "f": 0.05625,
+              "mx": 360,
+              "iv": "0x0",
+              "u": "kmh",
+              "iv2": "0x1FFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RL_Direction",
+              "sb": 10,
+              "bs": 85,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x0",
+              "vd": "0x0=Forward；0x1=backward；0x2=Standstill；0x3=Invalid",
+              "iv2": "0x3",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RL_Pulse",
+              "sb": 29,
+              "bs": 232,
+              "bo": "Motorola LSB",
+              "mx": 254,
+              "iv": "0x0",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RL_Valid_Data",
+              "sb": 10,
+              "bs": 87,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=Valid；0x1=NotValid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RR_Data",
+              "sb": 9,
+              "bs": 72,
+              "ln": 13,
+              "bo": "Motorola LSB",
+              "f": 0.05625,
+              "mx": 360,
+              "iv": "0x0",
+              "u": "kmh",
+              "iv2": "0x1FFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RR_Direction",
+              "sb": 8,
+              "bs": 69,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x0",
+              "vd": "0x0=Forward；0x1=backward；0x2=Standstill；0x3=Invalid",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RR_Pulse",
+              "sb": 28,
+              "bs": 224,
+              "bo": "Motorola LSB",
+              "mx": 254,
+              "iv": "0x0",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_RR_Valid_Data",
+              "sb": 8,
+              "bs": 71,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "iv": "0x0",
+              "vd": "0x0=Valid；0x1=NotValid",
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_ESP_CRCCheck_20B",
+              "sb": 63,
+              "bs": 504,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "mx": 65535,
+              "vd": "16-bit CCITT-FALSE CRC16，Polynomial 1021h\nRefer to AUTOSAR <Specification of CRC Routines>",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x20B_ESP_RollingCounter_20B",
+              "sb": 61,
+              "bs": 488,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "sst": "Cyclic",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x20B_Wheel_SpeedPulseTimeStamp_FR",
+              "sb": 18,
+              "bs": 144,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "mx": 655.35,
+              "iv": "0x0",
+              "u": "ms",
+              "vd": "0-655.35=正常值",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_SpeedPulseTimeStamp_FL",
+              "sb": 21,
+              "bs": 168,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "mx": 655.35,
+              "iv": "0x0",
+              "u": "ms",
+              "vd": "0-655.35=正常值",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FR_Pulse",
+              "sb": 19,
+              "bs": 152,
+              "bo": "Motorola LSB",
+              "mx": 254,
+              "iv": "0x0",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x20B_Wheel_Speed_FL_Pulse",
+              "sb": 16,
+              "bs": 128,
+              "bo": "Motorola LSB",
+              "mx": 254,
+              "iv": "0x0",
+              "iv2": "0xFF",
+              "sst": "Cyclic",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_2DE",
+      "c": [
+        {
+          "l": "Msg_2DE",
+          "id": 734,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x2DE_IP_ModeSeting",
+              "sb": 4,
+              "bs": 38,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x3",
+              "vd": "0x0=normal；0x1=light；\n0x2=heavy；0x3=norequest",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_3FD",
+      "c": [
+        {
+          "l": "Msg_3FD",
+          "id": 1021,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x3FD_BCM_EPSTorqueMode",
+              "sb": 1,
+              "bs": 9,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "iv": "0x0",
+              "vd": "0x0=normal ； 0x1=light ； 0x2=heavy ； 0x3=reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x3FD_BCM_RollingCounter_3FD",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "iv": "0x0",
+              "vd": "rolling counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x3FD_BCM_CRCCheck_3FD",
+              "sb": 7,
+              "bs": 56,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "vd": "CRCCheck_SAE_J1850_2001,多项式采用X8+X4+X3+X2+1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_1D_All"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "x17D_PCU_PwrIndcdRealTqRearWhl",
+    "onValue": "2",
+    "offValue": "0"
+  },
+  "spd": "x17A_ESP_VehicleSpeed",
+  "ch": 1,
+  "relay": 2,
+  "dtc": [
+    "0x15599"
+  ],
+  "oem": "ChangAn",
+  "_meta": {
+    "config_name": "A46C(G393-5)",
+    "digest": "0cfb72b8034def12ef6b1e5824bf1a0fe1bae95a"
+  }
+}

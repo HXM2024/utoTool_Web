@@ -1,0 +1,2906 @@
+{
+  "tree": [
+    {
+      "l": "Left_BCM_x9D",
+      "c": [
+        {
+          "l": "Msg_9D",
+          "id": 157,
+          "d": "16",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x9D_Checksum_09D_S",
+              "ln": 16,
+              "mx": 4129,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_Rolling_counter_09D_S",
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_MotorTorqueUpperLimit_X9D",
+              "bs": 32,
+              "ln": 12,
+              "f": 0.01,
+              "mx": 10,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_MotorTorqueLowerLimit_X9D",
+              "bs": 44,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -10,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_BiVC_Function_X9D",
+              "bs": 56,
+              "ln": 4,
+              "mx": 15,
+              "vd": "7=ADT(Æ¯ÒÆÄ£Ê½); 6=SMC(¶Ô¿ªÂ·ÃæÎÈ¶¨¿ØÖÆ); 5=CDS(Åö×²Ê¶±ð¿ØÖÆ); 4=IRR(ÖÇÄÜÂ·¿öÊ¶±ð); 3=RC(Ò£¿Ø¼ÝÊ»); 2=USC(¼«ÖÂ×ªÏò); 1=TSC(±¬Ì¥); 0=Normal",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_BiVCECU_AngleReq_St",
+              "bs": 60,
+              "ln": 2,
+              "mx": 3,
+              "vd": "2=Active; 1=Ready; 0=No request",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_BiVC_ECU_AngleReq",
+              "bs": 64,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_BiVC_Vibration_Cmd",
+              "bs": 80,
+              "ln": 3,
+              "mx": 7,
+              "vd": "5=Level 5£¨DMSÕñ¸ÐÇúÏß£©; 4=Level 4£¨DMSÕñ¸ÐÇúÏß£©; 3=Level 3£¨low£©; 2=Level 2£¨middle£©; 1=Level 1£¨high£©; 0=invalid",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x9D_SVC_VibrationCmdvld",
+              "bs": 83,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "IPB_0x10C",
+      "c": [
+        {
+          "l": "Msg_10C",
+          "id": 268,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x10C_Checksum_S",
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Alive_counter_S",
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Vehicle_speed",
+              "bs": 35,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_VehicleSpeed_Status",
+              "bs": 47,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FL_1F0_S",
+              "bs": 48,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FR_1F0_S",
+              "bs": 60,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Wheel_Speed_RL_1F0_S",
+              "bs": 72,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Wheel_Speed_RR_1F0_S",
+              "bs": 84,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FR_Stats_1F0_S",
+              "bs": 96,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FL_Stats_1F0_S",
+              "bs": 97,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Wheel_Speed_RR_Stats_1F0_S",
+              "bs": 98,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_WheelSpeed_RL_Status_1F0_S",
+              "bs": 99,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_FL_Wheel_Pulse_Counter",
+              "bs": 112,
+              "ln": 10,
+              "mx": 1022,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_FR_Wheel_Pulse_Counter",
+              "bs": 122,
+              "ln": 10,
+              "mx": 1022,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_RL_Wheel_Pulse_Counter",
+              "bs": 132,
+              "ln": 10,
+              "mx": 1022,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_RR_Wheel_Pulse_Counter",
+              "bs": 142,
+              "ln": 10,
+              "mx": 1022,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_RR_Wheel_Pulse_Counter_Validity",
+              "bs": 152,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_RL_Wheel_Pulse_Counter_Validity",
+              "bs": 153,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_FR_Wheel_Pulse_Counter_Validity",
+              "bs": 154,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_FL_Wheel_Pulse_Counter_Validity",
+              "bs": 155,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_EBD_Active",
+              "bs": 156,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_EBD_Fault",
+              "bs": 157,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_ABS_Active",
+              "bs": 158,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_ABS_Fault",
+              "bs": 159,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_VDC_Active",
+              "bs": 160,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_VDC_Fault",
+              "bs": 161,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_ESP_OFF_S",
+              "bs": 162,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_IPB_Active",
+              "bs": 163,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Yaw_Rate_Signal",
+              "bs": 225,
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -2.0943,
+              "mn": -2.0943,
+              "mx": 6.638709285,
+              "iv": "-8.881784197001252e-16",
+              "u": "rad/s",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Yaw_Rate_Offset",
+              "bs": 237,
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -0.13,
+              "mn": -0.13,
+              "mx": 8.603009285,
+              "iv": "-2.7755575615628914e-17",
+              "u": "rad/s",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Yaw_rate_status",
+              "bs": 249,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_AX",
+              "bs": 250,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_AX_Offset",
+              "bs": 262,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_AX_Status",
+              "bs": 274,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_AY",
+              "bs": 275,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_AY_Offset",
+              "bs": 287,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_AY_Status",
+              "bs": 299,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Automatic_Braking_Available",
+              "bs": 303,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Automatic_Braking_Active",
+              "bs": 304,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x10C_Brake_Pedal_Status",
+              "bs": 349,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_94",
+      "c": [
+        {
+          "l": "Msg_94",
+          "id": 148,
+          "d": "16",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x94_Checksum_094_S",
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_Rolling_counter_094_S",
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPSAngleCtrlSt_094_S",
+              "bs": 32,
+              "ln": 3,
+              "mx": 7,
+              "vd": "4=Permanently Failed; 3=Temporary Failed; 2=Active; 1=Ready; 0=Not Ready",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_StrngWhlTorqVD_094_S",
+              "bs": 35,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_StrngWhlTorq_094_S",
+              "bs": 36,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -13.5,
+              "mx": 13.5,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPSAngleCtrlDlvdValue_094_S",
+              "bs": 48,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPSAngleCtrlDlvdTorsionBar_094_S",
+              "bs": 64,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -5,
+              "mx": 5,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPS_InterDect_094_S",
+              "bs": 76,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPS_InterDectVD",
+              "bs": 77,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_Request_Angle_Over_Range",
+              "bs": 78,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_Request_Angle_speed_Over_Range",
+              "bs": 79,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPSAngleCtrlAbortFeedback",
+              "bs": 80,
+              "ln": 4,
+              "mx": 15,
+              "vd": "9=CurPinAngle ¡ÀDeviationAngle; 8=Over Angle Velocity; 7=Over Angle Max Value; 6=EPS Permanently error; 5=EPS Temporary error; 4=BiVC ECU Signal error; 3=Request Error; 2=Vehicle Speed Invalid; 1=Driver override; 0=No interruption",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_SAC_FunOutTq",
+              "bs": 84,
+              "ln": 12,
+              "f": 0.1,
+              "o": -204.8,
+              "mn": -204.8,
+              "mx": 204.7,
+              "iv": "0.0",
+              "u": "N¡¤m",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_Motor_Winding_Temper",
+              "bs": 96,
+              "ln": 11,
+              "f": 0.2,
+              "o": -60,
+              "mn": -60,
+              "mx": 349.4,
+              "iv": "0.0",
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPS_Vibration_State",
+              "bs": 107,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=Õð¶¯; 0=Î´Õð¶¯",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_Vibration_Control",
+              "bs": 108,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=Prohibit; 0=Allowed",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_Vibration_interface_mode",
+              "bs": 109,
+              "ln": 2,
+              "mx": 3,
+              "vd": "2=·ùÆµÊÜ¿ØÄ£Ê½; 1=µµÎ»Ä£Ê½; 0=ÎÞÐ§",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_Actual_Vibration_Gear",
+              "bs": 111,
+              "ln": 3,
+              "mx": 7,
+              "vd": "5=DMSÕñ¸ÐÇúÏßModerate; 4=DMSÕñ¸ÐÇúÏßSevere; 3=LDWÕñ¸ÐÇúÏßLow; 2=LDWÕñ¸ÐÇúÏßMiddle; 1=LDWÕñ¸ÐÇúÏßhigh; 0=ÎÞÐ§",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x94_EPS_Unvibration_Feedback",
+              "bs": 114,
+              "ln": 3,
+              "mx": 7,
+              "vd": "7=EPSÓÀ¾Ã¹ÊÕÏ; 6=EPSÁÙÊ±¹ÊÕÏ; 5=ÅäÖÃ×ÖÎ´´ò¿ª; 4=ÇëÇóÕñÆµ³¬ÏÞ; 3=ÇëÇóÕñ·ù³¬ÏÞ; 2=Õñ¶¯¼äÐªÖÐ; 1=ÎÞÕñ¶¯ÇëÇó; 0=³õÊ¼»¯",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_6D",
+      "c": [
+        {
+          "l": "Msg_6D",
+          "id": 109,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x6D_Counter_S",
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_Checksum_S",
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_AgCtrlAvl",
+              "bs": 32,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_AgCtrlSts",
+              "bs": 34,
+              "ln": 2,
+              "mx": 3,
+              "vd": "3=Reserved; 2=active; 1=Ready; 0=No active",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_TqCtrlAvl",
+              "bs": 36,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_TqCtrlSts",
+              "bs": 38,
+              "ln": 2,
+              "mx": 3,
+              "vd": "3=Reserved; 2=active; 1=Ready; 0=No active",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_LdwWarnAvl",
+              "bs": 40,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_LdwWarnSts",
+              "bs": 42,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAg",
+              "bs": 44,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAgVld",
+              "bs": 60,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAgRat",
+              "bs": 61,
+              "ln": 15,
+              "f": 0.1,
+              "mn": -1500,
+              "mx": 1500,
+              "u": "¡ã/s",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAgRatVld",
+              "bs": 76,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAg",
+              "bs": 77,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAgVld",
+              "bs": 93,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAgRat",
+              "bs": 94,
+              "ln": 15,
+              "f": 0.1,
+              "mn": -1500,
+              "mx": 1500,
+              "u": "¡ã/s",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAgRatVld",
+              "bs": 109,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_AsscMotCrtTq",
+              "bs": 110,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_AsscMotCrtTqVld",
+              "bs": 121,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTq",
+              "bs": 122,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTqVld",
+              "bs": 133,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTqFlt",
+              "bs": 134,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTqFltVld",
+              "bs": 145,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerDrvrOvrd",
+              "bs": 146,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerDrvrOvrdVld",
+              "bs": 147,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_AdsReqErrorFb",
+              "bs": 148,
+              "ln": 3,
+              "mx": 7,
+              "vd": "7=other error; 6= E2E ¹ÊÕÏ ; 5=AgReq Out of Limit; 4=AgSpdReq Out of Limit; 3=AgReq Invalid or Timeout; 2=TqReq Out of Limit; 1=TqReq Invalid or Timeout; 0=No error",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_AbortFb",
+              "bs": 151,
+              "ln": 3,
+              "mx": 7,
+              "vd": "4=EPS Internal Failure; 3=ADS Request Abnormal; 2=Driver interference StrWhl; 1=Other Abnormal; 0=no Abnormal",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_SteerMod",
+              "bs": 154,
+              "ln": 3,
+              "mx": 7,
+              "vd": "5=Failure; 4=Torque control(emergency); 3=Torque control(common); 2=Angle control; 1=Power steer; 0=Initial",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EpsFltSts",
+              "bs": 157,
+              "ln": 2,
+              "mx": 3,
+              "vd": "2=Fatal failure  £¨ÑÏÖØ¹ÊÕÏ£©; 1=Slight failure £¨Ò»°ã¹ÊÕÏ£©; 0=No failure ",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_BoostMod",
+              "bs": 159,
+              "ln": 2,
+              "mx": 3,
+              "vd": "3=unknow; 2=Sport Mode; 1=Comfort Mode ; 0=Standar Mode ",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_TasCalSts",
+              "bs": 161,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_Tq1",
+              "bs": 162,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x6D_EPS_Tq2",
+              "bs": 173,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "MPC4_0x057",
+      "c": [
+        {
+          "l": "Msg_57",
+          "id": 87,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x57_ADS_SteerAgReq",
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_SteerAgVld",
+              "bs": 16,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_SteerAgEna",
+              "bs": 18,
+              "ln": 2,
+              "mx": 3,
+              "vd": "2=Active; 1=Ready; 0=No request",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_SteerGainLevel",
+              "bs": 20,
+              "f": 0.01,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_SteerTqReq",
+              "bs": 28,
+              "ln": 13,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_SteerTqVld",
+              "bs": 41,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_SteerTqMod",
+              "bs": 43,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_SteerTqEna",
+              "bs": 45,
+              "ln": 2,
+              "mx": 3,
+              "vd": "2=Active; 1=Ready; 0=No request",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_LdwWarningCmd",
+              "bs": 52,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_ADS_LdwWarningCmdVld",
+              "bs": 54,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_Counter_057_S",
+              "bs": 480,
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x57_Checksum_057_S",
+              "bs": 496,
+              "ln": 16,
+              "mx": 65535,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Ax223",
+      "c": [
+        {
+          "l": "Msg_223",
+          "id": 547,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x223_AX_S",
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "u": "m/s2",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x223_AX_offset_S",
+              "bs": 12,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "u": "m/s2",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x223_AY_S",
+              "bs": 24,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "u": "m/s2",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x223_AY_Offset_S",
+              "bs": 36,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.552713678800501e-15",
+              "u": "m/s2",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS8_355_03",
+      "c": [
+        {
+          "l": "Msg_357",
+          "id": 855,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x357_Child_ID_355_S_03",
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x357_EPS_PowerPercentage_S",
+              "bs": 8,
+              "ln": 10,
+              "f": 0.1,
+              "mx": 100,
+              "u": "%",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x357_EPS_Assist_Status_S",
+              "bs": 18,
+              "ln": 3,
+              "mx": 8,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x357_EPSSteeringTorque_S",
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "u": "N.m",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x357_EPS_Motor_Torque_355_S",
+              "bs": 36,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -20.48,
+              "mx": 20.47,
+              "u": "N.m",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x357_Motor_Temperature_355_S",
+              "bs": 48,
+              "ln": 11,
+              "f": 0.2,
+              "o": -60,
+              "mn": -60,
+              "mx": 349.4,
+              "iv": "0.0",
+              "u": "¡æ",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS8_355_02",
+      "c": [
+        {
+          "l": "Msg_356",
+          "id": 854,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x356_Child_ID_355_S_02",
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_Network_BusOFF_S",
+              "bs": 8,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_VehicleSpeedCommucation_S",
+              "bs": 9,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_WheelSpeedCommucation_S",
+              "bs": 10,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_VCU_ok_Commucation_S",
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_BCM_ON_Commucation_S",
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_APA_Commucationn_S",
+              "bs": 13,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_ADAS_Commucation_S",
+              "bs": 14,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_VOT_Communication_S",
+              "bs": 15,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_SMS_Communication_S",
+              "bs": 16,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_DST_Communication_S",
+              "bs": 17,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_LDW_Communication_S",
+              "bs": 18,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_SCU_Communication_S",
+              "bs": 19,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_EPB_Communication_S",
+              "bs": 20,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_Motor_Current_355_S",
+              "bs": 21,
+              "o": -125,
+              "mn": -125,
+              "mx": 125,
+              "iv": "0.0",
+              "u": "A",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_SteeringMode",
+              "bs": 29,
+              "ln": 3,
+              "mx": 7,
+              "vd": "7=¾ºËÙ; 6=ÌØÊâÊÖ¸Ð2; 5=ÌØÊâÊÖ¸Ð1; 4=ÔË¶¯+; 3=ÔË¶¯; 2=ÊæÊÊ+; 1=ÊæÊÊ; 0=ÎÞÐ§",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_LWS_ANGLE",
+              "bs": 32,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_LWS_SPEED",
+              "bs": 48,
+              "f": 4,
+              "mx": 1016,
+              "u": "¡ã/s",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_EPSAngleCtrlAbortFeedback",
+              "bs": 56,
+              "ln": 4,
+              "mx": 15,
+              "vd": "10=ActiveAngleError; 9=LKAAngleSlopeLimitation; 8=LKAAngleValueLimitation; 7=EPS Permanently error; 6=EPS Temporary error; 5=ADAS ECU Signal error; 4=ADAS Activation Request Error; 3=Vehicle Speed Invalid; 2= Driver override; 1=Driver hands off; 0=No interruption",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x356_EPS_APA_CtrlAbortFeed",
+              "bs": 60,
+              "ln": 4,
+              "mx": 15,
+              "vd": "15=Other Faults; 14=Over Angle Velocity; 13=Over Angle Max Value; 12=Incorrect Handshaking; 11=TAS Angle Error; 10=Reserved; 9=Vehicle Speed Signal Error; 8=Vehicle Speed Over Limit; 7=APA Signal Error; 6=APA Angle Velocity Over Limit; 5=APA Target Angle Over Limit; 4=Reserved; 3=EPS Permanent Error; 2=EPS Temporary Error; 1=Driver Interruption; 0=No Interruption",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS8_355_01",
+      "c": [
+        {
+          "l": "Msg_358",
+          "id": 856,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x358_Child_ID_355_S",
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPSMotorFault_S",
+              "bs": 8,
+              "ln": 1,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPSTorqueSensorFault_S",
+              "bs": 9,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPSAngleSensorFault_S",
+              "bs": 10,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPSECUFault_S",
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPSECUCalibration_Failure_S",
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_FRICTION_DETECTED_ERROR_S",
+              "bs": 13,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPS_PowerFailure_S",
+              "bs": 14,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_CONFIGURATIONFailure_S",
+              "bs": 16,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EndProtection_S",
+              "bs": 18,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_OverProtection_S",
+              "bs": 20,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_TemperatureProtection_S",
+              "bs": 21,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_PDC_Status_S",
+              "bs": 22,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_TSC_Status_S",
+              "bs": 24,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_Shimmy_Status_S",
+              "bs": 26,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_AFC_Status_S",
+              "bs": 28,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_AngleZeroCalibration",
+              "bs": 30,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_SFS_Configuration_S",
+              "bs": 32,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_RCS_Configuration_S",
+              "bs": 33,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_LKA_Angle_Configuration_S",
+              "bs": 34,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_LKA_BarTorque_Configuration_S",
+              "bs": 35,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_LKA_MotorTorque_Configuration_S",
+              "bs": 36,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_APA_Configuration_S",
+              "bs": 37,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_VOT_Configuration_S",
+              "bs": 38,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_SMSATSConfiguration_S",
+              "bs": 39,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPS_Tuning_Number_S",
+              "bs": 40,
+              "ln": 5,
+              "mx": 31,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_TAS_SENTAngleOriginal",
+              "bs": 45,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_SBC_Warning_S",
+              "bs": 46,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_DST_Configuration_S",
+              "bs": 47,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_ADS_AngPortConfigState",
+              "bs": 48,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_ADS_MotTorquePortConfigState",
+              "bs": 49,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPS_AdsReqErrorFb",
+              "bs": 50,
+              "ln": 3,
+              "mx": 7,
+              "vd": "7=other error; 6=E2E ¹ÊÕÏ ; 5=AgReq Out of Limit; 4=AgSpdReq Out of Limit; 3=AgReq Invalid or Timeout; 2=TqReq Out of Limit; 1=TqReq Invalid or Timeout; 0=No error",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x358_EPS_AbortFb",
+              "bs": 53,
+              "ln": 3,
+              "mx": 7,
+              "vd": "4=EPS Internal Failure; 3=ADS Request Abnormal; 2=driver interference StrWhl; 1= Other Abnormal; 0=no Abnormal",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Left_BCM_x336",
+      "c": [
+        {
+          "l": "Msg_336",
+          "id": 822,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x336_Hand_marker",
+              "bs": 2,
+              "ln": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x336_Target_gear",
+              "bs": 3,
+              "ln": 3,
+              "mx": 7,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Left_BCM_x4BF",
+      "c": [
+        {
+          "l": "Msg_4BF",
+          "id": 1215,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x4BF_Limit_mode_instruction",
+              "bs": 58,
+              "ln": 2,
+              "mx": 3,
+              "vd": "3=¼«ÏÞÐøº½Ä£Ê½¹Ø±Õ; 2=¼«ÖÂ°æ¼«ÏÞÐøº½Ä£Ê½¿ªÆô; 1=±ê×¼°æ¼«ÏÞÐøº½Ä£Ê½¿ªÆô; 0=ÎÞÐ§",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "VCU_0x241",
+      "c": [
+        {
+          "l": "Msg_241",
+          "id": 577,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x241_Vehicle_Torque",
+              "ln": 16,
+              "o": -12000,
+              "mn": -12000,
+              "mx": 12000,
+              "iv": "0.0",
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x241_Vehicle_Torque_State",
+              "bs": 46,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "ECU0x134",
+      "c": [
+        {
+          "l": "Msg_134",
+          "id": 308,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x134_APA_MainStas",
+              "ln": 3,
+              "mx": 7,
+              "vd": "7=ParkAssist_Standby; 6=Failure; 5=Guidance Completed; 4=Guidance Terminated; 3=Guidance Suspend; 2=Guidance Active; 1=Serching; 0=Passive",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x134_APA_SteeringCtrlReqForEPS",
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x134_APA_SteeringCtrlReqForEPSVD",
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1.0",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x134_APA_Tar_StrAgl",
+              "bs": 16,
+              "ln": 16,
+              "f": 0.1,
+              "o": -780,
+              "mn": -780,
+              "mx": 779.9,
+              "iv": "0.0",
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x134_APA_MsgCounter",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x134_APA_Checksum",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "MPC3_0x432",
+      "c": [
+        {
+          "l": "Msg_432",
+          "id": 1074,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x432_LDW",
+              "bs": 4,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1.0",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x432_LKS_HWA",
+              "bs": 5,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1.0",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x432_TJA",
+              "bs": 7,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1.0",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "MPC2_0x1E2",
+      "c": [
+        {
+          "l": "Msg_1E2",
+          "id": 482,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x1E2_MotorTorqueU_pperLimit",
+              "ln": 10,
+              "f": 0.01,
+              "mx": 5,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1E2_MotorTorqueL_owerLimit",
+              "bs": 10,
+              "ln": 10,
+              "f": 0.01,
+              "mn": -5,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1E2_ADAS_ECU_AngleReq_St",
+              "bs": 20,
+              "ln": 2,
+              "mx": 3,
+              "vd": "2=Active; 1=Ready; 0=Inhibited",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1E2_ADAS_ECU_AngleReq",
+              "bs": 24,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1E2_MsgCounter1E2",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1E2_Checksum1E2",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "MPC1_0x316",
+      "c": [
+        {
+          "l": "Msg_316",
+          "id": 790,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x316_Left_line_tracking_status",
+              "bs": 4,
+              "ln": 2,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x316_Lane_auxiliary_mode_state",
+              "bs": 6,
+              "ln": 2,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x316_MPC_TorqueReq",
+              "bs": 16,
+              "ln": 11,
+              "f": 0.01,
+              "mn": -10.24,
+              "mx": 10.23,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x316_MPC_TorqueReqSt",
+              "bs": 27,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x316_Right_line_tracking_status",
+              "bs": 34,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x316_LDW_Waring_style",
+              "bs": 48,
+              "ln": 2,
+              "mn": -2,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x316_Message_alive_counter",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x316_Messge_check_sum",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "BCM_12D",
+      "c": [
+        {
+          "l": "Msg_12D",
+          "id": 301,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x12D_Power_gear",
+              "bs": 34,
+              "ln": 3,
+              "mx": 7,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x12D_MsgCounter",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x12D_Checksum_BCM",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Media3_0X2b6",
+      "c": [
+        {
+          "l": "Msg_2B6",
+          "id": 694,
+          "d": "8",
+          "cy": "500",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x2B6_Date_year",
+              "o": 2000,
+              "mn": 2001,
+              "mx": 2255,
+              "iv": "2000.0",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x2B6_Date_month",
+              "bs": 8,
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x2B6_Date_day",
+              "bs": 16,
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x2B6_hours",
+              "bs": 24,
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x2B6_minutes",
+              "bs": 32,
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x2B6_second",
+              "bs": 40,
+              "mx": 255,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x2B6_week",
+              "bs": 48,
+              "ln": 3,
+              "mx": 7,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x2B6_Time_system",
+              "bs": 51,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Media2_0x4E3",
+      "c": [
+        {
+          "l": "Msg_4E3",
+          "id": 1251,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x4E3_Steering_mode_Settings2",
+              "bs": 26,
+              "ln": 3,
+              "mx": 7,
+              "vd": "3=ÔË¶¯; 2=Ô¤Áô; 1=ÊæÊÊ; 0=ÎÞÐ§",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Media1_0x3E3",
+      "c": [
+        {
+          "l": "Msg_3E3",
+          "id": 995,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x3E3_Return_to_factory_flag",
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "VYOG3_0x240",
+      "c": [
+        {
+          "l": "Msg_240",
+          "id": 576,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x240_Actual_road_pattern",
+              "bs": 43,
+              "ln": 3,
+              "mx": 7,
+              "vd": "7=Ô¤Áô; 6=Ô¤Áô; 5=Ô¤Áô; 4=É³µØ; 3=ÄàÅ¢µØÃæ/³µÕÞµØ; 2=²ÝµØ/É°ÀùµØ/Ñ©µØ; 1=ÆÕÍ¨Ä£Ê½; 0=ÎÞÐ§",
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "VTOG2_0x410",
+      "c": [
+        {
+          "l": "Msg_410",
+          "id": 1040,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x410_Remote_driving_condition",
+              "bs": 5,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "VTOG1_0x341",
+      "c": [
+        {
+          "l": "Msg_341",
+          "id": 833,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x341_The_back_indicator_amp",
+              "bs": 8,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "ESP6_0x27E",
+      "c": [
+        {
+          "l": "Msg_27E",
+          "id": 638,
+          "d": "8",
+          "cy": "40",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x27E_MStrWhlOffs",
+              "ln": 16,
+              "f": 0.0009765625,
+              "o": -10,
+              "mn": -10,
+              "mx": 10,
+              "iv": "0.0",
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27E_ESP_DST_OK",
+              "bs": 16,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27E_Message_counter",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27E_CheckSum_ESP6",
+              "bs": 56,
+              "mn": -128,
+              "mx": 127,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "ESP5_0x123",
+      "c": [
+        {
+          "l": "Msg_123",
+          "id": 291,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x123_IPB_BRAKE_PEDAL_STARUS",
+              "bs": 43,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x123_ESP_Active",
+              "bs": 53,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x123_TCS_Fault",
+              "bs": 54,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x123_VDC_Fault",
+              "bs": 55,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "ESP4_0x218",
+      "c": [
+        {
+          "l": "Msg_218",
+          "id": 536,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x218_Electric_Park_Brake_Status",
+              "bs": 9,
+              "ln": 3,
+              "mx": 7,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS3_0x222",
+      "c": [
+        {
+          "l": "Msg_222",
+          "id": 546,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x222_Yaw_Rate_Signal",
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -2.0943,
+              "mn": -2.0943,
+              "mx": 6.638709285,
+              "iv": "-8.881784197001252e-16",
+              "u": "rad/s",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_Yaw_Rate_Offset",
+              "bs": 12,
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -0.13,
+              "mn": -0.13,
+              "mx": 0.13,
+              "iv": "-2.7755575615628914e-17",
+              "u": "rad/s",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_EBD_Active",
+              "bs": 24,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_ABS_Active",
+              "bs": 25,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_EBD_Fault",
+              "bs": 26,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_ABS_Fault",
+              "bs": 27,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_TCS_Active",
+              "bs": 28,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_VDC_Active",
+              "bs": 30,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_Yaw_rate_status",
+              "bs": 31,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_Counter_222",
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x222_Checksum_222",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "ESP7_0x1F0",
+      "c": [
+        {
+          "l": "Msg_1F0",
+          "id": 496,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x1F0_Wheel_Speed_FL_1F0_S",
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_FR_Stats_1F0_S",
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_FL_Stats_1F0_S",
+              "bs": 13,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_RR_Stats_1F0_S",
+              "bs": 14,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_WheelSpeed_RL_Status_1F0_S",
+              "bs": 15,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_FR_1F0_S",
+              "bs": 16,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_RL_1F0_S",
+              "bs": 28,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_RR_1F0_S",
+              "bs": 40,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Message_Counter_1F0_S",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1F0_Checksum_1F0_S",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "ESP1_0x121",
+      "c": [
+        {
+          "l": "Msg_121",
+          "id": 289,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x121_Vehicle_speed",
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x121_VehicleSpeed_Status",
+              "bs": 15,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x121_ESP1_MSG_Counter",
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x121_ESP1_Checksum",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "SCU_0x35C",
+      "c": [
+        {
+          "l": "Msg_35C",
+          "id": 860,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x35C_Gear_recognition",
+              "bs": 8,
+              "ln": 3,
+              "mx": 7,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "IKEY_0x299",
+      "c": [
+        {
+          "l": "Msg_299",
+          "id": 665,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x299_Remote_control_command",
+              "bs": 20,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS7_0x1FC",
+      "c": [
+        {
+          "l": "Msg_1FC",
+          "id": 508,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x1FC_EPSAngleCtrlSt_S",
+              "ln": 3,
+              "mx": 7,
+              "vd": "4=Permanently Failed; 3=Temporary Failed; 2=Active; 1=Ready; 0=Not Ready",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_StrngWhlTorqVD_1FC_S",
+              "bs": 3,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=Valid; 0=Invalid",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_StrngWhlTorq_1FC_S",
+              "bs": 4,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_EPSAngleCtrlDlvdValue_S",
+              "bs": 16,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_EPSAngleCtrlDlvdTorsionBar_S",
+              "bs": 32,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -5,
+              "mx": 5,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_Vibration_status",
+              "bs": 44,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=Vibration; 0=No vibration",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_LKA_tune_status",
+              "bs": 45,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=LKA_tune ; 0=Ordinary_tune ",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_Request_Angle_Over_Range",
+              "bs": 46,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_Request_Angle_speed_Over_Range",
+              "bs": 47,
+              "ln": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_EPSAngleCtrlAbortFeedback",
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "vd": "9=EPS Permanently error; 8=Angle Value over range; 7=Angle Slope over range; 6=EPS Temporary error; 5=ADAS ECU Signal error; 4=ADAS Request Error; 3=Vehicle Speed Invalid; 2=Driver override; 1=Ô¤Áô; 0= No interruption ",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_Counter_1FC_S",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x1FC_Checksum_1FC_S",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS4_0x135",
+      "c": [
+        {
+          "l": "Msg_135",
+          "id": 309,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x135_EPS_StrWhlTorqVD",
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x135_EPS_StrWhlTorqVal",
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x135_EPS_InterDect",
+              "bs": 36,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x135_EPS_InterDectVD",
+              "bs": 37,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x135_EPS_APA_CtrlStas",
+              "bs": 38,
+              "ln": 3,
+              "mx": 7,
+              "vd": "3=Permanent Inhibited; 2=Active; 1=Available for control; 0=Temporary Inhibited",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x135_EPS_APA_APA_CtrlAbortFeed",
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "vd": "15=Other Faults; 14=Over Angle Velocity; 13=Over Angle Max Value; 12=Incorrect Handshaking; 11=TAS Angle Error; 10=Reserved; 9=Vehicle Speed Signal Error; 8=Vehicle Speed Over Limit; 7=APA Signal Error; 6=Target Angle Velocity Over Limit; 5=Target Angle Over Limit; 4=Reserved; 3=EPS Permanent Error; 2=EPS Temporary Error; 1=Driver Interruption; 0=No Interruption",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x135_EPS_MsgCounter_x135",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x135_EPS_Checksum_x135",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS5_0x27F",
+      "c": [
+        {
+          "l": "Msg_27F",
+          "id": 639,
+          "d": "8",
+          "cy": "40",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x27F_EPS_DST_Control_status",
+              "ln": 3,
+              "mx": 7,
+              "vd": "3=Permanent Inhibited; 2=Active; 1=Available for control; 0=Temporary Inhibited",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27F_EPS_DST_Value",
+              "bs": 8,
+              "ln": 12,
+              "f": 0.01,
+              "o": -10,
+              "mn": -10,
+              "mx": 10,
+              "iv": "0.0",
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27F_EPS_DST_Value_VD",
+              "bs": 20,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27F_Steering_Wheel_Torque_VD",
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27F_Steering_Wheel_Torque",
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "o": -10,
+              "mn": -10,
+              "mx": 10,
+              "iv": "0.0",
+              "u": "Nm",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27F_EPS_MsgCounter",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x27F_EPS_Checksum",
+              "bs": 56,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS3_0x11F",
+      "c": [
+        {
+          "l": "Msg_11F",
+          "id": 287,
+          "d": "5",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x11F_LWS_ANGLE",
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "¡ã",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x11F_LWS_SPEED",
+              "bs": 16,
+              "f": 4,
+              "mx": 1016,
+              "u": "¡ã/S",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x11F_Failure_Status",
+              "bs": 24,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=´«¸ÐÆ÷ÓÐÐ§; 0=´«¸ÐÆ÷ÎÞÐ§",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x11F_Sensor_Calibration_Stats",
+              "bs": 25,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=Áãµã±ê¶¨³É¹¦; 0=ÁãµãÎ´±ê¶¨",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x11F_TRIM_Trimming_Stats",
+              "bs": 26,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x11F_SF1_5_Internal_Stats",
+              "bs": 27,
+              "ln": 5,
+              "mx": 31,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x11F_SAS_Conter",
+              "bs": 32,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x11F_SAS_CheckSum",
+              "bs": 36,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS1_0x24C",
+      "c": [
+        {
+          "l": "Msg_24C",
+          "id": 588,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x24C_EPS_Fault_Waring",
+              "ln": 2,
+              "mx": 3,
+              "vd": "3=Ò»°ã¹ÊÕÏ; 2=Ò»°ã¹ÊÕÏ(½ûÖ¹Ò£¿Ø¼ÝÊ»); 1=ÑÏÖØ¹ÊÕÏ; 0=Õý³£",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x24C_Steering_mode_state",
+              "bs": 8,
+              "ln": 3,
+              "mx": 7,
+              "vd": "4=ÔË¶¯+; 3=ÔË¶¯; 2=ÊæÊÊ+; 1=ÊæÊÊ; 0=Ä¬ÈÏ/ÎÞÐ§",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x24C_Steering_mode_Settings",
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=½ûÖ¹; 0=ÔÊÐí",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x24C_CODE",
+              "bs": 12,
+              "ln": 4,
+              "mx": 15,
+              "vd": "7=ÁúÈó",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x24C_SFS_configuration",
+              "bs": 16,
+              "ln": 1,
+              "mx": 1,
+              "vd": "1=¼¤»î; 0=Î´¼¤»î",
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x24C_Counter",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x24C_Checksum",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS2_0x318",
+      "c": [
+        {
+          "l": "Msg_318",
+          "id": 792,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x318_EPS_LKA_Control_State",
+              "ln": 3,
+              "mx": 7,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_LKA_tune_status",
+              "bs": 3,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_EPS_LKA_Abort_Feedback",
+              "bs": 4,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_LKA_Control_Delivered_Value",
+              "bs": 8,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -5,
+              "mx": 5,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_LKA_CtrlDlvdValue_VD",
+              "bs": 20,
+              "ln": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_HandsOffDetStVD",
+              "bs": 22,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_StrngWhlTorqVD",
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_StrngWhlTorq",
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_Vibration_status",
+              "bs": 36,
+              "ln": 2,
+              "mx": 3,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_EPS_2_MsgCounter",
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "gs": "NoFunction"
+            },
+            {
+              "l": "x318_EPS_2_Checksum",
+              "bs": 56,
+              "mx": 255,
+              "gs": "NoFunction"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "",
+    "onValue": "",
+    "offValue": ""
+  },
+  "spd": "",
+  "ch": 1,
+  "relay": 2,
+  "dtc": [],
+  "oem": "BYD",
+  "_meta": {
+    "config_name": "A47",
+    "digest": "b1092f7558689339e6b3395bdf4ca82899c96f46"
+  }
+}

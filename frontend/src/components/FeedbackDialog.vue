@@ -82,7 +82,9 @@
         :closable="false"
         show-icon
         class="fb-alert"
-        title="共享盘暂不可达，当前显示本地缓存；网络恢复后再次提交会自动写入共享盘"
+        :title="remoteError
+          ? `共享盘数据文件无法读取（${remoteError}），当前显示本地缓存；已阻止写入以免覆盖原文件`
+          : '共享盘暂不可达，当前显示本地缓存；网络恢复后再次提交会自动写入共享盘'"
       />
 
       <el-alert
@@ -390,6 +392,7 @@ const issues = ref<FeedbackIssue[]>([])
 const loading = ref(false)
 const refreshing = ref(false)
 const storage = ref<'remote' | 'local'>('remote')
+const remoteError = ref('')
 const sharePath = ref('')
 const query = ref('')
 const statusFilter = ref<'全部' | FeedbackStatus>('全部')
@@ -479,6 +482,7 @@ async function loadIssues(silent = false) {
     const data = res?.data || {}
     issues.value = Array.isArray(data.issues) ? data.issues : []
     storage.value = data.storage === 'local' ? 'local' : 'remote'
+    remoteError.value = data.error || ''
     sharePath.value = data.path || ''
   } catch {
     // 错误提示由 axios 拦截器统一处理

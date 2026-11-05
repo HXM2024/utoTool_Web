@@ -663,7 +663,8 @@ const crcAlgorithms = ref<CrcAlgorithm[]>([])
 const crcLoading = ref(false)
 
 // 需要 DataID 的 E2E CRC 算法：信号节点上显示 DateID 输入框
-const DATE_ID_ALGOS = ['E2E_1D_ID_CRC8', 'E2E_1021_CRC16_ID']
+// 吉利 GEEA_3.0 的 E2E_CRC 同样需要 DataID（来自 DBC 的 GenSigDataID）
+const DATE_ID_ALGOS = ['E2E_1D_ID_CRC8', 'E2E_1021_CRC16_ID', 'E2E_CRC']
 function isDateIdAlgo(value: any): boolean {
   return DATE_ID_ALGOS.includes(String(value || ''))
 }
@@ -962,6 +963,10 @@ function buildTreeFromData(type: string, data: any) {
   const invalidValueIdx = findColumnIndex(columns, ['Invalid_Value', '无效值'])
   const signalTypeIdx = findColumnIndex(columns, ['Signal_Type'])
   const genSigFuncTypeIdx = findColumnIndex(columns, ['GenSigFuncType'])
+  // 吉利 GEEA_3.0：CHK 信号的 E2E 数据 ID 与 SIG_GROUP_ 归属/组内顺序
+  const genSigDataIdIdx = findColumnIndex(columns, ['GenSigDataID'])
+  const sigGroupIdx = findColumnIndex(columns, ['SIG_GROUP_', 'SIG_GROUP'])
+  const sigGroupIndexIdx = findColumnIndex(columns, ['SIG_GROUP_Index'])
   const sendersIdx = findColumnIndex(columns, ['Senders', '发送节点'])
   if (sigNameIdx === -1) {
     ElMessage.error('未找到信号名称列')
@@ -1096,13 +1101,17 @@ function buildTreeFromData(type: string, data: any) {
     const dataType = row[dataTypeIdx] || ''
     const rawSignalType = signalTypeIdx >= 0 ? row[signalTypeIdx] : ''
     const rawGenSigFuncType = genSigFuncTypeIdx >= 0 ? row[genSigFuncTypeIdx] : ''
+    // 吉利 GEEA_3.0：GenSigDataID（CHK 信号）与 SIG_GROUP_ 归属
+    const rawSigDataId = genSigDataIdIdx >= 0 ? row[genSigDataIdIdx] : ''
+    const rawSigGroup = sigGroupIdx >= 0 ? row[sigGroupIdx] : ''
+    const rawSigGroupIndex = sigGroupIndexIdx >= 0 ? row[sigGroupIndexIdx] : ''
 
     // GenSigFuncType 优先级（与后端 resolve_gen_sig_func_type 一致）：
     // 1. Excel Signal_Type 列 → 2. Excel/DBC GenSigFuncType 列 → 3. 信号名关键字默认
     const GENSIG_OPTS = [
       'NoFunction', 'Counter', 'CRC_Hig_xor_low', 'CRC_Xor_FF', 'CRC_CheckSum',
       'CRC8_1D_All', 'CRC8_2F_All', 'CRC8_1D_Cutoff', 'CRC8_2F_Cutoff', 'CRC16_All', 'CRC16_Cutoff',
-      'E2E_1D_ID_CRC8', 'E2E_1021_CRC16_ID',
+      'E2E_1D_ID_CRC8', 'E2E_1021_CRC16_ID', 'E2E_CRC',
     ]
     const SIGNAL_TYPE_MAP: Record<string, string> = {
       CRC: 'CRC_Hig_xor_low',
@@ -1139,7 +1148,10 @@ function buildTreeFromData(type: string, data: any) {
       const counterKws = ['RollingCounter', 'Counter', 'RollCnt', 'Roll', 'rollingcounter', 'counter', 'rollcnt', 'roll', 'Cnt', 'cnt']
       const crcKws = ['CRC', 'Checksum', 'checksum', 'crc', 'Cksm', 'CheckSum', 'CHECKSUM']
       if (counterKws.some(k => sigStr.includes(k))) autoGenSigFuncType = 'Counter'
-      else if (crcKws.some(k => sigStr.includes(k))) autoGenSigFuncType = 'CRC_Hig_xor_low'
+      else if (crcKws.some(k => sigStr.includes(k))) {
+        // 吉利 GEEA_3.0：CRC 信号默认填充 E2E_CRC
+        autoGenSigFuncType = store.selectedOem === 'GEEA_3.0' ? 'E2E_CRC' : 'CRC_Hig_xor_low'
+      }
     }
 
     const sigAttrs = [
@@ -1183,7 +1195,9 @@ function buildTreeFromData(type: string, data: any) {
       signalSendType,
       dataType,
       genSigFuncType: autoGenSigFuncType,
-      dataId: '',
+      dataId: normalizeDateId(rawSigDataId),
+      sigGroup: String(rawSigGroup || ''),
+      sigGroupIndex: Number(rawSigGroupIndex || 0),
       children: sigAttrs.map(attr => ({
         id: `attr_${nodeIdCounter++}`,
         type: 'attr',
@@ -1488,6 +1502,11 @@ function serializeTree(tree: any[]): any[] {
         if (sig.genSigFuncType) s.gs = sig.genSigFuncType
         const did = normalizeDateId(sig.dataId)
         if (did) s.did = did
+        // 吉利 GEEA_3.0：SIG_GROUP_ 归属与组内顺序（E2E_CRC 依赖）
+        if (sig.sigGroup) {
+          s.sg = sig.sigGroup
+          s.sgi = sig.sigGroupIndex
+        }
         return s
       })
       return m
@@ -1642,6 +1661,8 @@ function deserializeTree(compact: any[]): any[] {
           dataType: dt,
           genSigFuncType: gs,
           dataId: normalizeDateId(sig.did),
+          sigGroup: String(sig.sg || ''),
+          sigGroupIndex: Number(sig.sgi || 0),
           children: sigAttrs.map(attr => ({
             id: `attr_${idc++}`,
             type: 'attr',

@@ -392,6 +392,7 @@ void SGMW_Part_number()
     testWaitForTimeout(5000);
   }
   _TestDisableMsg(Struct_CarSpd.Sig_Id);
+  testWaitForTimeout(1000);
   if(Pos_Time != -1)
   {
     _Send_Diag(6,phyreq_ID,Data_Send);

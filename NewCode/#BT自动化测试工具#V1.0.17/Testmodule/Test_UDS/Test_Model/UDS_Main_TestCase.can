@@ -10,11 +10,11 @@ variables
 }
 
 
-testcase ToolTest()/*¹¤¾ßÑéÖ¤*/
+testcase ToolTest()/*å·¥å…·éªŒè¯*/
 {
   int i;
-//  char basePath[1024] = "C:\\Users\\Administrator\\Desktop\\#BT×Ô¶¯»¯²âÊÔ¹¤¾ß_LRA101(T79-G2)#V1.0.01\\Testmodule";
-  writeEx(-3,1,"/*---------------¹¤¾ßÑéÖ¤----------------*/");
+//  char basePath[1024] = "C:\\Users\\Administrator\\Desktop\\#BTè‡ªåŠ¨åŒ–æµ‹è¯•å·¥å…·_LRA101(T79-G2)#V1.0.01\\Testmodule";
+  writeEx(-3,1,"/*---------------å·¥å…·éªŒè¯----------------*/");
   MainInit(defsession);
 //  writeEx(-3,0,"---------------------------------");
 //  sysExec("C:\\Users\\Administrator\\Desktop\\#Excel2Case#V1.0.00.exe & exit","" );
@@ -71,7 +71,7 @@ testcase ID_Loop()
       testWaitForTimeout(1);
     if(testWaitForMessage(Response_ID,50))
     {
-      testStepFail("","µ±Ç°ID:0x%03X,³öÏÖÓ¦´ğ",i);
+      testStepFail("","å½“å‰ID:0x%03X,å‡ºç°åº”ç­”",i);
       Flage = 1;
     }
   }
@@ -79,18 +79,18 @@ testcase ID_Loop()
     Msg.id = phyreq_ID;
     output(Msg);
     if(testWaitForMessage(Response_ID,50))
-      testStepPass("","µ±Ç°ID:0x%03X,ÄÜ¹»ÏìÓ¦",phyreq_ID);
+      testStepPass("","å½“å‰ID:0x%03X,èƒ½å¤Ÿå“åº”",phyreq_ID);
     else
-      testStepFail("","µ±Ç°ID:0x%03X,Î´ÏìÓ¦",phyreq_ID);
+      testStepFail("","å½“å‰ID:0x%03X,æœªå“åº”",phyreq_ID);
     Msg.id = funreq_ID;
     output(Msg);
     if(testWaitForMessage(Response_ID,50))
-      testStepPass("","µ±Ç°ID:0x%03X,ÄÜ¹»ÏìÓ¦",funreq_ID);
+      testStepPass("","å½“å‰ID:0x%03X,èƒ½å¤Ÿå“åº”",funreq_ID);
     else
-      testStepFail("","µ±Ç°ID:0x%03X,Î´ÏìÓ¦",funreq_ID);
+      testStepFail("","å½“å‰ID:0x%03X,æœªå“åº”",funreq_ID);
   }
   if(Flage == 0)
-    testStepPass("","ÏìÓ¦ID·ûºÏÖ÷»ú³§¶¨Òå");
+    testStepPass("","å“åº”IDç¬¦åˆä¸»æœºå‚å®šä¹‰");
 }
 testcase Case_10_Phy_Def_01() /*10 01*/
 {
@@ -113,7 +113,7 @@ testcase Case_10_Phy_Def_03()/*10 03*/
   _10_Phy_03(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_10_Phy_Def_04()/*¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»*/
+testcase Case_10_Phy_Def_04()/*è‚¯å®šå“åº”æŠ‘åˆ¶ä½*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -188,7 +188,7 @@ testcase Case_10_Phy_Pro_NRC22_Auto()
   End_Main();
 }
 
-testcase Case_11_Phy_Def_01()/*±éÀú×Ó¹¦ÄÜ*/
+testcase Case_11_Phy_Def_01()/*éå†å­åŠŸèƒ½*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -223,7 +223,7 @@ testcase Case_11_Phy_Def_05()/*NRC12*/
   _11_Phy_Def_05(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_22_Phy_Def_01()/*±éÀúDID 22 XX XX*/
+testcase Case_22_Phy_Def_01()/*éå†DID 22 XX XX*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -251,28 +251,28 @@ testcase Case_22_Phy_Def_04()/*NRC13>NRC31*/
   _22_Serve_NRC(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_22_Phy_Def_05()/*Ò»´ÎĞÔ¶Á¶à¸öDID*/
+testcase Case_22_Phy_Def_05()/*ä¸€æ¬¡æ€§è¯»å¤šä¸ªDID*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _Serve22_06(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_22_Phy_Def_06()/*Ò»´ÎĞÔ¶ÁÈı¸öÏàÍ¬µÄDID*/
+testcase Case_22_Phy_Def_06()/*ä¸€æ¬¡æ€§è¯»ä¸‰ä¸ªç›¸åŒçš„DID*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _Serve22_07(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_22_Phy_Def_07()/*Ò»´ÎĞÔ¶Á¶à¸öDID£¨ÆäÖĞÒ»¸ö»ò¶à¸ö²»Ö§³Ö£©*/
+testcase Case_22_Phy_Def_07()/*ä¸€æ¬¡æ€§è¯»å¤šä¸ªDIDï¼ˆå…¶ä¸­ä¸€ä¸ªæˆ–å¤šä¸ªä¸æ”¯æŒï¼‰*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _Serve22_08(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_22_Phy_Def_08()/*ÆäËû*/
+testcase Case_22_Phy_Def_08()/*å…¶ä»–*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -287,7 +287,7 @@ testcase Case_2E_Phy_Def_01()/*NRC7F>NRC13*/
   _2E_Serve_01(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_2E_Phy_Pro_01()/*±éÀúDID 2E XX XX*/
+testcase Case_2E_Phy_Pro_01()/*éå†DID 2E XX XX*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -315,7 +315,7 @@ testcase Case_2E_Phy_Pro_04()/*NRC33*/
   _2E_Serve_05(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_2E_Phy_Pro_05()/*NRCÓÅÏÈ¼¶*/
+testcase Case_2E_Phy_Pro_05()/*NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -351,154 +351,154 @@ testcase Case_27_Phy_Pro_03()/*NRC24*/
   _27_Serve_04(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_04()/*NRCÓÅÏÈ¼¶*/
+testcase Case_27_Phy_Pro_04()/*NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_05(ID_From_Title,Session_From_Title);
   End_Main();
 }
-//testcase Case_27_Phy_Pro_05()/*ÏÂµç¶Ô´íÎó¼ÆÊıÓ°Ïì²âÊÔ*/
+//testcase Case_27_Phy_Pro_05()/*ä¸‹ç”µå¯¹é”™è¯¯è®¡æ•°å½±å“æµ‹è¯•*/
 //{
 //  GetInformationFromTitle();
 //  MainInit(Session_From_Title);
 //  _27_Serve_06_2(ID_From_Title,Session_From_Title);
 //  End_Main();
 //}
-//testcase Case_27_Phy_Pro_06()/*ÖØÆô¶Ô´íÎó¼ÆÊıÓ°Ïì²âÊÔ*/
+//testcase Case_27_Phy_Pro_06()/*é‡å¯å¯¹é”™è¯¯è®¡æ•°å½±å“æµ‹è¯•*/
 //{
 //  GetInformationFromTitle();
 //  MainInit(Session_From_Title);
 //  _27_Serve_07_2(ID_From_Title,Session_From_Title);
 //  End_Main();
 //}
-testcase Case_27_Phy_Pro_07()/*²»ÕıÈ·±¨ÎÄ¶Ô´íÎó¼ÆÊıÓ°Ïì²âÊÔ*/
+testcase Case_27_Phy_Pro_07()/*ä¸æ­£ç¡®æŠ¥æ–‡å¯¹é”™è¯¯è®¡æ•°å½±å“æµ‹è¯•*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_08(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_08()/*½âËøÇé¿öÏÂÔÙ´ÎÇëÇóÖÖ×Ó*/
+testcase Case_27_Phy_Pro_08()/*è§£é”æƒ…å†µä¸‹å†æ¬¡è¯·æ±‚ç§å­*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_09(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_09()/*ÂúÑÓÊ±´íÎó¼ÆÊıÆ÷±ä»¯²âÊÔ*/
+testcase Case_27_Phy_Pro_09()/*æ»¡å»¶æ—¶é”™è¯¯è®¡æ•°å™¨å˜åŒ–æµ‹è¯•*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_10(ID_From_Title,Session_From_Title);
   End_Main();
 }
-//testcase Case_27_Phy_Pro_10()/*»á»°ÇĞ»»¶Ô10sÑÓÊ±µÄÓ°Ïì²âÊÔ*/
+//testcase Case_27_Phy_Pro_10()/*ä¼šè¯åˆ‡æ¢å¯¹10så»¶æ—¶çš„å½±å“æµ‹è¯•*/
 //{
 //  GetInformationFromTitle();
 //  MainInit(Session_From_Title);
 //  _27_Serve_11(ID_From_Title,Session_From_Title);
 //  End_Main();
 //}
-//testcase Case_27_Phy_Pro_11()/*¶Ïµç¶Ô10sÑÓÊ±µÄÓ°Ïì²âÊÔ*/
+//testcase Case_27_Phy_Pro_11()/*æ–­ç”µå¯¹10så»¶æ—¶çš„å½±å“æµ‹è¯•*/
 //{
 //  GetInformationFromTitle();
 //  MainInit(Session_From_Title);
 //  _27_Serve_12(ID_From_Title,Session_From_Title);
 //  End_Main();
 //}
-testcase Case_27_Phy_Pro_12()/*¼ì²â°²È«·ÃÎÊ½âËø×´Ì¬*/
+testcase Case_27_Phy_Pro_12()/*æ£€æµ‹å®‰å…¨è®¿é—®è§£é”çŠ¶æ€*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_13(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_13()/*Á¬ĞøÇëÇóÖÖ×Ó*/
+testcase Case_27_Phy_Pro_13()/*è¿ç»­è¯·æ±‚ç§å­*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_14(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_14()/*ÑÓÊ±Ê±¼ä²âÊÔ*/
+testcase Case_27_Phy_Pro_14()/*å»¶æ—¶æ—¶é—´æµ‹è¯•*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_15(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_15()/*Á¬ĞøÇëÇóÖÖ×ÓÑéÖ¤ÖØ¸´ÂÊ*/
+testcase Case_27_Phy_Pro_15()/*è¿ç»­è¯·æ±‚ç§å­éªŒè¯é‡å¤ç‡*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_16(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_16()/*Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔ*/
+testcase Case_27_Phy_Pro_16()/*æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_17(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_17()/*½âËøºó¼ÆÊıÆ÷ÇåÁã*/
+testcase Case_27_Phy_Pro_17()/*è§£é”åè®¡æ•°å™¨æ¸…é›¶*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_18(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_18()/*ÒÑ½âËø×´Ì¬-ÉÏÏÂµç/11¸´Î»*/
+testcase Case_27_Phy_Pro_18()/*å·²è§£é”çŠ¶æ€-ä¸Šä¸‹ç”µ/11å¤ä½*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_19(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_19()/*ÒÑ½âËø×´Ì¬-»á»°ÇĞ»»*/
+testcase Case_27_Phy_Pro_19()/*å·²è§£é”çŠ¶æ€-ä¼šè¯åˆ‡æ¢*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_20(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_20()/*Î´½âËø×´Ì¬-11¸´Î»*/
+testcase Case_27_Phy_Pro_20()/*æœªè§£é”çŠ¶æ€-11å¤ä½*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_21(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_21()/*Î´½âËø×´Ì¬-ÉÏÏÂµç*/
+testcase Case_27_Phy_Pro_21()/*æœªè§£é”çŠ¶æ€-ä¸Šä¸‹ç”µ*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_22(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_22()/*Î´½âËø×´Ì¬-»á»°ÇĞ»»*/
+testcase Case_27_Phy_Pro_22()/*æœªè§£é”çŠ¶æ€-ä¼šè¯åˆ‡æ¢*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_23(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_22_01()/*Î´½âËø×´Ì¬-»á»°ÇĞ»»02ÇĞ02*/
+testcase Case_27_Phy_Pro_22_01()/*æœªè§£é”çŠ¶æ€-ä¼šè¯åˆ‡æ¢02åˆ‡02*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_23_01(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_23()/*³¤¶È²»ÕıÈ·µÄÕıÈ·ÃØÔ¿*/
+testcase Case_27_Phy_Pro_23()/*é•¿åº¦ä¸æ­£ç¡®çš„æ­£ç¡®ç§˜é’¥*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _27_Serve_24(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_27_Phy_Pro_24()/*×Ó¹¦ÄÜ´íÎóµÄÕıÈ·ÃØÔ¿*/
+testcase Case_27_Phy_Pro_24()/*å­åŠŸèƒ½é”™è¯¯çš„æ­£ç¡®ç§˜é’¥*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -543,7 +543,7 @@ testcase Case_3E_Phy_Def_05()/*NRC12*/
   _3E_Serve_05(ID_From_Title);
   End_Main();
 }
-testcase Case_Not_Support_Phy_Def()/*²»Ö§³Ö·şÎñ*/
+testcase Case_Not_Support_Phy_Def()/*ä¸æ”¯æŒæœåŠ¡*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -609,7 +609,7 @@ testcase Case_28_Phy_Def_01()/*NRC7F*/
   _28_Serve_01(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_28_Phy_Pro_01()/*×Ó¹¦ÄÜ¼°¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»*/
+testcase Case_28_Phy_Pro_01()/*å­åŠŸèƒ½åŠè‚¯å®šå“åº”æŠ‘åˆ¶ä½*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -637,7 +637,7 @@ testcase Case_28_Phy_Pro_04()/*NRC31*/
   _28_Serve_05(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_28_Phy_Pro_05()/*NRCÓÅÏÈ¼¶*/
+testcase Case_28_Phy_Pro_05()/*NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -687,21 +687,21 @@ testcase Case_34_Phy_Pro_04()/*NRC31*/
   _34_Serve_05(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_34_Phy_Pro_05()/*Çı¶¯µØÖ·NRCÓÅÏÈ¼¶*/
+testcase Case_34_Phy_Pro_05()/*é©±åŠ¨åœ°å€NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _34_Serve_06(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_34_Phy_Pro_05_GAC()/*Çı¶¯µØÖ·NRCÓÅÏÈ¼¶*/
+testcase Case_34_Phy_Pro_05_GAC()/*é©±åŠ¨åœ°å€NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _34_Serve_06_GAC(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_34_Phy_Pro_06()/*APPµØÖ·NRCÓÅÏÈ¼¶*/
+testcase Case_34_Phy_Pro_06()/*APPåœ°å€NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -716,7 +716,7 @@ testcase Case_36_Phy_Def_01()/*NRC7F*/
   _36_Serve_01(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_36_Phy_Pro_01()/*NRCÓÅÏÈ¼¶*/
+testcase Case_36_Phy_Pro_01()/*NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -738,7 +738,7 @@ testcase Case_37_Phy_Def_01()/*NRC7F*/
   _37_Serve_01(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_37_Phy_Pro_01()/*NRCÓÅÏÈ¼¶*/
+testcase Case_37_Phy_Pro_01()/*NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -802,14 +802,14 @@ testcase Case_31_Phy_Pro_05()/*NRC31*/
   _31_Serve_08(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_31_Phy_Pro_06()/*NRCÓÅÏÈ¼¶*/
+testcase Case_31_Phy_Pro_06()/*NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
   _31_Serve_06(ID_From_Title,Session_From_Title);
   End_Main();
 }
-testcase Case_31_Phy_Pro_06_GAC()/*NRCÓÅÏÈ¼¶*/
+testcase Case_31_Phy_Pro_06_GAC()/*NRCä¼˜å…ˆçº§*/
 {
   GetInformationFromTitle();
   MainInit(Session_From_Title);
@@ -825,79 +825,79 @@ testcase Case_31_Phy_Pro_NRC22_Auto()
 }
 
 //
-//testcase Case_Other_GAC_01()/*Ä¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300s*/
+//testcase Case_Other_GAC_01()/*é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300s*/
 //{
 //  MainInit(defsession);
 //  Other_GAC_01();
 //  End_Main();
 //}
-//testcase Case_Other_GAC_02()/*Ä¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-301s*/
+//testcase Case_Other_GAC_02()/*é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-301s*/
 //{
 //  MainInit(defsession);
 //  Other_GAC_02();
 //  End_Main();
 //}
-//testcase Case_Other_GAC_03()/*Ä¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-298s*/
+//testcase Case_Other_GAC_03()/*é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-298s*/
 //{
 //  MainInit(defsession);
 //  Other_GAC_03();
 //  End_Main();
 //}
-//testcase Case_Other_GAC_04()/*Ä¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-100s*/
+//testcase Case_Other_GAC_04()/*é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-100s*/
 //{
 //  MainInit(defsession);
 //  Other_GAC_04();
 //  End_Main();
 //}
-//testcase Case_Other_GAC_05()/*Ä¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÓĞÕï¶Ï±¨ÎÄÇëÇó*/
+//testcase Case_Other_GAC_05()/*é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æœ‰è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 //{
 //  MainInit(defsession);
 //  Other_GAC_05();
 //  End_Main();
 //}
-//testcase Case_Other_GAC_06()/*Ä¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-Ä¬ÈÏ»á»°ÇĞ»»*/
+//testcase Case_Other_GAC_06()/*é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-é»˜è®¤ä¼šè¯åˆ‡æ¢*/
 //{
 //  MainInit(defsession);
 //  Other_GAC_06();
 //  End_Main();
 //}
-//testcase Case_Other_GAC_07()/*Ä¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-ÍØÕ¹»á»°ÇĞ»»Ä¬ÈÏ»á»°*/
+//testcase Case_Other_GAC_07()/*é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-æ‹“å±•ä¼šè¯åˆ‡æ¢é»˜è®¤ä¼šè¯*/
 //{
 //  MainInit(defsession);
 //  Other_GAC_07();
 //  End_Main();
 //}
-testcase Case_Other_GAC_08()/*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ-ÍØÕ¹»á»°*/
+testcase Case_Other_GAC_08()/*1101å“åº”åæ—¶é—´æµ‹è¯•-æ‹“å±•ä¼šè¯*/
 {
   MainInit(defsession);
   Other_GAC_08();
   End_Main();
 }
-testcase Case_Other_GAC_09()/*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ-11¸´Î»*/
+testcase Case_Other_GAC_09()/*1101å“åº”åæ—¶é—´æµ‹è¯•-11å¤ä½*/
 {
   MainInit(defsession);
   Other_GAC_09();
   End_Main();
 }
-testcase Case_Other_GAC_10()/*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ-¸ß¸ºÔØ*/
+testcase Case_Other_GAC_10()/*1101å“åº”åæ—¶é—´æµ‹è¯•-é«˜è´Ÿè½½*/
 {
   MainInit(defsession);
   Other_GAC_10();
   End_Main();
 }
-testcase Case_Other_GAC_11()/*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ-ÇëÇóÖÖ×Ó*/
+testcase Case_Other_GAC_11()/*1002å“åº”åæ—¶é—´æµ‹è¯•-è¯·æ±‚ç§å­*/
 {
   MainInit(exsession);
   Other_GAC_11();
   End_Main();
 }
-testcase Case_Other_GAC_12()/*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ-11¸´Î»*/
+testcase Case_Other_GAC_12()/*1002å“åº”åæ—¶é—´æµ‹è¯•-11å¤ä½*/
 {
   MainInit(exsession);
   Other_GAC_12();
   End_Main();
 }
-testcase Case_Other_GAC_13()/*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ-¸ß¸ºÔØ*/
+testcase Case_Other_GAC_13()/*1002å“åº”åæ—¶é—´æµ‹è¯•-é«˜è´Ÿè½½*/
 {
   MainInit(exsession);
   Other_GAC_13();

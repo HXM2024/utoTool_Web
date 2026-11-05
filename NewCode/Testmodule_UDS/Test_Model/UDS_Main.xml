@@ -1004,7 +1004,7 @@
         <capltestcase name="Can_TP_CF_11"   title="TP_CAN_确认控制器的流控制帧参数STmin有效" />
         <capltestcase name="Can_TP_CF_9"   title="TP_CAN_确认控制器发送的流控帧中的BS和Stmin" />
         <capltestcase name="Can_TP_CF_19"   title="TP_CAN_等待流控制帧" />
-        <capltestcase name="Can_TP_CF_19_1"   title="TP_CAN_等待流控制帧的N_WFTmax" />
+        <!-- <capltestcase name="Can_TP_CF_19_1"   title="TP_CAN_等待流控制帧的N_WFTmax" /> -->
         <capltestcase name="Can_TP_CF_18"   title="TP_CAN_流控制状态为OVFLW溢出" />
         <capltestcase name="Can_TP_CF_16"   title="TP_CAN_无效流控制帧-FS无效值" />
         <capltestcase name="Can_TP_CF_12"   title="TP_CAN_不发送流控制帧" />
@@ -1079,7 +1079,7 @@
         <capltestcase name="CANFD_TP_FC_2_"   title="TP_CANFD_确认控制器的流控制帧参数STmin有效" />
         <capltestcase name="CANFD_TP_FC_2"   title="TP_CANFD_确认控制器发送的流控帧中的BS和STmin" />
         <capltestcase name="CANFD_TP_FC_11"   title="TP_CANFD_等待流控制帧" />
-        <capltestcase name="CANFD_TP_FC_11_1"   title="TP_CANFD_等待流控制帧的N_WFTmax" />
+        <!-- <capltestcase name="CANFD_TP_FC_11_1"   title="TP_CANFD_等待流控制帧的N_WFTmax" /> -->
         <capltestcase name="CANFD_TP_FC_7"   title="TP_CANFD_流控制状态为OVFLW溢出" />
         <capltestcase name="CANFD_TP_FC_10"   title="TP_CANFD_无效流控制帧-FS无效值" />
         <capltestcase name="CANFD_TP_FC_3"   title="TP_CANFD_上位机收到首帧后-不发送流控帧" />

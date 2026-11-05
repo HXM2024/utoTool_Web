@@ -535,7 +535,7 @@ async function handleCreateCanoeUpload(file: File, fileInfo: { type: string; typ
     })
     ElMessage.success('Excel 解析成功')
   } else if (fileInfo.type === 'dbc') {
-    const res: any = await parseDbcFile(file)
+    const res: any = await parseDbcFile(file, store.selectedOem)
     const raw = res?.data || res
     if (raw?.columns && raw?.rows) {
       store.setModuleUploadResult('create_canoe', {

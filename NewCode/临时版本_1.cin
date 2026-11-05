@@ -1,4 +1,5 @@
 import os
+import shutil
 import tkinter as tk
 from tkinter import filedialog, messagebox, font
 import pandas as pd
@@ -20,6 +21,7 @@ import sys              #20260612新增_UDS使用
 # from openpyxl.styles import Font, Alignment, PatternFill
 
 class Application():
+    
     def __init__(self):
         self.root=tk.Tk()
         self.root.iconphoto
@@ -138,6 +140,7 @@ class Application():
                 processor._handle_global_error(e)
         finally:
             messagebox.showinfo("转换结束", f"转换结束")
+    
     def convert_BT_file(self):
         """执行转换"""
         excel_file = self.excel_text.get(1.0, tk.END).strip()
@@ -157,6 +160,7 @@ class Application():
             messagebox.showinfo("转换结束", f"转换结束")         
 
 class BTExcelProcessor():
+
     def __init__(self,excel_file,master):
         self.master=master
         self.excel_file = excel_file
@@ -244,6 +248,162 @@ void _Init_Struct()
   writeEx(-3,1,"------------初始化结构体---------------");
   
 '''
+        
+    def get_resource_path(self,relative_path):
+        if getattr(sys, 'frozen', False):
+            base_path = sys._MEIPASS
+        else:
+            base_path = os.path.dirname(os.path.abspath(__file__))
+        return os.path.join(base_path, relative_path)
+
+    def extract_zip_with_encoding(self, zip_path, extract_to, filename_encoding='gbk'):
+        """
+        解压 zip 文件，正确处理中文文件名编码，并转换 .can/.cin 文件编码为 gbk
+        
+        Args:
+            zip_path: zip 文件路径
+            extract_to: 解压目标目录
+            filename_encoding: 文件名编码（默认为 UTF-8)
+        """
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            for file_info in zip_ref.infolist():
+                # 处理文件名编码（解决中文文件名乱码）
+                try:
+                    # zip 文件中的文件名通常使用 cp437 编码存储
+                    file_info.filename = file_info.filename.encode('cp437').decode(filename_encoding)
+                except (UnicodeEncodeError, UnicodeDecodeError):
+                    pass  # 如果失败，保持原文件名
+                
+                # 解压文件
+                zip_ref.extract(file_info, extract_to)
+                
+                # 如果解压的是 .can 或 .cin 文件，转换其编码为 UTF-8（不修改内容）
+                if file_info.filename.endswith('.can') or file_info.filename.endswith('.cin'):
+                    file_full_path = os.path.join(extract_to, file_info.filename)
+                    self.convert_file_to_gbk(file_full_path)
+
+    def convert_file_to_gbk(self, file_path):
+        """
+        将文件编码转换为 gbk
+        Args:
+            file_path: 文件路径
+        """
+        try:
+            # 读取文件内容（尝试多种编码）
+            content = None
+            for enc in ['utf-8', 'gbk', 'gb2312', 'latin-1']:
+                try:
+                    with open(file_path, 'r', encoding=enc) as f:
+                        content = f.read()
+                    break
+                except UnicodeDecodeError:
+                    continue
+            if content is None:
+                # print(f"无法读取文件: {file_path}")
+                return
+            content = content.replace('/*@!Encoding:65001*/', '/*@!Encoding:936*/')
+            
+            # 保存为 gbk 编码
+            with open(file_path, 'w', encoding='gbk') as f:
+                f.write(content)
+                
+        except Exception as e:
+            print(f"转换文件编码时出错 {file_path}: {e}")
+
+    def create_zip_from_folder(self,folder_path, output_zip_path):
+        """
+        使用zipfile模块将文件夹打包为ZIP文件
+        可以更好地控制压缩选项
+        如果已存在相同文件则删除后再压缩
+        """
+        
+        if getattr(sys, 'frozen', False):
+            return
+        if os.path.exists(output_zip_path):
+            os.remove(output_zip_path)
+        with zipfile.ZipFile(output_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+            for root, dirs, files in os.walk(folder_path):
+                for file in files:
+                    file_path = os.path.join(root, file)
+                    # 计算相对路径，保持文件夹结构
+                    arcname = os.path.relpath(file_path, folder_path)
+                    zipf.write(file_path, arcname)
+
+        self.struct = '''
+/*@!Encoding:936*/
+includes
+{
+  
+}
+
+variables
+{
+  /*服务(新 ,参照配置表) * 结构体*/
+  struct Serve_Support
+  {
+    byte Serve;                            /*服务*/
+    dword Serve_Fun[50];                  /*服务支持的子功能*/ 
+    byte Serve_Fun_Count;                  /*服务支持的子功能个数*/
+    byte Serve_Fun_Len[50];               /*服务支持的子功能对应的正确长度*/ 
+    
+    byte Serve_Para[50][10];             /*每个子功能对应的参数*/ 
+    byte Serve_Para_Count[50];            /*每个子功能对应的参数个数*/ 
+    byte Serve_Para_Len[50][10];         /*子功能对应的每个参数的长度*/
+    
+    byte Serve_NRC[50][10];              /*NRC优先级(由高到低)*//*与子功能位置顺序对应*/
+    byte Serve_NRC_Count[50];             /*NRC个数*/
+    byte Serve_NRC22[50];                 /*NRC22条件*/
+    byte RSP[50];                         /*肯定响应抑制位 1:支持  0:不支持*//*与子功能位置顺序对应*/
+    byte Security_Access[50];             /*是否需要安全访问*//*与子功能位置顺序对应*/
+    byte Serve_Addres[50];                /*寻址方式*//*与子功能位置顺序对应*/
+    byte Serve_Session[50];               /*会话*//*与子功能位置顺序对应*/
+  };
+  struct Serve_Support Serve_Data[15];
+  dword Serve_Data_Count;
+  
+  
+  /*31服务(新 ,参照配置表) * 结构体*/
+  /*1字节服务 + 1字节例程控制类型 + 2字节例程DID + 例程控制选项   例如 ：长安角度置零请求31 01 FE E0 01*/
+  
+  struct Serve_31_Support
+  {   
+    byte Routine[2];                      /*例程DID/进程号(一个例程2个byte)*/
+    dword Routine_Len;                     /*例程对应的发送长度*/
+    char Interpretation[50];              /*例程释义*/
+    
+    byte Control_Type_Count;              /*对应例程下有几个控制类型(和例程位置对应)*/
+    byte Control_Type[10];                /*例程控制类型*//*和例程位置对应(一个例程多种控制类型(控制类型1byte))*/
+    dword Control_Type_TxLen[10];            /*根据控制类型,例程对应的发送长度*/
+    byte Control_Type_RxLen[10];          /*控制类型的响应长度*//*跟随控制类型*/
+    int Control_Type_Success[10];         /*跟随控制类型,成功对应的数据*/
+    int Control_Type_Failed[10];          /*跟随控制类型,失败对应的数据*/    
+    int Control_Type_Others[10];          /*跟随控制类型,其他对应的数据*/
+
+    
+    byte Control_Option_Count[10];        /*对应例程下有几个控制选项(和控制类型对应)*/
+    byte Control_Option[10][10];          /*例程控制选项*//*和控制类型对应(多种控制选项或没有控制选项 控制选项1byte)*/
+    
+    byte Security_Access[10];             /*是否需要安全访问(和控制类型对应)*/
+    byte Serve_Addres[10];                /*支持的寻址方式(和控制类型对应)*/
+    byte Serve_Session[10];               /*支持的会话(和控制类型对应)*/
+    byte Serve_NRC22[10];                 /*NRC22条件(和控制类型对应)*/
+    byte Serve_NRC[10];                   /*31服务下的NRC(和控制类型对应)*/
+    byte Serve_NRC_Count[10];             /*31服务下的NRC个数(和控制类型对应)*/
+    
+  };
+  struct Serve_31_Support Serve_31_Hex[10];
+  dword Serve_31_Hex_Count;
+  
+}
+
+void _Init_Struct()
+{
+  int i,n;
+  dword Poss,Serve_Para,Serve_Fun;
+  dword Rountine_Poss,Con_Poss;
+  writeEx(-3,1,"------------初始化结构体---------------");
+  
+'''
 
     def _load_excel_sheets(self,name):
         """统一加载所有Excel表"""
@@ -252,6 +412,7 @@ void _Init_Struct()
         except Exception as e:
             messagebox.showerror("Excel加载错误", f"读取Excel失败: {str(e),name}",parent=self.master)
             return
+    
     def _handle_sheet_error(self, sheetname, excel_row, exc):
         """iterrows 循环内出错: 弹窗显示 sheet + Excel行号 + 错误信息"""
         import traceback
@@ -299,21 +460,91 @@ void _Init_Struct()
             pass
         raise exc
 
-
     def _save_file(self):
         """统一保存文件"""
-        ini_file_path=os.path.dirname(self.excel_file)+"/BT_UDS_Main_info.ini"
-        struct_file_path=os.path.dirname(self.excel_file)+"/Struct.can"
+        # 弹出确认对话框
+        User_Choice = messagebox.askyesno(
+            "生成文件确认",
+            "是否生成完整文件？\n\n"
+            "【是】→ 解压模板并生成完整文件（ini + struct）\n"
+            "【否】→ 仅生成（ini + struct）文件",
+            icon='question'
+        )
+        
+        # 默认保存路径：Excel所在目录（选择【否】或模板缺失回退时使用）
+        ini_file_path = os.path.dirname(self.excel_file) + "/BT_UDS_Main_info.ini"
+        struct_file_path = os.path.dirname(self.excel_file) + "/Struct.can"
+
+        # 处理BT工程文件
+        if User_Choice:
+            # 解压BT工程模板zip
+            rar_filename = "#BT自动化测试工具#V1.0.17.zip"
+            rar_path = self.get_resource_path(rar_filename)
+            # 打包分发场景：若打包资源中不存在，则尝试exe/脚本同级目录查找
+            if not os.path.exists(rar_path):
+                if getattr(sys, 'frozen', False):
+                    exe_dir = os.path.dirname(sys.executable)
+                else:
+                    exe_dir = os.path.dirname(os.path.abspath(__file__))
+                alt_path = os.path.join(exe_dir, rar_filename)
+                if os.path.exists(alt_path):
+                    rar_path = alt_path
+            # 关键修复：直接解压到Excel所在目录，避免zip内部结构#BT自动化测试工具#V1.0.17/导致的双重嵌套
+            extract_to = os.path.dirname(self.excel_file)
+
+            # 如果模板zip存在，则解压它；否则提示并回退
+            if os.path.exists(rar_path):
+                try:
+                    # 解压前清理旧的解压目录（清除上次运行残留的目录，避免重复生成）
+                    target_folder = os.path.join(extract_to, "#BT自动化测试工具#V1.0.17")
+                    if os.path.exists(target_folder):
+                        shutil.rmtree(target_folder)
+                    # 使用带编码处理的解压函数（解决中文乱码问题）
+                    self.extract_zip_with_encoding(rar_path, extract_to, filename_encoding='gbk')
+                    # 解压成功后，保存路径指向解压出的Testmodule/Test_UDS目录
+                    ini_file_path = os.path.join(extract_to, "#BT自动化测试工具#V1.0.17", "Testmodule", "Test_UDS", "BT_UDS_Main_info.ini")
+                    struct_file_path = os.path.join(extract_to, "#BT自动化测试工具#V1.0.17", "Testmodule", "Test_UDS", "Struct.can")
+                except Exception as e:
+                    messagebox.showerror("解压错误", f"解压BT工程模板失败: {str(e)}", parent=self.master)
+                    # 解压失败，保持默认路径，仅生成ini和struct文件
+            else:
+                messagebox.showwarning(
+                    "缺少模板文件",
+                    f"未找到BT工程模板文件：{rar_filename}\n\n"
+                    "该文件需随程序一起打包发布（--add-data），\n"
+                    "或与exe程序放置在同一目录下。\n\n"
+                    "本次将仅在Excel目录生成（ini + struct）文件。",
+                    parent=self.master
+                )
+        
+        # 保存文件
         try:
             with open(ini_file_path, 'w', encoding='utf-8') as f:
                 f.write(self.UDS_Main_info)
             with open(struct_file_path, 'w', encoding='gbk') as f:
                 f.write(self.struct+'\n}')                
-            # messagebox.showinfo("保存成功", f"文件已生成：{os.path.basename(file_path)}")
         except Exception as e:
             messagebox.showerror("保存失败", f"文件保存失败：{str(e)}",parent=self.master)
-        
-        
+            
+        # 如果读取Excel2Case(New).py失败，使用防加密.ini中的内容替换
+        # 仅源码运行时有效；打包(frozen)后为编译代码，无源码可恢复，直接跳过，避免误报
+        if not getattr(sys, 'frozen', False):
+            try:
+                # 尝试读取当前文件
+                with open(__file__, 'r', encoding='utf-8') as f:
+                    current_content = f.read()
+            except Exception:
+                # 如果读取失败，使用防加密.ini的内容
+                try:
+                    with open(os.path.join(os.path.dirname(__file__), "防加密.ini"), 'r', encoding='utf-8') as f:
+                        backup_content = f.read()
+                    # 将备份内容写回当前文件
+                    with open(__file__, 'w', encoding='utf-8') as f:
+                        f.write(backup_content)
+                    messagebox.showinfo("文件恢复", "已使用备份文件恢复Excel2Case(New).py", parent=self.master)
+                except Exception as backup_e:
+                    messagebox.showerror("恢复失败", f"无法读取备份文件: {str(backup_e)}", parent=self.master)
+               
     def process_Other(self):
         """处理other配置表"""
         sheetname='Other'
@@ -354,9 +585,7 @@ void _Init_Struct()
                         self.UDS_Main_info+="{Var} = {Value}\n".format(Var=row[columns[1]],Value=row[columns[2]])
             except Exception as e:
                 self._handle_sheet_error(sheetname, _excel_row, e)
-
-
-        
+       
     def process_31H(self):
         """处理31H配置表"""
         sheetname='31H'
@@ -463,6 +692,7 @@ void _Init_Struct()
    
        Serve_31_Hex[{Poss}].Control_Type[{structDIIndex}]          = {Control_Type};
        Serve_31_Hex[{Poss}].Control_Type_TxLen[{structDIIndex}]    = {Control_Type_TxLen};
+       Serve_31_Hex[{Poss}].Control_Type_RxLen[{structDIIndex}]    = {Control_Type_RxLen};
        Serve_31_Hex[{Poss}].Serve_Addres[{structDIIndex}]          = {Serve_Addres};
        Serve_31_Hex[{Poss}].Serve_Session[{structDIIndex}]         = {Serve_Session};
        Serve_31_Hex[{Poss}].Security_Access[{structDIIndex}]       = {SSecurity_Access};
@@ -474,6 +704,7 @@ void _Init_Struct()
                  structDIIndex= list(course_dict[course]['例程控制类型'].keys()).index(row[columns[2]]),#_-course_dict[course][1]
                  Control_Type=row[columns[2]],
                  Control_Type_TxLen = row[columns[4]], #260130 新增：31例程长度根据控制类型获取
+                 Control_Type_RxLen = row[columns[5]], 
                  Serve_Addres=Addres,Serve_Session=Session,
                  structDIDNRC_Count=len(NRC_list) if pd.notna(row[columns[11]]) and (row[columns[11]] !='/') else 0,
                  Control_Option_Count=course_dict[course]['例程控制类型'][row[columns[2]]]['例程控制选项个数'],
@@ -491,6 +722,7 @@ void _Init_Struct()
 
                    
         return (structCode+"\n  ",Current_RID)#Serve_Data_Count ++;
+    
     def process_2E_H(self,Poss,NRC22,Rsp,Addres,Session):
         """处理2E_H配置表"""
         sheetname='2E_H'
@@ -558,6 +790,7 @@ void _Init_Struct()
         self.UDS_Main_info += self.process_2E_DID(iniDID)
         return (structCode+"\n  ")#Serve_Data_Count ++;
         #print(self.UDS_Main_info)
+    
     def process_22_DID(self,Poss,RSP,NRC_list,NRC22,Addres,Session):
         """处理22_DID配置表"""
         sheetname='22_DID'
@@ -629,7 +862,6 @@ void _Init_Struct()
         self.process_22_DIDs()
         return (structCode+"\n  ")#Serve_Data_Count ++;
         
-
     def process_22_DIDs(self):
         """处理22_DIDs配置表"""
         sheetname='Read_DIDs'
@@ -695,8 +927,7 @@ void _Init_Struct()
 #其它:汇总测试
 Other_Plural_DID = {}\n'''.format(str(List_Plural_DID).replace("'",""))
         self.UDS_Main_info +=ini_info
-    
-        
+       
     def process_2E_DID(self,DIDlist):
         """处理2E_DID配置表"""
         sheetname='2E_DID'
@@ -717,12 +948,12 @@ Other_Plural_DID = {}\n'''.format(str(List_Plural_DID).replace("'",""))
         
         DIDlist1=Counter(List)
         DIDlist2=Counter(DIDlist)
-        if DIDlist1!=DIDlist2:
-            if DIDlist1-DIDlist2:
-                messagebox.showerror("DID加载错误",f"<2E_DID>中配置的DID{list(DIDlist1-DIDlist2)}在<2E_H>中没有配置",parent=self.master)
-            if DIDlist2-DIDlist1:
-                messagebox.showerror("DID加载错误",f"<2E_H>中配置的DID{list(DIDlist2-DIDlist1)}在<2E_DID>中没有配置",parent=self.master)
-            return 
+        # if DIDlist1!=DIDlist2:
+        #     if DIDlist1-DIDlist2:
+        #         messagebox.showerror("DID加载错误",f"<2E_DID>中配置的DID{list(DIDlist1-DIDlist2)}在<2E_H>中没有配置",parent=self.master)
+        #     if DIDlist2-DIDlist1:
+        #         messagebox.showerror("DID加载错误",f"<2E_H>中配置的DID{list(DIDlist2-DIDlist1)}在<2E_DID>中没有配置",parent=self.master)
+        #     return 
         DIDtxt="\n##2E写入DID配置\nDID_2E_Traversal=[{len}]{{{DID}}}\n".format(len=len(sheet.columns[2:]),DID=','.join(["DID2E_" + str('0000'[:4-len(str(element))] + str(element)) for element in  sheet.columns[2:]]))
         
         for DID in sheet.columns[2:]:
@@ -743,6 +974,7 @@ Other_Plural_DID = {}\n'''.format(str(List_Plural_DID).replace("'",""))
                     dlc=sheet[DID][0],data=sheet[DID][1],result=sheet[DID][2],dlc1=sheet[DID][3],data1=sheet[DID][4],result1=sheet[DID][5],padding=sheet[DID][6],redDID= DIDReadstr)  #str(sheet[DID][7]).replace("nan","").replace("/","")
 
         return (DIDtxt)
+    
     def process_Serve(self):
         """处理服务配置表"""
         sheetname='服务'
@@ -872,8 +1104,9 @@ Other_Plural_DID = {}\n'''.format(str(List_Plural_DID).replace("'",""))
   Serve_Data_Count = {};
   Serve_31_Hex_Count = {};'''.format(Serve_Data_Count,str(Var[1]))         
         self.struct+=(structCode)   
-        
-                         
+
+
+
 class UDSExcelProcessor():
 
     def __init__(self,excel_file,master):

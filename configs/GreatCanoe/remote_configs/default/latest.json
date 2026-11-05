@@ -1,0 +1,13 @@
+{
+  "output_dir": "",
+  "dbc_name": "",
+  "create_canoe_cfg": true,
+  "generate_envvar": true,
+  "generate_panel": true,
+  "generate_nodes": true,
+  "name": "default",
+  "_meta": {
+    "config_name": "default",
+    "digest": "87eb76cad1b87d7fbf798912e3fe66a83880dd31"
+  }
+}

@@ -238,11 +238,12 @@ variables
   float NRC22_TasTorque_Fac;      /*工厂模式回NRC22的力矩值*/
   byte NRC_22_Gears_Normal;       /*NRC22_档位_正常档位*/
   dword NRC_22_Gears_Range[2];    /*NRC_22_档位范围*/
-  char NRC22_SelectStr[50];        /*NRC_22遍历时选择测试项次*/
-  byte NRC22_Select[10];           /*NRC_22遍历时选择测试项次*/
+  char NRC22_SelectStr[50];       /*NRC_22遍历时选择测试项次*/
+  byte NRC22_Select[10];          /*NRC_22遍历时选择测试项次*/
   int NRC22_Select_Count;         /*NRC_22遍历时选择测试项次个数*/
   char Gears_Signal[50];          /*档位信号*/
   dword Gears_ID;                 /*档位ID*/
+  char Gears_CRC_Signal[50];      //档位CRC信号  
   char Traversal_DID[200][50];    /*获取遍历的字符串*/
   int Traversal_Count;            /*获取遍历个数*/
   char Data_Rev[500];             /*获取返回的数据,除NRC78及流控帧*/
@@ -572,6 +573,12 @@ variables
   int FunDID_Read_CCPGroupCount;//共多少组
   int DataCheckGreater;
   int TimeInvalid_FirstTime = 0;//用于时间无效第一次计算
+
+  char PowerMode[50];           //Geely1.0电源模式信号
+  char PowerMode_Invalid_Sig[50];//Geely1.0电源模式有效性信号
+  char PowerMode_CRC_Sig[50];   //Geely1.0电源模式CRC信号
+  dword PowerMode_ID;           //Geely1.0电源模式信号ID
+  // dword PowerMode_Range[2];     //Geely1.0电源模式信号范围
 }
 
 
@@ -1188,6 +1195,8 @@ void Get_value()
   NRC_22_Gears_Normal = getProfileInt(ECU_project,"NRC_22_Gears_Normal",NRC_22_Gears_Normal,file_name_1);
   Ready_NRC22 = getProfileInt(ECU_project,"Ready_NRC22",Ready_NRC22,file_name_1);
   Gears_ID = getProfileInt(ECU_project,"Gears_ID",Gears_ID,file_name_1);
+  PowerMode_ID = getProfileInt(ECU_project,"PowerMode_ID",PowerMode_ID,file_name_1);
+
   NRC22_Loop_Serve_31 = getProfileInt(ECU_project,"NRC22_Loop_Serve_31",NRC22_Loop_Serve_31,file_name_1);
   NRC22_Select_Count = getProfileArray(ECU_project,"NRC22_Select",NRC22_SelectStr,elCount(NRC22_SelectStr),file_name_1);
   for(i=0;i<NRC22_Select_Count;i++)
@@ -1195,6 +1204,10 @@ void Get_value()
   if(NRC22_Select_Count == 1 && NRC22_Select[0] == 0)
     NRC22_Select_Count = 0;
   getProfileString(ECU_project, "Gears_Signal","Null",Gears_Signal, 50, file_name_1);
+  getProfileString(ECU_project, "PowerMode","Null",PowerMode, 50, file_name_1);
+  getProfileString(ECU_project, "PowerMode_Invalid_Sig","Null",PowerMode_Invalid_Sig, 50, file_name_1);
+  getProfileString(ECU_project, "PowerMode_CRC_Sig","Null",PowerMode_CRC_Sig, 50, file_name_1);
+  getProfileString(ECU_project, "Gears_CRC_Signal","Null",Gears_CRC_Signal, 50, file_name_1);
   /*-----------------------------------分隔符------------------------------*/
   
   /*-----------------------------------10服务--------------------------*/

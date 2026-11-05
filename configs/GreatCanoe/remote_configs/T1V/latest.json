@@ -1,0 +1,3307 @@
+{
+  "tree": [
+    {
+      "l": "Node_21",
+      "c": [
+        {
+          "l": "Msg_21",
+          "id": 33,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x21_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0002",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x21_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x21_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x21_LongitudinalAcceleration",
+              "sb": 2,
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.001,
+              "o": -2,
+              "mn": -2,
+              "mx": 2,
+              "u": "g",
+              "cm": "纵向加速度\nLongitudinal acceleration signal\nSensor accuracy：0.0027680342857143 g",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x21_LongitudinalAccelerationVD",
+              "sb": 4,
+              "bs": 39,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "3",
+              "vd": "0: Valid\n1: Reserved\n2: Invalid\n3: Initialize",
+              "cm": "纵向加速度有效位\nIf hasn’t been calibrated, after initialization, this signal ‘s value is always10(invalid)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x21_SCMRequest",
+              "sb": 4,
+              "bs": 37,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: No crash\n1: Front Crash\n2: Side Crash\n3: Rear Crash\n4: Roll Crash\n5: reserved\n6: reserved\n7: reserved",
+              "cm": "二次碰撞预警(D01不做)默认发0\nSCM:Second Collision Mitigate\nFor front crash,deceleration limitation is -5, The Maximum rate of Deceleration for Non-Front(Side and Rear) crash in the platform is maximum? (-14 M/S^2) in full brake system, the deceleration limitation is ASIL B related, should discussed by project specific.\n此信号发到ECU停止工作为止",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_31",
+      "c": [
+        {
+          "l": "Msg_31",
+          "id": 49,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x31_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0001",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x31_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x31_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x31_LateralAcceleration",
+              "sb": 2,
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.001,
+              "o": -2,
+              "mn": -2,
+              "mx": 2,
+              "u": "g",
+              "cm": "横向加速度\nLateral acceleration signal\nSensor accuracy：0.0027680342857143g",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x31_YawRate",
+              "sb": 4,
+              "bs": 39,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "o": -180,
+              "mn": -180,
+              "mx": 180,
+              "u": "deg/sec",
+              "cm": "偏航角速度\nYaw rate signal\nSensor accuracy：0.122189236 deg/s",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x31_LateralAccelerationSigVD",
+              "sb": 6,
+              "bs": 52,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "3",
+              "vd": "0: Valid\n1: Reserved\n2: Invalid\n3: Initialize",
+              "cm": "横向加速度有效性\nIf hasn’t been calibrated, after initialization, this signal ‘s value is always 10(invalid).",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x31_YawrateSigValidData",
+              "sb": 6,
+              "bs": 50,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "3",
+              "vd": "0: Valid\n1: Reserved\n2: Invalid\n3: Initialize",
+              "cm": "偏航角速度有效性\nSignal state for yawrate",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x31_YASCalibrationSts",
+              "sb": 6,
+              "bs": 48,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Sensor  Not Calibrated\n1: Sensor  Calibrated",
+              "cm": "YAS标定状态\nIndicates  IMU Calibration State",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_3B",
+      "c": [
+        {
+          "l": "Msg_3B",
+          "id": 59,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x3B_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0069",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x3B_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x3B_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x3B_IndicatedDriverReqWhlTqFA",
+              "sb": 2,
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "o": -32768,
+              "mn": -32768,
+              "mx": 32767,
+              "iv": "0",
+              "u": "NM",
+              "cm": "前轴需求轮端扭矩\nDriver request wheel torque at FA",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x3B_ActWheelTorqueFA",
+              "sb": 4,
+              "bs": 39,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "o": -32768,
+              "mn": -32768,
+              "mx": 32767,
+              "iv": "0",
+              "u": "NM",
+              "cm": "前轴实际轮端扭矩\nActual wheel torque at FA",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x3B_ActWheelSpdFA",
+              "sb": 6,
+              "bs": 55,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "o": -32767,
+              "mn": -32767,
+              "mx": 32767,
+              "iv": "0",
+              "u": "RPM",
+              "vd": "65535: Invalid",
+              "cm": "前轮转速（基于电机转速计算）\nThe motor terminal speed, forward and backward are both sent the positive value",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x3B_CRC2",
+              "sb": 8,
+              "bs": 71,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x006A",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x3B_Resd2",
+              "sb": 9,
+              "bs": 79,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x3B_RollgCntr2",
+              "sb": 9,
+              "bs": 75,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x3B_ActWheelSpdStsFA",
+              "sb": 10,
+              "bs": 83,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: no failure\n1: failure",
+              "cm": "前轮转速有效\nActual wheel speed status at FA",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x3B_ActWheelTorqueStsFA",
+              "sb": 10,
+              "bs": 82,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "1",
+              "vd": "0: no failure\n1: failure",
+              "cm": "前轴实际轮端扭矩有效\nActual wheel torque status at FA",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_98",
+      "c": [
+        {
+          "l": "Msg_98",
+          "id": 152,
+          "d": "24",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x98_ONEBOX_1_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0049",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x98_ONEBOX_1_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_ONEBOX_1_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x98_VehicleSpeedVSOSig",
+              "sb": 2,
+              "bs": 23,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 511.875,
+              "u": "km/h",
+              "cm": "车速\nVehicle Speed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_VehicleSpeedVSOSigValidData",
+              "sb": 3,
+              "bs": 26,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "车速有效性\nValid check bit of the signal ABS_ESP_1_VehicleSpeedVSOSig",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_ABSFailSts",
+              "sb": 3,
+              "bs": 24,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not present\n1: Fail present (lamp on)",
+              "cm": "ABS Fail Status",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_TCSActive",
+              "sb": 5,
+              "bs": 45,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not active\n1: Active",
+              "cm": "ESP lamp on ICM should blinking; TCS Intervention",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_TCSFailSts",
+              "sb": 5,
+              "bs": 44,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not present\n1: Fail present (lamp on)",
+              "cm": "TCS Fail Status",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_VDCActive",
+              "sb": 5,
+              "bs": 43,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not active\n1: Active",
+              "cm": "ESP lamp on ICM should blinking ;VDC Intervention",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_VDCFailSts",
+              "sb": 5,
+              "bs": 42,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not present\n1: Fail present (lamp on)",
+              "cm": "VDC Fail Status",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x98_ABSActive",
+              "sb": 5,
+              "bs": 41,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not active\n1: Active",
+              "cm": "ABS Active",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_A8",
+      "c": [
+        {
+          "l": "Msg_A8",
+          "id": 168,
+          "d": "24",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "xA8_LHFWheelSpeed",
+              "sb": 2,
+              "bs": 23,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 511.875,
+              "u": "km/h",
+              "cm": "left front Wheel Speed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xA8_LHFWheelSpeedValidData",
+              "sb": 3,
+              "bs": 26,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "Valid check bit of the signal LHFWheelSpeed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xA8_RHFWheelSpeed",
+              "sb": 4,
+              "bs": 39,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 511.875,
+              "u": "km/h",
+              "cm": "right front  Wheel Speed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xA8_RHFWheelSpeedValidData",
+              "sb": 5,
+              "bs": 42,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "Valid check bit of the signal RHFWheelSpeed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xA8_LHRWheelSpeed",
+              "sb": 6,
+              "bs": 55,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 511.875,
+              "u": "km/h",
+              "cm": "Left Rear Wheel Speed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xA8_LHRWheelSpeedValidData",
+              "sb": 7,
+              "bs": 58,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "Valid check bit of the signal LHRWheelSpeed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xA8_RHRWheelSpeed",
+              "sb": 10,
+              "bs": 87,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 511.875,
+              "u": "km/h",
+              "cm": "Right Rear Wheel Speed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xA8_RHRWheelSpeedValidData",
+              "sb": 11,
+              "bs": 90,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "Valid check bit of the signal RHRWheelSpeed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_106",
+          "id": 262,
+          "d": "32",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x106_EPS_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x01D3",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x106_EPS_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x106_EPS_AgCtrlAvl",
+              "sb": 2,
+              "bs": 23,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not available\n1: Available\n2: Available Degraded\n3: reserved",
+              "cm": "EPS转角控制可用状态（非冗余项目不需要Available Degraded状态）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_AgCtrlSts",
+              "sb": 2,
+              "bs": 21,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No active\n1: Ready\n2: active\n3: Active with Error",
+              "cm": "EPS转角控制响应状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_TqCtrlAvl",
+              "sb": 2,
+              "bs": 19,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not available\n1: Available\n2: Available Degraded\n3: reserved",
+              "cm": "EPS转矩控制可用状态（非冗余项目不需要Available Degraded状态）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_TqCtrlSts",
+              "sb": 2,
+              "bs": 17,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No active\n1: Ready\n2: active\n3: Active with Error",
+              "cm": "EPS转矩控制响应状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_LdwWarnAvl",
+              "sb": 3,
+              "bs": 31,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not available\n1: Available",
+              "cm": "车道偏离振动可用状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_LdwWarnSts",
+              "sb": 3,
+              "bs": 29,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: NotActive\n1: Active LevelA (high)\n2: Active LevelB (low)\n3: Reserved",
+              "cm": "车道偏离振动状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerPinionAg",
+              "sb": 4,
+              "bs": 39,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -650,
+              "mn": -650,
+              "mx": 650,
+              "u": "deg",
+              "cm": "小齿轮转角，左正右负（小齿轮转角为MPS发出的角度信号）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerPinionAgRate",
+              "sb": 6,
+              "bs": 55,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "o": -800,
+              "mn": -800,
+              "mx": 800,
+              "iv": "-800",
+              "u": "deg/s",
+              "cm": "小齿轮转角速率（小齿轮转角为MPS发出的角度信号）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerPinionAgVld",
+              "sb": 7,
+              "bs": 57,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "小齿轮转角有效位（小齿轮转角为MPS发出的角度信号）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerPinionAgRateVld",
+              "sb": 7,
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "小齿轮转角速率有效位（小齿轮转角为MPS发出的角度信号）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_CRC2",
+              "sb": 8,
+              "bs": 71,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x01D2",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x106_EPS_Resd2",
+              "sb": 9,
+              "bs": 79,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_RollgCntr2",
+              "sb": 9,
+              "bs": 75,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x106_EPS_SteerWheelAg",
+              "sb": 10,
+              "bs": 87,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -650,
+              "mn": -650,
+              "mx": 650,
+              "u": "deg",
+              "cm": "方向盘转角(方向盘转角为TAS发出的角度信号)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerWheelAgVld",
+              "sb": 12,
+              "bs": 103,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "方向盘转角有效位(方向盘转角为TAS发出的角度信号)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerWheelAgRate",
+              "sb": 12,
+              "bs": 102,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "o": -800,
+              "mn": -800,
+              "mx": 800,
+              "iv": "-800",
+              "u": "deg/s",
+              "cm": "方向盘转角速率(方向盘转角为TAS发出的角度信号)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerWheelAgRateVld",
+              "sb": 13,
+              "bs": 104,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "方向盘转角速率有效位(方向盘转角为TAS发出的角度信号)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_AsscMotCrtTq",
+              "sb": 14,
+              "bs": 119,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -20,
+              "mn": -20,
+              "mx": 20,
+              "iv": "-20",
+              "u": "Nm",
+              "cm": "EPS助力电机当前转矩",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_AsscMotCrtTqVld",
+              "sb": 15,
+              "bs": 124,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "EPS助力电机当前转矩有效位",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_CRC3",
+              "sb": 16,
+              "bs": 135,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x01D1",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x106_EPS_Resd3",
+              "sb": 17,
+              "bs": 143,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_RollgCntr3",
+              "sb": 17,
+              "bs": 139,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x106_EPS_DrvrSteerTq",
+              "sb": 18,
+              "bs": 151,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -20,
+              "mn": -20,
+              "mx": 20,
+              "iv": "-20",
+              "u": "Nm",
+              "cm": "驾驶员操控扭矩",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_DrvrSteerTqVld",
+              "sb": 19,
+              "bs": 156,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "驾驶员操控扭矩有效位",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_DrvrSteerTqFlt",
+              "sb": 19,
+              "bs": 155,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -20,
+              "mn": -20,
+              "mx": 20,
+              "iv": "-20",
+              "u": "Nm",
+              "cm": "驾驶员操控扭矩滤波",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_DrvrSteerTqFltVld",
+              "sb": 20,
+              "bs": 160,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "驾驶员操控扭矩滤波有效位",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerDrvrOvrd",
+              "sb": 21,
+              "bs": 175,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not override\n1: Override",
+              "cm": "驾驶员转向干预",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerDrvrOvrdVld",
+              "sb": 21,
+              "bs": 174,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "驾驶员转向干预有效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_HandsOnSts",
+              "sb": 21,
+              "bs": 173,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Hands-on\n1: Hands-off",
+              "cm": "hands On 状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_HandsOnStsVld",
+              "sb": 21,
+              "bs": 172,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "hands On 状态有效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_AdsReqErrorFb",
+              "sb": 21,
+              "bs": 171,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: No error\n1: TqReq Invalid or Timeout\n2: TqReq Out of Limit\n3: AgReq Invalid or Timeout\n4: AgSpdReq Out of Limit\n5: AgReq Out of Limit\n6: E2E 故障\n7: other error",
+              "cm": "EPS监控智驾请求异常反馈",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_AbortFb",
+              "sb": 22,
+              "bs": 183,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: no Abnormal\n1: Other Abnormal\n2: driver interference StrWhl\n3: ADS Request Abnormal\n4: EPS Internal Failure\n5: Reserved\n6: Reserved\n7: Reserved",
+              "cm": "EPS退出反馈",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EpsFltSts",
+              "sb": 22,
+              "bs": 177,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No failure\n1: Slight failure\n2: Critical failure\n3: Fatal failure",
+              "cm": "EPS故障状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_SteerMod",
+              "sb": 23,
+              "bs": 191,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: Initial\n1: Power steer\n2: Angle control\n3: Torque control\n4: Failure\n5: reserved\n6: reserved\n7: reserved",
+              "cm": "EPS工作模式",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_CRC4",
+              "sb": 24,
+              "bs": 199,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x01D9",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x106_EPS_Resd4",
+              "sb": 25,
+              "bs": 207,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_RollgCntr4",
+              "sb": 25,
+              "bs": 203,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x106_EPS_Tq1",
+              "sb": 26,
+              "bs": 215,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -20,
+              "mn": -20,
+              "mx": 20,
+              "iv": "-20",
+              "u": "Nm",
+              "cm": "EPS角度控制模块扭矩",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x106_EPS_Tq2",
+              "sb": 27,
+              "bs": 220,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -20,
+              "mn": -20,
+              "mx": 20,
+              "iv": "-20",
+              "u": "Nm",
+              "cm": "EPS助力模块扭矩",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_122",
+          "id": 290,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x122_EPS_1_CRC",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x002E",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x122_EPS_1_Resd",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x122_EPS_1_RollgCntr",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x122_EPSSts",
+              "sb": 2,
+              "bs": 23,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "1",
+              "vd": "0: OFF\n1: Initial\n2: Active\n3: Defect\n4: Reserved\n5: Reserved\n6: Reserved\n7: Invalid",
+              "cm": "EPS Status",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x122_EPS_EOTLearning_Sts",
+              "sb": 2,
+              "bs": 20,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Learnt\n1: Not Learnt",
+              "cm": "Indicates the status of EPS EOT(end of travel) learning, displayed on the DMC(ICM)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x122_SteeringAngleCalibrationSts",
+              "sb": 2,
+              "bs": 19,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Calibration is fine\n1: No calibration or no initialization",
+              "cm": "EPS Steering Angle Calibration Status",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x122_EPSFailSts",
+              "sb": 2,
+              "bs": 18,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not present\n1: Fail present\n2: Reserved\n3: Reserved",
+              "cm": "EPS Fail Status",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_132",
+          "id": 306,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x132_CRC",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0035",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x132_Resd",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_RollgCntr",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x132_SteeringAngle",
+              "sb": 2,
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "o": -2048,
+              "mn": -2048,
+              "mx": 2047.875,
+              "iv": "2047",
+              "u": "deg",
+              "cm": "方向盘转角角度值",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_SteeringAngleSpeed",
+              "sb": 4,
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "f": 4,
+              "mx": 1016,
+              "iv": "1020",
+              "u": "deg/Sec",
+              "cm": "方向盘转角角速度",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_AngleFailure",
+              "sb": 5,
+              "bs": 47,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: No Failure\n1: Failure",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_BatteryWarning",
+              "sb": 5,
+              "bs": 46,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: No Warning\n1: Warning",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_InternalFailure",
+              "sb": 5,
+              "bs": 45,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: No Failure\n1: Failure",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_CANWarning",
+              "sb": 5,
+              "bs": 44,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: No Warning\n1: Warning",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_SASInit",
+              "sb": 5,
+              "bs": 43,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not Initialized\n1: Initialized",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_SASCalibrated",
+              "sb": 5,
+              "bs": 42,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not calibrated\n1: Calibrated",
+              "cm": "角度传感器标定状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_SteeringAngleVD",
+              "sb": 5,
+              "bs": 41,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "角度有效性",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x132_SteeringAngleSpeedVD",
+              "sb": 5,
+              "bs": 40,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "角速度有效性",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_2CB",
+          "id": 715,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x2CB_EPS_3_CRC",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E_CRC_(SAE_J1850_CRC-8)_for_8_Bytes\nDataID:0x002F",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x2CB_EPS_3_Resd",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E_Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2CB_EPS_3_RollgCntr",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E_Rolling_message_counter(the_maximum_value_of_Alive_counter_is_14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x2CB_TorsionBarTorque",
+              "sb": 2,
+              "bs": 23,
+              "ln": 10,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mx": 10.23,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2CB_TosionBarTorqueValid",
+              "sb": 3,
+              "bs": 29,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2CB_TorsionBarTorqueDir",
+              "sb": 3,
+              "bs": 28,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: postive\n1: negative",
+              "cm": "转向方向\n0左\n1右",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_4D3",
+          "id": 1235,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x4D3_EPS_2_CRC",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:No ASIL requirements.Not configure\nCRC Reserved.",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x4D3_EPS_2_Resd",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4D3_EPS_2_RollgCntr",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x4D3_EPS_Temp_monitor",
+              "sb": 2,
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "o": -70,
+              "mn": -70,
+              "mx": 184,
+              "iv": "184",
+              "u": "℃",
+              "vd": "255: Invalid",
+              "cm": "monitor",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4D3_EPS_AssistanceStyle_Sts",
+              "sb": 3,
+              "bs": 31,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "1",
+              "vd": "0: Unavailable\n1: Light\n2: Midle\n3: Heavy",
+              "cm": "EPS助力工作模式\n此信号自驾同样需要",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4D3_Steer_ReturnRmd_Sts",
+              "sb": 3,
+              "bs": 27,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No_Active\n1: ON\n2: OFF\n3: Reserved",
+              "cm": "Steer  wheeel return Sts(捷途D01）\n方向盘回正状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4D3_Steer_ReturnRmd",
+              "sb": 3,
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No Tip\n1: Tip return finish\n2: Tip return left\n3: Tip return right",
+              "cm": "Steer  wheeel return remind(捷途D01）\n方向盘未回正文字提示(大屏仪表显示）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4D3_MFS_ShakeSts",
+              "sb": 4,
+              "bs": 39,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No_Active\n1: ON\n2: OFF\n3: reserved",
+              "cm": "方向盘震动反馈(捷途D01）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4D3_AssociWithDriverModeSts",
+              "sb": 4,
+              "bs": 37,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not_Active\n1: ON\n2: OFF\n3: reserved",
+              "cm": "转向助力关联驾驶模式开关",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_5F7",
+          "id": 1527,
+          "d": "32",
+          "cy": "500",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x5F7_EPS_TotalFaultNum",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "当前故障总数",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_SupplierNum",
+              "sb": 1,
+              "bs": 15,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "cm": "供应商代码",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FrameIndex",
+              "sb": 1,
+              "bs": 12,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mx": 31,
+              "iv": "0",
+              "cm": "帧序号",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum1",
+              "sb": 2,
+              "bs": 23,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum2",
+              "sb": 3,
+              "bs": 27,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum3",
+              "sb": 5,
+              "bs": 47,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表3",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum4",
+              "sb": 6,
+              "bs": 51,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表4",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum5",
+              "sb": 8,
+              "bs": 71,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表5",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum6",
+              "sb": 9,
+              "bs": 75,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表6",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum7",
+              "sb": 11,
+              "bs": 95,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表7",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum8",
+              "sb": 12,
+              "bs": 99,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表8",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum9",
+              "sb": 14,
+              "bs": 119,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表9",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum10",
+              "sb": 15,
+              "bs": 123,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表10",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum11",
+              "sb": 17,
+              "bs": 143,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表11",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum12",
+              "sb": 18,
+              "bs": 147,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表12",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum13",
+              "sb": 20,
+              "bs": 167,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表13",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum14",
+              "sb": 21,
+              "bs": 171,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表14",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum15",
+              "sb": 23,
+              "bs": 191,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表15",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum16",
+              "sb": 24,
+              "bs": 195,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表16",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum17",
+              "sb": 26,
+              "bs": 215,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表17",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum18",
+              "sb": 27,
+              "bs": 219,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表18",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum19",
+              "sb": 29,
+              "bs": 239,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表19",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x5F7_EPS_FaultNum20",
+              "sb": 30,
+              "bs": 243,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "mx": 4095,
+              "iv": "0",
+              "cm": "故障列表20",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_16A",
+      "c": [
+        {
+          "l": "Msg_16A",
+          "id": 362,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x16A_ADS_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x01CC",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x16A_ADS_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x16A_ADS_SteerAgReq",
+              "sb": 2,
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -650,
+              "mn": -650,
+              "mx": 650,
+              "u": "degree",
+              "cm": "转角控制请求值",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerAgVld",
+              "sb": 4,
+              "bs": 39,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "转角控制有效位",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerAgEna",
+              "sb": 4,
+              "bs": 38,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No request\n1: Ready\n2: Active\n3: Reserved",
+              "cm": "转角控制使能",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerAgMod",
+              "sb": 4,
+              "bs": 36,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: normal\n1: Emergent",
+              "cm": "转角控制模式",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerGainLevel",
+              "sb": 4,
+              "bs": 35,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mx": 1,
+              "cm": "驾驶员干预系数",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerTqReq",
+              "sb": 5,
+              "bs": 43,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "f": 0.02,
+              "o": -80,
+              "mn": -80,
+              "mx": 80,
+              "u": "Nm",
+              "cm": "转矩控制请求值",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerTqVld",
+              "sb": 7,
+              "bs": 62,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "转矩控制有效位",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerTqMod",
+              "sb": 7,
+              "bs": 61,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: normal\n1: Emergent",
+              "cm": "转矩控制模式",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerTqEna",
+              "sb": 7,
+              "bs": 60,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No request\n1: Ready\n2: Active\n3: Reserved",
+              "cm": "转矩控制使能",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_LdwWarningCmd",
+              "sb": 7,
+              "bs": 58,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No request\n1: LevelA（high）\n2: LevelB（low）\n3: Reserved",
+              "cm": "车道偏离振动请求",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_LdwWarningCmdVld",
+              "sb": 7,
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Invalid\n1: Valid",
+              "cm": "车道偏离请求有效位",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_CRC2",
+              "sb": 8,
+              "bs": 71,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x01CA",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x16A_ADS_Resd2",
+              "sb": 9,
+              "bs": 79,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_RollgCntr2",
+              "sb": 9,
+              "bs": 75,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x16A_ADS_ACCSts",
+              "sb": 10,
+              "bs": 87,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "vd": "0: Off\n1: Passive\n2: Standby\n3: Active_Control\n4: Brake Only\n5: Override\n6: Stand Wait\n7: failure\n8: Stand Active\n9: reserved\n10: reserved\n11: reserved\n12: reserved\n13: reserved\n14: reserved\n15: reserved",
+              "cm": "ACC状态信号",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_AEBStatus",
+              "sb": 10,
+              "bs": 83,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: OFF\n1: ON\n2: Failure\n3: available\n4: active\n5: pre-fill\n6: blindness",
+              "cm": "AEB状态信号\n以下为平台化库数据内容\n0x0:OFF\n0x1:ON\n0x2:Failure\n0x3:no_active(0x3:available捷途使用)\n0x4:active\n0x5:pre-fill\n0x6 blindness(捷途使用)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x16A_ADS_SteerTqGainLevel",
+              "sb": 11,
+              "bs": 95,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mx": 1,
+              "cm": "驾驶员干预系数2（扭矩）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1BC",
+      "c": [
+        {
+          "l": "Msg_1BC",
+          "id": 444,
+          "d": "24",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1BC_ADS_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0006",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x1BC_ADS_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BC_ADS_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1BC_ADS_3_SteerParkAgReq",
+              "sb": 2,
+              "bs": 21,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "o": -780,
+              "mn": -780,
+              "mx": 780,
+              "u": "degree",
+              "cm": "转向转角请求",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BC_ADS_3_SteerParkAgEna",
+              "sb": 4,
+              "bs": 39,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No request\n1: Ready\n2: Active\n3: Reserved",
+              "cm": "转向转角控制使能",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BC_ADS_3_SteerParkAgVld",
+              "sb": 4,
+              "bs": 37,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Initializing\n1: Valid\n2: Invalid\n3: Reserved",
+              "cm": "转向转角请求有效位",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BC_ADS_3_ParkFcnMode",
+              "sb": 5,
+              "bs": 41,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: No function\n1: APA\n2: RPA\n3: HPA",
+              "cm": "ADS功能模式请求",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BC_ADS_CRC2",
+              "sb": 8,
+              "bs": 71,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0007",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x1BC_ADS_Resd2",
+              "sb": 9,
+              "bs": 79,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1BC_ADS_RollgCntr2",
+              "sb": 9,
+              "bs": 75,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1BC_ADS_3_ADSParkHealthSts",
+              "sb": 10,
+              "bs": 84,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: fail present\n1: not present\n2: reserved\n3: reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1F2",
+      "c": [
+        {
+          "l": "Msg_1F2",
+          "id": 498,
+          "d": "24",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1F2_APA_ADSParkHealthSts",
+              "sb": 7,
+              "bs": 61,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: fail present\n1: not present\n2: reserved\n3: reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_23B",
+      "c": [
+        {
+          "l": "Msg_23B",
+          "id": 571,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x23B_DirectionIndRight",
+              "sb": 5,
+              "bs": 44,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Close\n1: Open",
+              "cm": "当右转向灯闪烁时一直发1，转向灯熄灭时一直发0\n右转向灯实际状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x23B_DirectionIndLeft",
+              "sb": 5,
+              "bs": 43,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Close\n1: Open",
+              "cm": "当左转向灯闪烁时一直发1，转向灯熄灭时一直发0\n左转向灯实际状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_24B",
+      "c": [
+        {
+          "l": "Msg_24B",
+          "id": 587,
+          "d": "48",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x24B_ONEBOX_4_CRC1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x0051",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x24B_ONEBOX_4_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24B_ONEBOX_4_RollgCntr1",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_ONEBOX_4_LHFWheelSpeedRPM",
+              "sb": 2,
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 4095.875,
+              "u": "rpm",
+              "cm": "left front Wheel Speed(the unit is RPM)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24B_ONEBOX_4_RHFWheelSpeedRPM",
+              "sb": 4,
+              "bs": 39,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 4095.875,
+              "u": "rpm",
+              "cm": "right front  Wheel Speed(the unit is RPM)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24B_LHRWheelSpeedRPM",
+              "sb": 6,
+              "bs": 55,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 4095.875,
+              "u": "rpm",
+              "cm": "Left Rear Wheel Speed(the unit is RPM)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24B_RHRWheelSpeedRPM",
+              "sb": 10,
+              "bs": 87,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mx": 4095.875,
+              "u": "rpm",
+              "cm": "right Rear  Wheel Speed(the unit is RPM)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24B_LHRPulseCounter",
+              "sb": 12,
+              "bs": 103,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "mx": 8191,
+              "iv": "0",
+              "u": "pulse",
+              "cm": "left rear wheel Pulse Counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_LHRPulseCounterFailSts",
+              "sb": 13,
+              "bs": 106,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Fail Not Present\n1: Fail Present",
+              "cm": "left rear wheel Pulse Counter Fail Status",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_RHRPulseCounter",
+              "sb": 14,
+              "bs": 119,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "mx": 8191,
+              "iv": "0",
+              "u": "pulse",
+              "cm": "right rear wheel Pulse Counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_RHRPulseCounterFailSts",
+              "sb": 15,
+              "bs": 122,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Fail Not Present\n1: Fail Present",
+              "cm": "right rear wheel Pulse Counter FailSts",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_RHFPulseCounter",
+              "sb": 18,
+              "bs": 151,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "mx": 8191,
+              "iv": "0",
+              "u": "pulse",
+              "cm": "right front wheel Pulse Counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_RHFPulseCounterFailSts",
+              "sb": 19,
+              "bs": 154,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Fail Not Present\n1: Fail Present",
+              "cm": "right front wheel Pulse Counter FailSts",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_LHFPulseCounter",
+              "sb": 20,
+              "bs": 167,
+              "ln": 13,
+              "bo": "Motorola MSB",
+              "mx": 8191,
+              "iv": "0",
+              "u": "pulse",
+              "cm": "left front wheel Pulse Counter",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24B_LHFPulseCounterFailSts",
+              "sb": 21,
+              "bs": 170,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Fail Not Present\n1: Fail Present",
+              "cm": "left front wheel Pulse Counter FailSts",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_3FE",
+      "c": [
+        {
+          "l": "Msg_3FE",
+          "id": 1022,
+          "d": "64",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x3FE_FLZCU_CarMode",
+              "sb": 2,
+              "bs": 23,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: Normal Mode\n1: Factory Mode\n2: Transport Mode\n3: Exhibition Mode\n4: Reserved\n5: Reserved\n6: Reserved\n7: Not active",
+              "cm": "整车模式",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_40B",
+      "c": [
+        {
+          "l": "Msg_40B",
+          "id": 1035,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x40B_VCC_1_DriveMode",
+              "sb": 4,
+              "bs": 36,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mx": 31,
+              "iv": "0",
+              "vd": "0: Not Active\n1: ECO\n2: Normal\n3: Sport\n4: Snow\n5: Off Road\n6: Individual\n7: Energy-saving hybrid\n8: Sand\n9: AI\n10: Wade\n11: Rock\n12: Mud\n13: Smart",
+              "cm": "驾驶模式状态信号/原股份信号\n（此信号为驾驶模式真实状态反馈）",
+              "iv2": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_422",
+      "c": [
+        {
+          "l": "Msg_422",
+          "id": 1058,
+          "d": "16",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x422_EPS_Assistance_Style",
+              "sb": 3,
+              "bs": 24,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: NORequest\n1: Light\n2: Middle\n3: Heavy\n4: reserved\n5: reserved\n6: reserved\n7: Invalid",
+              "cm": "拆帧转发至CH CAN 0x4D5(bit 43)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_433",
+      "c": [
+        {
+          "l": "Msg_433",
+          "id": 1075,
+          "d": "8",
+          "mt": "CANFD_Standard",
+          "st": "Event",
+          "c": [
+            {
+              "l": "x433_ConfigurationMessageTrg",
+              "sb": 2,
+              "bs": 23,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: not active\n1: active",
+              "sst": "Event",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_46F",
+      "c": [
+        {
+          "l": "Msg_46F",
+          "id": 1135,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x46F_EngineSts",
+              "sb": 3,
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not Run\n1: Run",
+              "cm": "Engine Status 发动机状态\nIf this value is 1, indicate that  the engine is started successfully.",
+              "iv2": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_470",
+      "c": [
+        {
+          "l": "Msg_470",
+          "id": 1136,
+          "d": "32",
+          "mt": "CANFD_Standard",
+          "st": "Event",
+          "c": [
+            {
+              "l": "x470_VCC_3_CRC",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 32 Bytes\nDataID:0x0070",
+              "sst": "Event",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x470_VCC_3_Resd1",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Event",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x470_VCC_3_RollgCntr",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Event",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x470_VCC_3_SN",
+              "sb": 2,
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mn": 1,
+              "mx": 32,
+              "iv": "1",
+              "cm": "Message ID信号值.当VCC成功被写入配置信息时，VCC以100ms的周期滚动发送报文，Message ID信号值从1到32循环发送。",
+              "sst": "Event",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_4B4",
+      "c": [
+        {
+          "l": "Msg_4B4",
+          "id": 1204,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x4B4_VCU_1_G_AcceleratorPosRaw",
+              "sb": 3,
+              "bs": 29,
+              "ln": 10,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "mx": 100,
+              "u": "%",
+              "cm": "真实油门开度\nRaw position of the accelerator pedal (unfiltered). Represents always raw pedal position without any other influcence only mandatory to calculated gradient acceleration pedal.",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4B4_VCU_1_G_PTReady",
+              "sb": 4,
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: LmpOFF\n1: LmpON",
+              "cm": "PT Ready indication",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4B4_VCU_1_G_PRNDGearAct",
+              "sb": 7,
+              "bs": 62,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: Init\n1: P\n2: R\n3: N\n4: D\n5: Reserved\n6: Reserved\n7: Reserved",
+              "cm": "Gear indication",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_4B9",
+      "c": [
+        {
+          "l": "Msg_4B9",
+          "id": 1209,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x4B9_CRC",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "cm": "Profile1A:E2E CRC (SAE J1850 CRC-8) for 8 Bytes\nDataID:0x005D",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            },
+            {
+              "l": "x4B9_Resd",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "cm": "Profile1A:E2E Reserved",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4B9_RollgCntr",
+              "sb": 1,
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 14,
+              "iv": "0",
+              "cm": "Profile1A:E2E Rolling message counter(the maximum value of Alive counter is 14)",
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x4B9_BrakePedalStsValidData",
+              "sb": 3,
+              "bs": 31,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Valid\n1: Not Valid",
+              "cm": "制动踏板状态有效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4B9_GasPedalPosInvalidData",
+              "sb": 3,
+              "bs": 24,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Valid\n1: Invalid",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4B9_HVReady",
+              "sb": 4,
+              "bs": 38,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: LmpOFF\n1: LmpON",
+              "cm": "HV Ready",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4B9_BrakePedalSts",
+              "sb": 4,
+              "bs": 36,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "0: Not applied\n1: Applied",
+              "cm": "制动踏板状态",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x4B9_GasPedalPosition",
+              "sb": 6,
+              "bs": 49,
+              "ln": 10,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "mx": 100,
+              "u": "%",
+              "vd": "1023: Invalid",
+              "cm": "Driver/Cruise control\nThis signal including compositive informations which are actual gas pedal position and dummy Cruise control gas pedal position",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_4D5",
+      "c": [
+        {
+          "l": "Msg_4D5",
+          "id": 1237,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "st": "CE",
+          "c": [
+            {
+              "l": "x4D5_Set_CSTFunctionSts",
+              "sb": 5,
+              "bs": 47,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not active\n1: CST ON\n2: CST OFF\n3: Reserved",
+              "cm": "CST:Comfortable stop\nTo switch on or off CST function.",
+              "sst": "CE",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_4E4",
+      "c": [
+        {
+          "l": "Msg_4E4",
+          "id": 1252,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x4E4_TotalOdometer_km",
+              "sb": 2,
+              "bs": 23,
+              "ln": 24,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "mx": 999999.9,
+              "u": "km",
+              "vd": "16777215: Invalid",
+              "cm": "GB18285-2018新增OBD输出检查要求车辆累积行驶里程信号。",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_510",
+      "c": [
+        {
+          "l": "Msg_510",
+          "id": 1296,
+          "d": "8",
+          "cy": "500",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x510_CurrentTimeYear",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "o": 2000,
+              "mn": 2000,
+              "mx": 2255,
+              "iv": "2000",
+              "cm": "时间（年)",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x510_CurrentTimeMonth",
+              "sb": 1,
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mn": 1,
+              "mx": 12,
+              "iv": "1",
+              "cm": "时间（月）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x510_CurrentTimeDay",
+              "sb": 2,
+              "bs": 23,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mn": 1,
+              "mx": 31,
+              "iv": "1",
+              "cm": "时间（日）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x510_CurrentTimeHour",
+              "sb": 3,
+              "bs": 31,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mx": 23,
+              "iv": "0",
+              "cm": "时间（时）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x510_CurrentTimeMinute",
+              "sb": 4,
+              "bs": 39,
+              "ln": 6,
+              "bo": "Motorola MSB",
+              "mx": 59,
+              "iv": "0",
+              "cm": "时间（分）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x510_CurrentTimeSecond",
+              "sb": 5,
+              "bs": 47,
+              "ln": 6,
+              "bo": "Motorola MSB",
+              "mx": 59,
+              "iv": "0",
+              "cm": "时间（秒）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_522",
+      "c": [
+        {
+          "l": "Msg_522",
+          "id": 1314,
+          "d": "64",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x522_HCU_DriveMode_JT",
+              "sb": 18,
+              "bs": 151,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mx": 31,
+              "iv": "0",
+              "vd": "0: ECO\n1: NORMAL\n2: SPORT\n3: SNOW\n4: MUD\n5: OffRoad\n6: SAND\n7: ROCK\n8: EXPERT\n9: X\n10: WADE\n11: UTURN\n12: DRIFT\n13: TOW\n14: OffroadRace\n15: Carsickness\n16: CleverEngy",
+              "cm": "驾驶模式反馈\n0x0:经济\n0x1:标准\n0x2:运动\n0x3:雪/草地\n0x4:泥地\n0x5:越野\n0x6:沙地\n0x7:岩石\n0x8:专家\n0x9:智能\n0xA:涉水\n0xB:极限掉头\n0xC:漂移\n0xD:拖挂\n0xE:越野竞速\n0xF:晕车舒缓\n0x10:智慧能量管理\n0x11~0x1F：预留",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_537",
+      "c": [
+        {
+          "l": "Msg_537",
+          "id": 1335,
+          "d": "32",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "st": "CE",
+          "c": [
+            {
+              "l": "x537_DistractionLevel",
+              "sb": 2,
+              "bs": 22,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "0: Not Active\n1: DISTRACTION_LEVEL_LIGHT\n2: DISTRACTION_LEVEL_MEDIUM\n3: DISTRACTION_LEVEL_HEAVY",
+              "cm": "方向盘震动等级调节",
+              "sst": "CE",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x537_ICC_SET_MFSShake",
+              "sb": 2,
+              "bs": 19,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not Active\n1: ON\n2: OFF\n3: reserved",
+              "cm": "方向盘震动开关",
+              "sst": "CE",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x537_SteerReturnRmdSts",
+              "sb": 2,
+              "bs": 17,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not Active\n1: ON\n2: OFF\n3: reserved",
+              "cm": "方向盘回正开关",
+              "sst": "CE",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x537_AsociWithDrvModSts",
+              "sb": 3,
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "0: Not_Active\n1: ON\n2: OFF\n3: reserved",
+              "cm": "EPS与驾驶模式关联开关",
+              "sst": "CE",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "",
+    "onValue": "",
+    "offValue": ""
+  },
+  "spd": "",
+  "ch": 1,
+  "relay": 0,
+  "dtc": [],
+  "oem": "BYD",
+  "_meta": {
+    "config_name": "T1V",
+    "digest": "af1cf27ce93016b6d38c62d111e096c714175f25"
+  }
+}

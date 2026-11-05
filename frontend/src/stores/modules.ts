@@ -163,6 +163,9 @@ export const useModuleStore = defineStore('modules', () => {
   const objDtcRaw = ref<any>(null)
   // DTC 数据（来自 CDD 解析，三包模块专用）
   const objCddDtcRaw = ref<any>(null)
+  // DTC_Configuration 的 Fault_array 条目（来自后端 /can/fault-array）
+  //   { index, Fault_Type, ID, Fault, Value, time, DTC }，index 与生成的 CAPL 下标一致
+  const objFaultArray = ref<any[]>([])
   // A2L Qualifier（用于 sysvar 拖拽转换）
   const objA2lQualifier = ref('')
   // CAN 模块电机类型：无刷（默认，解析 .a2l）/ 有刷（解析 .mapxml）
@@ -335,6 +338,10 @@ function normalizeA2lVars(list: any): A2lVar[] {
   /** 设置 CDD DTC 数据 */
   function setCddDtc(data: any) {
     objCddDtcRaw.value = data
+  }
+  /** 设置 DTC_Configuration 的 Fault_array（对象浏览器拖拽用） */
+  function setFaultArray(list: any[]) {
+    objFaultArray.value = Array.isArray(list) ? list : []
   }
   /** 设置 A2L 变量数据
    *
@@ -638,6 +645,7 @@ function normalizeA2lVars(list: any): A2lVar[] {
     objDbcEnvVars,
     objDtcRaw,
     objCddDtcRaw,
+    objFaultArray,
     objA2lQualifier,
     canMotorMode,
     ccpVarTypes,
@@ -656,6 +664,7 @@ function normalizeA2lVars(list: any): A2lVar[] {
     setUploadDbc,
     setDtc,
     setCddDtc,
+    setFaultArray,
     setA2lVars,
     clearUploadA2lVars,
     setA2lQualifier,

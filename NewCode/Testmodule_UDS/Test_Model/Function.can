@@ -1152,206 +1152,6 @@ int _Check_22DID_Mixed_DIDs(dword msgID,dword LenEx,byte Tx_Data[],char Rx_Data[
 
 /*----------------------------------------------------------------------------------------*/
 
-/*
-  判断是否为CANFD报文,修改对应的发送长度
-  用于NRC13遍历，CANFD报文返回0x3E，CAN报文返回7
-*/
-dword _Check_CANFD_Flage()
-{
-  dword data = 0;
-  if (CANFD_Flage == 0)
-  {
-    _WriteEx_and_Report("","当前为CAN报文数据");
-    data = 0x07;   
-  }
-  if (CANFD_Flage == 1)
-  {
-    _WriteEx_and_Report("","当前为CANFD报文数据");
-    data = 0x3E;   
-  }
-  return data;
-}
-_Check_DID_2E(dword ID,byte Session)
-{
-  char str1[2000];
-  byte Read_Data[2000];
-  int Read_Data_Len;
-  int i,m,Flage_Read,Fun_Temp,UnlockFlage;
-  snprintf(str1,elCount(str1),"%s","");
-  snprintf(str1,elCount(str1),"%s","获取第一次写入数据: ");
-  if(Support_Read_2E_DID == 1)
-  {
-    for(i=0;i<DID_2E_SendData_1_Len;i++)
-    {
-      snprintf(str1,elCount(str1),"%s%02X",str1,DID_2E_SendData_1[i]);
-      snprintf(str1,elCount(str1),"%s%s",str1,"  ");
-    }
-    _WriteEx_and_Report("",str1);
-    Fun_Temp = ((Read_2E_DID[1]<<8)|Read_2E_DID[2]);
-    UnlockFlage = _Check_Serve(0x22,Fun_Temp,5);
-    if(UnlockFlage == 1)
-      _unlockECU();
-    _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-    _TestResult(SendData,phyreq_ID,"",-1);
-    {
-      Flage_Read = 0;
-      if(diagGetLastResponseCode(SendData) == -1)
-      {
-        Read_Data_Len =  DiagGetRespPrimitiveSize(SendData);
-        Flage_Read = 1;
-        for(m=0;m<Read_Data_Len;m++)
-          Read_Data[m] = DiagGetRespPrimitiveByte(SendData,m);
-      }
-    }
-    if(UnlockFlage != 1)
-      _unlockECU();
-    if(DID_2E_SendData_1_Response == -1)
-    {
-      _Send_Diag_(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
-      _TestResult(SendData,ID,"",-1);
-      testWaitForTimeout(500);
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
-      _WriteEx_and_Report("","第一次写入判断完成");
-      _Power_Down();
-      testWaitForTimeout(2000);
-      _Power_Up();
-      testWaitForTimeout(3000);
-      _SetSession(exsession);
-      testWaitForTimeout(200);
-      if(UnlockFlage == 1)
-        _unlockECU();
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
-      _WriteEx_and_Report("","正常上下电读取判断完成");
-      if(UnlockFlage == 1)
-        _Set_11_Restoration(0);
-      else
-        _Set_11_Restoration();
-      if(UnlockFlage == 1)
-        _unlockECU();
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
-      _WriteEx_and_Report("","11复位读取判断完成");
-      _K30_OFF();
-      testWaitForTimeout(2000);
-      _K30_ON();
-      testWaitForTimeout(3000);
-      if(UnlockFlage == 1)
-        _unlockECU();
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
-      _WriteEx_and_Report("","异常复位读取判断完成");
-    }
-    else
-    {
-      _WriteEx_and_Report("","期望结果不为正响应,验证异常写入后值不被改变");
-      _Send_Diag_(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
-      _TestResult(SendData,phyreq_ID,"",DID_2E_SendData_1_Response);
-      if(Flage_Read == 0)
-        _WriteEx_and_Report("","第一次读取时未获取到正确值,不再测试后续部分");
-      else
-      {
-        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
-        _Power_Down();
-        testWaitForTimeout(2000);
-        _Power_Up();
-        testWaitForTimeout(3000);
-        _SetSession(exsession);
-        testWaitForTimeout(200);
-        if(UnlockFlage == 1)
-          _unlockECU();
-        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
-        _WriteEx_and_Report("","正常上下电读取判断完成");
-        if(UnlockFlage == 1)
-          _Set_11_Restoration(0);
-        else
-          _Set_11_Restoration();
-
-        if(UnlockFlage == 1)
-          _unlockECU();
-        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
-        _WriteEx_and_Report("","11复位读取判断完成");
-        _K30_OFF();
-        testWaitForTimeout(2000);
-        _K30_ON();
-        testWaitForTimeout(3000);
-        if(UnlockFlage == 1)
-          _unlockECU();
-        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
-        _WriteEx_and_Report("","异常复位读取判断完成");
-      }
-    }
-    if(UnlockFlage != 1)
-      _unlockECU();
-    if(DID_2E_SendData_1_Response == -1 && DID_2E_SendData_2_Response == -1)
-    {
-      _Clear_Config(DID_2E_SendData_1,Session);
-      _Send_Diag_(DID_2E_SendData_2_Len,ID,DID_2E_SendData_2);
-      _TestResult(SendData,ID,"",-1);
-      testWaitForTimeout(500);
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
-      _WriteEx_and_Report("","第二次写入判断完成");
-    }
-    else if(DID_2E_SendData_1_Response != -1 && DID_2E_SendData_2_Response == -1)
-    {
-      _WriteEx_and_Report("","第一次写入值未成功,验证第二次写入");
-      _Clear_Config(DID_2E_SendData_1,Session);
-      _Send_Diag_(DID_2E_SendData_2_Len,ID,DID_2E_SendData_2);
-      _TestResult(SendData,ID,"",-1);
-      testWaitForTimeout(500);
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
-      _WriteEx_and_Report("","第二次写入判断完成");
-      _Power_Down();
-      testWaitForTimeout(2000);
-      _Power_Up();
-      testWaitForTimeout(3000);
-      if(UnlockFlage == 1)
-        _unlockECU();
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
-      _WriteEx_and_Report("","正常上下电读取判断完成");
-      if(UnlockFlage == 1)
-        _Set_11_Restoration(0);
-      else
-        _Set_11_Restoration();
-
-      if(UnlockFlage == 1)
-        _unlockECU();
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
-      _WriteEx_and_Report("","11复位读取判断完成");
-      _K30_OFF();
-      testWaitForTimeout(2000);
-      _K30_ON();
-      testWaitForTimeout(3000);
-      if(UnlockFlage == 1)
-        _unlockECU();
-      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
-      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
-      _WriteEx_and_Report("","异常复位读取判断完成");
-    }
-    else if(DID_2E_SendData_2_Response != -1)
-    {
-      _Clear_Config(DID_2E_SendData_1,Session);
-      _Send_Diag_(DID_2E_SendData_2_Len,ID,DID_2E_SendData_2);
-      _TestResult(SendData,ID,"",DID_2E_SendData_2_Response);
-    }
-  }
-  else
-  {
-    _WriteEx_and_Report("","不支持读取,仅验证写入后正响应");
-    _unlockECU();
-    _Send_Diag_(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
-    _TestResult(SendData,ID,"",-1);
-  }
-}
 
 /// <DTC_Diag>
 /*
@@ -1915,6 +1715,207 @@ _TestEnableMsg(char str[])
   }
 }
 /*-----------------------------------------------*/
+
+/*
+  判断是否为CANFD报文,修改对应的发送长度
+  用于NRC13遍历，CANFD报文返回0x3E，CAN报文返回7
+*/
+dword _Check_CANFD_Flage()
+{
+  dword data = 0;
+  if (CANFD_Flage == 0)
+  {
+    _WriteEx_and_Report("","当前为CAN报文数据");
+    data = 0x07;   
+  }
+  if (CANFD_Flage == 1)
+  {
+    _WriteEx_and_Report("","当前为CANFD报文数据");
+    data = 0x3E;   
+  }
+  return data;
+}
+_Check_DID_2E(dword ID,byte Session)
+{
+  char str1[2000];
+  byte Read_Data[2000];
+  int Read_Data_Len;
+  int i,m,Flage_Read,Fun_Temp,UnlockFlage;
+  snprintf(str1,elCount(str1),"%s","");
+  snprintf(str1,elCount(str1),"%s","获取第一次写入数据: ");
+  if(Support_Read_2E_DID == 1)
+  {
+    for(i=0;i<DID_2E_SendData_1_Len;i++)
+    {
+      snprintf(str1,elCount(str1),"%s%02X",str1,DID_2E_SendData_1[i]);
+      snprintf(str1,elCount(str1),"%s%s",str1,"  ");
+    }
+    _WriteEx_and_Report("",str1);
+    Fun_Temp = ((Read_2E_DID[1]<<8)|Read_2E_DID[2]);
+    UnlockFlage = _Check_Serve(0x22,Fun_Temp,5);
+    if(UnlockFlage == 1)
+      _unlockECU();
+    _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+    _TestResult(SendData,phyreq_ID,"",-1);
+    {
+      Flage_Read = 0;
+      if(diagGetLastResponseCode(SendData) == -1)
+      {
+        Read_Data_Len =  DiagGetRespPrimitiveSize(SendData);
+        Flage_Read = 1;
+        for(m=0;m<Read_Data_Len;m++)
+          Read_Data[m] = DiagGetRespPrimitiveByte(SendData,m);
+      }
+    }
+    if(UnlockFlage != 1)
+      _unlockECU();
+    if(DID_2E_SendData_1_Response == -1)
+    {
+      _Send_Diag_(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+      _TestResult(SendData,ID,"",-1);
+      testWaitForTimeout(500);
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
+      _WriteEx_and_Report("","第一次写入判断完成");
+      _Power_Down();
+      testWaitForTimeout(2000);
+      _Power_Up();
+      testWaitForTimeout(3000);
+      _SetSession(exsession);
+      testWaitForTimeout(200);
+      if(UnlockFlage == 1)
+        _unlockECU();
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
+      _WriteEx_and_Report("","正常上下电读取判断完成");
+      if(UnlockFlage == 1)
+        _Set_11_Restoration(0);
+      else
+        _Set_11_Restoration();
+      if(UnlockFlage == 1)
+        _unlockECU();
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
+      _WriteEx_and_Report("","11复位读取判断完成");
+      _K30_OFF();
+      testWaitForTimeout(2000);
+      _K30_ON();
+      testWaitForTimeout(3000);
+      if(UnlockFlage == 1)
+        _unlockECU();
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
+      _WriteEx_and_Report("","异常复位读取判断完成");
+    }
+    else
+    {
+      _WriteEx_and_Report("","期望结果不为正响应,验证异常写入后值不被改变");
+      _Send_Diag_(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+      _TestResult(SendData,phyreq_ID,"",DID_2E_SendData_1_Response);
+      if(Flage_Read == 0)
+        _WriteEx_and_Report("","第一次读取时未获取到正确值,不再测试后续部分");
+      else
+      {
+        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
+        _Power_Down();
+        testWaitForTimeout(2000);
+        _Power_Up();
+        testWaitForTimeout(3000);
+        _SetSession(exsession);
+        testWaitForTimeout(200);
+        if(UnlockFlage == 1)
+          _unlockECU();
+        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
+        _WriteEx_and_Report("","正常上下电读取判断完成");
+        if(UnlockFlage == 1)
+          _Set_11_Restoration(0);
+        else
+          _Set_11_Restoration();
+
+        if(UnlockFlage == 1)
+          _unlockECU();
+        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
+        _WriteEx_and_Report("","11复位读取判断完成");
+        _K30_OFF();
+        testWaitForTimeout(2000);
+        _K30_ON();
+        testWaitForTimeout(3000);
+        if(UnlockFlage == 1)
+          _unlockECU();
+        _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+        _Check_Response_2E(SendData,Read_Data_Len,Read_Data);
+        _WriteEx_and_Report("","异常复位读取判断完成");
+      }
+    }
+    if(UnlockFlage != 1)
+      _unlockECU();
+    if(DID_2E_SendData_1_Response == -1 && DID_2E_SendData_2_Response == -1)
+    {
+      _Clear_Config(DID_2E_SendData_1,Session);
+      _Send_Diag_(DID_2E_SendData_2_Len,ID,DID_2E_SendData_2);
+      _TestResult(SendData,ID,"",-1);
+      testWaitForTimeout(500);
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
+      _WriteEx_and_Report("","第二次写入判断完成");
+    }
+    else if(DID_2E_SendData_1_Response != -1 && DID_2E_SendData_2_Response == -1)
+    {
+      _WriteEx_and_Report("","第一次写入值未成功,验证第二次写入");
+      _Clear_Config(DID_2E_SendData_1,Session);
+      _Send_Diag_(DID_2E_SendData_2_Len,ID,DID_2E_SendData_2);
+      _TestResult(SendData,ID,"",-1);
+      testWaitForTimeout(500);
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
+      _WriteEx_and_Report("","第二次写入判断完成");
+      _Power_Down();
+      testWaitForTimeout(2000);
+      _Power_Up();
+      testWaitForTimeout(3000);
+      if(UnlockFlage == 1)
+        _unlockECU();
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
+      _WriteEx_and_Report("","正常上下电读取判断完成");
+      if(UnlockFlage == 1)
+        _Set_11_Restoration(0);
+      else
+        _Set_11_Restoration();
+
+      if(UnlockFlage == 1)
+        _unlockECU();
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
+      _WriteEx_and_Report("","11复位读取判断完成");
+      _K30_OFF();
+      testWaitForTimeout(2000);
+      _K30_ON();
+      testWaitForTimeout(3000);
+      if(UnlockFlage == 1)
+        _unlockECU();
+      _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID);
+      _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
+      _WriteEx_and_Report("","异常复位读取判断完成");
+    }
+    else if(DID_2E_SendData_2_Response != -1)
+    {
+      _Clear_Config(DID_2E_SendData_1,Session);
+      _Send_Diag_(DID_2E_SendData_2_Len,ID,DID_2E_SendData_2);
+      _TestResult(SendData,ID,"",DID_2E_SendData_2_Response);
+    }
+  }
+  else
+  {
+    _WriteEx_and_Report("","不支持读取,仅验证写入后正响应");
+    _unlockECU();
+    _Send_Diag_(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
+    _TestResult(SendData,ID,"",-1);
+  }
+}
 
 _Send_Diag(int size,dword ID,byte Send_Data[])
 {
@@ -7306,6 +7307,7 @@ _Check_1903(diagRequest* Diag)
       testStepPass("","所有快照ID均与预期一致");
   }
 }
+
 //根据测试通过条件，在报告上标记结果，功能寻址不响应NRC11、12、13、31、7E、7F
 int _TestResult(diagRequest* obj,dword  msgID,char stepid[],int passcondition)
 {
@@ -7926,7 +7928,7 @@ int _Set_Battery(float Value)
   diagStartTesterPresent(Cdd_Name);
   snprintf(str,elCount(str),"%s","");
   snprintf(str,elCount(str),"设置电压为 %.2f V",Value);
-  if(Value>35)
+  if(Value>35 && Set_Battery_RS232 == 1)
   {
     testStep("Battery","设置电压值较大,后续测试时间较长会损坏控制器,建议人为测试精确时间");
   }
@@ -12657,6 +12659,24 @@ int _Check_DID_Pos(dword DID)
     if(DID_Function[i].DID == DID)
     {
       toUpper(DID_Function[i].Sig_Type,DID_Function[i].Sig_Type,strlen(DID_Function[i].Sig_Type));//大写数据类型防止后续判断时不匹配
+      Return_Value = i;
+      break;
+    }
+  }
+  return Return_Value;
+}
+int _Check_DID_Pos(char Str[])
+{
+  int Return_Value;
+  int i;
+  char StrInput[100],StrDID[100];
+  snprintf(StrInput,elCount(StrInput),"");  toUpper(StrInput,Str,strlen(Str));
+  Return_Value = -1;
+  for(i=0;i<DID_Function_Count;i++)
+  {
+    snprintf(StrDID,elCount(StrDID),"");  toUpper(StrDID,DID_Function[i].Sig_Step,strlen(DID_Function[i].Sig_Step));
+    if(strncmp(StrInput,StrDID,strlen(StrDID)) == 0)
+    {
       Return_Value = i;
       break;
     }

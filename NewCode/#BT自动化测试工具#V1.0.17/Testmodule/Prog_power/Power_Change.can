@@ -44,16 +44,16 @@ InitSerialPort(sysvarInt *port)
 
   // open the serial port (comes up with Windows defaults)
   if(Rs232Open(sysGetVariableInt(port))==1)
-    writeLineEx(0,1, "port %d ³É¹¦´ò¿ª.", sysGetVariableInt(port));    
+    writeLineEx(0,1, "port %d æˆåŠŸæ‰“å¼€.", sysGetVariableInt(port));    
   else
-    writeLineEx(0,3,"port %d ´ò¿ªÊ§°Ü.", sysGetVariableInt(port));       
+    writeLineEx(0,3,"port %d æ‰“å¼€å¤±è´¥.", sysGetVariableInt(port));       
 
   // configure the serial port
   // - just take the panel content
   if(Rs232Configure(sysGetVariableInt(port),9600,8,1,0)==1)
-    writeLineEx(0,1, " port %d ³É¹¦³õÊ¼»¯.", sysGetVariableInt(port));    
+    writeLineEx(0,1, " port %d æˆåŠŸåˆå§‹åŒ–.", sysGetVariableInt(port));    
   else
-    writeLineEx(0,3," port %d ³õÊ¼»¯Ê§°Ü.", sysGetVariableInt(port));    
+    writeLineEx(0,3," port %d åˆå§‹åŒ–å¤±è´¥.", sysGetVariableInt(port));    
   // port, handshake, xonLim, xoffLim, xonChar, xoffChar, writeTimeout
   // without last timeout parameter: use default timeout
   // for transmission of small amounts of data one may not need to use handshake ! 
@@ -135,9 +135,9 @@ on sysvar sysvar::Prog_power::K30send
     buffer[aDLC]=0X0A;
     if(0==Rs232Send(sysGetVariableInt(sysvar::Prog_power::K30Port), buffer, aDLC+1))
     {
-      writeEx(0,3,"port %d ·¢ËÍÊı¾İÊ§°Ü.", sysGetVariableInt(sysvar::Prog_power::K30Port));
+      writeEx(0,3,"port %d å‘é€æ•°æ®å¤±è´¥.", sysGetVariableInt(sysvar::Prog_power::K30Port));
       return;
-    } else {/*writeEx(-3,0,"port %d ·¢ËÍÊı¾İ.");*/}
+    } else {/*writeEx(-3,0,"port %d å‘é€æ•°æ®.");*/}
    }  
 }
 on sysvar sysvar::Prog_power::K15send
@@ -152,9 +152,9 @@ on sysvar sysvar::Prog_power::K15send
     buffer[aDLC]=0X0A;
     if(0==Rs232Send(sysGetVariableInt(sysvar::Prog_power::K30Port), buffer, aDLC+1))
     {
-      writeEx(0,3,"port %d ·¢ËÍÊı¾İÊ§°Ü.", sysGetVariableInt(sysvar::Prog_power::K15Port));
+      writeEx(0,3,"port %d å‘é€æ•°æ®å¤±è´¥.", sysGetVariableInt(sysvar::Prog_power::K15Port));
       return;
-    } else {/*writeEx(-3,0,"port %d ·¢ËÍÊı¾İ.");*/}
+    } else {/*writeEx(-3,0,"port %d å‘é€æ•°æ®.");*/}
    }  
 }
  SendData(sysvarInt *port,char str[])
@@ -176,9 +176,9 @@ on sysvar sysvar::Prog_power::K15send
     sysSetVariableData(sysvar::Prog_power::SendData,buffer,elCount(buffer));
   if(0==Rs232Send(sysGetVariableInt(port), buffer, aDLC+1))
     return;
-    /*writeEx(0,3,"port %d ·¢ËÍÊı¾İÊ§°Ü.", sysGetVariableInt(port));
+    /*writeEx(0,3,"port %d å‘é€æ•°æ®å¤±è´¥.", sysGetVariableInt(port));
   else 
-    writeEx(-3,0,"port %d ·¢ËÍÊı¾İ.", sysGetVariableInt(port));*/
+    writeEx(-3,0,"port %d å‘é€æ•°æ®.", sysGetVariableInt(port));*/
 }
 SendData1(sysvarInt *port,char str[])
 { 
@@ -198,9 +198,9 @@ SendData1(sysvarInt *port,char str[])
 
   if(0==Rs232Send(sysGetVariableInt(port), buffer, aDLC+1))
     return;
-   /* writeEx(0,3,"port %d ·¢ËÍÊı¾İÊ§°Ü.", sysGetVariableInt(port));
+   /* writeEx(0,3,"port %d å‘é€æ•°æ®å¤±è´¥.", sysGetVariableInt(port));
   else
-    writeEx(-3,0,"port %d ·¢ËÍÊı¾İ.", sysGetVariableInt(port));*/
+    writeEx(-3,0,"port %d å‘é€æ•°æ®.", sysGetVariableInt(port));*/
 }
 
 on timer out 

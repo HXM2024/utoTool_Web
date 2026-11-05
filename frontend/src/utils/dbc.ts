@@ -38,6 +38,14 @@ export interface DbcRecord {
   valueDesc: string
   dtc: string
   signalType: string
+  /** 吉利 GEEA_3.0：CHK 信号的数据 ID（如 "0x0037"） */
+  genSigDataId: string
+  /** 吉利 GEEA_3.0：信号所属 SIG_GROUP_ 名称 */
+  sigGroup: string
+  /** 吉利 GEEA_3.0：信号在 SIG_GROUP_ 中的顺序（从 1 开始，0 表示不在组内） */
+  sigGroupIndex: string
+  /** GenSigFuncType 列（DBC 上传时由后端把 CHK→E2E_CRC、CNTR→Counter 归一化） */
+  genSigFuncType: string
   xcpVar: string
   test: string
   msgTest: string
@@ -322,6 +330,10 @@ export function parseDbcRecords(raw: any): DbcRecord[] {
     lostDtc: findIdx(cols, ['lostdtc']),
     dlcDtc: findIdx(cols, ['dlcdtc']),
     signalType: findIdx(cols, ['signal_type', '信号类型']),
+    genSigDataId: findIdx(cols, ['gensigdataid'], paramIdxList),
+    sigGroup: findExactIdx(cols, 'sig_group_'),
+    sigGroupIndex: findIdx(cols, ['sig_group_index'], paramIdxList),
+    genSigFuncType: findIdx(cols, ['gensigfunctype'], paramIdxList),
     xcpVar: findIdx(cols, ['xcp_ccp_varname', 'xcpccpvarname', 'xcp', 'ccp']),
     test: testExact >= 0 ? testExact : findIdx(cols, ['test'], paramIdxList),
     msgTest: findIdx(cols, ['msgtest', 'msg_test', '报文test'], paramIdxList),
@@ -394,6 +406,10 @@ export function parseDbcRecords(raw: any): DbcRecord[] {
       valueDesc: get(row, idx.valueDesc),
       dtc: get(row, dtcIdx),
       signalType: get(row, idx.signalType),
+      genSigDataId: get(row, idx.genSigDataId),
+      sigGroup: get(row, idx.sigGroup),
+      sigGroupIndex: get(row, idx.sigGroupIndex),
+      genSigFuncType: get(row, idx.genSigFuncType),
       xcpVar: get(row, idx.xcpVar),
       test: get(row, idx.test),
       msgTest: get(row, idx.msgTest),

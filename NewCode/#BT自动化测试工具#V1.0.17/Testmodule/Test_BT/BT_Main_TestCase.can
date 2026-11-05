@@ -9,7 +9,7 @@ variables
   
 }
 
-//¹¤¾ßÑéÖ¤
+//å·¥å…·éªŒè¯
 testcase ToolTest()
 {
   char filename[100];
@@ -28,7 +28,7 @@ testcase ToolTest()
   
 }
 
-//¹¤¾ßÑéÖ¤
+//å·¥å…·éªŒè¯
 testcase Read_Bin_Test()
 {
   char filename[400];
@@ -52,7 +52,7 @@ testcase ID_Check()
     testWaitForTimeout(70);
   }
 }
-//°²È«Ëã·¨²âÊÔ
+//å®‰å…¨ç®—æ³•æµ‹è¯•
 testcase Security_Test()
 {
 
@@ -66,7 +66,7 @@ testcase Security_Test()
   Deinit();
   
 }
-//KL30ÉÏµç²âÊÔ
+//KL30ä¸Šç”µæµ‹è¯•
 testcase K30ON_Test()
 {
 
@@ -74,7 +74,7 @@ testcase K30ON_Test()
   _K30_ON();
   Deinit();
 }
-//KL30ÏÂµç²âÊÔ
+//KL30ä¸‹ç”µæµ‹è¯•
 testcase K30OFF_Test()
 {
 
@@ -82,7 +82,7 @@ testcase K30OFF_Test()
   _K30_OFF();
   Deinit();
 }
-//KL15ÉÏµç²âÊÔ
+//KL15ä¸Šç”µæµ‹è¯•
 testcase K15ON_Test()
 {
 
@@ -90,7 +90,7 @@ testcase K15ON_Test()
   _K15_ON();
   Deinit();
 }
-//KL15ÏÂµç²âÊÔ
+//KL15ä¸‹ç”µæµ‹è¯•
 testcase K15OFF_Test()
 {
 
@@ -98,7 +98,7 @@ testcase K15OFF_Test()
   _K15_OFF();
   Deinit();
 }
-//APPÓĞĞ§ĞÔ¼ì²â
+//APPæœ‰æ•ˆæ€§æ£€æµ‹
 testcase APPValid_Test()
 {
   
@@ -106,14 +106,14 @@ testcase APPValid_Test()
   Check_AppValid();
   Deinit();
 }
-//Õı³£Ë¢Ğ´Á÷³Ì
+//æ­£å¸¸åˆ·å†™æµç¨‹
 testcase Normal_Test()
 {
   MainInit();
   MainTest_f();
   Deinit();
 }
-//SOSË¢Ğ´Á÷³Ì
+//SOSåˆ·å†™æµç¨‹
 testcase SOS_Test()
 {
   MainInit();
@@ -121,7 +121,7 @@ testcase SOS_Test()
   MainTest_f();
   Deinit();
 }
-//Ê¹APPÎŞĞ§ ½øÈëBT
+//ä½¿APPæ— æ•ˆ è¿›å…¥BT
 testcase APPtoBT()
 {
   MainInit();
@@ -146,8 +146,8 @@ testcase Alternate_DownLoad()
   
   while(@Test::Loop_Test_Switch && Download_Time < @sysvar::AUTO::Alternate_Count)
   {
-    writeEx(-3,1,"---------------------²âÊÔµÚ%d´Î½»ÌæË¢Ğ´---------------------",++Download_Time);
-    snprintf(comment,elCount(comment),"²âÊÔµÚ%d´Î½»ÌæË¢Ğ´",Download_Time);
+    writeEx(-3,1,"---------------------æµ‹è¯•ç¬¬%dæ¬¡äº¤æ›¿åˆ·å†™---------------------",++Download_Time);
+    snprintf(comment,elCount(comment),"æµ‹è¯•ç¬¬%dæ¬¡äº¤æ›¿åˆ·å†™",Download_Time);
     testCaseComment(comment);
     Alternate_DownLoad_Flage = 1;
     {
@@ -179,7 +179,7 @@ testcase Alternate_DownLoad()
   sysSetVariableString(sysvar::Test::openhex1,SoftWareBefor2_Now);
   sysSetVariableString(sysvar::Test::openhex2,SoftWareBefor3_Now);
 }
-//Õı³£Ë¢Ğ´1000´Î
+//æ­£å¸¸åˆ·å†™1000æ¬¡
 testcase Normal_Test_1000()
 {
   char comment[70];
@@ -191,8 +191,8 @@ testcase Normal_Test_1000()
   Save_Change_ReadPro = 0;
   while(@Test::Loop_Test_Switch && Download_Count < 1000)
   {
-    writeEx(-3,1,"---------------------²âÊÔµÚ%d´ÎÕı³£Ë¢Ğ´---------------------",++Download_Count);
-    snprintf(comment,elCount(comment),"²âÊÔµÚ%d´ÎÕı³£Ë¢Ğ´",Download_Count);
+    writeEx(-3,1,"---------------------æµ‹è¯•ç¬¬%dæ¬¡æ­£å¸¸åˆ·å†™---------------------",++Download_Count);
+    snprintf(comment,elCount(comment),"æµ‹è¯•ç¬¬%dæ¬¡æ­£å¸¸åˆ·å†™",Download_Count);
     testCaseComment(comment);
     MainInit();
     MainTest_f();
@@ -203,19 +203,19 @@ testcase Normal_Test_1000()
       if(Download_Count>1)
       {
         if(Change_CompilePro - Save_Change_CompilePro != 1)
-          testStepFail("","±à³Ì³¢ÊÔ´ÎÊıÔöÁ¿´íÎó£¬µ±Ç°ÔöÁ¿Îª%d",Change_CompilePro - Save_Change_CompilePro);
+          testStepFail("","ç¼–ç¨‹å°è¯•æ¬¡æ•°å¢é‡é”™è¯¯ï¼Œå½“å‰å¢é‡ä¸º%d",Change_CompilePro - Save_Change_CompilePro);
         else
-          testStepPass("","±à³Ì³¢ÊÔ´ÎÊı²½ÔöÖµÎª1");
+          testStepPass("","ç¼–ç¨‹å°è¯•æ¬¡æ•°æ­¥å¢å€¼ä¸º1");
         if(Change_ReadPro - Save_Change_ReadPro != 1)
-          testStepFail("","±à³Ì´ÎÊıÔöÁ¿´íÎó£¬µ±Ç°ÔöÁ¿Îª%d",Change_ReadPro - Save_Change_ReadPro);
+          testStepFail("","ç¼–ç¨‹æ¬¡æ•°å¢é‡é”™è¯¯ï¼Œå½“å‰å¢é‡ä¸º%d",Change_ReadPro - Save_Change_ReadPro);
         else
-          testStepPass("","±à³Ì´ÎÊı²½ÔöÖµÎª1");
+          testStepPass("","ç¼–ç¨‹æ¬¡æ•°æ­¥å¢å€¼ä¸º1");
       }
       Save_Change_CompilePro = Change_CompilePro;
       Save_Change_ReadPro = Change_ReadPro;
     }
   }
-  writeEx(-3,1,"---------------------Õı³£Ë¢Ğ´1000´Î²âÊÔÍê³É---------------------");
+  writeEx(-3,1,"---------------------æ­£å¸¸åˆ·å†™1000æ¬¡æµ‹è¯•å®Œæˆ---------------------");
   
 }
 
@@ -230,8 +230,8 @@ testcase Normal_Test_Cycle()
   Save_Change_ReadPro = 0;
   while(@Test::Loop_Test_Switch)
   {
-    writeEx(-3,1,"---------------------²âÊÔµÚ%d´ÎÕı³£Ë¢Ğ´---------------------",++Download_Count);
-    snprintf(comment,elCount(comment),"²âÊÔµÚ%d´ÎÕı³£Ë¢Ğ´",Download_Count);
+    writeEx(-3,1,"---------------------æµ‹è¯•ç¬¬%dæ¬¡æ­£å¸¸åˆ·å†™---------------------",++Download_Count);
+    snprintf(comment,elCount(comment),"æµ‹è¯•ç¬¬%dæ¬¡æ­£å¸¸åˆ·å†™",Download_Count);
     testCaseComment(comment);
     MainInit();
     MainTest_f();
@@ -242,22 +242,22 @@ testcase Normal_Test_Cycle()
       if(Download_Count>1)
       {
         if(Change_CompilePro - Save_Change_CompilePro != 1)
-          testStepFail("","±à³Ì³¢ÊÔ´ÎÊıÔöÁ¿´íÎó£¬µ±Ç°ÔöÁ¿Îª%d",Change_CompilePro - Save_Change_CompilePro);
+          testStepFail("","ç¼–ç¨‹å°è¯•æ¬¡æ•°å¢é‡é”™è¯¯ï¼Œå½“å‰å¢é‡ä¸º%d",Change_CompilePro - Save_Change_CompilePro);
         else
-          testStepPass("","±à³Ì³¢ÊÔ´ÎÊı²½ÔöÖµÎª1");
+          testStepPass("","ç¼–ç¨‹å°è¯•æ¬¡æ•°æ­¥å¢å€¼ä¸º1");
         if(Change_ReadPro - Save_Change_ReadPro != 1)
-          testStepFail("","±à³Ì´ÎÊıÔöÁ¿´íÎó£¬µ±Ç°ÔöÁ¿Îª%d",Change_ReadPro - Save_Change_ReadPro);
+          testStepFail("","ç¼–ç¨‹æ¬¡æ•°å¢é‡é”™è¯¯ï¼Œå½“å‰å¢é‡ä¸º%d",Change_ReadPro - Save_Change_ReadPro);
         else
-          testStepPass("","±à³Ì´ÎÊı²½ÔöÖµÎª1");
+          testStepPass("","ç¼–ç¨‹æ¬¡æ•°æ­¥å¢å€¼ä¸º1");
       }
       Save_Change_CompilePro = Change_CompilePro;
       Save_Change_ReadPro = Change_ReadPro;
     }
   }
-  writeEx(-3,1,"---------------------Í£Ö¹Ë¢Ğ´,¹²²âÊÔ%d´ÎË¢Ğ´---------------------",Download_Count);
+  writeEx(-3,1,"---------------------åœæ­¢åˆ·å†™,å…±æµ‹è¯•%dæ¬¡åˆ·å†™---------------------",Download_Count);
 }
 
-/*ÉÏÏÂµçÑ¹Á¦²âÊÔ*/
+/*ä¸Šä¸‹ç”µå‹åŠ›æµ‹è¯•*/
 testcase Power_Down_Up_Cycle()
 {
   char comment[70];
@@ -276,8 +276,8 @@ testcase Power_Down_Up_Cycle()
   Check_AppValid();
   while(@Test::Loop_Test_Switch && (Download_Time < @Test::Loop_Power_Times) )
   {
-    writeEx(-3,1,"/*---------------------²âÊÔµÚ%d´ÎÉÏÏÂµç---------------------*/",++Download_Time);
-    snprintf(comment,elCount(comment),"µÚ%d´ÎÉÏÏÂµç",Download_Time);
+    writeEx(-3,1,"/*---------------------æµ‹è¯•ç¬¬%dæ¬¡ä¸Šä¸‹ç”µ---------------------*/",++Download_Time);
+    snprintf(comment,elCount(comment),"ç¬¬%dæ¬¡ä¸Šä¸‹ç”µ",Download_Time);
     testCaseComment(comment);
     
     _K15_OFF();
@@ -287,16 +287,16 @@ testcase Power_Down_Up_Cycle()
     
     app_status = Check_AppValid();
 //    if(app_status == 1)
-//      snprintf(comment,elCount(comment),"£ºAPPÓĞĞ§");
+//      snprintf(comment,elCount(comment),"ï¼šAPPæœ‰æ•ˆ");
 //    else
-//      snprintf(comment,elCount(comment),"£ºAPPÎŞĞ§");
+//      snprintf(comment,elCount(comment),"ï¼šAPPæ— æ•ˆ");
 //    writeEx(-3,1,comment);
 
   }
-  writeEx(-3,1,"/*---------------------Í£Ö¹Ë¢Ğ´---------------------*/");
+  writeEx(-3,1,"/*---------------------åœæ­¢åˆ·å†™---------------------*/");
   
 }
-/*ÑéÖ¤ÊÇ·ñÔÚAPPÖĞ²Á³ıAPPÓĞĞ§Î»1¡ª¡ª½øÈëBTºóÉÏÏÂµç*/
+/*éªŒè¯æ˜¯å¦åœ¨APPä¸­æ“¦é™¤APPæœ‰æ•ˆä½1â€”â€”è¿›å…¥BTåä¸Šä¸‹ç”µ*/
 testcase BT_AppValid1()
 {
   char comment[70];
@@ -304,15 +304,15 @@ testcase BT_AppValid1()
   Loop_Add_Times = 0;
   Loop_Add_Time =0;
   @Faultinsert::TC_BT_AppValid = 1;
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
   curAppValid = Check_AppValid();
   Restart_Time = 1;
   curAppValid = 1;
   Resp_1003 = -1;
   while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
   {
-    writeEx(-3,1,"/*---------------------µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
-    snprintf(comment,elCount(comment),"µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms",Loop_Add_Times,Loop_Add_Time);
+    writeEx(-3,1,"/*---------------------ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms",Loop_Add_Times,Loop_Add_Time);
     testCaseComment(comment);
     
     if(Loop_Add_Times > 0)
@@ -322,13 +322,13 @@ testcase BT_AppValid1()
     if(Loop_Add_Time > 0)
     {
       testWaitForTimeout(Loop_Add_Time);
-      writeEx(-3,1,"µÈ´ı£º%dms",Loop_Add_Time);
+      writeEx(-3,1,"ç­‰å¾…ï¼š%dms",Loop_Add_Time);
     }
     _K15_OFF();
     testWaitForTimeout(2000);
     _K15_ON();
     testWaitForTimeout(2000);
-    writeEx(-3,1,"µÈ´ı£º2s");
+    writeEx(-3,1,"ç­‰å¾…ï¼š2s");
     @Faultinsert::TC_Miss_GetFc = 0;
     Check_APPValid2();
     
@@ -339,10 +339,10 @@ testcase BT_AppValid1()
   }
   @Faultinsert::TC_Miss_GetFc = 0;
   @Faultinsert::TC_BT_AppValid = 0;
-  writeEx(-3,1,"/*---------------------Í£Ö¹²âÊÔ---------------------*/");
+  writeEx(-3,1,"/*---------------------åœæ­¢æµ‹è¯•---------------------*/");
   
 }
-/*ÑéÖ¤ÊÇ·ñÔÚBTÖĞ²Á³ıAPPÓĞĞ§Î»2¡ª¡ªË¢Ğ´ÍêÊı¾İĞ£ÑéºóÉÏÏÂµç*/
+/*éªŒè¯æ˜¯å¦åœ¨BTä¸­æ“¦é™¤APPæœ‰æ•ˆä½2â€”â€”åˆ·å†™å®Œæ•°æ®æ ¡éªŒåä¸Šä¸‹ç”µ*/
 testcase BT_AppValid2()
 {
   char comment[70];
@@ -352,8 +352,8 @@ testcase BT_AppValid2()
   
   while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
   {
-    writeEx(-3,1,"/*---------------------µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
-    snprintf(comment,elCount(comment),"µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms",Loop_Add_Times,Loop_Add_Time);
+    writeEx(-3,1,"/*---------------------ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms",Loop_Add_Times,Loop_Add_Time);
     testCaseComment(comment);
     
 //    @Faultinsert::TC_BT_AppValid = 0;
@@ -371,9 +371,9 @@ testcase BT_AppValid2()
       break;
   }
   @Faultinsert::TC_BT_AppValid = 0;
-  writeEx(-3,1,"/*---------------------Í£Ö¹²âÊÔ---------------------*/");
+  writeEx(-3,1,"/*---------------------åœæ­¢æµ‹è¯•---------------------*/");
 }
-/*ÑéÖ¤ÊÇ·ñÔÚBTÖĞ²Á³ıAPPÓĞĞ§Î»3¡ª¡ª½øÈëBTºó´íÎóÃÜÔ¿ºóÉÏÏÂµç*/
+/*éªŒè¯æ˜¯å¦åœ¨BTä¸­æ“¦é™¤APPæœ‰æ•ˆä½3â€”â€”è¿›å…¥BTåé”™è¯¯å¯†é’¥åä¸Šä¸‹ç”µ*/
 testcase BT_AppValid3()
 {
   char comment[70];
@@ -383,12 +383,12 @@ testcase BT_AppValid3()
   @Faultinsert::TC_BT_AppValid = 1;
   @Faultinsert::TC_Error_27Key = 0;
   @Faultinsert::TC_Error_27 = 0;
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
   curAppValid = Check_AppValid();
   while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
   {
-    writeEx(-3,1,"/*---------------------µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
-    snprintf(comment,elCount(comment),"µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms",Loop_Add_Times,Loop_Add_Time);
+    writeEx(-3,1,"/*---------------------ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms",Loop_Add_Times,Loop_Add_Time);
     testCaseComment(comment);
     
     Pre_Programme_For_AppValidTest();
@@ -407,13 +407,13 @@ testcase BT_AppValid3()
     if(Loop_Add_Time > 0)
     {
       testWaitForTimeout(Loop_Add_Time);
-      writeEx(-3,1,"µÈ´ı£º%dms",Loop_Add_Time);
+      writeEx(-3,1,"ç­‰å¾…ï¼š%dms",Loop_Add_Time);
     }
     _K15_OFF();
     testWaitForTimeout(2000);
     _K15_ON();
     testWaitForTimeout(2000);
-    writeEx(-3,1,"µÈ´ı£º2s");
+    writeEx(-3,1,"ç­‰å¾…ï¼š2s");
     
     Check_APPValid2();
     
@@ -430,11 +430,11 @@ testcase BT_AppValid3()
   @Faultinsert::TC_BT_AppValid = 0;
   @Faultinsert::TC_Error_27 = 0;
   @Faultinsert::TC_Error_27Key = 0;
-  writeEx(-3,1,"/*---------------------Í£Ö¹²âÊÔ---------------------*/");
+  writeEx(-3,1,"/*---------------------åœæ­¢æµ‹è¯•---------------------*/");
   
 }
 
-/*ÑéÖ¤ÊÇ·ñÔÚBTÖĞ²Á³ıAPPÓĞĞ§Î»4¡ª¡ª½øÈëBTºó11¸´Î»ÉÏÏÂµç*/
+/*éªŒè¯æ˜¯å¦åœ¨BTä¸­æ“¦é™¤APPæœ‰æ•ˆä½4â€”â€”è¿›å…¥BTå11å¤ä½ä¸Šä¸‹ç”µ*/
 testcase BT_AppValid4()
 {
   char comment[70];
@@ -443,12 +443,12 @@ testcase BT_AppValid4()
   Loop_Add_Time =0;
   Restart_Time = 1;
   @Faultinsert::TC_BT_AppValid = 1;
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
   curAppValid = Check_AppValid();
   while(@Test::Loop_Test_Switch && ( Loop_Add_Times < @Test::Loop_Power_Times) )
   {
-    writeEx(-3,1,"/*---------------------µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
-    snprintf(comment,elCount(comment),"µÚ%d´Î²âÊÔ,µÈ´ıÊ±¼äÎª£º%dms",Loop_Add_Times,Loop_Add_Time);
+    writeEx(-3,1,"/*---------------------ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms---------------------*/",++Loop_Add_Times,Loop_Add_Time);
+    snprintf(comment,elCount(comment),"ç¬¬%dæ¬¡æµ‹è¯•,ç­‰å¾…æ—¶é—´ä¸ºï¼š%dms",Loop_Add_Times,Loop_Add_Time);
     testCaseComment(comment);
     
 
@@ -460,13 +460,13 @@ testcase BT_AppValid4()
     if(Loop_Add_Time > 0)
     {
       testWaitForTimeout(Loop_Add_Time);
-      writeEx(-3,1,"µÈ´ı£º%dms",Loop_Add_Time);
+      writeEx(-3,1,"ç­‰å¾…ï¼š%dms",Loop_Add_Time);
     }
     _K15_OFF();
     testWaitForTimeout(2000);
     _K15_ON();
     testWaitForTimeout(2000);
-    writeEx(-3,1,"µÈ´ı£º2s");
+    writeEx(-3,1,"ç­‰å¾…ï¼š2s");
     @Faultinsert::TC_Miss_GetFc = 0;
     Check_APPValid2();
     
@@ -478,19 +478,19 @@ testcase BT_AppValid4()
   }
   @Faultinsert::TC_Miss_GetFc = 0;
   @Faultinsert::TC_BT_AppValid = 0;
-  writeEx(-3,1,"/*---------------------Í£Ö¹²âÊÔ---------------------*/");
+  writeEx(-3,1,"/*---------------------åœæ­¢æµ‹è¯•---------------------*/");
   
 }
 
 /*-----------------------------------------------------------------------------------------------------------*/
-/*APPÎŞĞ§-¹ıµÍÑ¹Ë¢Ğ´-6V*/
+/*APPæ— æ•ˆ-è¿‡ä½å‹åˆ·å†™-6V*/
 testcase APPInvalid_Volt_1()
 {
   MainInit();
   @AUTO::APP_Valid = 1;
   MainTest_f();
   Resp_Init();
-  @Faultinsert::TC_ErrorVolt = 1; //µÍÑ¹
+  @Faultinsert::TC_ErrorVolt = 1; //ä½å‹
   MainTest_f();
   @Faultinsert::TC_ErrorVolt = 0;
   Check_Tx(TxMessage_Fail);
@@ -501,14 +501,14 @@ testcase APPInvalid_Volt_1()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÎŞĞ§-µÍÑ¹Ë¢Ğ´(µÍÑ¹-0.1)V*/
+/*APPæ— æ•ˆ-ä½å‹åˆ·å†™(ä½å‹-0.1)V*/
 testcase APPInvalid_Volt_2()
 {
   MainInit();
   @AUTO::APP_Valid = 1;
   MainTest_f();
   Resp_Init();
-  @Faultinsert::TC_ErrorVolt = 2; //µÍÑ¹-0.1
+  @Faultinsert::TC_ErrorVolt = 2; //ä½å‹-0.1
   MainTest_f();
   @Faultinsert::TC_ErrorVolt = 0;
   Check_Tx(TxMessage_Fail);
@@ -519,19 +519,19 @@ testcase APPInvalid_Volt_2()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÎŞĞ§-µÍÑ¹Ë¢Ğ´(µÍÑ¹+0.1)V*/
+/*APPæ— æ•ˆ-ä½å‹åˆ·å†™(ä½å‹+0.1)V*/
 testcase APPInvalid_Volt_3()
 {
   MainInit();
   @AUTO::APP_Valid = 1;
   MainTest_f();
   Resp_Init();
-  @Faultinsert::TC_ErrorVolt = 12; //µÍÑ¹+0.1
+  @Faultinsert::TC_ErrorVolt = 12; //ä½å‹+0.1
   MainTest_f();
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÎŞĞ§-Õı³£µçÑ¹Ë¢Ğ´*/
+/*APPæ— æ•ˆ-æ­£å¸¸ç”µå‹åˆ·å†™*/
 testcase APPInvalid_Volt_4()
 {
   MainInit();
@@ -544,26 +544,26 @@ testcase APPInvalid_Volt_4()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÎŞĞ§-¸ßÑ¹Ë¢Ğ´(¸ßÑ¹-0.1)V*/
+/*APPæ— æ•ˆ-é«˜å‹åˆ·å†™(é«˜å‹-0.1)V*/
 testcase APPInvalid_Volt_5()
 {
   MainInit();
   @AUTO::APP_Valid = 1;
   MainTest_f();
   Resp_Init();
-  @Faultinsert::TC_ErrorVolt = 13; //¸ßÑ¹-0.1
+  @Faultinsert::TC_ErrorVolt = 13; //é«˜å‹-0.1
   MainTest_f();
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÎŞĞ§-¸ßÑ¹Ë¢Ğ´(¸ßÑ¹+0.1)*/
+/*APPæ— æ•ˆ-é«˜å‹åˆ·å†™(é«˜å‹+0.1)*/
 testcase APPInvalid_Volt_6()
 {
   MainInit();
   @AUTO::APP_Valid = 1;
   MainTest_f();
   Resp_Init();
-  @Faultinsert::TC_ErrorVolt = 3;//¸ßÑ¹+0.1
+  @Faultinsert::TC_ErrorVolt = 3;//é«˜å‹+0.1
   MainTest_f();
   @Faultinsert::TC_ErrorVolt = 0;
   Check_Tx(TxMessage_Fail);
@@ -574,7 +574,7 @@ testcase APPInvalid_Volt_6()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÎŞĞ§-¹ı¸ßÑ¹Ë¢Ğ´-18V*/
+/*APPæ— æ•ˆ-è¿‡é«˜å‹åˆ·å†™-18V*/
 testcase APPInvalid_Volt_7()
 {
   MainInit();
@@ -592,7 +592,7 @@ testcase APPInvalid_Volt_7()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÓĞĞ§-¹ıµÍÑ¹Ë¢Ğ´*/
+/*APPæœ‰æ•ˆ-è¿‡ä½å‹åˆ·å†™*/
 testcase APPValid_Volt_1()
 {
   MainInit();
@@ -608,7 +608,7 @@ testcase APPValid_Volt_1()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÓĞĞ§-µÍÑ¹±ß½çÖµË¢Ğ´*/
+/*APPæœ‰æ•ˆ-ä½å‹è¾¹ç•Œå€¼åˆ·å†™*/
 testcase APPValid_Volt_2()
 {
   MainInit();
@@ -624,18 +624,18 @@ testcase APPValid_Volt_2()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÓĞĞ§-µÍÑ¹±ß½çÖµË¢Ğ´*/
+/*APPæœ‰æ•ˆ-ä½å‹è¾¹ç•Œå€¼åˆ·å†™*/
 testcase APPValid_Volt_3()
 {
   MainInit();
   MainTest_f();
   Resp_Init();
-  @Faultinsert::TC_ErrorVolt = 12; //µÍÑ¹+0.1
+  @Faultinsert::TC_ErrorVolt = 12; //ä½å‹+0.1
   MainTest_f();
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÓĞĞ§-Õı³£µçÑ¹Ë¢Ğ´*/
+/*APPæœ‰æ•ˆ-æ­£å¸¸ç”µå‹åˆ·å†™*/
 testcase APPValid_Volt_4()
 {
   MainInit();
@@ -647,18 +647,18 @@ testcase APPValid_Volt_4()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÓĞĞ§-¸ßµçÑ¹±ß½çÖµË¢Ğ´*/
+/*APPæœ‰æ•ˆ-é«˜ç”µå‹è¾¹ç•Œå€¼åˆ·å†™*/
 testcase APPValid_Volt_5()
 {
   MainInit();
   MainTest_f();
   Resp_Init();
-  @Faultinsert::TC_ErrorVolt = 13; //¸ßÑ¹-0.1
+  @Faultinsert::TC_ErrorVolt = 13; //é«˜å‹-0.1
   MainTest_f();
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÓĞĞ§-¸ßµçÑ¹±ß½çÖµË¢Ğ´*/
+/*APPæœ‰æ•ˆ-é«˜ç”µå‹è¾¹ç•Œå€¼åˆ·å†™*/
 testcase APPValid_Volt_6()
 {
   MainInit();
@@ -674,7 +674,7 @@ testcase APPValid_Volt_6()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APPÓĞĞ§-¹ı¸ßÑ¹Ë¢Ğ´*/
+/*APPæœ‰æ•ˆ-è¿‡é«˜å‹åˆ·å†™*/
 testcase APPValid_Volt_7()
 {
   MainInit();
@@ -690,7 +690,7 @@ testcase APPValid_Volt_7()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP´«ÊäÊ±µÍÑ¹*/
+/*APPä¼ è¾“æ—¶ä½å‹*/
 testcase APP_36_LowVolt()
 {
   MainInit();
@@ -701,7 +701,7 @@ testcase APP_36_LowVolt()
   MainTest_f();
   Deinit();
 }
-/*APP´«ÊäÊ±¸ßÑ¹*/
+/*APPä¼ è¾“æ—¶é«˜å‹*/
 testcase APP_36_HighVolt()
 {
   MainInit();
@@ -712,7 +712,7 @@ testcase APP_36_HighVolt()
   MainTest_f();
   Deinit();
 }
-/*ECUÏìÓ¦NRC78ºóÂíÉÏ·¢2Ö¡¹¦ÄÜÑ°Ö·µÄ3E80*/
+/*ECUå“åº”NRC78åé©¬ä¸Šå‘2å¸§åŠŸèƒ½å¯»å€çš„3E80*/
 testcase Handshake_After_NRC78()
 {
   MainInit();
@@ -722,7 +722,7 @@ testcase Handshake_After_NRC78()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00²Á³ı¹ı³ÌÖĞ¹¦ÄÜÑ°Ö·ÎÕÊÖ*/
+/*FF00æ“¦é™¤è¿‡ç¨‹ä¸­åŠŸèƒ½å¯»å€æ¡æ‰‹*/
 testcase Handshake_FF00()
 {
   MainInit();
@@ -732,7 +732,7 @@ testcase Handshake_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*0301Ê± ¹¦ÄÜÎÕÊÖ*/
+/*0301æ—¶ åŠŸèƒ½æ¡æ‰‹*/
 testcase Handshake_0301()
 {
   MainInit();
@@ -745,7 +745,7 @@ testcase Handshake_0301()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*0205Ê± ¹¦ÄÜÎÕÊÖ*/
+/*0205æ—¶ åŠŸèƒ½æ¡æ‰‹*/
 testcase Handshake_0205()
 {
   MainInit();
@@ -758,7 +758,7 @@ testcase Handshake_0205()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Çı¶¯ 0202Ğ£Ñé¹ı³ÌÖĞ¹¦ÄÜÑ°Ö·ÎÕÊÖ*/
+/*é©±åŠ¨ 0202æ ¡éªŒè¿‡ç¨‹ä¸­åŠŸèƒ½å¯»å€æ¡æ‰‹*/
 testcase Handshake_0202F()
 {
   MainInit();
@@ -768,7 +768,7 @@ testcase Handshake_0202F()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 0202Ğ£Ñé¹ı³ÌÖĞ¹¦ÄÜÑ°Ö·ÎÕÊÖ*/
+/*APP 0202æ ¡éªŒè¿‡ç¨‹ä¸­åŠŸèƒ½å¯»å€æ¡æ‰‹*/
 testcase Handshake_0202A()
 {
   MainInit();
@@ -778,7 +778,7 @@ testcase Handshake_0202A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*2EĞ´Êı¾İ¹ı³ÌÖĞ¹¦ÄÜÑ°Ö·ÎÕÊÖ*/
+/*2Eå†™æ•°æ®è¿‡ç¨‹ä¸­åŠŸèƒ½å¯»å€æ¡æ‰‹*/
 testcase Handshake_2E()
 {
   MainInit();
@@ -788,7 +788,7 @@ testcase Handshake_2E()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36¹ı³ÌÖĞÎÕÊÖ*/
+/*APP 36è¿‡ç¨‹ä¸­æ¡æ‰‹*/
 testcase Handshake_36A()
 {
   MainInit();
@@ -798,7 +798,7 @@ testcase Handshake_36A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF01ÒÀÀµĞÔ¼ì²âÊ±¹¦ÄÜÎÕÊÖ*/
+/*FF01ä¾èµ–æ€§æ£€æµ‹æ—¶åŠŸèƒ½æ¡æ‰‹*/
 testcase Handshake_FF01()
 {
   MainInit();
@@ -808,7 +808,7 @@ testcase Handshake_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*DA04ÓĞĞ§¼ì²âÊ±¹¦ÄÜÎÕÊÖ*/
+/*DA04æœ‰æ•ˆæ£€æµ‹æ—¶åŠŸèƒ½æ¡æ‰‹*/
 testcase Handshake_DA04()
 {
   MainInit();
@@ -818,7 +818,7 @@ testcase Handshake_DA04()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 34ÇëÇóÏÂÔØ³¤¶È´íÎó*/
+/*APP 34è¯·æ±‚ä¸‹è½½é•¿åº¦é”™è¯¯*/
 testcase APP_34_ErrorLength()
 {
   MainInit();
@@ -829,7 +829,7 @@ testcase APP_34_ErrorLength()
   MainTest_f();
   Deinit();
 }
-/*APP 34ÇëÇóÏÂÔØµØÖ·´íÎó*/
+/*APP 34è¯·æ±‚ä¸‹è½½åœ°å€é”™è¯¯*/
 testcase APP_34_ErrorAddr()
 {
   MainInit();
@@ -840,7 +840,7 @@ testcase APP_34_ErrorAddr()
   MainTest_f();
   Deinit();
 }
-/*APP 34ÇëÇóÏÂÔØµØÖ·´óĞ¡´íÎó*/
+/*APP 34è¯·æ±‚ä¸‹è½½åœ°å€å¤§å°é”™è¯¯*/
 testcase APP_34_ErrorAddrSize()
 {
   MainInit();
@@ -851,7 +851,7 @@ testcase APP_34_ErrorAddrSize()
   MainTest_f();
   Deinit();
 }
-/*APP 34ÇëÇóÏÂÔØÊı¾İ¸ñÊ½±êÊ¶´íÎó*/
+/*APP 34è¯·æ±‚ä¸‹è½½æ•°æ®æ ¼å¼æ ‡è¯†é”™è¯¯*/
 testcase APP_34_ErrorDataID()
 {
   MainInit();
@@ -862,7 +862,7 @@ testcase APP_34_ErrorDataID()
   MainTest_f();
   Deinit();
 }
-/*APP 34ÇëÇóÏÂÔØµØÖ·³¤¶È¸ñÊ½±êÊ¶´íÎó*/
+/*APP 34è¯·æ±‚ä¸‹è½½åœ°å€é•¿åº¦æ ¼å¼æ ‡è¯†é”™è¯¯*/
 testcase APP_34_ErrorAddrLenID()
 {
   MainInit();
@@ -874,7 +874,7 @@ testcase APP_34_ErrorAddrLenID()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 34ÖØ¸´ÇëÇóÏÂÔØÊı¾İ*/
+/*APP 34é‡å¤è¯·æ±‚ä¸‹è½½æ•°æ®*/
 testcase APP_34_Repeat()
 {
   MainInit();
@@ -886,7 +886,7 @@ testcase APP_34_Repeat()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36Êı¾İÏÂÔØÍê³Éºó¼ÌĞø·¢ËÍ36Êı¾İ¿é*/
+/*APP 36æ•°æ®ä¸‹è½½å®Œæˆåç»§ç»­å‘é€36æ•°æ®å—*/
 testcase APP_36_Continue()
 {
   MainInit();
@@ -898,7 +898,7 @@ testcase APP_36_Continue()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36Î´´«ÊäÍêÖ±½Ó34ÇëÇó*/
+/*APP 36æœªä¼ è¾“å®Œç›´æ¥34è¯·æ±‚*/
 testcase APP_36_34()
 {
   MainInit();
@@ -911,7 +911,7 @@ testcase APP_36_34()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36Êı¾İÎ´´«ÊäÍêÖ±½Ó37ÍË³ö*/
+/*APP 36æ•°æ®æœªä¼ è¾“å®Œç›´æ¥37é€€å‡º*/
 testcase APP_36_Exit()
 {
   MainInit();
@@ -923,7 +923,7 @@ testcase APP_36_Exit()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36´«ÊäÊı¾İ´íÎó*/
+/*APP 36ä¼ è¾“æ•°æ®é”™è¯¯*/
 testcase APP_36_Error()
 {
   MainInit();
@@ -935,7 +935,7 @@ testcase APP_36_Error()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*App´«ÊäÊı¾İ¿éĞ¡ÓÚ34ÇëÇóÏìÓ¦ÖĞ×î´ó²ÎÊı*/
+/*Appä¼ è¾“æ•°æ®å—å°äº34è¯·æ±‚å“åº”ä¸­æœ€å¤§å‚æ•°*/
 testcase APP_36_Less()
 {
   MainInit();
@@ -946,7 +946,7 @@ testcase APP_36_Less()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*App´«ÊäÊı¾İ¿é´óÓÚ34ÇëÇóÏìÓ¦ÖĞ×î´ó²ÎÊı*/
+/*Appä¼ è¾“æ•°æ®å—å¤§äº34è¯·æ±‚å“åº”ä¸­æœ€å¤§å‚æ•°*/
 testcase APP_36_More()
 {
   MainInit();
@@ -960,7 +960,7 @@ testcase APP_36_More()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 3601ºó3601*/
+/*APP 3601å3601*/
 testcase APP_3601_3601()
 {
   MainInit();
@@ -975,7 +975,7 @@ testcase APP_3601_3601()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 3601ºó3603*/
+/*APP 3601å3603*/
 testcase APP_3601_3603()
 {
   MainInit();
@@ -992,7 +992,7 @@ testcase APP_3601_3603()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 3602ºó3601*/
+/*APP 3602å3601*/
 testcase APP_3602_3601()
 {
   MainInit();
@@ -1009,7 +1009,7 @@ testcase APP_3602_3601()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP Ê×´ÎÊı¾İ¿é´«Êä36 00*/
+/*APP é¦–æ¬¡æ•°æ®å—ä¼ è¾“36 00*/
 testcase APP_3600()
 {
   MainInit();
@@ -1023,7 +1023,7 @@ testcase APP_3600()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP Ê×´ÎÊı¾İ¿é´«Êä36 02*/
+/*APP é¦–æ¬¡æ•°æ®å—ä¼ è¾“36 02*/
 testcase APP_3602()
 {
   MainInit();
@@ -1037,7 +1037,7 @@ testcase APP_3602()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP Á¬Ğø5´Î´«ÊäÍ¬Ò»Êı¾İ¿é*/
+/*APP è¿ç»­5æ¬¡ä¼ è¾“åŒä¸€æ•°æ®å—*/
 testcase APP_36_Repeat()
 {
   MainInit();
@@ -1051,7 +1051,7 @@ testcase APP_36_Repeat()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP Á¬Ğø6´Î´«ÊäÍ¬Ò»Êı¾İ¿é*/
+/*APP è¿ç»­6æ¬¡ä¼ è¾“åŒä¸€æ•°æ®å—*/
 testcase APP_36_RepeatOver()
 {
   MainInit();
@@ -1065,7 +1065,7 @@ testcase APP_36_RepeatOver()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36´«ÊäÍêºó·¢ËÍ31 01 FF 01¼æÈİĞÔ¼ì²é*/
+/*APP 36ä¼ è¾“å®Œåå‘é€31 01 FF 01å…¼å®¹æ€§æ£€æŸ¥*/
 testcase APP_36_Complete_FF01()
 {
   MainInit();
@@ -1076,7 +1076,7 @@ testcase APP_36_Complete_FF01()
   MainTest_f();
   Deinit();
 }
-/*APP 36Î´´«ÊäÍêºó·¢ËÍ31 01 FF 01¼æÈİĞÔ¼ì²é*/
+/*APP 36æœªä¼ è¾“å®Œåå‘é€31 01 FF 01å…¼å®¹æ€§æ£€æŸ¥*/
 testcase APP_36_Incomplete_FF01()
 {
   MainInit();
@@ -1087,7 +1087,7 @@ testcase APP_36_Incomplete_FF01()
   MainTest_f();
   Deinit();
 }
-/*APP 36Ê± 3601´«Êä´íÎóÊı¾İ*/
+/*APP 36æ—¶ 3601ä¼ è¾“é”™è¯¯æ•°æ®*/
 testcase APP_3601_Error()
 {
   MainInit();
@@ -1099,7 +1099,7 @@ testcase APP_3601_Error()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36ºó·¢ËÍ0205*/
+/*APP 36åå‘é€0205*/
 testcase APP_36_0205()
 {
   MainInit();
@@ -1110,7 +1110,7 @@ testcase APP_36_0205()
   MainTest_f();
   Deinit();
 }
-/*Geely3.0 APP 0212Ê±µÚÒ»´Î·¢ËÍ´íÎóµÄÇ©Ãû£¬µÚ¶ş´Î·¢ËÍÕıÈ·µÄÇ©Ãû*/
+/*Geely3.0 APP 0212æ—¶ç¬¬ä¸€æ¬¡å‘é€é”™è¯¯çš„ç­¾åï¼Œç¬¬äºŒæ¬¡å‘é€æ­£ç¡®çš„ç­¾å*/
 testcase APP_0202_FirstError()
 {
   MainInit();
@@ -1122,7 +1122,7 @@ testcase APP_0202_FirstError()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 APP ÖØ¸´ÇëÇó0212*/
+/*Geely3.0 APP é‡å¤è¯·æ±‚0212*/
 testcase APP_0202_Repeat()
 {
   MainInit();
@@ -1134,7 +1134,7 @@ testcase APP_0202_Repeat()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 37ÇëÇóÍË³ö±¨ÎÄÊı¾İ¹ı³¤*/
+/*APP 37è¯·æ±‚é€€å‡ºæŠ¥æ–‡æ•°æ®è¿‡é•¿*/
 testcase APP_37_ErrorLen()
 {
   MainInit();
@@ -1147,7 +1147,7 @@ testcase APP_37_ErrorLen()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 0202Ğ£ÑéÊ±CRCĞ£Ñé´íÎó*/
+/*APP 0202æ ¡éªŒæ—¶CRCæ ¡éªŒé”™è¯¯*/
 testcase APP_0202_Error()
 {
   MainInit();
@@ -1160,7 +1160,7 @@ testcase APP_0202_Error()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash 34ÇëÇó·şÎñµÄ±¨ÎÄ³¤¶È´íÎó*/
+/*Flash 34è¯·æ±‚æœåŠ¡çš„æŠ¥æ–‡é•¿åº¦é”™è¯¯*/
 testcase Flash_34_ErrorLength()
 {
   MainInit();
@@ -1171,7 +1171,7 @@ testcase Flash_34_ErrorLength()
   MainTest_f();
   Deinit();
 }
-/*Flash 34ÇëÇóÊı¾İÄÚ´æ´óĞ¡´íÎó*/
+/*Flash 34è¯·æ±‚æ•°æ®å†…å­˜å¤§å°é”™è¯¯*/
 testcase Flash_34_ErrorAddrSize()
 {
   MainInit();
@@ -1182,7 +1182,7 @@ testcase Flash_34_ErrorAddrSize()
   MainTest_f();
   Deinit();
 }
-/*Flash 34ÇëÇóµØÖ·´íÎó*/
+/*Flash 34è¯·æ±‚åœ°å€é”™è¯¯*/
 testcase Flash_34_ErrorAddr()
 {
   MainInit();
@@ -1193,7 +1193,7 @@ testcase Flash_34_ErrorAddr()
   MainTest_f();
   Deinit();
 }
-/*Flash 34ÇëÇóÏÂÔØµÄÊı¾İ¸ñÊ½±êÊ¶´íÎó*/
+/*Flash 34è¯·æ±‚ä¸‹è½½çš„æ•°æ®æ ¼å¼æ ‡è¯†é”™è¯¯*/
 testcase Flash_34_ErrorDataID()
 {
   MainInit();
@@ -1204,7 +1204,7 @@ testcase Flash_34_ErrorDataID()
   MainTest_f();
   Deinit();
 }
-/*Flash 34ÇëÇóÏÂÔØµÄµØÖ·³¤¶È¸ñÊ½±êÊ¶´íÎó*/
+/*Flash 34è¯·æ±‚ä¸‹è½½çš„åœ°å€é•¿åº¦æ ¼å¼æ ‡è¯†é”™è¯¯*/
 testcase Flash_34_ErrorAddrLenID()
 {
   MainInit();
@@ -1215,7 +1215,7 @@ testcase Flash_34_ErrorAddrLenID()
   MainTest_f();
   Deinit();
 }
-/*Flash 3601ºó3601*/
+/*Flash 3601å3601*/
 testcase Flash_3601_3601()
 {
   MainInit();
@@ -1229,7 +1229,7 @@ testcase Flash_3601_3601()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash 3601ºó3603*/
+/*Flash 3601å3603*/
 testcase Flash_3601_3603()
 {
   MainInit();
@@ -1243,7 +1243,7 @@ testcase Flash_3601_3603()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash 3602ºó3601*/
+/*Flash 3602å3601*/
 testcase Flash_3602_3601()
 {
   MainInit();
@@ -1257,7 +1257,7 @@ testcase Flash_3602_3601()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash Ê×´Î´«Êä36 00*/
+/*Flash é¦–æ¬¡ä¼ è¾“36 00*/
 testcase Flash_3600()
 {
   MainInit();
@@ -1270,7 +1270,7 @@ testcase Flash_3600()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash ÖØ¸´´«ÊäÍ¬Ò»Êı¾İ¿é*/
+/*Flash é‡å¤ä¼ è¾“åŒä¸€æ•°æ®å—*/
 testcase Flash_36_Repeat()
 {
   MainInit();
@@ -1284,7 +1284,7 @@ testcase Flash_36_Repeat()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash ÖØ¸´´«ÊäÍ¬Ò»Êı¾İ¿é³¬¹ı×î´óÏŞÖÆ*/
+/*Flash é‡å¤ä¼ è¾“åŒä¸€æ•°æ®å—è¶…è¿‡æœ€å¤§é™åˆ¶*/
 testcase Flash_36_ReOver()
 {
   MainInit();
@@ -1298,7 +1298,7 @@ testcase Flash_36_ReOver()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash 36´«ÊäÊı¾İ´íÎó*/
+/*Flash 36ä¼ è¾“æ•°æ®é”™è¯¯*/
 testcase Flash_36_Error()
 {
   MainInit();
@@ -1309,7 +1309,7 @@ testcase Flash_36_Error()
   MainTest_f();
   Deinit();
 }
-/*Flash 36Êı¾İÏÂÔØÍêºó¼ÌĞø·¢ËÍÒ»¸ö36Êı¾İ¿é*/
+/*Flash 36æ•°æ®ä¸‹è½½å®Œåç»§ç»­å‘é€ä¸€ä¸ª36æ•°æ®å—*/
 testcase Flash_36_Continue()
 {
   MainInit();
@@ -1323,7 +1323,7 @@ testcase Flash_36_Continue()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Flash 36Î´´«ÊäÍêÖ±½ÓÍË³ö*/
+/*Flash 36æœªä¼ è¾“å®Œç›´æ¥é€€å‡º*/
 testcase Flash_36_Exit()
 {
   MainInit();
@@ -1334,7 +1334,7 @@ testcase Flash_36_Exit()
   MainTest_f();
   Deinit();
 }
-/*Flash 36´«ÊäÍê·¢ËÍ31 01 FF 01¼æÈİĞÔ¼ì²é*/
+/*Flash 36ä¼ è¾“å®Œå‘é€31 01 FF 01å…¼å®¹æ€§æ£€æŸ¥*/
 testcase Flash_36_FF01()
 {
   MainInit();
@@ -1345,7 +1345,7 @@ testcase Flash_36_FF01()
   MainTest_f();
   Deinit();
 }
-/*Geely3.0 SBT37ºóÖ±½Ó·¢ËÍ0205*/
+/*Geely3.0 SBT37åç›´æ¥å‘é€0205*/
 testcase Flash_37_0205()
 {
   MainInit();
@@ -1356,7 +1356,7 @@ testcase Flash_37_0205()
   MainTest_f();
   Deinit();
 }
-/*Çı¶¯Ğ£Ñé0202´íÎó*/
+/*é©±åŠ¨æ ¡éªŒ0202é”™è¯¯*/
 testcase Flash_0202_Error()
 {
   MainInit();
@@ -1368,7 +1368,7 @@ testcase Flash_0202_Error()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 SBT0212Ê±µÚÒ»´Î·¢ËÍ´íÎóµÄÇ©Ãû£¬µÚ¶ş´Î·¢ËÍÕıÈ·µÄÇ©Ãû*/
+/*Geely3.0 SBT0212æ—¶ç¬¬ä¸€æ¬¡å‘é€é”™è¯¯çš„ç­¾åï¼Œç¬¬äºŒæ¬¡å‘é€æ­£ç¡®çš„ç­¾å*/
 testcase Flash_0202_FirstError()
 {
   MainInit();
@@ -1380,7 +1380,7 @@ testcase Flash_0202_FirstError()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 SBT0212ºó¶ÁF1A2*/
+/*Geely3.0 SBT0212åè¯»F1A2*/
 testcase Flash_0202_ReadF1A2()
 {
   MainInit();
@@ -1393,7 +1393,7 @@ testcase Flash_0202_ReadF1A2()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 SBT0212ºó¶ÁF186*/
+/*Geely3.0 SBT0212åè¯»F186*/
 testcase Flash_0202_ReadF186()
 {
   MainInit();
@@ -1406,7 +1406,7 @@ testcase Flash_0202_ReadF186()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00ºó11¸´Î»*/
+/*FF00å11å¤ä½*/
 testcase Restart_FF00()
 {
   MainInit();
@@ -1419,7 +1419,7 @@ testcase Restart_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF01ºó11¸´Î»*/
+/*FF01å11å¤ä½*/
 testcase Restart_FF01()
 {
   MainInit();
@@ -1432,7 +1432,7 @@ testcase Restart_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Çı¶¯Ğ£Ñé0202ºó11¸´Î»*/
+/*é©±åŠ¨æ ¡éªŒ0202å11å¤ä½*/
 testcase Restart_0202F()
 {
   MainInit();
@@ -1443,7 +1443,7 @@ testcase Restart_0202F()
   MainTest_f();
   Deinit();
 }
-/*APPĞ£Ñé0202ºó11¸´Î»*/
+/*APPæ ¡éªŒ0202å11å¤ä½*/
 testcase Restart_0202A()
 {
   MainInit();
@@ -1454,7 +1454,7 @@ testcase Restart_0202A()
   MainTest_f();
   Deinit();
 }
-/*2EĞ´Êı¾İºó11¸´Î»*/
+/*2Eå†™æ•°æ®å11å¤ä½*/
 testcase Restart_2E()
 {
   MainInit();
@@ -1466,7 +1466,7 @@ testcase Restart_2E()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*APP 36´«ÊäÊı¾İºó11¸´Î»*/
+/*APP 36ä¼ è¾“æ•°æ®å11å¤ä½*/
 testcase Restart_36A()
 {
   MainInit();
@@ -1477,7 +1477,7 @@ testcase Restart_36A()
   MainTest_f();
   Deinit();
 }
-/*¸üĞÂÌõ¼ş¼ì²âºó11¸´Î»*/
+/*æ›´æ–°æ¡ä»¶æ£€æµ‹å11å¤ä½*/
 testcase Restart_0203()
 {
   MainInit();
@@ -1488,7 +1488,7 @@ testcase Restart_0203()
   MainTest_f();
   Deinit();
 }
-/*DA04¼ì²âºó11¸´Î»*/
+/*DA04æ£€æµ‹å11å¤ä½*/
 testcase Restart_DA04()
 {
   MainInit();
@@ -1499,7 +1499,7 @@ testcase Restart_DA04()
   MainTest_f();
   Deinit();
 }
-/*0301ºó 11¸´Î»*/
+/*0301å 11å¤ä½*/
 testcase Restart_0301()
 {
   MainInit();
@@ -1512,7 +1512,7 @@ testcase Restart_0301()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*0205ºó 11¸´Î»*/
+/*0205å 11å¤ä½*/
 testcase Restart_0205()
 {
   MainInit();
@@ -1525,7 +1525,7 @@ testcase Restart_0205()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00ºóÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*FF00ååˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_FF00()
 {
   MainInit();
@@ -1536,7 +1536,7 @@ testcase DefSession_FF00()
   MainTest_f();
   Deinit();
 }
-/*Çı¶¯Ğ£Ñé0202ºóÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*é©±åŠ¨æ ¡éªŒ0202ååˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_0202F()
 {
   MainInit();
@@ -1547,7 +1547,7 @@ testcase DefSession_0202F()
   MainTest_f();
   Deinit();
 }
-/*APP 36´«ÊäºóÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*APP 36ä¼ è¾“ååˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_36A()
 {
   MainInit();
@@ -1558,7 +1558,7 @@ testcase DefSession_36A()
   MainTest_f();
   Deinit();
 }
-/*APPĞ£Ñé0202ºóÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*APPæ ¡éªŒ0202ååˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_0202A()
 {
   MainInit();
@@ -1569,7 +1569,7 @@ testcase DefSession_0202A()
   MainTest_f();
   Deinit();
 }
-/*2EĞ´Êı¾İºóÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*2Eå†™æ•°æ®ååˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_2E()
 {
   MainInit();
@@ -1580,7 +1580,7 @@ testcase DefSession_2E()
   MainTest_f();
   Deinit();
 }
-/*FF01ÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*FF01åˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_FF01()
 {
   MainInit();
@@ -1592,7 +1592,7 @@ testcase DefSession_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*0301ºóÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*0301ååˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_0301()
 {
   MainInit(); 
@@ -1605,7 +1605,7 @@ testcase DefSession_0301()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*0205ºóÇĞ»»Ä¬ÈÏ»á»°Ä£Ê½*/
+/*0205ååˆ‡æ¢é»˜è®¤ä¼šè¯æ¨¡å¼*/
 testcase DefSession_0205()
 {
   MainInit();
@@ -1618,7 +1618,7 @@ testcase DefSession_0205()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*1003ºóÑÓÊ±³¬¹ı5S*/
+/*1003åå»¶æ—¶è¶…è¿‡5S*/
 testcase Wait_1003()
 {
   MainInit();
@@ -1629,7 +1629,7 @@ testcase Wait_1003()
   MainTest_f();
   Deinit();
 }
-/*¸üĞÂÌõ¼ş¼ì²âºóÑÓÊ±³¬¹ı5S*/
+/*æ›´æ–°æ¡ä»¶æ£€æµ‹åå»¶æ—¶è¶…è¿‡5S*/
 testcase Wait_0203()
 {
   MainInit();
@@ -1640,7 +1640,7 @@ testcase Wait_0203()
   MainTest_f();
   Deinit();
 }
-/*¸üĞÂÌõ¼ş¼ì²âºó10 02½øÈë±à³Ì»á»°*/
+/*æ›´æ–°æ¡ä»¶æ£€æµ‹å10 02è¿›å…¥ç¼–ç¨‹ä¼šè¯*/
 testcase Pro_0203()
 {
   MainInit();
@@ -1651,7 +1651,7 @@ testcase Pro_0203()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ ¸üĞÂÌõ¼ş²éÑ¯0203*/
+/*æ­¥éª¤ç¼ºå¤± æ›´æ–°æ¡ä»¶æŸ¥è¯¢0203*/
 testcase Miss_0203()
 {
   MainInit();
@@ -1663,7 +1663,7 @@ testcase Miss_0203()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*²½ÖèÈ±Ê§ 10 02*/
+/*æ­¥éª¤ç¼ºå¤± 10 02*/
 testcase Miss_1002()
 {
   MainInit();
@@ -1674,7 +1674,7 @@ testcase Miss_1002()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ 10 03*/
+/*æ­¥éª¤ç¼ºå¤± 10 03*/
 testcase Miss_1003()
 {
   MainInit();
@@ -1687,7 +1687,7 @@ testcase Miss_1003()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*²½ÖèÈ±Ê§ Õû¸öÔ¤±à³Ì½×¶Î*/
+/*æ­¥éª¤ç¼ºå¤± æ•´ä¸ªé¢„ç¼–ç¨‹é˜¶æ®µ*/
 testcase Miss_Pre()
 {
   MainInit();
@@ -1700,7 +1700,7 @@ testcase Miss_Pre()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*²½ÖèÈ±Ê§ µÚÒ»´Î°²È«·ÃÎÊ*/
+/*æ­¥éª¤ç¼ºå¤± ç¬¬ä¸€æ¬¡å®‰å…¨è®¿é—®*/
 testcase Miss_27_1()
 {
   MainInit();
@@ -1713,7 +1713,7 @@ testcase Miss_27_1()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*²½ÖèÈ±Ê§ µÚ¶ş´Î°²È«·ÃÎÊ*/
+/*æ­¥éª¤ç¼ºå¤± ç¬¬äºŒæ¬¡å®‰å…¨è®¿é—®*/
 testcase Miss_27_2()
 {
   MainInit();
@@ -1726,7 +1726,7 @@ testcase Miss_27_2()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*²½ÖèÈ±Ê§ 22¶ÁÊı¾İ*/
+/*æ­¥éª¤ç¼ºå¤± 22è¯»æ•°æ®*/
 testcase Miss_22()
 {
   MainInit();
@@ -1737,7 +1737,7 @@ testcase Miss_22()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ 2EĞ´Êı¾İ*/
+/*æ­¥éª¤ç¼ºå¤± 2Eå†™æ•°æ®*/
 testcase Miss_2E()
 {
   MainInit();
@@ -1748,7 +1748,7 @@ testcase Miss_2E()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ Flash 34ÇëÇóÏÂÔØ*/
+/*æ­¥éª¤ç¼ºå¤± Flash 34è¯·æ±‚ä¸‹è½½*/
 testcase Miss_34F()
 {
   MainInit();
@@ -1759,7 +1759,7 @@ testcase Miss_34F()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ Flash 36Êı¾İ´«Êä*/
+/*æ­¥éª¤ç¼ºå¤± Flash 36æ•°æ®ä¼ è¾“*/
 testcase Miss_36F()
 {
   MainInit();
@@ -1770,7 +1770,7 @@ testcase Miss_36F()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ Flash 37ÍË³ö´«Êä*/
+/*æ­¥éª¤ç¼ºå¤± Flash 37é€€å‡ºä¼ è¾“*/
 testcase Miss_37F()
 {
   MainInit();
@@ -1781,7 +1781,7 @@ testcase Miss_37F()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ FlashÏÂÔØÁ÷³Ì34¡¢36¡¢37*/
+/*æ­¥éª¤ç¼ºå¤± Flashä¸‹è½½æµç¨‹34ã€36ã€37*/
 testcase Miss_34_36_37F()
 {
   MainInit();
@@ -1796,7 +1796,7 @@ testcase Miss_34_36_37F()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ FlashËùÓĞÏÂÔØÁ÷³Ì34¡¢36¡¢37¡¢0202*/
+/*æ­¥éª¤ç¼ºå¤± Flashæ‰€æœ‰ä¸‹è½½æµç¨‹34ã€36ã€37ã€0202*/
 testcase Miss_Flash()
 {
   MainInit();
@@ -1813,7 +1813,7 @@ testcase Miss_Flash()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ FlashĞ£Ñé0202*/
+/*æ­¥éª¤ç¼ºå¤± Flashæ ¡éªŒ0202*/
 testcase Miss_0202F()
 {
   MainInit();
@@ -1824,7 +1824,7 @@ testcase Miss_0202F()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ FF00²Á³ı*/
+/*æ­¥éª¤ç¼ºå¤± FF00æ“¦é™¤*/
 testcase Miss_FF00()
 {
   MainInit();
@@ -1835,7 +1835,7 @@ testcase Miss_FF00()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§31 03 FF 00²Á³ı*/
+/*æ­¥éª¤ç¼ºå¤±31 03 FF 00æ“¦é™¤*/
 testcase Miss_03FF00()
 {
   MainInit();
@@ -1846,7 +1846,7 @@ testcase Miss_03FF00()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§31 02 FF 00²Á³ı*/
+/*æ­¥éª¤ç¼ºå¤±31 02 FF 00æ“¦é™¤*/
 testcase Miss_02FF00()
 {
   MainInit();
@@ -1857,7 +1857,7 @@ testcase Miss_02FF00()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ 31 01 FF 00ºÍ31 03 FF 00²Á³ı*/
+/*æ­¥éª¤ç¼ºå¤± 31 01 FF 00å’Œ31 03 FF 00æ“¦é™¤*/
 testcase Miss_01_03FF00()
 {
   MainInit();
@@ -1870,7 +1870,7 @@ testcase Miss_01_03FF00()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ 31 01 FF 00ºÍ31 03 FF 00ºÍ31 02 FF 00²Á³ı*/
+/*æ­¥éª¤ç¼ºå¤± 31 01 FF 00å’Œ31 03 FF 00å’Œ31 02 FF 00æ“¦é™¤*/
 testcase Miss_01_02_03FF00()
 {
   MainInit();
@@ -1885,7 +1885,7 @@ testcase Miss_01_02_03FF00()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ Flash 0202Ğ£ÑéºÍÕû¸öAPPÏÂÔØ*/
+/*æ­¥éª¤ç¼ºå¤± Flash 0202æ ¡éªŒå’Œæ•´ä¸ªAPPä¸‹è½½*/
 testcase Miss_0202F_App()
 {
   MainInit();
@@ -1896,7 +1896,7 @@ testcase Miss_0202F_App()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ APP 34ÇëÇóÏÂÔØ*/
+/*æ­¥éª¤ç¼ºå¤± APP 34è¯·æ±‚ä¸‹è½½*/
 testcase Miss_34A()
 {
   MainInit();
@@ -1907,7 +1907,7 @@ testcase Miss_34A()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ APP 36Êı¾İ´«Êä*/
+/*æ­¥éª¤ç¼ºå¤± APP 36æ•°æ®ä¼ è¾“*/
 testcase Miss_36A()
 {
   MainInit();
@@ -1918,7 +1918,7 @@ testcase Miss_36A()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ APP 37Êı¾İ´«Êä*/
+/*æ­¥éª¤ç¼ºå¤± APP 37æ•°æ®ä¼ è¾“*/
 testcase Miss_37A()
 {
   MainInit();
@@ -1929,7 +1929,7 @@ testcase Miss_37A()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ APP 34¡¢36Êı¾İ´«Êä*/
+/*æ­¥éª¤ç¼ºå¤± APP 34ã€36æ•°æ®ä¼ è¾“*/
 testcase Miss_34_36A()
 {
   MainInit();
@@ -1942,7 +1942,7 @@ testcase Miss_34_36A()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ APP 34¡¢36Êı¾İ´«Êä*/
+/*æ­¥éª¤ç¼ºå¤± APP 34ã€36æ•°æ®ä¼ è¾“*/
 testcase Miss_34_36_37A()
 {
   MainInit();
@@ -1957,7 +1957,7 @@ testcase Miss_34_36_37A()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ AppĞ£Ñé0202*/
+/*æ­¥éª¤ç¼ºå¤± Appæ ¡éªŒ0202*/
 testcase Miss_0202A()
 {
   MainInit();
@@ -1968,7 +1968,7 @@ testcase Miss_0202A()
   MainTest_f();
   Deinit();
 }
-/*²½ÖèÈ±Ê§ FF01*/
+/*æ­¥éª¤ç¼ºå¤± FF01*/
 testcase Miss_FF01()
 {
   MainInit();
@@ -1981,7 +1981,7 @@ testcase Miss_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 03 FF 01*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 03 FF 01*/
 testcase Miss_03FF01()
 {
   MainInit();
@@ -1994,7 +1994,7 @@ testcase Miss_03FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 01 FF 01ºÍ31 03 FF 01*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 01 FF 01å’Œ31 03 FF 01*/
 testcase Miss_01_03FF01()
 {
   MainInit();
@@ -2009,7 +2009,7 @@ testcase Miss_01_03FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 02 FF 01*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 02 FF 01*/
 testcase Miss_02FF01()
 {
   MainInit();
@@ -2022,7 +2022,7 @@ testcase Miss_02FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 01 FF 01¡¢31 03 FF 01¡¢31 02 FF 01*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 01 FF 01ã€31 03 FF 01ã€31 02 FF 01*/
 testcase Miss_01_02_03FF01()
 {
   MainInit();
@@ -2039,7 +2039,7 @@ testcase Miss_01_02_03FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 01 DA 04*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 01 DA 04*/
 testcase Miss_DA04()
 {
   MainInit();
@@ -2052,7 +2052,7 @@ testcase Miss_DA04()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 03 DA 04*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 03 DA 04*/
 testcase Miss_03DA04()
 {
   MainInit();
@@ -2065,7 +2065,7 @@ testcase Miss_03DA04()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 01 DA 04 ºÍ 31 03 DA 04*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 01 DA 04 å’Œ 31 03 DA 04*/
 testcase Miss_01_03DA04()
 {
   MainInit();
@@ -2080,7 +2080,7 @@ testcase Miss_01_03DA04()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 02 DA 04*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 02 DA 04*/
 testcase Miss_02DA04()
 {
   MainInit();
@@ -2093,7 +2093,7 @@ testcase Miss_02DA04()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*ÆæÈğ ²½ÖèÈ±Ê§ 31 01 DA 04 ºÍ 31 03 DA 04*/
+/*å¥‡ç‘ æ­¥éª¤ç¼ºå¤± 31 01 DA 04 å’Œ 31 03 DA 04*/
 testcase Miss_01_02_03DA04()
 {
   MainInit();
@@ -2110,7 +2110,7 @@ testcase Miss_01_02_03DA04()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 ²½ÖèÈ±Ê§ 31 01 03 01*/
+/*Geely3.0 æ­¥éª¤ç¼ºå¤± 31 01 03 01*/
 testcase Miss_0301()
 {
   MainInit();
@@ -2123,7 +2123,7 @@ testcase Miss_0301()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 ²½ÖèÈ±Ê§ 31 01 02 05*/
+/*Geely3.0 æ­¥éª¤ç¼ºå¤± 31 01 02 05*/
 testcase Miss_0205()
 {
   MainInit();
@@ -2138,7 +2138,7 @@ testcase Miss_0205()
   TxMessage_Pass = 1;
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 ²½ÖèÈ±Ê§ SBT0212Ğ£ÑéºÍ0301*/
+/*Geely3.0 æ­¥éª¤ç¼ºå¤± SBT0212æ ¡éªŒå’Œ0301*/
 testcase Miss_0202F_0301()
 {
   MainInit();
@@ -2153,7 +2153,7 @@ testcase Miss_0202F_0301()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*²½ÖèÈ±Ê§ ECU 11¸´Î»*/
+/*æ­¥éª¤ç¼ºå¤± ECU 11å¤ä½*/
 testcase Miss_11()
 {
   MainInit();
@@ -2164,7 +2164,7 @@ testcase Miss_11()
   MainTest_f();
   Deinit();
 }
-/*ÆæÈğ 31 01 FF 00ºó31 01 FF 00*/
+/*å¥‡ç‘ 31 01 FF 00å31 01 FF 00*/
 testcase Re_FF00()
 {
   MainInit();
@@ -2175,7 +2175,7 @@ testcase Re_FF00()
   MainTest_f();
   Deinit();
 }
-/*ÆæÈğ 31 01 FF 01ºó31 01 FF 01*/
+/*å¥‡ç‘ 31 01 FF 01å31 01 FF 01*/
 testcase Re_FF01()
 {
   MainInit();
@@ -2186,7 +2186,7 @@ testcase Re_FF01()
   MainTest_f();
   Deinit();
 }
-/*Geely3.0 ÖØ¸´ÇëÇó 0301 ¼¤»îSBL*/
+/*Geely3.0 é‡å¤è¯·æ±‚ 0301 æ¿€æ´»SBL*/
 testcase Repeat_0301()
 {
   MainInit();
@@ -2197,7 +2197,7 @@ testcase Repeat_0301()
   MainTest_f();
   Deinit();
 }
-/*22 ¶ÁÈ¡²»Ö§³ÖµÄDID*/
+/*22 è¯»å–ä¸æ”¯æŒçš„DID*/
 testcase Error_22_DID()
 {
   MainInit();
@@ -2210,7 +2210,7 @@ testcase Error_22_DID()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*°²È«·ÃÎÊ ÃÜÔ¿´íÎó*/
+/*å®‰å…¨è®¿é—® å¯†é’¥é”™è¯¯*/
 testcase Error_27()
 {
   MainInit();
@@ -2221,7 +2221,7 @@ testcase Error_27()
   MainTest_f();
   Deinit();
 }
-/*2E F184Ğ´ÈëÎŞĞ§Êı¾İ*/
+/*2E F184å†™å…¥æ— æ•ˆæ•°æ®*/
 testcase Error_2EF184()
 {
   MainInit();
@@ -2232,7 +2232,7 @@ testcase Error_2EF184()
   MainTest_f();
   Deinit();
 }
-/*ÆæÈğ 31 01 DA04µÄCRCÖµ´íÎó*/
+/*å¥‡ç‘ 31 01 DA04çš„CRCå€¼é”™è¯¯*/
 testcase Error_DA04()
 {
   MainInit();
@@ -2243,7 +2243,7 @@ testcase Error_DA04()
   MainTest_f();
   Deinit();
 }
-/*Geely3.0 0301·¢ËÍ´íÎóÊı¾İ*/
+/*Geely3.0 0301å‘é€é”™è¯¯æ•°æ®*/
 testcase Error_0301()
 {
   MainInit();
@@ -2256,7 +2256,7 @@ testcase Error_0301()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 Êı¾İ³¤¶È´íÎó*/
+/*FF00 æ•°æ®é•¿åº¦é”™è¯¯*/
 testcase FF00_Length()
 {
   MainInit();
@@ -2269,7 +2269,7 @@ testcase FF00_Length()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 ²Á³ıÄÚ´æµØÖ·´íÎó*/
+/*FF00 æ“¦é™¤å†…å­˜åœ°å€é”™è¯¯*/
 testcase FF00_Addr()
 {
   MainInit();
@@ -2281,7 +2281,7 @@ testcase FF00_Addr()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 ²Á³ıÄÚ´æ´óĞ¡´íÎó*/
+/*FF00 æ“¦é™¤å†…å­˜å¤§å°é”™è¯¯*/
 testcase FF00_AddrSize()
 {
   MainInit();
@@ -2293,7 +2293,7 @@ testcase FF00_AddrSize()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 Ä³¸öµØÖ·Î´½øĞĞ²Á³ı£¬µ«ÔÚºóĞøÏÂÔØÊı¾İÊ±ÇëÇó34ÏÂÔØ*/
+/*FF00 æŸä¸ªåœ°å€æœªè¿›è¡Œæ“¦é™¤ï¼Œä½†åœ¨åç»­ä¸‹è½½æ•°æ®æ—¶è¯·æ±‚34ä¸‹è½½*/
 testcase FF00_Part()
 {
   MainInit();
@@ -2305,7 +2305,7 @@ testcase FF00_Part()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 Çı¶¯ÏÂÔØÍê³ÉÇ° ²Á³ı*/
+/*FF00 é©±åŠ¨ä¸‹è½½å®Œæˆå‰ æ“¦é™¤*/
 testcase FF00_Before_36F()
 {
   MainInit();
@@ -2317,7 +2317,7 @@ testcase FF00_Before_36F()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 ²Á³ıFBT*/
+/*FF00 æ“¦é™¤FBT*/
 testcase FF00_FBT()
 {
   MainInit();
@@ -2331,7 +2331,7 @@ testcase FF00_FBT()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 ²Á³ıSBT*/
+/*FF00 æ“¦é™¤SBT*/
 testcase FF00_SBT()
 {
   MainInit();
@@ -2345,7 +2345,7 @@ testcase FF00_SBT()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 ¿Ï¶¨ÏìÓ¦Ç°ÏÂ×Üµç*/
+/*FF00 è‚¯å®šå“åº”å‰ä¸‹æ€»ç”µ*/
 testcase FF00_K30OFF()
 {
   MainInit();
@@ -2358,7 +2358,7 @@ testcase FF00_K30OFF()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF00 ²Á³ıºóÖ±½ÓDA04ÒÀÀµĞÔ¼ì²â*/
+/*FF00 æ“¦é™¤åç›´æ¥DA04ä¾èµ–æ€§æ£€æµ‹*/
 testcase FF00_DA04()
 {
   MainInit();
@@ -2371,7 +2371,7 @@ testcase FF00_DA04()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 FF00ÖØ¸´ÇëÇó*/
+/*Geely3.0 FF00é‡å¤è¯·æ±‚*/
 testcase FF00_Repeat()
 {
   MainInit();
@@ -2383,7 +2383,7 @@ testcase FF00_Repeat()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 FF00²Á³ıºó¶Á22 F1 AA*/
+/*Geely3.0 FF00æ“¦é™¤åè¯»22 F1 AA*/
 testcase FF00_ReadF1AA()
 {
   MainInit();
@@ -2396,7 +2396,7 @@ testcase FF00_ReadF1AA()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*Geely3.0 FF00²Á³ıºóÖ±½Ó0205*/
+/*Geely3.0 FF00æ“¦é™¤åç›´æ¥0205*/
 testcase FF00_0205()
 {
   MainInit();
@@ -2408,7 +2408,7 @@ testcase FF00_0205()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*FF 01ÒÀÀµĞÔ¼ì²é¹ı³ÌÖĞÈ±ÉÙÄ³¸öµØÖ·¶Î*/
+/*FF 01ä¾èµ–æ€§æ£€æŸ¥è¿‡ç¨‹ä¸­ç¼ºå°‘æŸä¸ªåœ°å€æ®µ*/
 testcase FF01_Part()
 {
   MainInit();
@@ -2421,7 +2421,7 @@ testcase FF01_Part()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*³¤°²ÌØÊâÓÃÀı£ºFF00ºó·¢ËÍ1001£¬È»ºóË¢Ğ´²»Ö´ĞĞ2E*/
+/*é•¿å®‰ç‰¹æ®Šç”¨ä¾‹ï¼šFF00åå‘é€1001ï¼Œç„¶ååˆ·å†™ä¸æ‰§è¡Œ2E*/
 testcase CA_Test_1()
 {
   MainInit();
@@ -2436,7 +2436,7 @@ testcase CA_Test_1()
   MainTest_f();
   Deinit();
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÄÚ´æ²Á³ıÇ°ÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼šå†…å­˜æ“¦é™¤å‰åˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_Before_FF00()
 {
   MainInit();
@@ -2448,7 +2448,7 @@ testcase Powerdown_Before_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass);  
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÄÚ´æ²Á³ıÖĞÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼šå†…å­˜æ“¦é™¤ä¸­åˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_In_FF00()
 {
   MainInit();
@@ -2460,7 +2460,7 @@ testcase Powerdown_In_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass); 
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÄÚ´æ²Á³ıºóÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼šå†…å­˜æ“¦é™¤ååˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_After_FF00()
 {
   MainInit();
@@ -2472,7 +2472,7 @@ testcase Powerdown_After_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass); 
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÊı¾İ¿é´«ÊäÍêÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼šæ•°æ®å—ä¼ è¾“å®Œåˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_After_36A()
 {
   MainInit();
@@ -2484,7 +2484,7 @@ testcase Powerdown_After_36A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÊı¾İ¿é´«ÊäÖĞÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼šæ•°æ®å—ä¼ è¾“ä¸­åˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_In_36A()
 {
   MainInit();
@@ -2496,7 +2496,7 @@ testcase Powerdown_In_36A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£º0202¼ì²éÇ°ÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼š0202æ£€æŸ¥å‰åˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_Before_0202A()
 {
   MainInit();
@@ -2508,7 +2508,7 @@ testcase Powerdown_Before_0202A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºFF01ÓĞĞ§ĞÔ¼ì²éÇ°ÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼šFF01æœ‰æ•ˆæ€§æ£€æŸ¥å‰åˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_Before_FF01()
 {
   MainInit();
@@ -2520,7 +2520,7 @@ testcase Powerdown_Before_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºFF01ÓĞĞ§ĞÔ¼ì²éºóÇĞ¶ÏµçÔ´²âÊÔ*/
+/*å¯é æ€§æµ‹è¯•ï¼šFF01æœ‰æ•ˆæ€§æ£€æŸ¥ååˆ‡æ–­ç”µæºæµ‹è¯•*/
 testcase Powerdown_After_FF01()
 {
   MainInit();
@@ -2532,7 +2532,7 @@ testcase Powerdown_After_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÄÚ´æ²Á³ıÇ°ÏÂµã»ğ*/
+/*å¯é æ€§æµ‹è¯•ï¼šå†…å­˜æ“¦é™¤å‰ä¸‹ç‚¹ç«*/
 testcase K15_Before_FF00()
 {
   MainInit();
@@ -2544,7 +2544,7 @@ testcase K15_Before_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÄÚ´æ²Á³ıºóÏÂµã»ğ*/
+/*å¯é æ€§æµ‹è¯•ï¼šå†…å­˜æ“¦é™¤åä¸‹ç‚¹ç«*/
 testcase K15_After_FF00()
 {
   MainInit();
@@ -2556,7 +2556,7 @@ testcase K15_After_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÊı¾İ¿é´«ÊäÍêÏÂµã»ğ*/
+/*å¯é æ€§æµ‹è¯•ï¼šæ•°æ®å—ä¼ è¾“å®Œä¸‹ç‚¹ç«*/
 testcase K15_After_36A()
 {
   MainInit();
@@ -2568,7 +2568,7 @@ testcase K15_After_36A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÊı¾İ¿é´«ÊäÖĞÏÂµã»ğ*/
+/*å¯é æ€§æµ‹è¯•ï¼šæ•°æ®å—ä¼ è¾“ä¸­ä¸‹ç‚¹ç«*/
 testcase K15_In_36A()
 {
   MainInit();
@@ -2580,7 +2580,7 @@ testcase K15_In_36A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£º0202¼ì²éÇ°ÏÂµã»ğ*/
+/*å¯é æ€§æµ‹è¯•ï¼š0202æ£€æŸ¥å‰ä¸‹ç‚¹ç«*/
 testcase K15_Before_0202A()
 {
   MainInit();
@@ -2592,7 +2592,7 @@ testcase K15_Before_0202A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºFF01ÓĞĞ§ĞÔ¼ì²éÇ°ÏÂµã»ğ*/
+/*å¯é æ€§æµ‹è¯•ï¼šFF01æœ‰æ•ˆæ€§æ£€æŸ¥å‰ä¸‹ç‚¹ç«*/
 testcase K15_Before_FF01()
 {
   MainInit();
@@ -2604,7 +2604,7 @@ testcase K15_Before_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºFF01ÓĞĞ§ĞÔ¼ì²éºóÏÂµã»ğ*/
+/*å¯é æ€§æµ‹è¯•ï¼šFF01æœ‰æ•ˆæ€§æ£€æŸ¥åä¸‹ç‚¹ç«*/
 testcase K15_After_FF01()
 {
   MainInit();
@@ -2616,7 +2616,7 @@ testcase K15_After_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÄÚ´æ²Á³ıÇ°BusOff*/
+/*å¯é æ€§æµ‹è¯•ï¼šå†…å­˜æ“¦é™¤å‰BusOff*/
 testcase BusOff_Before_FF00()
 {
   MainInit();
@@ -2628,7 +2628,7 @@ testcase BusOff_Before_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÄÚ´æ²Á³ıºóBusOff*/
+/*å¯é æ€§æµ‹è¯•ï¼šå†…å­˜æ“¦é™¤åBusOff*/
 testcase BusOff_After_FF00()
 {
   MainInit();
@@ -2640,7 +2640,7 @@ testcase BusOff_After_FF00()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÊı¾İ¿é´«ÊäÍêBusOff*/
+/*å¯é æ€§æµ‹è¯•ï¼šæ•°æ®å—ä¼ è¾“å®ŒBusOff*/
 testcase BusOff_After_36A()
 {
   MainInit();
@@ -2652,7 +2652,7 @@ testcase BusOff_After_36A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºÊı¾İ¿é´«ÊäÖĞBusOff*/
+/*å¯é æ€§æµ‹è¯•ï¼šæ•°æ®å—ä¼ è¾“ä¸­BusOff*/
 testcase BusOff_In_36A()
 {
   MainInit();
@@ -2664,7 +2664,7 @@ testcase BusOff_In_36A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£º0202¼ì²éÇ°BusOff*/
+/*å¯é æ€§æµ‹è¯•ï¼š0202æ£€æŸ¥å‰BusOff*/
 testcase BusOff_Before_0202A()
 {
   MainInit();
@@ -2676,7 +2676,7 @@ testcase BusOff_Before_0202A()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºFF01ÓĞĞ§ĞÔ¼ì²éÇ°BusOff*/
+/*å¯é æ€§æµ‹è¯•ï¼šFF01æœ‰æ•ˆæ€§æ£€æŸ¥å‰BusOff*/
 testcase BusOff_Before_FF01()
 {
   MainInit();
@@ -2688,7 +2688,7 @@ testcase BusOff_Before_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*¿É¿¿ĞÔ²âÊÔ£ºFF01ÓĞĞ§ĞÔ¼ì²éºóBusOff*/
+/*å¯é æ€§æµ‹è¯•ï¼šFF01æœ‰æ•ˆæ€§æ£€æŸ¥åBusOff*/
 testcase BusOff_After_FF01()
 {
   MainInit();
@@ -2700,7 +2700,7 @@ testcase BusOff_After_FF01()
   Deinit();
   Check_Tx(TxMessage_Pass);
 }
-/*´¿BT×´Ì¬ÏÂ¶ÁÈ¡22 F1 86*/
+/*çº¯BTçŠ¶æ€ä¸‹è¯»å–22 F1 86*/
 testcase BT_F186()
 {
   MainInit();
@@ -2711,7 +2711,7 @@ testcase BT_F186()
   MainTest_f();
   Deinit();
 }
-/*APP½øBTºó·¢ËÍ10 01*/
+/*APPè¿›BTåå‘é€10 01*/
 testcase APP_BT_1001()
 {
   MainInit();
@@ -2723,11 +2723,11 @@ testcase APP_BT_1001()
   Deinit();
 }
 
-testcase Case_BT_Manager_01()/*ÎŞ±à³ÌÇëÇó APPÓĞĞ§*/
+testcase Case_BT_Manager_01()/*æ— ç¼–ç¨‹è¯·æ±‚ APPæœ‰æ•ˆ*/
 {
   MainInit();
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 0) //ÎŞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 0) //æ— æ•ˆ
   {
     MainTest_f();
     Resp_Init();
@@ -2740,7 +2740,7 @@ testcase Case_BT_Manager_01()/*ÎŞ±à³ÌÇëÇó APPÓĞĞ§*/
   DTC_Control(phyID,0,0x01,Resp_85);
   Deinit();
 }
-testcase Case_BT_Manager_02()/*ÓĞ±à³ÌÇëÇó*/
+testcase Case_BT_Manager_02()/*æœ‰ç¼–ç¨‹è¯·æ±‚*/
 {
   int i,Response;
   message 0x00 msg;
@@ -2769,19 +2769,19 @@ testcase Case_BT_Manager_02()/*ÓĞ±à³ÌÇëÇó*/
     i++;
   }while( Response == 0 && i<300);
   if(i >= 300)
-    testStepFail("","²âÊÔ´ÎÊı´ïµ½×î´óÇ°£¬Î´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","æµ‹è¯•æ¬¡æ•°è¾¾åˆ°æœ€å¤§å‰ï¼Œæœªæ”¶åˆ°æ­£å“åº”");
   if(Response == 1)
-    testStepPass("","³É¹¦½øÈë±à³Ì»á»°");
+    testStepPass("","æˆåŠŸè¿›å…¥ç¼–ç¨‹ä¼šè¯");
   testWaitForTimeout(2000);
   Resp_1001 = -1;
   enterDefault(phyID,0,Resp_1001);
   Deinit();
 }
-testcase Case_BT_Manager_03()/*ÎŞ±à³ÌÇëÇó APPÎŞĞ§*/
+testcase Case_BT_Manager_03()/*æ— ç¼–ç¨‹è¯·æ±‚ APPæ— æ•ˆ*/
 {
   MainInit();
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 1) //ÓĞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 1) //æœ‰æ•ˆ
   {
     @AUTO::APP_Valid = 1;
     MainTest_f();
@@ -2795,7 +2795,7 @@ testcase Case_BT_Manager_03()/*ÎŞ±à³ÌÇëÇó APPÎŞĞ§*/
   _Send37(phyID,Resp_37_a);
   Deinit();
 }
-testcase Case_BT_Manager_04()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ºóÓĞ±à³ÌÇëÇó*/
+testcase Case_BT_Manager_04()/*é»˜è®¤ä¼šè¯å‘é€1101å¤ä½åæœ‰ç¼–ç¨‹è¯·æ±‚*/
 {
   int i,Response;
   message 0x00 msg;
@@ -2804,8 +2804,8 @@ testcase Case_BT_Manager_04()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ºóÓĞ±à³ÌÇëÇó*/
   
   DiagSetPrimitiveByte(req11,1,0x01); 
   MainInit();
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 0) //ÎŞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 0) //æ— æ•ˆ
   {
     MainTest_f();
     Resp_Init();
@@ -2835,23 +2835,23 @@ testcase Case_BT_Manager_04()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ºóÓĞ±à³ÌÇëÇó*/
     i++;
   }while( Response == 0 && i<500);
   if(i >= 500)
-    testStepFail("","²âÊÔ´ÎÊı´ïµ½×î´óÇ°£¬Î´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","æµ‹è¯•æ¬¡æ•°è¾¾åˆ°æœ€å¤§å‰ï¼Œæœªæ”¶åˆ°æ­£å“åº”");
   if(Response == 1)
-    testStepPass("","³É¹¦½øÈë±à³Ì»á»°");
+    testStepPass("","æˆåŠŸè¿›å…¥ç¼–ç¨‹ä¼šè¯");
   testWaitForTimeout(2000);
   Resp_1001 = -1;
   enterDefault(phyID,0,Resp_1001);
   Deinit();
 }
 
-testcase Case_BT_Manager_05()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ÏìÓ¦ºó¶Ïµç*/
+testcase Case_BT_Manager_05()/*é»˜è®¤ä¼šè¯å‘é€1101å¤ä½å“åº”åæ–­ç”µ*/
 {
   diagRequest ABS_ESP.hardReset_Reset req11;
   
   DiagSetPrimitiveByte(req11,1,0x01); 
   MainInit();
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 0) //ÎŞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 0) //æ— æ•ˆ
   {
     MainTest_f();
     Resp_Init();
@@ -2875,11 +2875,11 @@ testcase Case_BT_Manager_05()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ÏìÓ¦ºó¶Ïµç*/
   Deinit();
 }
 
-testcase Case_BT_Manager_06()/*À©Õ¹»á»°·¢ËÍ±à³ÌÇëÇóºó¶Ïµç*/
+testcase Case_BT_Manager_06()/*æ‰©å±•ä¼šè¯å‘é€ç¼–ç¨‹è¯·æ±‚åæ–­ç”µ*/
 {
   MainInit();
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 0) //ÎŞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 0) //æ— æ•ˆ
   {
     MainTest_f();
     Resp_Init();
@@ -2905,7 +2905,7 @@ testcase Case_BT_Manager_06()/*À©Õ¹»á»°·¢ËÍ±à³ÌÇëÇóºó¶Ïµç*/
   Deinit();
 }
 
-testcase Case_BT_Manager_07()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ºóÓĞ±à³ÌÇëÇó*/
+testcase Case_BT_Manager_07()/*é»˜è®¤ä¼šè¯å‘é€1101å¤ä½åæœ‰ç¼–ç¨‹è¯·æ±‚*/
 {
   diagRequest ABS_ESP.hardReset_Reset req11;
   message *SendMsg;
@@ -2914,8 +2914,8 @@ testcase Case_BT_Manager_07()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ºóÓĞ±à³ÌÇëÇó*/
   
   MainInit();
   DiagSetPrimitiveByte(req11,1,0x01); 
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 1) //ÓĞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 1) //æœ‰æ•ˆ
   {
     @AUTO::APP_Valid = 1;
     MainTest_f();
@@ -2946,9 +2946,9 @@ testcase Case_BT_Manager_07()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ºóÓĞ±à³ÌÇëÇó*/
     i++;
   }while( Response == 0 && i<200);
   if(i >= 200)
-    testStepFail("","²âÊÔ´ÎÊı´ïµ½×î´óÇ°£¬Î´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","æµ‹è¯•æ¬¡æ•°è¾¾åˆ°æœ€å¤§å‰ï¼Œæœªæ”¶åˆ°æ­£å“åº”");
   if(Response == 1)
-    testStepPass("","ÄÜ¹»Õı³£½øÈë±à³Ì»á»°");
+    testStepPass("","èƒ½å¤Ÿæ­£å¸¸è¿›å…¥ç¼–ç¨‹ä¼šè¯");
   
   testWaitForTimeout(2000);
   Resp_1001 = -1;
@@ -2956,14 +2956,14 @@ testcase Case_BT_Manager_07()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ºóÓĞ±à³ÌÇëÇó*/
   
   Deinit();
 }
-testcase Case_BT_Manager_08()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ÏìÓ¦ºó¶Ïµç*/
+testcase Case_BT_Manager_08()/*é»˜è®¤ä¼šè¯å‘é€1101å¤ä½å“åº”åæ–­ç”µ*/
 {
   diagRequest ABS_ESP.hardReset_Reset req11;
   
   MainInit();
   DiagSetPrimitiveByte(req11,1,0x01); 
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 1) //ÓĞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 1) //æœ‰æ•ˆ
   {
     @AUTO::APP_Valid = 1;
     MainTest_f();
@@ -2989,11 +2989,11 @@ testcase Case_BT_Manager_08()/*Ä¬ÈÏ»á»°·¢ËÍ1101¸´Î»ÏìÓ¦ºó¶Ïµç*/
   enterDefault(phyID,0,Resp_1001);
   Deinit();
 }
-testcase Case_BT_Manager_09()/*À©Õ¹»á»°·¢ËÍ±à³ÌÇëÇóºó¶Ïµç*/
+testcase Case_BT_Manager_09()/*æ‰©å±•ä¼šè¯å‘é€ç¼–ç¨‹è¯·æ±‚åæ–­ç”µ*/
 {
   MainInit();
-  /*ÅĞ¶Ïµ±Ç°ÊÇ·ñAPPÓĞĞ§*/
-  if(Check_AppValid() == 1) //ÓĞĞ§
+  /*åˆ¤æ–­å½“å‰æ˜¯å¦APPæœ‰æ•ˆ*/
+  if(Check_AppValid() == 1) //æœ‰æ•ˆ
   {
     @AUTO::APP_Valid = 1;
     MainTest_f();

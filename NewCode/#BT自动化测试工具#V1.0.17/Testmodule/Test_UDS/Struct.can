@@ -1,5 +1,5 @@
-/*@!Encoding:936*/
 
+/*@!Encoding:936*/
 includes
 {
   
@@ -7,57 +7,57 @@ includes
 
 variables
 {
-  /*·şÎñ(ĞÂ ,²ÎÕÕÅäÖÃ±í) * ½á¹¹Ìå*/
+  /*æœåŠ¡(æ–° ,å‚ç…§é…ç½®è¡¨) * ç»“æ„ä½“*/
   struct Serve_Support
   {
-    byte Serve;                            /*·şÎñ*/
-    dword Serve_Fun[50];                  /*·şÎñÖ§³ÖµÄ×Ó¹¦ÄÜ*/ 
-    byte Serve_Fun_Count;                  /*·şÎñÖ§³ÖµÄ×Ó¹¦ÄÜ¸öÊı*/
-    byte Serve_Fun_Len[50];               /*·şÎñÖ§³ÖµÄ×Ó¹¦ÄÜ¶ÔÓ¦µÄÕıÈ·³¤¶È*/ 
+    byte Serve;                            /*æœåŠ¡*/
+    dword Serve_Fun[50];                  /*æœåŠ¡æ”¯æŒçš„å­åŠŸèƒ½*/ 
+    byte Serve_Fun_Count;                  /*æœåŠ¡æ”¯æŒçš„å­åŠŸèƒ½ä¸ªæ•°*/
+    byte Serve_Fun_Len[50];               /*æœåŠ¡æ”¯æŒçš„å­åŠŸèƒ½å¯¹åº”çš„æ­£ç¡®é•¿åº¦*/ 
     
-    byte Serve_Para[50][10];             /*Ã¿¸ö×Ó¹¦ÄÜ¶ÔÓ¦µÄ²ÎÊı*/ 
-    byte Serve_Para_Count[50];            /*Ã¿¸ö×Ó¹¦ÄÜ¶ÔÓ¦µÄ²ÎÊı¸öÊı*/ 
-    byte Serve_Para_Len[50][10];         /*×Ó¹¦ÄÜ¶ÔÓ¦µÄÃ¿¸ö²ÎÊıµÄ³¤¶È*/
+    byte Serve_Para[50][10];             /*æ¯ä¸ªå­åŠŸèƒ½å¯¹åº”çš„å‚æ•°*/ 
+    byte Serve_Para_Count[50];            /*æ¯ä¸ªå­åŠŸèƒ½å¯¹åº”çš„å‚æ•°ä¸ªæ•°*/ 
+    byte Serve_Para_Len[50][10];         /*å­åŠŸèƒ½å¯¹åº”çš„æ¯ä¸ªå‚æ•°çš„é•¿åº¦*/
     
-    byte Serve_NRC[50][10];              /*NRCÓÅÏÈ¼¶(ÓÉ¸ßµ½µÍ)*//*Óë×Ó¹¦ÄÜÎ»ÖÃË³Ğò¶ÔÓ¦*/
-    byte Serve_NRC_Count[50];             /*NRC¸öÊı*/
-    byte Serve_NRC22[50];                 /*NRC22Ìõ¼ş*/
-    byte RSP[50];                         /*¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ» 1:Ö§³Ö  0:²»Ö§³Ö*//*Óë×Ó¹¦ÄÜÎ»ÖÃË³Ğò¶ÔÓ¦*/
-    byte Security_Access[50];             /*ÊÇ·ñĞèÒª°²È«·ÃÎÊ*//*Óë×Ó¹¦ÄÜÎ»ÖÃË³Ğò¶ÔÓ¦*/
-    byte Serve_Addres[50];                /*Ñ°Ö··½Ê½*//*Óë×Ó¹¦ÄÜÎ»ÖÃË³Ğò¶ÔÓ¦*/
-    byte Serve_Session[50];               /*»á»°*//*Óë×Ó¹¦ÄÜÎ»ÖÃË³Ğò¶ÔÓ¦*/
+    byte Serve_NRC[50][10];              /*NRCä¼˜å…ˆçº§(ç”±é«˜åˆ°ä½)*//*ä¸å­åŠŸèƒ½ä½ç½®é¡ºåºå¯¹åº”*/
+    byte Serve_NRC_Count[50];             /*NRCä¸ªæ•°*/
+    byte Serve_NRC22[50];                 /*NRC22æ¡ä»¶*/
+    byte RSP[50];                         /*è‚¯å®šå“åº”æŠ‘åˆ¶ä½ 1:æ”¯æŒ  0:ä¸æ”¯æŒ*//*ä¸å­åŠŸèƒ½ä½ç½®é¡ºåºå¯¹åº”*/
+    byte Security_Access[50];             /*æ˜¯å¦éœ€è¦å®‰å…¨è®¿é—®*//*ä¸å­åŠŸèƒ½ä½ç½®é¡ºåºå¯¹åº”*/
+    byte Serve_Addres[50];                /*å¯»å€æ–¹å¼*//*ä¸å­åŠŸèƒ½ä½ç½®é¡ºåºå¯¹åº”*/
+    byte Serve_Session[50];               /*ä¼šè¯*//*ä¸å­åŠŸèƒ½ä½ç½®é¡ºåºå¯¹åº”*/
   };
   struct Serve_Support Serve_Data[15];
   dword Serve_Data_Count;
   
   
-  /*31·şÎñ(ĞÂ ,²ÎÕÕÅäÖÃ±í) * ½á¹¹Ìå*/
-  /*1×Ö½Ú·şÎñ + 1×Ö½ÚÀı³Ì¿ØÖÆÀàĞÍ + 2×Ö½ÚÀı³ÌDID + Àı³Ì¿ØÖÆÑ¡Ïî   ÀıÈç £º³¤°²½Ç¶ÈÖÃÁãÇëÇó31 01 FE E0 01*/
+  /*31æœåŠ¡(æ–° ,å‚ç…§é…ç½®è¡¨) * ç»“æ„ä½“*/
+  /*1å­—èŠ‚æœåŠ¡ + 1å­—èŠ‚ä¾‹ç¨‹æ§åˆ¶ç±»å‹ + 2å­—èŠ‚ä¾‹ç¨‹DID + ä¾‹ç¨‹æ§åˆ¶é€‰é¡¹   ä¾‹å¦‚ ï¼šé•¿å®‰è§’åº¦ç½®é›¶è¯·æ±‚31 01 FE E0 01*/
   
   struct Serve_31_Support
   {   
-    byte Routine[2];                      /*Àı³ÌDID/½ø³ÌºÅ(Ò»¸öÀı³Ì2¸öbyte)*/
-    dword Routine_Len;                     /*Àı³Ì¶ÔÓ¦µÄ·¢ËÍ³¤¶È*/
-    char Interpretation[50];              /*Àı³ÌÊÍÒå*/
+    byte Routine[2];                      /*ä¾‹ç¨‹DID/è¿›ç¨‹å·(ä¸€ä¸ªä¾‹ç¨‹2ä¸ªbyte)*/
+    dword Routine_Len;                     /*ä¾‹ç¨‹å¯¹åº”çš„å‘é€é•¿åº¦*/
+    char Interpretation[50];              /*ä¾‹ç¨‹é‡Šä¹‰*/
     
-    byte Control_Type_Count;              /*¶ÔÓ¦Àı³ÌÏÂÓĞ¼¸¸ö¿ØÖÆÀàĞÍ(ºÍÀı³ÌÎ»ÖÃ¶ÔÓ¦)*/
-    byte Control_Type[10];                /*Àı³Ì¿ØÖÆÀàĞÍ*//*ºÍÀı³ÌÎ»ÖÃ¶ÔÓ¦(Ò»¸öÀı³Ì¶àÖÖ¿ØÖÆÀàĞÍ(¿ØÖÆÀàĞÍ1byte))*/
-    dword Control_Type_TxLen[10];            /*¸ù¾İ¿ØÖÆÀàĞÍ,Àı³Ì¶ÔÓ¦µÄ·¢ËÍ³¤¶È*/
-    byte Control_Type_RxLen[10];          /*¿ØÖÆÀàĞÍµÄÏìÓ¦³¤¶È*//*¸úËæ¿ØÖÆÀàĞÍ*/
-    int Control_Type_Success[10];         /*¸úËæ¿ØÖÆÀàĞÍ,³É¹¦¶ÔÓ¦µÄÊı¾İ*/
-    int Control_Type_Failed[10];          /*¸úËæ¿ØÖÆÀàĞÍ,Ê§°Ü¶ÔÓ¦µÄÊı¾İ*/    
-    int Control_Type_Others[10];          /*¸úËæ¿ØÖÆÀàĞÍ,ÆäËû¶ÔÓ¦µÄÊı¾İ*/
+    byte Control_Type_Count;              /*å¯¹åº”ä¾‹ç¨‹ä¸‹æœ‰å‡ ä¸ªæ§åˆ¶ç±»å‹(å’Œä¾‹ç¨‹ä½ç½®å¯¹åº”)*/
+    byte Control_Type[10];                /*ä¾‹ç¨‹æ§åˆ¶ç±»å‹*//*å’Œä¾‹ç¨‹ä½ç½®å¯¹åº”(ä¸€ä¸ªä¾‹ç¨‹å¤šç§æ§åˆ¶ç±»å‹(æ§åˆ¶ç±»å‹1byte))*/
+    dword Control_Type_TxLen[10];            /*æ ¹æ®æ§åˆ¶ç±»å‹,ä¾‹ç¨‹å¯¹åº”çš„å‘é€é•¿åº¦*/
+    byte Control_Type_RxLen[10];          /*æ§åˆ¶ç±»å‹çš„å“åº”é•¿åº¦*//*è·Ÿéšæ§åˆ¶ç±»å‹*/
+    int Control_Type_Success[10];         /*è·Ÿéšæ§åˆ¶ç±»å‹,æˆåŠŸå¯¹åº”çš„æ•°æ®*/
+    int Control_Type_Failed[10];          /*è·Ÿéšæ§åˆ¶ç±»å‹,å¤±è´¥å¯¹åº”çš„æ•°æ®*/    
+    int Control_Type_Others[10];          /*è·Ÿéšæ§åˆ¶ç±»å‹,å…¶ä»–å¯¹åº”çš„æ•°æ®*/
 
     
-    byte Control_Option_Count[10];        /*¶ÔÓ¦Àı³ÌÏÂÓĞ¼¸¸ö¿ØÖÆÑ¡Ïî(ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦)*/
-    byte Control_Option[10][10];          /*Àı³Ì¿ØÖÆÑ¡Ïî*//*ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦(¶àÖÖ¿ØÖÆÑ¡Ïî»òÃ»ÓĞ¿ØÖÆÑ¡Ïî ¿ØÖÆÑ¡Ïî1byte)*/
+    byte Control_Option_Count[10];        /*å¯¹åº”ä¾‹ç¨‹ä¸‹æœ‰å‡ ä¸ªæ§åˆ¶é€‰é¡¹(å’Œæ§åˆ¶ç±»å‹å¯¹åº”)*/
+    byte Control_Option[10][10];          /*ä¾‹ç¨‹æ§åˆ¶é€‰é¡¹*//*å’Œæ§åˆ¶ç±»å‹å¯¹åº”(å¤šç§æ§åˆ¶é€‰é¡¹æˆ–æ²¡æœ‰æ§åˆ¶é€‰é¡¹ æ§åˆ¶é€‰é¡¹1byte)*/
     
-    byte Security_Access[10];             /*ÊÇ·ñĞèÒª°²È«·ÃÎÊ(ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦)*/
-    byte Serve_Addres[10];                /*Ö§³ÖµÄÑ°Ö··½Ê½(ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦)*/
-    byte Serve_Session[10];               /*Ö§³ÖµÄ»á»°(ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦)*/
-    byte Serve_NRC22[10];                 /*NRC22Ìõ¼ş(ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦)*/
-    byte Serve_NRC[10];                   /*31·şÎñÏÂµÄNRC(ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦)*/
-    byte Serve_NRC_Count[10];             /*31·şÎñÏÂµÄNRC¸öÊı(ºÍ¿ØÖÆÀàĞÍ¶ÔÓ¦)*/
+    byte Security_Access[10];             /*æ˜¯å¦éœ€è¦å®‰å…¨è®¿é—®(å’Œæ§åˆ¶ç±»å‹å¯¹åº”)*/
+    byte Serve_Addres[10];                /*æ”¯æŒçš„å¯»å€æ–¹å¼(å’Œæ§åˆ¶ç±»å‹å¯¹åº”)*/
+    byte Serve_Session[10];               /*æ”¯æŒçš„ä¼šè¯(å’Œæ§åˆ¶ç±»å‹å¯¹åº”)*/
+    byte Serve_NRC22[10];                 /*NRC22æ¡ä»¶(å’Œæ§åˆ¶ç±»å‹å¯¹åº”)*/
+    byte Serve_NRC[10];                   /*31æœåŠ¡ä¸‹çš„NRC(å’Œæ§åˆ¶ç±»å‹å¯¹åº”)*/
+    byte Serve_NRC_Count[10];             /*31æœåŠ¡ä¸‹çš„NRCä¸ªæ•°(å’Œæ§åˆ¶ç±»å‹å¯¹åº”)*/
     
   };
   struct Serve_31_Support Serve_31_Hex[10];
@@ -70,553 +70,679 @@ void _Init_Struct()
   int i,n;
   dword Poss,Serve_Para,Serve_Fun;
   dword Rountine_Poss,Con_Poss;
-  writeEx(-3,1,"------------³õÊ¼»¯½á¹¹Ìå---------------");
+  writeEx(-3,1,"------------åˆå§‹åŒ–ç»“æ„ä½“---------------");
   
 
   Serve_Data_Count = 11;
-  Serve_31_Hex_Count = 4;
+  Serve_31_Hex_Count = 7;
 
-  /********************10½á¹¹Ìå*****************/        
-  Serve_Data[0].Serve                = 0x10;
-  Serve_Data[0].Serve_Fun_Count      = 3;
-
-                
-  Serve_Data[0].Serve_Fun[0]         = 0x01;            //Ä¬ÈÏÄ£Ê½
-  Serve_Data[0].RSP[0]               = 1;
-  Serve_Data[0].Serve_Fun_Len[0]     = 2;
-  Serve_Data[0].Serve_Addres[0]      = 3;
-  Serve_Data[0].Serve_Session[0]     = 7;
-  Serve_Data[0].Serve_Para_Count[0]  = 0;
-  Serve_Data[0].Serve_NRC_Count[0]   = 3; 
-  Serve_Data[0].Security_Access[0]   = 0;
-  Serve_Data[0].Serve_NRC22[0]       = 0;
-  Serve_Data[0].Serve_NRC[0][0]      = 0x13;
-  Serve_Data[0].Serve_NRC[0][1]      = 0x12;
-  Serve_Data[0].Serve_NRC[0][2]      = 0x13;
-                
-  Serve_Data[0].Serve_Fun[1]         = 0x02;            //±à³ÌÄ£Ê½
-  Serve_Data[0].RSP[1]               = 1;
-  Serve_Data[0].Serve_Fun_Len[1]     = 2;
-  Serve_Data[0].Serve_Addres[1]      = 1;
-  Serve_Data[0].Serve_Session[1]     = 6;
-  Serve_Data[0].Serve_Para_Count[1]  = 0;
-  Serve_Data[0].Serve_NRC_Count[1]   = 3; 
-  Serve_Data[0].Security_Access[1]   = 0;
-  Serve_Data[0].Serve_NRC22[1]       = 0;
-  Serve_Data[0].Serve_NRC[1][0]      = 0x13;
-  Serve_Data[0].Serve_NRC[1][1]      = 0x12;
-  Serve_Data[0].Serve_NRC[1][2]      = 0x13;
-                
-  Serve_Data[0].Serve_Fun[2]         = 0x03;            //À©Õ¹Õï¶ÏÄ£Ê½
-  Serve_Data[0].RSP[2]               = 1;
-  Serve_Data[0].Serve_Fun_Len[2]     = 2;
-  Serve_Data[0].Serve_Addres[2]      = 3;
-  Serve_Data[0].Serve_Session[2]     = 5;
-  Serve_Data[0].Serve_Para_Count[2]  = 0;
-  Serve_Data[0].Serve_NRC_Count[2]   = 3; 
-  Serve_Data[0].Security_Access[2]   = 0;
-  Serve_Data[0].Serve_NRC22[2]       = 0;
-  Serve_Data[0].Serve_NRC[2][0]      = 0x13;
-  Serve_Data[0].Serve_NRC[2][1]      = 0x12;
-  Serve_Data[0].Serve_NRC[2][2]      = 0x13;
-
-  /********************11½á¹¹Ìå*****************/        
-  Serve_Data[1].Serve                = 0x11;
-  Serve_Data[1].Serve_Fun_Count      = 2;
+      /********************10ç»“æ„ä½“*****************/        
+      Serve_Data[0].Serve                = 0x10;
+      Serve_Data[0].Serve_Fun_Count      = 3;
 
                 
-  Serve_Data[1].Serve_Fun[0]         = 0x01;            //Ó²¼ş¸´Î»
-  Serve_Data[1].RSP[0]               = 1;
-  Serve_Data[1].Serve_Fun_Len[0]     = 2;
-  Serve_Data[1].Serve_Addres[0]      = 3;
-  Serve_Data[1].Serve_Session[0]     = 7;
-  Serve_Data[1].Serve_Para_Count[0]  = 0;
-  Serve_Data[1].Serve_NRC_Count[0]   = 3; 
-  Serve_Data[1].Security_Access[0]   = 0;
-  Serve_Data[1].Serve_NRC22[0]       = 0;
-  Serve_Data[1].Serve_NRC[0][0]      = 0x13;
-  Serve_Data[1].Serve_NRC[0][1]      = 0x12;
-  Serve_Data[1].Serve_NRC[0][2]      = 0x13;
+      Serve_Data[0].Serve_Fun[0]         = 0x01;            //é»˜è®¤æ¨¡å¼
+      Serve_Data[0].RSP[0]               = 1;
+      Serve_Data[0].Serve_Fun_Len[0]     = 2;
+      Serve_Data[0].Serve_Addres[0]      = 3;
+      Serve_Data[0].Serve_Session[0]     = 5;
+      Serve_Data[0].Serve_Para_Count[0]  = 0;
+      Serve_Data[0].Serve_NRC_Count[0]   = 3; 
+      Serve_Data[0].Security_Access[0]   = 0;
+      Serve_Data[0].Serve_NRC22[0]       = 0;
+      Serve_Data[0].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[0].Serve_NRC[0][1]      = 0x12;
+      Serve_Data[0].Serve_NRC[0][2]      = 0x13;
                 
-  Serve_Data[1].Serve_Fun[1]         = 0x03;            //Èí¼ş¸´Î»
-  Serve_Data[1].RSP[1]               = 1;
-  Serve_Data[1].Serve_Fun_Len[1]     = 2;
-  Serve_Data[1].Serve_Addres[1]      = 3;
-  Serve_Data[1].Serve_Session[1]     = 7;
-  Serve_Data[1].Serve_Para_Count[1]  = 0;
-  Serve_Data[1].Serve_NRC_Count[1]   = 3; 
-  Serve_Data[1].Security_Access[1]   = 0;
-  Serve_Data[1].Serve_NRC22[1]       = 0;
-  Serve_Data[1].Serve_NRC[1][0]      = 0x13;
-  Serve_Data[1].Serve_NRC[1][1]      = 0x12;
-  Serve_Data[1].Serve_NRC[1][2]      = 0x13;
-
-  /********************27½á¹¹Ìå*****************/        
-  Serve_Data[2].Serve                = 0x27;
-  Serve_Data[2].Serve_Fun_Count      = 2;
-
+      Serve_Data[0].Serve_Fun[1]         = 0x02;            //ç¼–ç¨‹æ¨¡å¼
+      Serve_Data[0].RSP[1]               = 1;
+      Serve_Data[0].Serve_Fun_Len[1]     = 2;
+      Serve_Data[0].Serve_Addres[1]      = 3;
+      Serve_Data[0].Serve_Session[1]     = 3;
+      Serve_Data[0].Serve_Para_Count[1]  = 0;
+      Serve_Data[0].Serve_NRC_Count[1]   = 3; 
+      Serve_Data[0].Security_Access[1]   = 0;
+      Serve_Data[0].Serve_NRC22[1]       = 0;
+      Serve_Data[0].Serve_NRC[1][0]      = 0x13;
+      Serve_Data[0].Serve_NRC[1][1]      = 0x12;
+      Serve_Data[0].Serve_NRC[1][2]      = 0x13;
                 
-  Serve_Data[2].Serve_Fun[0]         = 0x11;            //ÇëÇóÖÖ×Ó
-  Serve_Data[2].RSP[0]               = 0;
-  Serve_Data[2].Serve_Fun_Len[0]     = 2;
-  Serve_Data[2].Serve_Addres[0]      = 1;
-  Serve_Data[2].Serve_Session[0]     = 2;
-  Serve_Data[2].Serve_Para_Count[0]  = 0;
-  Serve_Data[2].Serve_NRC_Count[0]   = 2; 
-  Serve_Data[2].Security_Access[0]   = 0;
-  Serve_Data[2].Serve_NRC22[0]       = 0;
-  Serve_Data[2].Serve_NRC[0][0]      = 0x13;
-  Serve_Data[2].Serve_NRC[0][1]      = 0x12;
-                
-  Serve_Data[2].Serve_Fun[1]         = 0x12;            //·¢ËÍÃÜÔ¿
-  Serve_Data[2].RSP[1]               = 0;
-  Serve_Data[2].Serve_Fun_Len[1]     = 6;
-  Serve_Data[2].Serve_Addres[1]      = 1;
-  Serve_Data[2].Serve_Session[1]     = 2;
-  Serve_Data[2].Serve_Para_Count[1]  = 0;
-  Serve_Data[2].Serve_NRC_Count[1]   = 2; 
-  Serve_Data[2].Security_Access[1]   = 0;
-  Serve_Data[2].Serve_NRC22[1]       = 0;
-  Serve_Data[2].Serve_NRC[1][0]      = 0x13;
-  Serve_Data[2].Serve_NRC[1][1]      = 0x12;
+      Serve_Data[0].Serve_Fun[2]         = 0x03;            //æ‰©å±•è¯Šæ–­æ¨¡å¼
+      Serve_Data[0].RSP[2]               = 1;
+      Serve_Data[0].Serve_Fun_Len[2]     = 2;
+      Serve_Data[0].Serve_Addres[2]      = 3;
+      Serve_Data[0].Serve_Session[2]     = 5;
+      Serve_Data[0].Serve_Para_Count[2]  = 0;
+      Serve_Data[0].Serve_NRC_Count[2]   = 3; 
+      Serve_Data[0].Security_Access[2]   = 0;
+      Serve_Data[0].Serve_NRC22[2]       = 0;
+      Serve_Data[0].Serve_NRC[2][0]      = 0x13;
+      Serve_Data[0].Serve_NRC[2][1]      = 0x12;
+      Serve_Data[0].Serve_NRC[2][2]      = 0x13;
 
-  /********************28½á¹¹Ìå*****************/        
-  Serve_Data[3].Serve                = 0x28;
-  Serve_Data[3].Serve_Fun_Count      = 2;
+      /********************11ç»“æ„ä½“*****************/        
+      Serve_Data[1].Serve                = 0x11;
+      Serve_Data[1].Serve_Fun_Count      = 1;
 
                 
-  Serve_Data[3].Serve_Fun[0]         = 0x00;            //Ê¹ÄÜ½ÓÊÕºÍ·¢ËÍ
-  Serve_Data[3].RSP[0]               = 1;
-  Serve_Data[3].Serve_Fun_Len[0]     = 3;
-  Serve_Data[3].Serve_Addres[0]      = 3;
-  Serve_Data[3].Serve_Session[0]     = 4;
-  Serve_Data[3].Serve_Para_Count[0]  = 1;
-  Serve_Data[3].Serve_NRC_Count[0]   = 4; 
-  Serve_Data[3].Security_Access[0]   = 0;
-  Serve_Data[3].Serve_NRC22[0]       = 0;
-  Serve_Data[3].Serve_Para[0][0]     = 0x1;
-  Serve_Data[3].Serve_Para_Len[0][0] = 1;
-  Serve_Data[3].Serve_NRC[0][0]      = 0x13;
-  Serve_Data[3].Serve_NRC[0][1]      = 0x12;
-  Serve_Data[3].Serve_NRC[0][2]      = 0x13;
-  Serve_Data[3].Serve_NRC[0][3]      = 0x31;
+      Serve_Data[1].Serve_Fun[0]         = 0x01;            //ç¡¬ä»¶å¤ä½
+      Serve_Data[1].RSP[0]               = 1;
+      Serve_Data[1].Serve_Fun_Len[0]     = 2;
+      Serve_Data[1].Serve_Addres[0]      = 3;
+      Serve_Data[1].Serve_Session[0]     = 6;
+      Serve_Data[1].Serve_Para_Count[0]  = 0;
+      Serve_Data[1].Serve_NRC_Count[0]   = 3; 
+      Serve_Data[1].Security_Access[0]   = 0;
+      Serve_Data[1].Serve_NRC22[0]       = 0;
+      Serve_Data[1].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[1].Serve_NRC[0][1]      = 0x12;
+      Serve_Data[1].Serve_NRC[0][2]      = 0x13;
+
+      /********************27ç»“æ„ä½“*****************/        
+      Serve_Data[2].Serve                = 0x27;
+      Serve_Data[2].Serve_Fun_Count      = 4;
+
                 
-  Serve_Data[3].Serve_Fun[1]         = 0x03 ;            //½ûÖ¹½ÓÊÕºÍ·¢ËÍ
-  Serve_Data[3].RSP[1]               = 1;
-  Serve_Data[3].Serve_Fun_Len[1]     = 3;
-  Serve_Data[3].Serve_Addres[1]      = 3;
-  Serve_Data[3].Serve_Session[1]     = 4;
-  Serve_Data[3].Serve_Para_Count[1]  = 1;
-  Serve_Data[3].Serve_NRC_Count[1]   = 4; 
-  Serve_Data[3].Security_Access[1]   = 0;
-  Serve_Data[3].Serve_NRC22[1]       = 0;
-  Serve_Data[3].Serve_Para[1][0]     = 0x1;
-  Serve_Data[3].Serve_Para_Len[1][0] = 1;
-  Serve_Data[3].Serve_NRC[1][0]      = 0x13;
-  Serve_Data[3].Serve_NRC[1][1]      = 0x12;
-  Serve_Data[3].Serve_NRC[1][2]      = 0x13;
-  Serve_Data[3].Serve_NRC[1][3]      = 0x31;
-   /********************22½á¹¹Ìå*****************/
+      Serve_Data[2].Serve_Fun[0]         = 0x11;            //è¯·æ±‚ç§å­
+      Serve_Data[2].RSP[0]               = 1;
+      Serve_Data[2].Serve_Fun_Len[0]     = 2;
+      Serve_Data[2].Serve_Addres[0]      = 1;
+      Serve_Data[2].Serve_Session[0]     = 2;
+      Serve_Data[2].Serve_Para_Count[0]  = 0;
+      Serve_Data[2].Serve_NRC_Count[0]   = 3; 
+      Serve_Data[2].Security_Access[0]   = 0;
+      Serve_Data[2].Serve_NRC22[0]       = 0;
+      Serve_Data[2].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[2].Serve_NRC[0][1]      = 0x12;
+      Serve_Data[2].Serve_NRC[0][2]      = 0x13;
+                
+      Serve_Data[2].Serve_Fun[1]         = 0x12;            //å‘é€å¯†é’¥
+      Serve_Data[2].RSP[1]               = 1;
+      Serve_Data[2].Serve_Fun_Len[1]     = 6;
+      Serve_Data[2].Serve_Addres[1]      = 1;
+      Serve_Data[2].Serve_Session[1]     = 2;
+      Serve_Data[2].Serve_Para_Count[1]  = 0;
+      Serve_Data[2].Serve_NRC_Count[1]   = 3; 
+      Serve_Data[2].Security_Access[1]   = 0;
+      Serve_Data[2].Serve_NRC22[1]       = 0;
+      Serve_Data[2].Serve_NRC[1][0]      = 0x13;
+      Serve_Data[2].Serve_NRC[1][1]      = 0x12;
+      Serve_Data[2].Serve_NRC[1][2]      = 0x13;
+                
+      Serve_Data[2].Serve_Fun[2]         = 0x01;            
+      Serve_Data[2].RSP[2]               = 0;
+      Serve_Data[2].Serve_Fun_Len[2]     = 0;
+      Serve_Data[2].Serve_Addres[2]      = 1;
+      Serve_Data[2].Serve_Session[2]     = 4;
+      Serve_Data[2].Serve_Para_Count[2]  = 0;
+      Serve_Data[2].Serve_NRC_Count[2]   = 0; 
+      Serve_Data[2].Security_Access[2]   = 0;
+      Serve_Data[2].Serve_NRC22[2]       = 0;
+                
+      Serve_Data[2].Serve_Fun[3]         = 0x02;            
+      Serve_Data[2].RSP[3]               = 0;
+      Serve_Data[2].Serve_Fun_Len[3]     = 0;
+      Serve_Data[2].Serve_Addres[3]      = 1;
+      Serve_Data[2].Serve_Session[3]     = 4;
+      Serve_Data[2].Serve_Para_Count[3]  = 0;
+      Serve_Data[2].Serve_NRC_Count[3]   = 0; 
+      Serve_Data[2].Security_Access[3]   = 0;
+      Serve_Data[2].Serve_NRC22[3]       = 0;
+
+      /********************28ç»“æ„ä½“*****************/        
+      Serve_Data[3].Serve                = 0x28;
+      Serve_Data[3].Serve_Fun_Count      = 4;
+
+                
+      Serve_Data[3].Serve_Fun[0]         = 0x00;            //ä½¿èƒ½æ¥æ”¶å’Œå‘é€
+      Serve_Data[3].RSP[0]               = 1;
+      Serve_Data[3].Serve_Fun_Len[0]     = 3;
+      Serve_Data[3].Serve_Addres[0]      = 3;
+      Serve_Data[3].Serve_Session[0]     = 4;
+      Serve_Data[3].Serve_Para_Count[0]  = 2;
+      Serve_Data[3].Serve_NRC_Count[0]   = 4; 
+      Serve_Data[3].Security_Access[0]   = 0;
+      Serve_Data[3].Serve_NRC22[0]       = 0;
+      Serve_Data[3].Serve_Para[0][0]     = 0x1;
+      Serve_Data[3].Serve_Para_Len[0][0] = 1;
+      Serve_Data[3].Serve_Para[0][1]     = 0x3;
+      Serve_Data[3].Serve_Para_Len[0][1] = 1;
+      Serve_Data[3].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[3].Serve_NRC[0][1]      = 0x12;
+      Serve_Data[3].Serve_NRC[0][2]      = 0x31;
+      Serve_Data[3].Serve_NRC[0][3]      = 0x13;
+                
+      Serve_Data[3].Serve_Fun[1]         = 0x01;            //ä½¿èƒ½æ¥æ”¶ç¦æ­¢å‘é€
+      Serve_Data[3].RSP[1]               = 1;
+      Serve_Data[3].Serve_Fun_Len[1]     = 3;
+      Serve_Data[3].Serve_Addres[1]      = 3;
+      Serve_Data[3].Serve_Session[1]     = 4;
+      Serve_Data[3].Serve_Para_Count[1]  = 2;
+      Serve_Data[3].Serve_NRC_Count[1]   = 4; 
+      Serve_Data[3].Security_Access[1]   = 0;
+      Serve_Data[3].Serve_NRC22[1]       = 0;
+      Serve_Data[3].Serve_Para[1][0]     = 0x1;
+      Serve_Data[3].Serve_Para_Len[1][0] = 1;
+      Serve_Data[3].Serve_Para[1][1]     = 0x3;
+      Serve_Data[3].Serve_Para_Len[1][1] = 1;
+      Serve_Data[3].Serve_NRC[1][0]      = 0x13;
+      Serve_Data[3].Serve_NRC[1][1]      = 0x12;
+      Serve_Data[3].Serve_NRC[1][2]      = 0x31;
+      Serve_Data[3].Serve_NRC[1][3]      = 0x13;
+                
+      Serve_Data[3].Serve_Fun[2]         = 0x02;            //ç¦æ­¢è¯»æ¥æ”¶ä½¿èƒ½å‘é€
+      Serve_Data[3].RSP[2]               = 1;
+      Serve_Data[3].Serve_Fun_Len[2]     = 3;
+      Serve_Data[3].Serve_Addres[2]      = 3;
+      Serve_Data[3].Serve_Session[2]     = 4;
+      Serve_Data[3].Serve_Para_Count[2]  = 2;
+      Serve_Data[3].Serve_NRC_Count[2]   = 4; 
+      Serve_Data[3].Security_Access[2]   = 0;
+      Serve_Data[3].Serve_NRC22[2]       = 0;
+      Serve_Data[3].Serve_Para[2][0]     = 0x1;
+      Serve_Data[3].Serve_Para_Len[2][0] = 1;
+      Serve_Data[3].Serve_Para[2][1]     = 0x3;
+      Serve_Data[3].Serve_Para_Len[2][1] = 1;
+      Serve_Data[3].Serve_NRC[2][0]      = 0x13;
+      Serve_Data[3].Serve_NRC[2][1]      = 0x12;
+      Serve_Data[3].Serve_NRC[2][2]      = 0x31;
+      Serve_Data[3].Serve_NRC[2][3]      = 0x13;
+                
+      Serve_Data[3].Serve_Fun[3]         = 0x03 ;            //ç¦æ­¢æ¥æ”¶å’Œå‘é€
+      Serve_Data[3].RSP[3]               = 1;
+      Serve_Data[3].Serve_Fun_Len[3]     = 3;
+      Serve_Data[3].Serve_Addres[3]      = 3;
+      Serve_Data[3].Serve_Session[3]     = 4;
+      Serve_Data[3].Serve_Para_Count[3]  = 2;
+      Serve_Data[3].Serve_NRC_Count[3]   = 4; 
+      Serve_Data[3].Security_Access[3]   = 0;
+      Serve_Data[3].Serve_NRC22[3]       = 0;
+      Serve_Data[3].Serve_Para[3][0]     = 0x1;
+      Serve_Data[3].Serve_Para_Len[3][0] = 1;
+      Serve_Data[3].Serve_Para[3][1]     = 0x3;
+      Serve_Data[3].Serve_Para_Len[3][1] = 1;
+      Serve_Data[3].Serve_NRC[3][0]      = 0x13;
+      Serve_Data[3].Serve_NRC[3][1]      = 0x12;
+      Serve_Data[3].Serve_NRC[3][2]      = 0x31;
+      Serve_Data[3].Serve_NRC[3][3]      = 0x13;
+   /********************22ç»“æ„ä½“*****************/
   Serve_Data[4].Serve                = 0x22;
-  Serve_Data[4].Serve_Fun_Count      = 13;                
+  Serve_Data[4].Serve_Fun_Count      = 9;                
   
             
-  Serve_Data[4].Serve_Fun[0]         = 0x0200;
-  Serve_Data[4].RSP[0]               = 0;
-  Serve_Data[4].Serve_Fun_Len[0]     = 3;
-  Serve_Data[4].Serve_Addres[0]      = 3;
-  Serve_Data[4].Serve_Session[0]     = 7;
-  Serve_Data[4].Serve_NRC_Count[0]   = 3;
-  Serve_Data[4].Security_Access[0]   = 0;
-  Serve_Data[4].Serve_NRC22[0]       = 0;
-  Serve_Data[4].Serve_NRC[0][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[0][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[0][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[0]         = 0xF18A;
+      Serve_Data[4].RSP[0]               = 0;
+      Serve_Data[4].Serve_Fun_Len[0]     = 3;
+      Serve_Data[4].Serve_Addres[0]      = 3;
+      Serve_Data[4].Serve_Session[0]     = 7;
+      Serve_Data[4].Serve_NRC_Count[0]   = 3;
+      Serve_Data[4].Security_Access[0]   = 0;
+      Serve_Data[4].Serve_NRC22[0]       = 0;
+      Serve_Data[4].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[0][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[0][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[1]         = 0x0201;
-  Serve_Data[4].RSP[1]               = 0;
-  Serve_Data[4].Serve_Fun_Len[1]     = 3;
-  Serve_Data[4].Serve_Addres[1]      = 3;
-  Serve_Data[4].Serve_Session[1]     = 7;
-  Serve_Data[4].Serve_NRC_Count[1]   = 3;
-  Serve_Data[4].Security_Access[1]   = 0;
-  Serve_Data[4].Serve_NRC22[1]       = 0;
-  Serve_Data[4].Serve_NRC[1][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[1][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[1][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[1]         = 0xF187;
+      Serve_Data[4].RSP[1]               = 0;
+      Serve_Data[4].Serve_Fun_Len[1]     = 3;
+      Serve_Data[4].Serve_Addres[1]      = 3;
+      Serve_Data[4].Serve_Session[1]     = 7;
+      Serve_Data[4].Serve_NRC_Count[1]   = 3;
+      Serve_Data[4].Security_Access[1]   = 0;
+      Serve_Data[4].Serve_NRC22[1]       = 0;
+      Serve_Data[4].Serve_NRC[1][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[1][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[1][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[2]         = 0xF101;
-  Serve_Data[4].RSP[2]               = 0;
-  Serve_Data[4].Serve_Fun_Len[2]     = 3;
-  Serve_Data[4].Serve_Addres[2]      = 3;
-  Serve_Data[4].Serve_Session[2]     = 7;
-  Serve_Data[4].Serve_NRC_Count[2]   = 3;
-  Serve_Data[4].Security_Access[2]   = 0;
-  Serve_Data[4].Serve_NRC22[2]       = 0;
-  Serve_Data[4].Serve_NRC[2][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[2][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[2][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[2]         = 0xF188;
+      Serve_Data[4].RSP[2]               = 0;
+      Serve_Data[4].Serve_Fun_Len[2]     = 3;
+      Serve_Data[4].Serve_Addres[2]      = 3;
+      Serve_Data[4].Serve_Session[2]     = 7;
+      Serve_Data[4].Serve_NRC_Count[2]   = 3;
+      Serve_Data[4].Security_Access[2]   = 0;
+      Serve_Data[4].Serve_NRC22[2]       = 0;
+      Serve_Data[4].Serve_NRC[2][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[2][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[2][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[3]         = 0xF17F;
-  Serve_Data[4].RSP[3]               = 0;
-  Serve_Data[4].Serve_Fun_Len[3]     = 3;
-  Serve_Data[4].Serve_Addres[3]      = 3;
-  Serve_Data[4].Serve_Session[3]     = 7;
-  Serve_Data[4].Serve_NRC_Count[3]   = 3;
-  Serve_Data[4].Security_Access[3]   = 0;
-  Serve_Data[4].Serve_NRC22[3]       = 0;
-  Serve_Data[4].Serve_NRC[3][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[3][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[3][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[3]         = 0xF189;
+      Serve_Data[4].RSP[3]               = 0;
+      Serve_Data[4].Serve_Fun_Len[3]     = 3;
+      Serve_Data[4].Serve_Addres[3]      = 3;
+      Serve_Data[4].Serve_Session[3]     = 7;
+      Serve_Data[4].Serve_NRC_Count[3]   = 3;
+      Serve_Data[4].Security_Access[3]   = 0;
+      Serve_Data[4].Serve_NRC22[3]       = 0;
+      Serve_Data[4].Serve_NRC[3][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[3][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[3][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[4]         = 0xF180;
-  Serve_Data[4].RSP[4]               = 0;
-  Serve_Data[4].Serve_Fun_Len[4]     = 3;
-  Serve_Data[4].Serve_Addres[4]      = 3;
-  Serve_Data[4].Serve_Session[4]     = 7;
-  Serve_Data[4].Serve_NRC_Count[4]   = 3;
-  Serve_Data[4].Security_Access[4]   = 0;
-  Serve_Data[4].Serve_NRC22[4]       = 0;
-  Serve_Data[4].Serve_NRC[4][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[4][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[4][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[4]         = 0xF089;
+      Serve_Data[4].RSP[4]               = 0;
+      Serve_Data[4].Serve_Fun_Len[4]     = 3;
+      Serve_Data[4].Serve_Addres[4]      = 3;
+      Serve_Data[4].Serve_Session[4]     = 7;
+      Serve_Data[4].Serve_NRC_Count[4]   = 3;
+      Serve_Data[4].Security_Access[4]   = 0;
+      Serve_Data[4].Serve_NRC22[4]       = 0;
+      Serve_Data[4].Serve_NRC[4][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[4][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[4][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[5]         = 0xF184;
-  Serve_Data[4].RSP[5]               = 0;
-  Serve_Data[4].Serve_Fun_Len[5]     = 3;
-  Serve_Data[4].Serve_Addres[5]      = 3;
-  Serve_Data[4].Serve_Session[5]     = 7;
-  Serve_Data[4].Serve_NRC_Count[5]   = 3;
-  Serve_Data[4].Security_Access[5]   = 0;
-  Serve_Data[4].Serve_NRC22[5]       = 0;
-  Serve_Data[4].Serve_NRC[5][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[5][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[5][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[5]         = 0xF170;
+      Serve_Data[4].RSP[5]               = 0;
+      Serve_Data[4].Serve_Fun_Len[5]     = 3;
+      Serve_Data[4].Serve_Addres[5]      = 3;
+      Serve_Data[4].Serve_Session[5]     = 7;
+      Serve_Data[4].Serve_NRC_Count[5]   = 3;
+      Serve_Data[4].Security_Access[5]   = 0;
+      Serve_Data[4].Serve_NRC22[5]       = 0;
+      Serve_Data[4].Serve_NRC[5][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[5][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[5][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[6]         = 0xF187;
-  Serve_Data[4].RSP[6]               = 0;
-  Serve_Data[4].Serve_Fun_Len[6]     = 3;
-  Serve_Data[4].Serve_Addres[6]      = 3;
-  Serve_Data[4].Serve_Session[6]     = 7;
-  Serve_Data[4].Serve_NRC_Count[6]   = 3;
-  Serve_Data[4].Security_Access[6]   = 0;
-  Serve_Data[4].Serve_NRC22[6]       = 0;
-  Serve_Data[4].Serve_NRC[6][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[6][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[6][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[6]         = 0xF171;
+      Serve_Data[4].RSP[6]               = 0;
+      Serve_Data[4].Serve_Fun_Len[6]     = 3;
+      Serve_Data[4].Serve_Addres[6]      = 3;
+      Serve_Data[4].Serve_Session[6]     = 7;
+      Serve_Data[4].Serve_NRC_Count[6]   = 3;
+      Serve_Data[4].Security_Access[6]   = 0;
+      Serve_Data[4].Serve_NRC22[6]       = 0;
+      Serve_Data[4].Serve_NRC[6][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[6][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[6][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[7]         = 0xF189;
-  Serve_Data[4].RSP[7]               = 0;
-  Serve_Data[4].Serve_Fun_Len[7]     = 3;
-  Serve_Data[4].Serve_Addres[7]      = 3;
-  Serve_Data[4].Serve_Session[7]     = 7;
-  Serve_Data[4].Serve_NRC_Count[7]   = 3;
-  Serve_Data[4].Security_Access[7]   = 0;
-  Serve_Data[4].Serve_NRC22[7]       = 0;
-  Serve_Data[4].Serve_NRC[7][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[7][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[7][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[7]         = 0xF010;
+      Serve_Data[4].RSP[7]               = 0;
+      Serve_Data[4].Serve_Fun_Len[7]     = 3;
+      Serve_Data[4].Serve_Addres[7]      = 3;
+      Serve_Data[4].Serve_Session[7]     = 7;
+      Serve_Data[4].Serve_NRC_Count[7]   = 3;
+      Serve_Data[4].Security_Access[7]   = 0;
+      Serve_Data[4].Serve_NRC22[7]       = 0;
+      Serve_Data[4].Serve_NRC[7][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[7][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[7][2]      = 0x13;
             
-  Serve_Data[4].Serve_Fun[8]         = 0xF197;
-  Serve_Data[4].RSP[8]               = 0;
-  Serve_Data[4].Serve_Fun_Len[8]     = 3;
-  Serve_Data[4].Serve_Addres[8]      = 3;
-  Serve_Data[4].Serve_Session[8]     = 7;
-  Serve_Data[4].Serve_NRC_Count[8]   = 3;
-  Serve_Data[4].Security_Access[8]   = 0;
-  Serve_Data[4].Serve_NRC22[8]       = 0;
-  Serve_Data[4].Serve_NRC[8][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[8][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[8][2]      = 0x13;
-            
-  Serve_Data[4].Serve_Fun[9]         = 0xF199;
-  Serve_Data[4].RSP[9]               = 0;
-  Serve_Data[4].Serve_Fun_Len[9]     = 3;
-  Serve_Data[4].Serve_Addres[9]      = 3;
-  Serve_Data[4].Serve_Session[9]     = 7;
-  Serve_Data[4].Serve_NRC_Count[9]   = 3;
-  Serve_Data[4].Security_Access[9]   = 0;
-  Serve_Data[4].Serve_NRC22[9]       = 0;
-  Serve_Data[4].Serve_NRC[9][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[9][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[9][2]      = 0x13;
-            
-  Serve_Data[4].Serve_Fun[10]         = 0xF18E;
-  Serve_Data[4].RSP[10]               = 0;
-  Serve_Data[4].Serve_Fun_Len[10]     = 3;
-  Serve_Data[4].Serve_Addres[10]      = 3;
-  Serve_Data[4].Serve_Session[10]     = 7;
-  Serve_Data[4].Serve_NRC_Count[10]   = 3;
-  Serve_Data[4].Security_Access[10]   = 0;
-  Serve_Data[4].Serve_NRC22[10]       = 0;
-  Serve_Data[4].Serve_NRC[10][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[10][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[10][2]      = 0x13;
-            
-  Serve_Data[4].Serve_Fun[11]         = 0xEF01;
-  Serve_Data[4].RSP[11]               = 0;
-  Serve_Data[4].Serve_Fun_Len[11]     = 3;
-  Serve_Data[4].Serve_Addres[11]      = 3;
-  Serve_Data[4].Serve_Session[11]     = 7;
-  Serve_Data[4].Serve_NRC_Count[11]   = 3;
-  Serve_Data[4].Security_Access[11]   = 0;
-  Serve_Data[4].Serve_NRC22[11]       = 0;
-  Serve_Data[4].Serve_NRC[11][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[11][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[11][2]      = 0x13;
-            
-  Serve_Data[4].Serve_Fun[12]         = 0xEF02;
-  Serve_Data[4].RSP[12]               = 0;
-  Serve_Data[4].Serve_Fun_Len[12]     = 3;
-  Serve_Data[4].Serve_Addres[12]      = 3;
-  Serve_Data[4].Serve_Session[12]     = 7;
-  Serve_Data[4].Serve_NRC_Count[12]   = 3;
-  Serve_Data[4].Security_Access[12]   = 0;
-  Serve_Data[4].Serve_NRC22[12]       = 0;
-  Serve_Data[4].Serve_NRC[12][0]      = 0x13;
-  Serve_Data[4].Serve_NRC[12][1]      = 0x31;
-  Serve_Data[4].Serve_NRC[12][2]      = 0x13;
+      Serve_Data[4].Serve_Fun[8]         = 0xF120;
+      Serve_Data[4].RSP[8]               = 0;
+      Serve_Data[4].Serve_Fun_Len[8]     = 3;
+      Serve_Data[4].Serve_Addres[8]      = 3;
+      Serve_Data[4].Serve_Session[8]     = 7;
+      Serve_Data[4].Serve_NRC_Count[8]   = 3;
+      Serve_Data[4].Security_Access[8]   = 0;
+      Serve_Data[4].Serve_NRC22[8]       = 0;
+      Serve_Data[4].Serve_NRC[8][0]      = 0x13;
+      Serve_Data[4].Serve_NRC[8][1]      = 0x31;
+      Serve_Data[4].Serve_NRC[8][2]      = 0x13;
   
 
-  /********************2E½á¹¹Ìå*****************/        
+  /********************2Eç»“æ„ä½“*****************/        
   Serve_Data[5].Serve                = 0x2E;
   Serve_Data[5].Serve_Fun_Count      = 3;
                 
-  Serve_Data[5].Serve_Fun[0]         = 0xF184;
-  Serve_Data[5].Serve_Fun_Len[0]     = 10;
-  Serve_Data[5].Serve_Addres[0]      = 1;
-  Serve_Data[5].Serve_Session[0]     = 2;
-  Serve_Data[5].Serve_NRC_Count[0]   = 4;
-  Serve_Data[5].Security_Access[0]   = 1;
-  Serve_Data[5].Serve_NRC22[0]       = 0;
-  Serve_Data[5].Serve_NRC[0][0]      = 0x33;
-  Serve_Data[5].Serve_NRC[0][1]      = 0x13;
-  Serve_Data[5].Serve_NRC[0][2]      = 0x31;
-  Serve_Data[5].Serve_NRC[0][3]      = 0x13;
+      Serve_Data[5].Serve_Fun[0]         = 0xF184;
+      Serve_Data[5].Serve_Fun_Len[0]     = 8;
+      Serve_Data[5].Serve_Addres[0]      = 3;
+      Serve_Data[5].Serve_Session[0]     = 6;
+      Serve_Data[5].Serve_NRC_Count[0]   = 5;
+      Serve_Data[5].Security_Access[0]   = 1;
+      Serve_Data[5].Serve_NRC22[0]       = 0;
+      Serve_Data[5].Serve_NRC[0][0]      = 0x33;
+      Serve_Data[5].Serve_NRC[0][1]      = 0x13;
+      Serve_Data[5].Serve_NRC[0][2]      = 0x12;
+      Serve_Data[5].Serve_NRC[0][3]      = 0x13;
+      Serve_Data[5].Serve_NRC[0][4]      = 0x31;
                 
-  Serve_Data[5].Serve_Fun[1]         = 0xF199;
-  Serve_Data[5].Serve_Fun_Len[1]     = 4;
-  Serve_Data[5].Serve_Addres[1]      = 1;
-  Serve_Data[5].Serve_Session[1]     = 2;
-  Serve_Data[5].Serve_NRC_Count[1]   = 4;
-  Serve_Data[5].Security_Access[1]   = 1;
-  Serve_Data[5].Serve_NRC22[1]       = 0;
-  Serve_Data[5].Serve_NRC[1][0]      = 0x33;
-  Serve_Data[5].Serve_NRC[1][1]      = 0x13;
-  Serve_Data[5].Serve_NRC[1][2]      = 0x31;
-  Serve_Data[5].Serve_NRC[1][3]      = 0x13;
+      Serve_Data[5].Serve_Fun[1]         = 0xF189;
+      Serve_Data[5].Serve_Fun_Len[1]     = 8;
+      Serve_Data[5].Serve_Addres[1]      = 3;
+      Serve_Data[5].Serve_Session[1]     = 6;
+      Serve_Data[5].Serve_NRC_Count[1]   = 5;
+      Serve_Data[5].Security_Access[1]   = 1;
+      Serve_Data[5].Serve_NRC22[1]       = 0;
+      Serve_Data[5].Serve_NRC[1][0]      = 0x33;
+      Serve_Data[5].Serve_NRC[1][1]      = 0x13;
+      Serve_Data[5].Serve_NRC[1][2]      = 0x12;
+      Serve_Data[5].Serve_NRC[1][3]      = 0x13;
+      Serve_Data[5].Serve_NRC[1][4]      = 0x31;
                 
-  Serve_Data[5].Serve_Fun[2]         = 0xEF01;
-  Serve_Data[5].Serve_Fun_Len[2]     = 16;
-  Serve_Data[5].Serve_Addres[2]      = 1;
-  Serve_Data[5].Serve_Session[2]     = 2;
-  Serve_Data[5].Serve_NRC_Count[2]   = 4;
-  Serve_Data[5].Security_Access[2]   = 1;
-  Serve_Data[5].Serve_NRC22[2]       = 0;
-  Serve_Data[5].Serve_NRC[2][0]      = 0x33;
-  Serve_Data[5].Serve_NRC[2][1]      = 0x13;
-  Serve_Data[5].Serve_NRC[2][2]      = 0x31;
-  Serve_Data[5].Serve_NRC[2][3]      = 0x13;
+      Serve_Data[5].Serve_Fun[2]         = 0x0001;
+      Serve_Data[5].Serve_Fun_Len[2]     = 0;
+      Serve_Data[5].Serve_Addres[2]      = 3;
+      Serve_Data[5].Serve_Session[2]     = 6;
+      Serve_Data[5].Serve_NRC_Count[2]   = 5;
+      Serve_Data[5].Security_Access[2]   = 0;
+      Serve_Data[5].Serve_NRC22[2]       = 0;
+      Serve_Data[5].Serve_NRC[2][0]      = 0x33;
+      Serve_Data[5].Serve_NRC[2][1]      = 0x13;
+      Serve_Data[5].Serve_NRC[2][2]      = 0x12;
+      Serve_Data[5].Serve_NRC[2][3]      = 0x13;
+      Serve_Data[5].Serve_NRC[2][4]      = 0x31;
   
                
-   /********************0x31 ½á¹¹Ìå*****************/     
-   Serve_31_Hex[0].Routine[0]               = 0x02;            
-   Serve_31_Hex[0].Routine[1]               = 0x03;                 
-   Serve_31_Hex[0].Control_Type_Count       = 1;
+       /********************0x31 ç»“æ„ä½“*****************/     
+       Serve_31_Hex[0].Routine[0]               = 0xAC;            
+       Serve_31_Hex[0].Routine[1]               = 0x00;                 
+       Serve_31_Hex[0].Control_Type_Count       = 2;
+       
+       Serve_31_Hex[0].Serve_NRC[0]             = 0x13;
+       Serve_31_Hex[0].Serve_NRC[1]             = 0x31;
+       Serve_31_Hex[0].Serve_NRC[2]             = 0x33;
+       Serve_31_Hex[0].Serve_NRC[3]             = 0x12;
+       Serve_31_Hex[0].Serve_NRC[4]             = 0x22;
    
-   Serve_31_Hex[0].Serve_NRC[0]             = 0x13;
-   Serve_31_Hex[0].Serve_NRC[1]             = 0x31;
-   Serve_31_Hex[0].Serve_NRC[2]             = 0x12;
-   Serve_31_Hex[0].Serve_NRC[3]             = 0x13;
+       Serve_31_Hex[0].Control_Type[0]          = 0x01;
+       Serve_31_Hex[0].Control_Type_TxLen[0]    = 4;
+       Serve_31_Hex[0].Serve_Addres[0]          = 3;
+       Serve_31_Hex[0].Serve_Session[0]         = 6;
+       Serve_31_Hex[0].Security_Access[0]       = 1;
+       Serve_31_Hex[0].Control_Option_Count[0]  = 0; 
+       Serve_31_Hex[0].Serve_NRC_Count[0]       = 5; 
+       Serve_31_Hex[0].Serve_NRC22[0]           = 1;
+        
    
-   Serve_31_Hex[0].Control_Type[0]          = 0x01;
-   Serve_31_Hex[0].Control_Type_TxLen[0]    = 4;
-   Serve_31_Hex[0].Serve_Addres[0]          = 1;
-   Serve_31_Hex[0].Serve_Session[0]         = 4;
-   Serve_31_Hex[0].Security_Access[0]       = 0;
-   Serve_31_Hex[0].Control_Option_Count[0]  = 0; 
-   Serve_31_Hex[0].Serve_NRC_Count[0]       = 4; 
-   Serve_31_Hex[0].Serve_NRC22[0]           = 0;
-    
+       Serve_31_Hex[0].Control_Type[1]          = 0x03;
+       Serve_31_Hex[0].Control_Type_TxLen[1]    = 4;
+       Serve_31_Hex[0].Serve_Addres[1]          = 3;
+       Serve_31_Hex[0].Serve_Session[1]         = 6;
+       Serve_31_Hex[0].Security_Access[1]       = 1;
+       Serve_31_Hex[0].Control_Option_Count[1]  = 0; 
+       Serve_31_Hex[0].Serve_NRC_Count[1]       = 5; 
+       Serve_31_Hex[0].Serve_NRC22[1]           = 0;
+        
                
-   /********************0x31 ½á¹¹Ìå*****************/     
-   Serve_31_Hex[1].Routine[0]               = 0xFF;            
-   Serve_31_Hex[1].Routine[1]               = 0x00;                 
-   Serve_31_Hex[1].Control_Type_Count       = 1;
+       /********************0x31 ç»“æ„ä½“*****************/     
+       Serve_31_Hex[1].Routine[0]               = 0xF0;            
+       Serve_31_Hex[1].Routine[1]               = 0x04;                 
+       Serve_31_Hex[1].Control_Type_Count       = 2;
+       
+       Serve_31_Hex[1].Serve_NRC[0]             = 0x13;
+       Serve_31_Hex[1].Serve_NRC[1]             = 0x31;
+       Serve_31_Hex[1].Serve_NRC[2]             = 0x33;
+       Serve_31_Hex[1].Serve_NRC[3]             = 0x12;
+       Serve_31_Hex[1].Serve_NRC[4]             = 0x22;
    
-   Serve_31_Hex[1].Serve_NRC[0]             = 0x33;
-   Serve_31_Hex[1].Serve_NRC[1]             = 0x13;
-   Serve_31_Hex[1].Serve_NRC[2]             = 0x31;
-   Serve_31_Hex[1].Serve_NRC[3]             = 0x12;
-   Serve_31_Hex[1].Serve_NRC[4]             = 0x13;
-   Serve_31_Hex[1].Serve_NRC[5]             = 0x31;
-   Serve_31_Hex[1].Serve_NRC[6]             = 0x22;
+       Serve_31_Hex[1].Control_Type[0]          = 0x01;
+       Serve_31_Hex[1].Control_Type_TxLen[0]    = 4;
+       Serve_31_Hex[1].Serve_Addres[0]          = 3;
+       Serve_31_Hex[1].Serve_Session[0]         = 6;
+       Serve_31_Hex[1].Security_Access[0]       = 1;
+       Serve_31_Hex[1].Control_Option_Count[0]  = 0; 
+       Serve_31_Hex[1].Serve_NRC_Count[0]       = 5; 
+       Serve_31_Hex[1].Serve_NRC22[0]           = 0;
+        
    
-   Serve_31_Hex[1].Control_Type[0]          = 0x01;
-   Serve_31_Hex[1].Control_Type_TxLen[0]    = 13;
-   Serve_31_Hex[1].Serve_Addres[0]          = 1;
-   Serve_31_Hex[1].Serve_Session[0]         = 2;
-   Serve_31_Hex[1].Security_Access[0]       = 1;
-   Serve_31_Hex[1].Control_Option_Count[0]  = 1; 
-   Serve_31_Hex[1].Serve_NRC_Count[0]       = 7; 
-   Serve_31_Hex[1].Serve_NRC22[0]           = 0;
-    
-   Serve_31_Hex[1].Control_Option[0][0]     = 0x44;
+       Serve_31_Hex[1].Control_Type[1]          = 0x03;
+       Serve_31_Hex[1].Control_Type_TxLen[1]    = 4;
+       Serve_31_Hex[1].Serve_Addres[1]          = 3;
+       Serve_31_Hex[1].Serve_Session[1]         = 6;
+       Serve_31_Hex[1].Security_Access[1]       = 1;
+       Serve_31_Hex[1].Control_Option_Count[1]  = 0; 
+       Serve_31_Hex[1].Serve_NRC_Count[1]       = 5; 
+       Serve_31_Hex[1].Serve_NRC22[1]           = 0;
+        
                
-   /********************0x31 ½á¹¹Ìå*****************/     
-   Serve_31_Hex[2].Routine[0]               = 0x02;            
-   Serve_31_Hex[2].Routine[1]               = 0x02;                 
-   Serve_31_Hex[2].Control_Type_Count       = 1;
+       /********************0x31 ç»“æ„ä½“*****************/     
+       Serve_31_Hex[2].Routine[0]               = 0x30;            
+       Serve_31_Hex[2].Routine[1]               = 0x01;                 
+       Serve_31_Hex[2].Control_Type_Count       = 2;
+       
+       Serve_31_Hex[2].Serve_NRC[0]             = 0x13;
+       Serve_31_Hex[2].Serve_NRC[1]             = 0x31;
+       Serve_31_Hex[2].Serve_NRC[2]             = 0x33;
+       Serve_31_Hex[2].Serve_NRC[3]             = 0x12;
+       Serve_31_Hex[2].Serve_NRC[4]             = 0x22;
    
-   Serve_31_Hex[2].Serve_NRC[0]             = 0x33;
-   Serve_31_Hex[2].Serve_NRC[1]             = 0x31;
-   Serve_31_Hex[2].Serve_NRC[2]             = 0x31;
-   Serve_31_Hex[2].Serve_NRC[3]             = 0x12;
-   Serve_31_Hex[2].Serve_NRC[4]             = 0x13;
-   Serve_31_Hex[2].Serve_NRC[5]             = 0x31;
-   Serve_31_Hex[2].Serve_NRC[6]             = 0x22;
+       Serve_31_Hex[2].Control_Type[0]          = 0x01;
+       Serve_31_Hex[2].Control_Type_TxLen[0]    = 4;
+       Serve_31_Hex[2].Serve_Addres[0]          = 3;
+       Serve_31_Hex[2].Serve_Session[0]         = 6;
+       Serve_31_Hex[2].Security_Access[0]       = 1;
+       Serve_31_Hex[2].Control_Option_Count[0]  = 0; 
+       Serve_31_Hex[2].Serve_NRC_Count[0]       = 5; 
+       Serve_31_Hex[2].Serve_NRC22[0]           = 0;
+        
    
-   Serve_31_Hex[2].Control_Type[0]          = 0x01;
-   Serve_31_Hex[2].Control_Type_TxLen[0]    = 8;
-   Serve_31_Hex[2].Serve_Addres[0]          = 1;
-   Serve_31_Hex[2].Serve_Session[0]         = 2;
-   Serve_31_Hex[2].Security_Access[0]       = 1;
-   Serve_31_Hex[2].Control_Option_Count[0]  = 0; 
-   Serve_31_Hex[2].Serve_NRC_Count[0]       = 7; 
-   Serve_31_Hex[2].Serve_NRC22[0]           = 0;
-    
+       Serve_31_Hex[2].Control_Type[1]          = 0x03;
+       Serve_31_Hex[2].Control_Type_TxLen[1]    = 4;
+       Serve_31_Hex[2].Serve_Addres[1]          = 3;
+       Serve_31_Hex[2].Serve_Session[1]         = 6;
+       Serve_31_Hex[2].Security_Access[1]       = 1;
+       Serve_31_Hex[2].Control_Option_Count[1]  = 0; 
+       Serve_31_Hex[2].Serve_NRC_Count[1]       = 5; 
+       Serve_31_Hex[2].Serve_NRC22[1]           = 0;
+        
                
-   /********************0x31 ½á¹¹Ìå*****************/     
-   Serve_31_Hex[3].Routine[0]               = 0xFF;            
-   Serve_31_Hex[3].Routine[1]               = 0x01;                 
-   Serve_31_Hex[3].Control_Type_Count       = 1;
+       /********************0x31 ç»“æ„ä½“*****************/     
+       Serve_31_Hex[3].Routine[0]               = 0x30;            
+       Serve_31_Hex[3].Routine[1]               = 0x02;                 
+       Serve_31_Hex[3].Control_Type_Count       = 2;
+       
+       Serve_31_Hex[3].Serve_NRC[0]             = 0x13;
+       Serve_31_Hex[3].Serve_NRC[1]             = 0x31;
+       Serve_31_Hex[3].Serve_NRC[2]             = 0x33;
+       Serve_31_Hex[3].Serve_NRC[3]             = 0x12;
+       Serve_31_Hex[3].Serve_NRC[4]             = 0x22;
    
-   Serve_31_Hex[3].Serve_NRC[0]             = 0x33;
-   Serve_31_Hex[3].Serve_NRC[1]             = 0x31;
-   Serve_31_Hex[3].Serve_NRC[2]             = 0x31;
-   Serve_31_Hex[3].Serve_NRC[3]             = 0x12;
-   Serve_31_Hex[3].Serve_NRC[4]             = 0x13;
-   Serve_31_Hex[3].Serve_NRC[5]             = 0x31;
-   Serve_31_Hex[3].Serve_NRC[6]             = 0x22;
+       Serve_31_Hex[3].Control_Type[0]          = 0x01;
+       Serve_31_Hex[3].Control_Type_TxLen[0]    = 4;
+       Serve_31_Hex[3].Serve_Addres[0]          = 3;
+       Serve_31_Hex[3].Serve_Session[0]         = 6;
+       Serve_31_Hex[3].Security_Access[0]       = 1;
+       Serve_31_Hex[3].Control_Option_Count[0]  = 0; 
+       Serve_31_Hex[3].Serve_NRC_Count[0]       = 5; 
+       Serve_31_Hex[3].Serve_NRC22[0]           = 0;
+        
    
-   Serve_31_Hex[3].Control_Type[0]          = 0x01;
-   Serve_31_Hex[3].Control_Type_TxLen[0]    = 4;
-   Serve_31_Hex[3].Serve_Addres[0]          = 1;
-   Serve_31_Hex[3].Serve_Session[0]         = 2;
-   Serve_31_Hex[3].Security_Access[0]       = 1;
-   Serve_31_Hex[3].Control_Option_Count[0]  = 0; 
-   Serve_31_Hex[3].Serve_NRC_Count[0]       = 7; 
-   Serve_31_Hex[3].Serve_NRC22[0]           = 0;
-    
+       Serve_31_Hex[3].Control_Type[1]          = 0x03;
+       Serve_31_Hex[3].Control_Type_TxLen[1]    = 4;
+       Serve_31_Hex[3].Serve_Addres[1]          = 3;
+       Serve_31_Hex[3].Serve_Session[1]         = 6;
+       Serve_31_Hex[3].Security_Access[1]       = 1;
+       Serve_31_Hex[3].Control_Option_Count[1]  = 0; 
+       Serve_31_Hex[3].Serve_NRC_Count[1]       = 5; 
+       Serve_31_Hex[3].Serve_NRC22[1]           = 0;
+        
+               
+       /********************0x31 ç»“æ„ä½“*****************/     
+       Serve_31_Hex[4].Routine[0]               = 0xA0;            
+       Serve_31_Hex[4].Routine[1]               = 0x01;                 
+       Serve_31_Hex[4].Control_Type_Count       = 1;
+       
+       Serve_31_Hex[4].Serve_NRC[0]             = 0x13;
+       Serve_31_Hex[4].Serve_NRC[1]             = 0x31;
+       Serve_31_Hex[4].Serve_NRC[2]             = 0x33;
+       Serve_31_Hex[4].Serve_NRC[3]             = 0x12;
+       Serve_31_Hex[4].Serve_NRC[4]             = 0x22;
+   
+       Serve_31_Hex[4].Control_Type[0]          = 0x01;
+       Serve_31_Hex[4].Control_Type_TxLen[0]    = 4;
+       Serve_31_Hex[4].Serve_Addres[0]          = 3;
+       Serve_31_Hex[4].Serve_Session[0]         = 6;
+       Serve_31_Hex[4].Security_Access[0]       = 1;
+       Serve_31_Hex[4].Control_Option_Count[0]  = 0; 
+       Serve_31_Hex[4].Serve_NRC_Count[0]       = 5; 
+       Serve_31_Hex[4].Serve_NRC22[0]           = 0;
+        
+               
+       /********************0x31 ç»“æ„ä½“*****************/     
+       Serve_31_Hex[5].Routine[0]               = 0x30;            
+       Serve_31_Hex[5].Routine[1]               = 0x03;                 
+       Serve_31_Hex[5].Control_Type_Count       = 1;
+       
+       Serve_31_Hex[5].Serve_NRC[0]             = 0x13;
+       Serve_31_Hex[5].Serve_NRC[1]             = 0x31;
+       Serve_31_Hex[5].Serve_NRC[2]             = 0x33;
+       Serve_31_Hex[5].Serve_NRC[3]             = 0x12;
+       Serve_31_Hex[5].Serve_NRC[4]             = 0x22;
+   
+       Serve_31_Hex[5].Control_Type[0]          = 0x01;
+       Serve_31_Hex[5].Control_Type_TxLen[0]    = 5;
+       Serve_31_Hex[5].Serve_Addres[0]          = 3;
+       Serve_31_Hex[5].Serve_Session[0]         = 6;
+       Serve_31_Hex[5].Security_Access[0]       = 1;
+       Serve_31_Hex[5].Control_Option_Count[0]  = 7; 
+       Serve_31_Hex[5].Serve_NRC_Count[0]       = 5; 
+       Serve_31_Hex[5].Serve_NRC22[0]           = 0;
+        
+       Serve_31_Hex[5].Control_Option[0][0]     = 0x00;
+       Serve_31_Hex[5].Control_Option[0][1]     = 0x01;
+       Serve_31_Hex[5].Control_Option[0][2]     = 0x02;
+       Serve_31_Hex[5].Control_Option[0][3]     = 0x03;
+       Serve_31_Hex[5].Control_Option[0][4]     = 0x04;
+       Serve_31_Hex[5].Control_Option[0][5]     = 0x05;
+       Serve_31_Hex[5].Control_Option[0][6]     = 0x06;
+               
+       /********************0x31 ç»“æ„ä½“*****************/     
+       Serve_31_Hex[6].Routine[0]               = 0xFF;            
+       Serve_31_Hex[6].Routine[1]               = 0x00;                 
+       Serve_31_Hex[6].Control_Type_Count       = 3;
+       
+       Serve_31_Hex[6].Serve_NRC[0]             = 0x13;
+       Serve_31_Hex[6].Serve_NRC[1]             = 0x31;
+       Serve_31_Hex[6].Serve_NRC[2]             = 0x33;
+       Serve_31_Hex[6].Serve_NRC[3]             = 0x12;
+       Serve_31_Hex[6].Serve_NRC[4]             = 0x22;
+   
+       Serve_31_Hex[6].Control_Type[0]          = 0x01;
+       Serve_31_Hex[6].Control_Type_TxLen[0]    = 13;
+       Serve_31_Hex[6].Serve_Addres[0]          = 3;
+       Serve_31_Hex[6].Serve_Session[0]         = 6;
+       Serve_31_Hex[6].Security_Access[0]       = 1;
+       Serve_31_Hex[6].Control_Option_Count[0]  = 1; 
+       Serve_31_Hex[6].Serve_NRC_Count[0]       = 5; 
+       Serve_31_Hex[6].Serve_NRC22[0]           = 0;
+        
+       Serve_31_Hex[6].Control_Option[0][0]     = 0x44;
+   
+       Serve_31_Hex[6].Control_Type[1]          = 0x02;
+       Serve_31_Hex[6].Control_Type_TxLen[1]    = 13;
+       Serve_31_Hex[6].Serve_Addres[1]          = 3;
+       Serve_31_Hex[6].Serve_Session[1]         = 6;
+       Serve_31_Hex[6].Security_Access[1]       = 1;
+       Serve_31_Hex[6].Control_Option_Count[1]  = 1; 
+       Serve_31_Hex[6].Serve_NRC_Count[1]       = 5; 
+       Serve_31_Hex[6].Serve_NRC22[1]           = 0;
+        
+       Serve_31_Hex[6].Control_Option[1][0]     = 0x44;
+   
+       Serve_31_Hex[6].Control_Type[2]          = 0x03;
+       Serve_31_Hex[6].Control_Type_TxLen[2]    = 13;
+       Serve_31_Hex[6].Serve_Addres[2]          = 3;
+       Serve_31_Hex[6].Serve_Session[2]         = 6;
+       Serve_31_Hex[6].Security_Access[2]       = 1;
+       Serve_31_Hex[6].Control_Option_Count[2]  = 1; 
+       Serve_31_Hex[6].Serve_NRC_Count[2]       = 5; 
+       Serve_31_Hex[6].Serve_NRC22[2]           = 0;
+        
+       Serve_31_Hex[6].Control_Option[2][0]     = 0x44;
   
 
-  /********************34½á¹¹Ìå*****************/        
-  Serve_Data[6].Serve                = 0x34;
-  Serve_Data[6].Serve_Fun_Count      = 1;
+      /********************34ç»“æ„ä½“*****************/        
+      Serve_Data[6].Serve                = 0x34;
+      Serve_Data[6].Serve_Fun_Count      = 1;
 
                 
-  Serve_Data[6].Serve_Fun[0]         = 0;            
-  Serve_Data[6].RSP[0]               = 0;
-  Serve_Data[6].Serve_Fun_Len[0]     = 1;
-  Serve_Data[6].Serve_Addres[0]      = 1;
-  Serve_Data[6].Serve_Session[0]     = 2;
-  Serve_Data[6].Serve_Para_Count[0]  = 2;
-  Serve_Data[6].Serve_NRC_Count[0]   = 6; 
-  Serve_Data[6].Security_Access[0]   = 1;
-  Serve_Data[6].Serve_NRC22[0]       = 0;
-  Serve_Data[6].Serve_Para[0][0]     = 0x0;
-  Serve_Data[6].Serve_Para_Len[0][0] = 1;
-  Serve_Data[6].Serve_Para[0][1]     = 0x44;
-  Serve_Data[6].Serve_Para_Len[0][1] = 1;
-  Serve_Data[6].Serve_NRC[0][0]      = 0x33;
-  Serve_Data[6].Serve_NRC[0][1]      = 0x13;
-  Serve_Data[6].Serve_NRC[0][2]      = 0x31;
-  Serve_Data[6].Serve_NRC[0][3]      = 0x13;
-  Serve_Data[6].Serve_NRC[0][4]      = 0x31;
-  Serve_Data[6].Serve_NRC[0][5]      = 0x22;
+      Serve_Data[6].Serve_Fun[0]         = 0;            
+      Serve_Data[6].RSP[0]               = 0;
+      Serve_Data[6].Serve_Fun_Len[0]     = 1;
+      Serve_Data[6].Serve_Addres[0]      = 1;
+      Serve_Data[6].Serve_Session[0]     = 2;
+      Serve_Data[6].Serve_Para_Count[0]  = 2;
+      Serve_Data[6].Serve_NRC_Count[0]   = 5; 
+      Serve_Data[6].Security_Access[0]   = 1;
+      Serve_Data[6].Serve_NRC22[0]       = 0;
+      Serve_Data[6].Serve_Para[0][0]     = 0x0;
+      Serve_Data[6].Serve_Para_Len[0][0] = 1;
+      Serve_Data[6].Serve_Para[0][1]     = 0x44;
+      Serve_Data[6].Serve_Para_Len[0][1] = 1;
+      Serve_Data[6].Serve_NRC[0][0]      = 0x33;
+      Serve_Data[6].Serve_NRC[0][1]      = 0x13;
+      Serve_Data[6].Serve_NRC[0][2]      = 0x31;
+      Serve_Data[6].Serve_NRC[0][3]      = 0x13;
+      Serve_Data[6].Serve_NRC[0][4]      = 0x70;
 
-  /********************36½á¹¹Ìå*****************/        
-  Serve_Data[7].Serve                = 0x36;
-  Serve_Data[7].Serve_Fun_Count      = 1;
-
-                
-  Serve_Data[7].Serve_Fun[0]         = 0x01;            
-  Serve_Data[7].RSP[0]               = 0;
-  Serve_Data[7].Serve_Fun_Len[0]     = 2;
-  Serve_Data[7].Serve_Addres[0]      = 1;
-  Serve_Data[7].Serve_Session[0]     = 2;
-  Serve_Data[7].Serve_Para_Count[0]  = 0;
-  Serve_Data[7].Serve_NRC_Count[0]   = 3; 
-  Serve_Data[7].Security_Access[0]   = 1;
-  Serve_Data[7].Serve_NRC22[0]       = 0;
-  Serve_Data[7].Serve_NRC[0][0]      = 0x33;
-  Serve_Data[7].Serve_NRC[0][1]      = 0x13;
-  Serve_Data[7].Serve_NRC[0][2]      = 0x24;
-
-  /********************37½á¹¹Ìå*****************/        
-  Serve_Data[8].Serve                = 0x37;
-  Serve_Data[8].Serve_Fun_Count      = 1;
+      /********************36ç»“æ„ä½“*****************/        
+      Serve_Data[7].Serve                = 0x36;
+      Serve_Data[7].Serve_Fun_Count      = 1;
 
                 
-  Serve_Data[8].Serve_Fun[0]         = 0;            
-  Serve_Data[8].RSP[0]               = 0;
-  Serve_Data[8].Serve_Fun_Len[0]     = 1;
-  Serve_Data[8].Serve_Addres[0]      = 1;
-  Serve_Data[8].Serve_Session[0]     = 2;
-  Serve_Data[8].Serve_Para_Count[0]  = 0;
-  Serve_Data[8].Serve_NRC_Count[0]   = 3; 
-  Serve_Data[8].Security_Access[0]   = 0;
-  Serve_Data[8].Serve_NRC22[0]       = 0;
-  Serve_Data[8].Serve_NRC[0][0]      = 0x33;
-  Serve_Data[8].Serve_NRC[0][1]      = 0x13;
-  Serve_Data[8].Serve_NRC[0][2]      = 0x24;
+      Serve_Data[7].Serve_Fun[0]         = 0x01;            
+      Serve_Data[7].RSP[0]               = 0;
+      Serve_Data[7].Serve_Fun_Len[0]     = 2;
+      Serve_Data[7].Serve_Addres[0]      = 1;
+      Serve_Data[7].Serve_Session[0]     = 2;
+      Serve_Data[7].Serve_Para_Count[0]  = 0;
+      Serve_Data[7].Serve_NRC_Count[0]   = 0; 
+      Serve_Data[7].Security_Access[0]   = 0;
+      Serve_Data[7].Serve_NRC22[0]       = 0;
 
-  /********************3E½á¹¹Ìå*****************/        
-  Serve_Data[9].Serve                = 0x3E;
-  Serve_Data[9].Serve_Fun_Count      = 1;
+      /********************37ç»“æ„ä½“*****************/        
+      Serve_Data[8].Serve                = 0x37;
+      Serve_Data[8].Serve_Fun_Count      = 1;
 
                 
-  Serve_Data[9].Serve_Fun[0]         = 0x00;            //Zero×Ó¹¦ÄÜ
-  Serve_Data[9].RSP[0]               = 1;
-  Serve_Data[9].Serve_Fun_Len[0]     = 2;
-  Serve_Data[9].Serve_Addres[0]      = 3;
-  Serve_Data[9].Serve_Session[0]     = 7;
-  Serve_Data[9].Serve_Para_Count[0]  = 0;
-  Serve_Data[9].Serve_NRC_Count[0]   = 3; 
-  Serve_Data[9].Security_Access[0]   = 0;
-  Serve_Data[9].Serve_NRC22[0]       = 0;
-  Serve_Data[9].Serve_NRC[0][0]      = 0x13;
-  Serve_Data[9].Serve_NRC[0][1]      = 0x12;
-  Serve_Data[9].Serve_NRC[0][2]      = 0x13;
+      Serve_Data[8].Serve_Fun[0]         = 0;            
+      Serve_Data[8].RSP[0]               = 0;
+      Serve_Data[8].Serve_Fun_Len[0]     = 1;
+      Serve_Data[8].Serve_Addres[0]      = 1;
+      Serve_Data[8].Serve_Session[0]     = 2;
+      Serve_Data[8].Serve_Para_Count[0]  = 0;
+      Serve_Data[8].Serve_NRC_Count[0]   = 2; 
+      Serve_Data[8].Security_Access[0]   = 0;
+      Serve_Data[8].Serve_NRC22[0]       = 0;
+      Serve_Data[8].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[8].Serve_NRC[0][1]      = 0x24;
 
-  /********************85½á¹¹Ìå*****************/        
-  Serve_Data[10].Serve                = 0x85;
-  Serve_Data[10].Serve_Fun_Count      = 2;
+      /********************3Eç»“æ„ä½“*****************/        
+      Serve_Data[9].Serve                = 0x3E;
+      Serve_Data[9].Serve_Fun_Count      = 1;
 
                 
-  Serve_Data[10].Serve_Fun[0]         = 0x01;            //´ò¿ªDTCÉèÖÃ
-  Serve_Data[10].RSP[0]               = 1;
-  Serve_Data[10].Serve_Fun_Len[0]     = 2;
-  Serve_Data[10].Serve_Addres[0]      = 3;
-  Serve_Data[10].Serve_Session[0]     = 4;
-  Serve_Data[10].Serve_Para_Count[0]  = 0;
-  Serve_Data[10].Serve_NRC_Count[0]   = 3; 
-  Serve_Data[10].Security_Access[0]   = 0;
-  Serve_Data[10].Serve_NRC22[0]       = 0;
-  Serve_Data[10].Serve_NRC[0][0]      = 0x13;
-  Serve_Data[10].Serve_NRC[0][1]      = 0x12;
-  Serve_Data[10].Serve_NRC[0][2]      = 0x13;
+      Serve_Data[9].Serve_Fun[0]         = 0x00;            //Zeroå­åŠŸèƒ½
+      Serve_Data[9].RSP[0]               = 1;
+      Serve_Data[9].Serve_Fun_Len[0]     = 2;
+      Serve_Data[9].Serve_Addres[0]      = 3;
+      Serve_Data[9].Serve_Session[0]     = 7;
+      Serve_Data[9].Serve_Para_Count[0]  = 0;
+      Serve_Data[9].Serve_NRC_Count[0]   = 3; 
+      Serve_Data[9].Security_Access[0]   = 0;
+      Serve_Data[9].Serve_NRC22[0]       = 0;
+      Serve_Data[9].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[9].Serve_NRC[0][1]      = 0x12;
+      Serve_Data[9].Serve_NRC[0][2]      = 0x13;
+
+      /********************85ç»“æ„ä½“*****************/        
+      Serve_Data[10].Serve                = 0x85;
+      Serve_Data[10].Serve_Fun_Count      = 2;
+
                 
-  Serve_Data[10].Serve_Fun[1]         = 0x02;            //¹Ø±ÕDTCÉèÖÃ
-  Serve_Data[10].RSP[1]               = 1;
-  Serve_Data[10].Serve_Fun_Len[1]     = 2;
-  Serve_Data[10].Serve_Addres[1]      = 3;
-  Serve_Data[10].Serve_Session[1]     = 4;
-  Serve_Data[10].Serve_Para_Count[1]  = 0;
-  Serve_Data[10].Serve_NRC_Count[1]   = 3; 
-  Serve_Data[10].Security_Access[1]   = 0;
-  Serve_Data[10].Serve_NRC22[1]       = 0;
-  Serve_Data[10].Serve_NRC[1][0]      = 0x13;
-  Serve_Data[10].Serve_NRC[1][1]      = 0x12;
-  Serve_Data[10].Serve_NRC[1][2]      = 0x13;
+      Serve_Data[10].Serve_Fun[0]         = 0x01;            //æ‰“å¼€DTCè®¾ç½®
+      Serve_Data[10].RSP[0]               = 1;
+      Serve_Data[10].Serve_Fun_Len[0]     = 2;
+      Serve_Data[10].Serve_Addres[0]      = 3;
+      Serve_Data[10].Serve_Session[0]     = 4;
+      Serve_Data[10].Serve_Para_Count[0]  = 0;
+      Serve_Data[10].Serve_NRC_Count[0]   = 3; 
+      Serve_Data[10].Security_Access[0]   = 0;
+      Serve_Data[10].Serve_NRC22[0]       = 0;
+      Serve_Data[10].Serve_NRC[0][0]      = 0x13;
+      Serve_Data[10].Serve_NRC[0][1]      = 0x12;
+      Serve_Data[10].Serve_NRC[0][2]      = 0x13;
+                
+      Serve_Data[10].Serve_Fun[1]         = 0x02;            //å…³é—­DTCè®¾ç½®
+      Serve_Data[10].RSP[1]               = 1;
+      Serve_Data[10].Serve_Fun_Len[1]     = 2;
+      Serve_Data[10].Serve_Addres[1]      = 3;
+      Serve_Data[10].Serve_Session[1]     = 4;
+      Serve_Data[10].Serve_Para_Count[1]  = 0;
+      Serve_Data[10].Serve_NRC_Count[1]   = 3; 
+      Serve_Data[10].Security_Access[1]   = 0;
+      Serve_Data[10].Serve_NRC22[1]       = 0;
+      Serve_Data[10].Serve_NRC[1][0]      = 0x13;
+      Serve_Data[10].Serve_NRC[1][1]      = 0x12;
+      Serve_Data[10].Serve_NRC[1][2]      = 0x13;
 }

@@ -38,7 +38,7 @@ on timer Time_Count
   Time_Flage =1;
 }
 
-_High_BUS_loader_H_2(byte type,dword Time)/*Ğ´DID*//*0:¸ÉÈÅ±¨ÎÄÓÅÏÈ¼¶¸ßÓÚ·¢ËÍID£¬1:¸ÉÈÅ±¨ÎÄÓÅÏÈ¼¶µÍÓÚ·¢ËÍID*/
+_High_BUS_loader_H_2(byte type,dword Time)/*å†™DID*//*0:å¹²æ‰°æŠ¥æ–‡ä¼˜å…ˆçº§é«˜äºå‘é€IDï¼Œ1:å¹²æ‰°æŠ¥æ–‡ä¼˜å…ˆçº§ä½äºå‘é€ID*/
 {
   diagSetTarget(Cdd_Name);
   _get_Str_Traversal("DID_2E_Traversal");
@@ -62,7 +62,7 @@ _High_BUS_loader_H_2(byte type,dword Time)/*Ğ´DID*//*0:¸ÉÈÅ±¨ÎÄÓÅÏÈ¼¶¸ßÓÚ·¢ËÍID£
       _Check_Response_2E(SendData,DID_2E_SendData_1_Len,DID_2E_SendData_1);
     }
     else
-      _WriteEx_and_Report("","ÆÚÍû½á¹ûÎª·ÇÕıÏìÓ¦,²»¼ì²âĞ´ÈëÊı¾İ");
+      _WriteEx_and_Report("","æœŸæœ›ç»“æœä¸ºéæ­£å“åº”,ä¸æ£€æµ‹å†™å…¥æ•°æ®");
     testWaitForTimeout(100);
     
     _Send_Diag(DID_2E_SendData_2_Len,phyreq_ID,DID_2E_SendData_2,Time);
@@ -74,7 +74,7 @@ _High_BUS_loader_H_2(byte type,dword Time)/*Ğ´DID*//*0:¸ÉÈÅ±¨ÎÄÓÅÏÈ¼¶¸ßÓÚ·¢ËÍID£
       _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
     }
     else
-      _WriteEx_and_Report("","ÆÚÍû½á¹ûÎª·ÇÕıÏìÓ¦,²»¼ì²âĞ´ÈëÊı¾İ");
+      _WriteEx_and_Report("","æœŸæœ›ç»“æœä¸ºéæ­£å“åº”,ä¸æ£€æµ‹å†™å…¥æ•°æ®");
     testWaitForTimeout(100);
   }while(Time_Flage==0);
   if(type==0 )
@@ -115,20 +115,21 @@ void _10_Phy_Def_02(dword ID,byte Session)
     }
   }
   else
-    _WriteEx_and_Report("","02×Ó¹¦ÄÜ²»Ö§³Ö");
+    _WriteEx_and_Report("","02å­åŠŸèƒ½ä¸æ”¯æŒ");
 }
 
 void _10_Phy_03(dword ID,byte Session) // S3server
 {
   byte Temp_0[2]={0x10,0x3};
-  int Start_time;/*Éè¶¨ÆğÊ¼µÄ»á»°Î¬³ÖÊ±¼ä*/
-  int End_time;/*Éè¶¨½áÊøµÄ»á»°Î¬³ÖÊ±¼ä*/
-  int Count_time=50;/*»á»°Î¬³ÖÊ±¼äÃ¿´ÎÀÛ¼Æ¼Ó50ms*/
+  int Start_time;/*è®¾å®šèµ·å§‹çš„ä¼šè¯ç»´æŒæ—¶é—´*/
+  int End_time;/*è®¾å®šç»“æŸçš„ä¼šè¯ç»´æŒæ—¶é—´*/
+  int Count_time=50;/*ä¼šè¯ç»´æŒæ—¶é—´æ¯æ¬¡ç´¯è®¡åŠ 50ms*/
   
   byte SedReq[4];
 //  byte send_size = 3;
   byte send_size = 2;
   int S3server = 5000;
+  int SesSuport;
   
   Start_time = S3server - 200;
   End_time = S3server + 200;
@@ -137,8 +138,13 @@ void _10_Phy_03(dword ID,byte Session) // S3server
 //  SedReq[2] = 0x03;
   SedReq[0] = 0x27;
   SedReq[1] = RequestSeed_27;
-  
-  if(@AUTO::Config_Switch == 6 || (strncmp(ECU_project,"RC",strlen("RC")) == 0 )) // Èğ³Û²»ÓÃ28²âÊÔ
+  SesSuport = _Check_Serve(0x27,RequestSeed_27,2);
+  if(SesSuport & exsession == 0)
+  {
+    send_size = 3;
+    SedReq[0] = 0x28; SedReq[1] = 0x00; SedReq[2] = 0x03;
+  }
+  if(@AUTO::Config_Switch == 6 || (strncmp(ECU_project,"RC",strlen("RC")) == 0 )) // ç‘é©°ä¸ç”¨28æµ‹è¯•
   {
     int serve_pos;
     send_size = 4;
@@ -154,25 +160,25 @@ void _10_Phy_03(dword ID,byte Session) // S3server
   _Check_10_01(Resp_10_len[2],Temp_0[1],P2can_server,P2_can_server);
   if(diagGetLastResponseCode(SendData)==-1)
   {
-    testStepPass("","ÊÕµ½¿Ï¶¨ÏìÓ¦");
+    testStepPass("","æ”¶åˆ°è‚¯å®šå“åº”");
     _Send_And_Check_NowSession(ID,exsession);
-    _WriteEx_and_Report("","²âÊÔ10 03µÄ»á»°Î¬³ÖÊ±¼ä");
+    _WriteEx_and_Report("","æµ‹è¯•10 03çš„ä¼šè¯ç»´æŒæ—¶é—´");
     for(Start_time;Start_time<End_time;Start_time+=Count_time)
     {
-      writeEx(-3,1,"µ±Ç°²âÊÔÊ±¼ä£º%dms",Start_time);
+      writeEx(-3,1,"å½“å‰æµ‹è¯•æ—¶é—´ï¼š%dms",Start_time);
       testWaitForTimeout(Start_time);
       _Send_Diag(send_size,phyreq_ID,SedReq);
       if(diagGetLastResponseCode(SendData)== 0x7f)
         break;
     }
     if((S3server - 60 <= Start_time)  &&(Start_time <= S3server + 60))
-      testStepPass("","03»á»°Î¬³ÖÊ±¼äÔÚ 5s ¡À 50ms ÄÚ£¬µ±Ç°Ô¼Îª%d ms",Start_time);
+      testStepPass("","03ä¼šè¯ç»´æŒæ—¶é—´åœ¨ 5s Â± 50ms å†…ï¼Œå½“å‰çº¦ä¸º%d ms",Start_time);
     else
-      testStepFail("","03»á»°Î¬³ÖÊ±¼ä²»ÔÚ 5s ¡À 50ms ÄÚ£¬µ±Ç°Ô¼Îª%d ms",Start_time);
+      testStepFail("","03ä¼šè¯ç»´æŒæ—¶é—´ä¸åœ¨ 5s Â± 50ms å†…ï¼Œå½“å‰çº¦ä¸º%d ms",Start_time);
     _Send_And_Check_NowSession(ID,defsession);
   }
   else
-    testStepFail("","10 03Î´ÊÕµ½ÏìÓ¦»òÊÕµ½·ñ¶¨Ó¦´ğ");
+    testStepFail("","10 03æœªæ”¶åˆ°å“åº”æˆ–æ”¶åˆ°å¦å®šåº”ç­”");
 }
 
 void _10_Phy_04(dword ID,byte Session)
@@ -185,12 +191,12 @@ void _10_Phy_08(dword ID,byte Session)/*NRC13*/
   byte Temp_0[2]={0x10,0x01};
   dword Len;
   Len = _Check_CANFD_Flage();
-  _WriteEx_and_Report("±éÀú","10 01·şÎñ³¤¶È");
+  _WriteEx_and_Report("éå†","10 01æœåŠ¡é•¿åº¦");
   for(i=1;i<=Len;i++)
   {
     if(i==2)
     {
-      _WriteEx_and_Report("","µ±Ç°³¤¶ÈÒÑ²âÊÔ£¬Ìø¹ı");
+      _WriteEx_and_Report("","å½“å‰é•¿åº¦å·²æµ‹è¯•ï¼Œè·³è¿‡");
       continue;
     }
     _Send_Diag(i,ID,Temp_0);
@@ -204,14 +210,14 @@ void _10_Phy_09(dword ID,byte Session)/*NRC12*/
 {
   byte Temp_0[2]={0x10,0x01};
   dword i=0;
-  _WriteEx_and_Report("±éÀú","10·şÎñ×Ó¹¦ÄÜ");
+  _WriteEx_and_Report("éå†","10æœåŠ¡å­åŠŸèƒ½");
   for(i=0;i<=0xff;i++)
   {
     if( (_Check_Serve(0x10,i,4)!= -1) )
       continue;
     if(i==0x60 && Factory_1060 == 1)
     {
-      _WriteEx_and_Report("","¹¤³§Ä£Ê½×Ó¹¦ÄÜ£¬Ìø¹ı");
+      _WriteEx_and_Report("","å·¥å‚æ¨¡å¼å­åŠŸèƒ½ï¼Œè·³è¿‡");
       continue;  
     }
     Temp_0[1] = i;
@@ -248,10 +254,10 @@ void  _10_Phy_Ex_02(dword ID,byte Session)/*10 02*/
       if(diagGetLastResponseCode(SendData)==0x78)
       {
         if((Sub_1002_NRC78 == 1) && (DiagGetPrimitiveByte(SendData,1)==0x02))
-          testStepFail("","10 02ÊÕµ½NRC78·´À¡,¸ÃÏîÄ¿Ô¤ÆÚ10 02²»ÏìÓ¦NRC78");
+          testStepFail("","10 02æ”¶åˆ°NRC78åé¦ˆ,è¯¥é¡¹ç›®é¢„æœŸ10 02ä¸å“åº”NRC78");
         testWaitForDiagResponse(SendData,p2cmax*100);
         testReportWriteDiagResponse(SendData);
-        _WriteEx_and_Report("","½ÓÊÕµ½NRC78ÏìÓ¦,ºóĞøÏìÓ¦ÅĞ¶ÏÊÇ·ñÎªÕıÏìÓ¦");
+        _WriteEx_and_Report("","æ¥æ”¶åˆ°NRC78å“åº”,åç»­å“åº”åˆ¤æ–­æ˜¯å¦ä¸ºæ­£å“åº”");
         _TestResult(SendData,ID,"",-1); 
         testWaitForTimeout(1000);
         _Send_And_Check_NowSession(ID,prosession);
@@ -333,10 +339,10 @@ void _10_Phy_Pro_02(dword ID,byte Session)/*10 02*/
         if(diagGetLastResponseCode(SendData)==0x78)
           {
             if((Sub_1002_NRC78 == 1) && (DiagGetPrimitiveByte(SendData,1)==0x02))
-              testStepFail("","10 02ÊÕµ½NRC78·´À¡,¸ÃÏîÄ¿Ô¤ÆÚ10 02²»ÏìÓ¦NRC78");
+              testStepFail("","10 02æ”¶åˆ°NRC78åé¦ˆ,è¯¥é¡¹ç›®é¢„æœŸ10 02ä¸å“åº”NRC78");
             testWaitForDiagResponse(SendData,p2cmax*100);
             testReportWriteDiagResponse(SendData);
-            _WriteEx_and_Report("","½ÓÊÕµ½NRC78ÏìÓ¦,ºóĞøÏìÓ¦ÅĞ¶ÏÊÇ·ñÎªÕıÏìÓ¦");
+            _WriteEx_and_Report("","æ¥æ”¶åˆ°NRC78å“åº”,åç»­å“åº”åˆ¤æ–­æ˜¯å¦ä¸ºæ­£å“åº”");
             _TestResult(SendData,ID,"",-1); 
             testWaitForTimeout(1000);
             _Send_And_Check_NowSession(ID,prosession);
@@ -367,83 +373,83 @@ void _10_Phy_Pro_03(dword ID,byte Session)/*10 03*/
     _Send_And_Check_NowSession(ID,Session);
   }
 }
-void _10_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _10_Serve_NRC(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
-  int Serve_Pos,i,Fun_Pos;  //±äÁ¿³õÊ¼»¯
+  int Serve_Pos,i,Fun_Pos;  //å˜é‡åˆå§‹åŒ–
   byte Send_Data[50];
   
-  Serve_Pos = _Check_Serve(0x10,0,0); //²éÑ¯·şÎñËùÔÚ½á¹¹ÌåµÄÎ»ÖÃ
+  Serve_Pos = _Check_Serve(0x10,0,0); //æŸ¥è¯¢æœåŠ¡æ‰€åœ¨ç»“æ„ä½“çš„ä½ç½®
   Send_Data[0] = 0x10;
-  Send_Data[1] = session;  // »ñÈ¡µ±Ç°µÄÕï¶Ï»á»°Ä£Ê½
-  Fun_Pos = _Check_Serve(0x10,Send_Data[1],4); //²éÑ¯×Ó¹¦ÄÜËùÔÚ·şÎñ½á¹¹µÄÎ»ÖÃ
-  if(_Check_Fun_IDAndSess(0x10,session,ID,session) == 1)  //¼ì²é×Ó¹¦ÄÜÊÇ·ñÖ§³Öµ±Ç°µÄÑ°Ö··½Ê½ºÍ»á»°Ä£Ê½
+  Send_Data[1] = session;  // è·å–å½“å‰çš„è¯Šæ–­ä¼šè¯æ¨¡å¼
+  Fun_Pos = _Check_Serve(0x10,Send_Data[1],4); //æŸ¥è¯¢å­åŠŸèƒ½æ‰€åœ¨æœåŠ¡ç»“æ„çš„ä½ç½®
+  if(_Check_Fun_IDAndSess(0x10,session,ID,session) == 1)  //æ£€æŸ¥å­åŠŸèƒ½æ˜¯å¦æ”¯æŒå½“å‰çš„å¯»å€æ–¹å¼å’Œä¼šè¯æ¨¡å¼
   {
 
-    _Set_NRC_Step(0x10,Send_Data[1],6,Send_Data);  //»ñÈ¡NRCÁĞ±í£¬²¢¸ù¾İÓÅÏÈ¼¶ÉèÖÃ·¢ËÍµÄÊı¾İSend_Data¼°Æä³¤¶ÈFun_NRC_Send_Len
-    if(Fun_NRC_Count == 0)  //ÎŞNRCÊäÈëÊ±£¬Ö±½ÓÌø³öº¯Êı½áÊøµ±Ç°²âÊÔ
+    _Set_NRC_Step(0x10,Send_Data[1],6,Send_Data);  //è·å–NRCåˆ—è¡¨ï¼Œå¹¶æ ¹æ®ä¼˜å…ˆçº§è®¾ç½®å‘é€çš„æ•°æ®Send_DataåŠå…¶é•¿åº¦Fun_NRC_Send_Len
+    if(Fun_NRC_Count == 0)  //æ— NRCè¾“å…¥æ—¶ï¼Œç›´æ¥è·³å‡ºå‡½æ•°ç»“æŸå½“å‰æµ‹è¯•
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
-    for(i=0;i<=Fun_NRC_Count;i++) //¸ù¾İNRCÁĞ±íÖğ²½·¢ËÍÕï¶ÏÇëÇóÊı¾İ
+    for(i=0;i<=Fun_NRC_Count;i++) //æ ¹æ®NRCåˆ—è¡¨é€æ­¥å‘é€è¯Šæ–­è¯·æ±‚æ•°æ®
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
-        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,Fun_Pos,Send_Data);  //¶ÔÉÏÒ»²½²âÊÔµÄNRC·¢ËÍÕï¶ÏÇëÇóÊı¾İ½øĞĞ»Ö¸´
+        _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,Fun_Pos,Send_Data);  //å¯¹ä¸Šä¸€æ­¥æµ‹è¯•çš„NRCå‘é€è¯Šæ–­è¯·æ±‚æ•°æ®è¿›è¡Œæ¢å¤
       }
-      if(i == Fun_NRC_Count) //µ±NRC²âÊÔÍê³Éºó£¬·¢ËÍÒ»´ÎÕı³£Õï¶ÏÇëÇóÊı¾İ£¬ÑéÖ¤ÊÇ·ñÕıÏìÓ¦
+      if(i == Fun_NRC_Count) //å½“NRCæµ‹è¯•å®Œæˆåï¼Œå‘é€ä¸€æ¬¡æ­£å¸¸è¯Šæ–­è¯·æ±‚æ•°æ®ï¼ŒéªŒè¯æ˜¯å¦æ­£å“åº”
       {
-        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data); //·¢ËÍÕï¶ÏÇëÇóÊı¾İ
-        _TestResult(SendData,ID,"",-1); //¼ì²éÏìÓ¦
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data); //å‘é€è¯Šæ–­è¯·æ±‚æ•°æ®
+        _TestResult(SendData,ID,"",-1); //æ£€æŸ¥å“åº”
       }
       
       else
       {
-        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);//·¢ËÍÕï¶ÏÇëÇóÊı¾İ
-        _TestResult(SendData,ID,"",Fun_NRC[i]);//¼ì²éÏìÓ¦
+        _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);//å‘é€è¯Šæ–­è¯·æ±‚æ•°æ®
+        _TestResult(SendData,ID,"",Fun_NRC[i]);//æ£€æŸ¥å“åº”
       }
-      testWaitForTimeout(200); //Ã¿Ò»´Î·¢ËÍºÍ¼ì²éÊı¾İºóµÈ´ı200ms
+      testWaitForTimeout(200); //æ¯ä¸€æ¬¡å‘é€å’Œæ£€æŸ¥æ•°æ®åç­‰å¾…200ms
     }
   }
   else
-    _WriteEx_and_Report("","0x10 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",session); //´òÓ¡²»Ö§³ÖÊ±µÄÏûÏ¢µ½TraceÃæ°å¼°Report±¨¸æÖĞ
+    _WriteEx_and_Report("","0x10 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",session); //æ‰“å°ä¸æ”¯æŒæ—¶çš„æ¶ˆæ¯åˆ°Traceé¢æ¿åŠReportæŠ¥å‘Šä¸­
 }
 
-void _11_Phy_Def_01(dword ID,byte Session)/*±éÀú×Ó¹¦ÄÜ*/ 
+void _11_Phy_Def_01(dword ID,byte Session)/*éå†å­åŠŸèƒ½*/ 
 {
   int i,Flage;
   byte Send_Data[2];
   Send_Data[0] = 0x11;
   for(i=1;i<=0xFF;i++)
   {
-    if(_Check_Serve(0x11,i,4)!= -1)  //²éÑ¯ËùÓĞÖ§³ÖµÄ×Ó¹¦ÄÜ²¢±éÀú
+    if(_Check_Serve(0x11,i,4)!= -1)  //æŸ¥è¯¢æ‰€æœ‰æ”¯æŒçš„å­åŠŸèƒ½å¹¶éå†
     {
       Send_Data[1] = i;
 //      writeEx(-3,1,"Send_Data = 0x11 %02x",Send_Data[1]);
       Flage = _Check_Fun_IDAndSess(0x11,i,ID,Session);
-      if(Flage == -1) //Ñ°Ö·²»Ö§³Ö
+      if(Flage == -1) //å¯»å€ä¸æ”¯æŒ
       {
         _Send_Diag(2,ID,Send_Data);
         _TestResult(SendData,ID,"",0);
         _Send_And_Check_NowSession(ID,Session);
       }
-      else if(Flage == 0)//»á»°²»Ö§³Ö
+      else if(Flage == 0)//ä¼šè¯ä¸æ”¯æŒ
       {
         _Send_Diag(2,ID,Send_Data);
         _TestResult(SendData,ID,"",NRC7F);
         _Send_And_Check_NowSession(ID,Session);
       }
-      else if(Flage == 1)//¾ùÖ§³Ö
+      else if(Flage == 1)//å‡æ”¯æŒ
       {
         if(_Check_Serve(0x11,i,5) == 1)
         {
           _Send_Diag(2,ID,Send_Data);
           _TestResult(SendData,ID,"",NRC33);
           testWaitForTimeout(500);
-          _WriteEx_and_Report("","Í¨¹ı°²È«·ÃÎÊ");
+          _WriteEx_and_Report("","é€šè¿‡å®‰å…¨è®¿é—®");
           _SetSession(exsession);
           _unlockECU();
         }
@@ -458,18 +464,18 @@ void _11_Phy_Def_01(dword ID,byte Session)/*±éÀú×Ó¹¦ÄÜ*/
   }  
 }
 
-void _11_Phy_Def_02(dword ID,byte Session)/*¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»*/ 
+void _11_Phy_Def_02(dword ID,byte Session)/*è‚¯å®šå“åº”æŠ‘åˆ¶ä½*/ 
 {
   int i,Flage;
   byte Send_Data[2];
   Send_Data[0] = 0x11;
   for(i=1;i<=0xFF;i++)
   {
-    if(_Check_Serve(0x11,i,4)!= -1)  //²éÑ¯ËùÓĞÖ§³ÖµÄ×Ó¹¦ÄÜ²¢±éÀú
+    if(_Check_Serve(0x11,i,4)!= -1)  //æŸ¥è¯¢æ‰€æœ‰æ”¯æŒçš„å­åŠŸèƒ½å¹¶éå†
     {
       Send_Data[1] = i|0x80;
       Flage = _Check_Fun_IDAndSess(0x11,i,ID,Session);
-      if(Flage == 1)//¾ùÖ§³Ö
+      if(Flage == 1)//å‡æ”¯æŒ
       {
         if(_Check_Serve(0x11,i,3)==1)
         {
@@ -478,7 +484,7 @@ void _11_Phy_Def_02(dword ID,byte Session)/*¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»*/
             _Send_Diag(2,ID,Send_Data);
             _TestResult(SendData,ID,"",NRC33);
             testWaitForTimeout(500);
-            _WriteEx_and_Report("","Í¨¹ı°²È«·ÃÎÊ");
+            _WriteEx_and_Report("","é€šè¿‡å®‰å…¨è®¿é—®");
             _SetSession(exsession);
             _unlockECU();
           }
@@ -490,10 +496,10 @@ void _11_Phy_Def_02(dword ID,byte Session)/*¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»*/
           testWaitForTimeout(1000);
         }
         else
-          _WriteEx_and_Report("","0x%02X¸Ã×Ó¹¦ÄÜ²»Ö§³Ö¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»",i);
+          _WriteEx_and_Report("","0x%02Xè¯¥å­åŠŸèƒ½ä¸æ”¯æŒè‚¯å®šå“åº”æŠ‘åˆ¶ä½",i);
       }
       else
-        _WriteEx_and_Report("","0x%02X¸Ã×Ó¹¦ÄÜÔÚ¸Ã»á»°»òÑ°Ö··½Ê½ÏÂ²»Ö§³Ö",i);
+        _WriteEx_and_Report("","0x%02Xè¯¥å­åŠŸèƒ½åœ¨è¯¥ä¼šè¯æˆ–å¯»å€æ–¹å¼ä¸‹ä¸æ”¯æŒ",i);
     }
   } 
 }
@@ -510,7 +516,7 @@ void _11_Phy_Def_04(dword ID,byte Session)/*NRC13*/
   flage = -1;
   for(i=0;i<Serve_Data[Serve_Pos].Serve_Fun_Count;i++)
   {
-    if(_Check_Fun_IDAndSess(0x11,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1) //µ±Ç°Ñ°Ö·¼°»á»°ÏÂÖ§³Ö
+    if(_Check_Fun_IDAndSess(0x11,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1) //å½“å‰å¯»å€åŠä¼šè¯ä¸‹æ”¯æŒ
     {
       flage = i;
       break;
@@ -518,7 +524,7 @@ void _11_Phy_Def_04(dword ID,byte Session)/*NRC13*/
   }
   if(flage != -1) 
   {
-    if(Serve_Data[Serve_Pos].Security_Access[flage]==1) //ÊÇ·ñĞèÒª°²È«·ÃÎÊ
+    if(Serve_Data[Serve_Pos].Security_Access[flage]==1) //æ˜¯å¦éœ€è¦å®‰å…¨è®¿é—®
       _unlockECU();
     for(i=1;i<=Len;i++)
     {
@@ -531,7 +537,7 @@ void _11_Phy_Def_04(dword ID,byte Session)/*NRC13*/
   }
   else
   {
-    _WriteEx_and_Report("","µ±Ç°Ñ°Ö·¼°»á»°ÏÂÎŞÖ§³ÖµÄ×Ó¹¦ÄÜ");
+    _WriteEx_and_Report("","å½“å‰å¯»å€åŠä¼šè¯ä¸‹æ— æ”¯æŒçš„å­åŠŸèƒ½");
     for(i=1;i<=Len;i++)
     {
       _Send_Diag(i,ID,Send_Data);
@@ -550,17 +556,17 @@ void _11_Phy_Def_05(dword ID,byte Session)/*NRC12*/
   flage = -1;
   for(i=0;i<Serve_Data[Serve_Pos].Serve_Fun_Count;i++)
   {
-    if(_Check_Fun_IDAndSess(0x11,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1) //µ±Ç°Ñ°Ö·¼°»á»°ÏÂÖ§³Ö
+    if(_Check_Fun_IDAndSess(0x11,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1) //å½“å‰å¯»å€åŠä¼šè¯ä¸‹æ”¯æŒ
     {
       flage = i;
       break;
     }
   }
-  if(flage != -1)//´æÔÚ×Ó¹¦ÄÜÔÚµ±Ç°·şÎñ¼°»á»°ÏÂÖ§³Ö
+  if(flage != -1)//å­˜åœ¨å­åŠŸèƒ½åœ¨å½“å‰æœåŠ¡åŠä¼šè¯ä¸‹æ”¯æŒ
   {
     if(Serve_Data[Serve_Pos].Security_Access[flage] == 1)
       _unlockECU();
-    /*±éÀú11·şÎñËùÓĞ²»Ö§³ÖµÄ×Ó¹¦ÄÜ*/
+    /*éå†11æœåŠ¡æ‰€æœ‰ä¸æ”¯æŒçš„å­åŠŸèƒ½*/
     for(i=0;i<=0xFF;i++)
     {
       if((_Check_Serve(0x11,i,4) != -1) || (_Check_Serve(0x11,i&0x7F,4) != -1))
@@ -573,10 +579,10 @@ void _11_Phy_Def_05(dword ID,byte Session)/*NRC12*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°Ñ°Ö·¼°»á»°ÏÂÎŞÖ§³ÖµÄ×Ó¹¦ÄÜ");
+    _WriteEx_and_Report("","å½“å‰å¯»å€åŠä¼šè¯ä¸‹æ— æ”¯æŒçš„å­åŠŸèƒ½");
 }
 
-void _11_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _11_Serve_NRC(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i;
   byte Send_Data[50];
@@ -588,16 +594,16 @@ void _11_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x11,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<=Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
       
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -615,7 +621,7 @@ void _11_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x11 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Fun[0]);
+    _WriteEx_and_Report("","0x11 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Fun[0]);
 }
 
 void _22_Serve_01(dword ID,dword Session) /*22 XX XX*/
@@ -632,19 +638,19 @@ void _22_Serve_01(dword ID,dword Session) /*22 XX XX*/
     Addres = 1;
   else if(ID == funreq_ID)
     Addres = 2 ;
-  if((Serve_Data[Serv_Pos].Serve_Addres[0] & Addres) != 0)  //Ñ°Ö·Ö§³Ö
+  if((Serve_Data[Serv_Pos].Serve_Addres[0] & Addres) != 0)  //å¯»å€æ”¯æŒ
   {
-    if((Serve_Data[Serv_Pos].Serve_Session[0] & Session_BIN) != 0) //»á»°Ö§³Ö
+    if((Serve_Data[Serv_Pos].Serve_Session[0] & Session_BIN) != 0) //ä¼šè¯æ”¯æŒ
     {
       snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
       testGetCurrentTestCaseTitle(Fault_Data_Write,400);
-      snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    ±éÀú22DIDÊı¾İÊ±,Òì³£ÏìÓ¦: \n",Fault_Data_Write);
+      snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    éå†22DIDæ•°æ®æ—¶,å¼‚å¸¸å“åº”: \n",Fault_Data_Write);
       File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
       _get_Str_Traversal("DID_22_Traversal");
       for(K=0;K<Traversal_Count;K++)
       {
         _get_DID(Traversal_DID[K]);
-        snprintf(Tem_Str,elCount(Tem_Str),"Ô¤ÆÚ½á¹û: ");
+        snprintf(Tem_Str,elCount(Tem_Str),"é¢„æœŸç»“æœ: ");
         Temp_0[1] = DID_byte1;
         Temp_0[2] = DID_byte2;
         if(Analysis == 1)
@@ -655,7 +661,7 @@ void _22_Serve_01(dword ID,dword Session) /*22 XX XX*/
             for(N=0;N<DID_len_Ex-3;N++)
               snprintf(Tem_Str,elCount(Tem_Str),"%s %02X",Tem_Str,DID_Data[N]);
           }
-          else //´æÔÚÎ´Ê¹ÓÃ×Ö½ÚÌî³äÎ»
+          else //å­˜åœ¨æœªä½¿ç”¨å­—èŠ‚å¡«å……ä½
           {
             for(N=0;N<Len_Input;N++)
               snprintf(Tem_Str,elCount(Tem_Str),"%s %02X",Tem_Str,DID_Data[N]);
@@ -666,7 +672,7 @@ void _22_Serve_01(dword ID,dword Session) /*22 XX XX*/
         }
         else
         {
-          snprintf(Tem_Str,elCount(Tem_Str),"Ô¤ÆÚ½á¹û %s",DID_Data_str);
+          snprintf(Tem_Str,elCount(Tem_Str),"é¢„æœŸç»“æœ %s",DID_Data_str);
           _WriteEx_and_Report(Traversal_DID[K],Tem_Str);
         }
         Flage_Save = _Check_22DID(ID,Temp_0,Session);
@@ -679,10 +685,10 @@ void _22_Serve_01(dword ID,dword Session) /*22 XX XX*/
       }
     }
     else
-       _WriteEx_and_Report("","µ±Ç°·şÎñ»á»°²»Ö§³Ö");
+       _WriteEx_and_Report("","å½“å‰æœåŠ¡ä¼šè¯ä¸æ”¯æŒ");
   }
   else
-    _WriteEx_and_Report("","µ±Ç°·şÎñÑ°Ö·²»Ö§³Ö");
+    _WriteEx_and_Report("","å½“å‰æœåŠ¡å¯»å€ä¸æ”¯æŒ");
 }
 
 void _22_Serve_02(dword ID,dword Session) /*NRC13*/
@@ -701,10 +707,10 @@ void _22_Serve_02(dword ID,dword Session) /*NRC13*/
     Len = _Check_CANFD_Flage();
     for(i=1;i<=Len;i++)
     {
-      writeEx(-3,1,"µ±Ç°³¤¶ÈÎª: %d",i);
+      writeEx(-3,1,"å½“å‰é•¿åº¦ä¸º: %d",i);
       if((i%2==1)&&(i!=1)&&i<=(DID_22_Support*2+1))
       {
-        _WriteEx_and_Report("","µ±Ç°³¤¶ÈÖ§³Ö£¬Ìø¹ı¼ì²â");
+        _WriteEx_and_Report("","å½“å‰é•¿åº¦æ”¯æŒï¼Œè·³è¿‡æ£€æµ‹");
         testWaitForTimeout(200);
         continue;
       }
@@ -717,9 +723,9 @@ void _22_Serve_02(dword ID,dword Session) /*NRC13*/
     }
   }
   else if(Return_Va == -1)
-    _WriteEx_and_Report("","µ±Ç°Ñ°Ö·²»Ö§³Ö¸Ã·şÎñ");
+    _WriteEx_and_Report("","å½“å‰å¯»å€ä¸æ”¯æŒè¯¥æœåŠ¡");
   else if(Return_Va == 0)
-    _WriteEx_and_Report("","µ±Ç°»á»°²»Ö§³Ö¸Ã·şÎñ");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸æ”¯æŒè¯¥æœåŠ¡");
 }
 
 void _22_Serve_03(dword ID,dword Session) /*NRC31*/
@@ -731,7 +737,7 @@ void _22_Serve_03(dword ID,dword Session) /*NRC31*/
   Return_Va = _Check_Serve_IDAndSess(0x22,ID,Session);
   snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
   testGetCurrentTestCaseTitle(Fault_Data_Write,400);
-  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    ±éÀú22·şÎñNRC31Ê±,Òì³£ÏìÓ¦: \n",Fault_Data_Write);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    éå†22æœåŠ¡NRC31æ—¶,å¼‚å¸¸å“åº”: \n",Fault_Data_Write);
   File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
   
   if(Return_Va == 1)
@@ -747,7 +753,7 @@ void _22_Serve_03(dword ID,dword Session) /*NRC31*/
           Fun_Send = (byte1 << 8) ^ byte2;
           if(_Check_Serve(0x22,Fun_Send,4) != -1 ) 
           {
-            _WriteEx_and_Report("","¸Ã×Ó¹¦ÄÜÖ§³Ö£¬Ìø¹ı¼ì²â");
+            _WriteEx_and_Report("","è¯¥å­åŠŸèƒ½æ”¯æŒï¼Œè·³è¿‡æ£€æµ‹");
             continue;
           }
           else
@@ -774,7 +780,7 @@ void _22_Serve_03(dword ID,dword Session) /*NRC31*/
         Fun_Send = (Ergodic_22H << 8) ^ byte2;
         if(_Check_Serve(0x22,Fun_Send,4) != -1 || (byte2 >= 0xF0 && byte2 <=0xF6))
         {
-          _WriteEx_and_Report("","¸Ã×Ó¹¦ÄÜÖ§³Ö£¬Ìø¹ı¼ì²â");
+          _WriteEx_and_Report("","è¯¥å­åŠŸèƒ½æ”¯æŒï¼Œè·³è¿‡æ£€æµ‹");
           testWaitForTimeout(100);
           continue;
         }
@@ -794,12 +800,12 @@ void _22_Serve_03(dword ID,dword Session) /*NRC31*/
     }
   }
   else if(Return_Va == -1)
-    _WriteEx_and_Report("","µ±Ç°Ñ°Ö·²»Ö§³Ö¸Ã·şÎñ");
+    _WriteEx_and_Report("","å½“å‰å¯»å€ä¸æ”¯æŒè¯¥æœåŠ¡");
   else if(Return_Va == 0)
-    _WriteEx_and_Report("","µ±Ç°»á»°²»Ö§³Ö¸Ã·şÎñ");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸æ”¯æŒè¯¥æœåŠ¡");
 }
 
-void _22_Serve_NRC(dword ID,dword Session)/*NRCÓÅÏÈ¼¶*/
+void _22_Serve_NRC(dword ID,dword Session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i;
   byte Send_Data[50];
@@ -813,16 +819,16 @@ void _22_Serve_NRC(dword ID,dword Session)/*NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x22,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<=Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
       
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -836,7 +842,7 @@ void _22_Serve_NRC(dword ID,dword Session)/*NRCÓÅÏÈ¼¶*/
         _Send_Diag(Fun_NRC_Send_Len,ID,Send_Data);
         if(Session != 2 && (Fun_NRC_Send_Len > Serve_Data[Serve_Pos].Serve_Fun_Len[0]) && NRC13_total == 2 && @AUTO::Config_Switch == 2)
         {
-          _WriteEx_and_Report("","¸Ã»á»°²»Ö§³ÖTotoal 13");
+          _WriteEx_and_Report("","è¯¥ä¼šè¯ä¸æ”¯æŒTotoal 13");
           _TestResult(SendData,ID,"",NRC31);
         }
         else
@@ -847,19 +853,19 @@ void _22_Serve_NRC(dword ID,dword Session)/*NRCÓÅÏÈ¼¶*/
   }
 }
 
-void _Serve22_06(dword ID,byte Session)/*Ò»´ÎĞÔ¶Á¶à¸öDIDÖ§³ÖµÄDID*/
+void _Serve22_06(dword ID,byte Session)/*ä¸€æ¬¡æ€§è¯»å¤šä¸ªDIDæ”¯æŒçš„DID*/
 {
   DID_Read_Some(ID,Session,"DID_Read_Plural");
 }
-void _Serve22_07(dword ID,byte Session)/*Ò»´ÎĞÔ¶Á¶à¸öÏàÍ¬DIDÖ§³ÖµÄDID*/
+void _Serve22_07(dword ID,byte Session)/*ä¸€æ¬¡æ€§è¯»å¤šä¸ªç›¸åŒDIDæ”¯æŒçš„DID*/
 {
   DID_Read_Some(ID,Session,"DID_Read_Plural_Same");
 }
-void _Serve22_08(dword ID,byte Session)/*Ò»´ÎĞÔ¶Á¶à¸öDID²¿·ÖÖ§³Ö*/
+void _Serve22_08(dword ID,byte Session)/*ä¸€æ¬¡æ€§è¯»å¤šä¸ªDIDéƒ¨åˆ†æ”¯æŒ*/
 {
   DID_Read_Some(ID,Session,"DID_Read_Plural_Some_NotSupport");
 }
-void _Serve22_09(dword ID,byte Session)/*ÆäËû*/
+void _Serve22_09(dword ID,byte Session)/*å…¶ä»–*/
 {
   int i;
   if(DID_22_Support >1)
@@ -867,17 +873,17 @@ void _Serve22_09(dword ID,byte Session)/*ÆäËû*/
     _Get_ReadPlural();
     if(Plural_DID_Count == 0)
     {
-      _WriteEx_and_Report("","ÎŞÆäÓà²âÊÔÇé¿öÊäÈë");
+      _WriteEx_and_Report("","æ— å…¶ä½™æµ‹è¯•æƒ…å†µè¾“å…¥");
       return;
     }
     for(i=0;i<Plural_DID_Count;i++)
     {
-      writeEx(-3,0,"¿ªÊ¼²âÊÔ:   %s   ",Plural_DID[i]);
+      writeEx(-3,0,"å¼€å§‹æµ‹è¯•:   %s   ",Plural_DID[i]);
       DID_Read_Some(ID,Session,Plural_DID[i]);
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°ÏîÄ¿½öÖ§³ÖÒ»´Î¶ÁÈ¡Ò»×éDID");
+    _WriteEx_and_Report("","å½“å‰é¡¹ç›®ä»…æ”¯æŒä¸€æ¬¡è¯»å–ä¸€ç»„DID");
 }
 
 void _2E_Serve_01(dword ID,dword Session)/*NRC7F>NRC13*/
@@ -892,9 +898,9 @@ void _2E_Serve_01(dword ID,dword Session)/*NRC7F>NRC13*/
     Addres = 2 ;
   if(Serve_Pos >= 0)
   {
-    if((Serve_Data[Serve_Pos].Serve_Addres[0] & Addres) != 0)  //Ñ°Ö·Ö§³Ö
+    if((Serve_Data[Serve_Pos].Serve_Addres[0] & Addres) != 0)  //å¯»å€æ”¯æŒ
     {
-      if((Serve_Data[Serve_Pos].Serve_Session[0] & Session_BIN) != 0) //»á»°Ö§³Ö
+      if((Serve_Data[Serve_Pos].Serve_Session[0] & Session_BIN) != 0) //ä¼šè¯æ”¯æŒ
       {
         _get_2E_DID("DID2E_Rx_NRC33");
         _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
@@ -910,20 +916,20 @@ void _2E_Serve_01(dword ID,dword Session)/*NRC7F>NRC13*/
     else
     {
       _get_2E_DID("DID2E_Rx_NRC33");
-      _WriteEx_and_Report("","¸ÃÑ°Ö··½Ê½µ±Ç°²»Ö§³Ö¸Ã·şÎñ");
+      _WriteEx_and_Report("","è¯¥å¯»å€æ–¹å¼å½“å‰ä¸æ”¯æŒè¯¥æœåŠ¡");
       _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
       _TestResult(SendData,ID,"",0);
     }
   }
   else
   {
-    _WriteEx_and_Report("","¸ÃÏîÄ¿µ±Ç°²»Ö§³Ö¸Ã·şÎñ");
+    _WriteEx_and_Report("","è¯¥é¡¹ç›®å½“å‰ä¸æ”¯æŒè¯¥æœåŠ¡");
     _Send_Diag(3,ID,Send_Data);
     _TestResult(SendData,ID,"",NRC11);
   }
 }
 
-void _2E_Serve_02(dword ID,dword Session)/*±éÀú 2E XX XX*/
+void _2E_Serve_02(dword ID,dword Session)/*éå† 2E XX XX*/
 {
   int m;
   int Flage_1,Pass_Flage;
@@ -949,14 +955,14 @@ void _2E_Serve_02(dword ID,dword Session)/*±éÀú 2E XX XX*/
     DID[1] =  DID_2E_SendData_1[2];
     if(Session == prosession)
     {
-      if(@AUTO::Config_Switch == 5 || (strncmp(ECU_project,"SRM",strlen("SRM")) == 0 ))//öÎÔ´ÌØÊâÇé¿ö
+      if(@AUTO::Config_Switch == 5 || (strncmp(ECU_project,"SRM",strlen("SRM")) == 0 ))//é‘«æºç‰¹æ®Šæƒ…å†µ
       {
         if(App_Status ==  -1)
           App_Status = Check_APPValid();
         if(DID[0] == 0xF1 && (DID[1] == 0x98 || DID[1] == 0x99) && App_Status == 0)
         {
-          writeEx(-3,1," /*-------- öÎÔ´F198ºÍF199ĞèÒª»ØAPP²âÊÔ£¬ĞèÊÖ¶¯Ë¢Ğ´Õı³£Á÷³Ìºó²âÊÔ¸ÃÓÃÀı! --------*/");
-          writeEx(-3,1," /*-------- ´¿BTÏÂ½öÑéÖ¤Ğ´ÈëºóÕıÏìÓ¦ --------*/");
+          writeEx(-3,1," /*-------- é‘«æºF198å’ŒF199éœ€è¦å›APPæµ‹è¯•ï¼Œéœ€æ‰‹åŠ¨åˆ·å†™æ­£å¸¸æµç¨‹åæµ‹è¯•è¯¥ç”¨ä¾‹! --------*/");
+          writeEx(-3,1," /*-------- çº¯BTä¸‹ä»…éªŒè¯å†™å…¥åæ­£å“åº” --------*/");
           Pass_Flage = 1;
           Flage_1 = _Check_2EH_Support(DID,ID,Session,1);
           if(Flage_1 ==1)
@@ -968,14 +974,14 @@ void _2E_Serve_02(dword ID,dword Session)/*±éÀú 2E XX XX*/
           }
           else if(Flage_1 == 0)
           {
-            _WriteEx_and_Report(Traversal_DID[i],"µ±Ç°»á»°ÏÂ²»Ö§³Ö¸ÃDID");
+            _WriteEx_and_Report(Traversal_DID[i],"å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒè¯¥DID");
       //      _unlockECU();
             _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
             _TestResult(SendData,ID,"",0x7F); 
           }
           else
           { 
-            _WriteEx_and_Report(Traversal_DID[i],"µ±Ç°Ñ°Ö·ÏÂ²»Ö§³Ö¸ÃDID");
+            _WriteEx_and_Report(Traversal_DID[i],"å½“å‰å¯»å€ä¸‹ä¸æ”¯æŒè¯¥DID");
           }
           testWaitForTimeout(100);
         }
@@ -990,14 +996,14 @@ void _2E_Serve_02(dword ID,dword Session)/*±éÀú 2E XX XX*/
       }
       else if(Flage_1 == 0)
       {
-        _WriteEx_and_Report(Traversal_DID[i],"µ±Ç°»á»°ÏÂ²»Ö§³Ö¸ÃDID");
+        _WriteEx_and_Report(Traversal_DID[i],"å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒè¯¥DID");
   //      _unlockECU();
         _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
         _TestResult(SendData,ID,"",0x7F); 
       }
       else
       { 
-        _WriteEx_and_Report(Traversal_DID[i],"µ±Ç°Ñ°Ö·ÏÂ²»Ö§³Ö¸ÃDID");
+        _WriteEx_and_Report(Traversal_DID[i],"å½“å‰å¯»å€ä¸‹ä¸æ”¯æŒè¯¥DID");
       }
       testWaitForTimeout(100);
     }
@@ -1008,8 +1014,8 @@ void _2E_Serve_03(dword ID,byte Session)/*NRC31*/
 {
   byte Temp_0[3];
   byte Temp_1[2];
-  int byte1;           /*2E·şÎñµÄµÚÒ»¸ö×Ö½Ú*/
-  int byte2;           /*2E·şÎñµÄµÚ¶ş¸ö×Ö½Ú*/
+  int byte1;           /*2EæœåŠ¡çš„ç¬¬ä¸€ä¸ªå­—èŠ‚*/
+  int byte2;           /*2EæœåŠ¡çš„ç¬¬äºŒä¸ªå­—èŠ‚*/
   int Serv_Pos,Addres;
   int Pass_Flage,Flage_Save;
   Temp_0[0] = 0x2E;
@@ -1022,22 +1028,22 @@ void _2E_Serve_03(dword ID,byte Session)/*NRC31*/
   Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
   if(Pass_Flage != 1)
   {
-    _WriteEx_and_Report("","µ±Ç°·şÎñÔÚ»á»°»òÑ°Ö··½Ê½ÏÂ²»Ö§³Ö,Ìø¹ı²âÊÔ");
+    _WriteEx_and_Report("","å½“å‰æœåŠ¡åœ¨ä¼šè¯æˆ–å¯»å€æ–¹å¼ä¸‹ä¸æ”¯æŒ,è·³è¿‡æµ‹è¯•");
     return;
   }
   
   snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
   testGetCurrentTestCaseTitle(Fault_Data_Write,400);
-  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    ±éÀú2E·şÎñNRC31Ê±,Òì³£ÏìÓ¦: \n",Fault_Data_Write);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    éå†2EæœåŠ¡NRC31æ—¶,å¼‚å¸¸å“åº”: \n",Fault_Data_Write);
   File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
   
-  if((Serve_Data[Serv_Pos].Serve_Addres[0] & Addres) != 0)  //Ñ°Ö·Ö§³Ö
+  if((Serve_Data[Serv_Pos].Serve_Addres[0] & Addres) != 0)  //å¯»å€æ”¯æŒ
   {
     Temp_0[0] = 0x2E;
     _get_2E_DID("DID2E_Rx_NRC33");
     Len = DID_2E_SendData_1_Len;
     _unlockECU();
-    /*±éÀúËùÓĞ²»Ö§³ÖµÄDID*/
+    /*éå†æ‰€æœ‰ä¸æ”¯æŒçš„DID*/
     if(Ergodic_2EH == 0)
     {
       for(byte1 = 0xF0; byte1 <= 0xF1; byte1++)
@@ -1049,7 +1055,7 @@ void _2E_Serve_03(dword ID,byte Session)/*NRC31*/
           Temp_0[2] = byte2;
           Temp_1[1] = byte2;
           if(_Check_2EH_Support(Temp_1,ID,Session,0)==1 || (byte1 == 0xF1 &&(byte2 >= 0xF0 && byte2 <=0xFA)))
-            _WriteEx_and_Report("","¸ÃDIDÖ§³Ö,Ìø¹ı");
+            _WriteEx_and_Report("","è¯¥DIDæ”¯æŒ,è·³è¿‡");
           else
           {
             _Send_Diag(Len,ID,Temp_0);
@@ -1074,7 +1080,7 @@ void _2E_Serve_03(dword ID,byte Session)/*NRC31*/
         Temp_0[2] = byte2;
         Temp_1[1] = byte2;
         if(_Check_2EH_Support(Temp_1,ID,Session,0)==1 || (byte2 >= 0xF0 && byte2 <=0xFA))
-          _WriteEx_and_Report("","¸ÃDIDÖ§³Ö,Ìø¹ı");
+          _WriteEx_and_Report("","è¯¥DIDæ”¯æŒ,è·³è¿‡");
         else
         {
           _Send_Diag(Len,ID,Temp_0);
@@ -1091,7 +1097,7 @@ void _2E_Serve_03(dword ID,byte Session)/*NRC31*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°·şÎñÑ°Ö·²»Ö§³Ö");
+    _WriteEx_and_Report("","å½“å‰æœåŠ¡å¯»å€ä¸æ”¯æŒ");
 }
 
 void _2E_Serve_04(dword ID,dword Session)/*NRC13*/
@@ -1103,7 +1109,7 @@ void _2E_Serve_04(dword ID,dword Session)/*NRC13*/
   Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
   if(Pass_Flage != 1)
   {
-    _WriteEx_and_Report("","µ±Ç°·şÎñÔÚ»á»°»òÑ°Ö··½Ê½ÏÂ²»Ö§³Ö,Ìø¹ı²âÊÔ");
+    _WriteEx_and_Report("","å½“å‰æœåŠ¡åœ¨ä¼šè¯æˆ–å¯»å€æ–¹å¼ä¸‹ä¸æ”¯æŒ,è·³è¿‡æµ‹è¯•");
     return;
   }
   _get_2E_DID("DID2E_Rx_NRC33");
@@ -1134,7 +1140,7 @@ void _2E_Serve_05(dword ID,dword Session)/*NRC33*/
   Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
   if(Pass_Flage != 1)
   {
-    _WriteEx_and_Report("","µ±Ç°·şÎñÔÚ»á»°»òÑ°Ö··½Ê½ÏÂ²»Ö§³Ö,Ìø¹ı²âÊÔ");
+    _WriteEx_and_Report("","å½“å‰æœåŠ¡åœ¨ä¼šè¯æˆ–å¯»å€æ–¹å¼ä¸‹ä¸æ”¯æŒ,è·³è¿‡æµ‹è¯•");
     return;
   }
   
@@ -1142,7 +1148,7 @@ void _2E_Serve_05(dword ID,dword Session)/*NRC33*/
   _get_Str_Traversal("DID_2E_Traversal");
   if(Session == 2 &&((_Check_Serve(0x10,0x02,5)==1) || (Pre_Programmed_1002==1)))
   {
-    _WriteEx_and_Report("","¸ÃÏîÄ¿½øÈë10 02Ê±EcuÒÑ½âËø£¬ÎŞ·¨²âÊÔ2E·şÎñ±à³ÌÄ£Ê½NRC33");
+    _WriteEx_and_Report("","è¯¥é¡¹ç›®è¿›å…¥10 02æ—¶Ecuå·²è§£é”ï¼Œæ— æ³•æµ‹è¯•2EæœåŠ¡ç¼–ç¨‹æ¨¡å¼NRC33");
     return;
   }
 
@@ -1162,7 +1168,7 @@ void _2E_Serve_05(dword ID,dword Session)/*NRC33*/
           Data[j] = DiagGetRespPrimitiveByte(SendData,j);
       }
       else
-        testStepFail("22¶ÁÈ¡Êı¾İ","Î´ÊÕµ½ÕıÏìÓ¦");
+        testStepFail("22è¯»å–æ•°æ®","æœªæ”¶åˆ°æ­£å“åº”");
       _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
       _TestResult(SendData,ID,"",NRC33);
       _Send_Diag(Read_2E_DID_Len,ID,Read_2E_DID);
@@ -1174,9 +1180,9 @@ void _2E_Serve_05(dword ID,dword Session)/*NRC33*/
           Data2[j] = DiagGetRespPrimitiveByte(SendData,j);
       }
       else
-        testStepFail("22¶ÁÈ¡Êı¾İ","Î´ÊÕµ½ÕıÏìÓ¦");
+        testStepFail("22è¯»å–æ•°æ®","æœªæ”¶åˆ°æ­£å“åº”");
       if(Len!=Len2 )
-        testStepFail(Traversal_DID[i],"Á½´Î½ÓÊÕµ½µÄÊı¾İ³¤¶È²»Ò»ÖÂ,µÚÒ»´Î³¤¶ÈÎª%d,µÚ¶ş´Î³¤¶ÈÎª%d",Len,Len2);
+        testStepFail(Traversal_DID[i],"ä¸¤æ¬¡æ¥æ”¶åˆ°çš„æ•°æ®é•¿åº¦ä¸ä¸€è‡´,ç¬¬ä¸€æ¬¡é•¿åº¦ä¸º%d,ç¬¬äºŒæ¬¡é•¿åº¦ä¸º%d",Len,Len2);
       else
       {
         for(j=0;j<Len;j++)
@@ -1185,21 +1191,21 @@ void _2E_Serve_05(dword ID,dword Session)/*NRC33*/
             flage=1;
         }
         if(flage==1)
-          testStepFail(Traversal_DID[i],"Á½´Î·µ»ØµÄÊı¾İ²»Ò»ÖÂ");
+          testStepFail(Traversal_DID[i],"ä¸¤æ¬¡è¿”å›çš„æ•°æ®ä¸ä¸€è‡´");
         else
-          testStepPass(Traversal_DID[i],"Á½´Î·µ»ØµÄÊı¾İÒ»ÖÂ");
+          testStepPass(Traversal_DID[i],"ä¸¤æ¬¡è¿”å›çš„æ•°æ®ä¸€è‡´");
       }
     }
     else
     {
-      _WriteEx_and_Report(Traversal_DID[i],"²»Ö§³Ö¶ÁÈ¡,½öÑéÖ¤·µ»ØNRC33");
+      _WriteEx_and_Report(Traversal_DID[i],"ä¸æ”¯æŒè¯»å–,ä»…éªŒè¯è¿”å›NRC33");
       _Send_Diag(DID_2E_SendData_1_Len,ID,DID_2E_SendData_1);
       _TestResult(SendData,ID,"",NRC33);
     }
   }
 }
 
-void _2E_Serve_06(dword ID,byte Session)/*NRCÓÅÏÈ¼¶*/
+void _2E_Serve_06(dword ID,byte Session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i;
   byte Send_Data[50];
@@ -1208,7 +1214,7 @@ void _2E_Serve_06(dword ID,byte Session)/*NRCÓÅÏÈ¼¶*/
   Pass_Flage = _Check_Serve_IDAndSess(0x2E,ID,Session);
   if(Pass_Flage != 1)
   {
-    _WriteEx_and_Report("","µ±Ç°·şÎñÔÚ»á»°»òÑ°Ö··½Ê½ÏÂ²»Ö§³Ö,Ìø¹ı²âÊÔ");
+    _WriteEx_and_Report("","å½“å‰æœåŠ¡åœ¨ä¼šè¯æˆ–å¯»å€æ–¹å¼ä¸‹ä¸æ”¯æŒ,è·³è¿‡æµ‹è¯•");
     return;
   }
   _get_2E_DID("DID2E_Rx_NRC33");
@@ -1219,16 +1225,16 @@ void _2E_Serve_06(dword ID,byte Session)/*NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x2E,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<Fun_NRC_Count;i++) 
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
       
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -1238,7 +1244,7 @@ void _2E_Serve_06(dword ID,byte Session)/*NRCÓÅÏÈ¼¶*/
         _TestResult(SendData,ID,"",-1);
       if(Session != 2 && (Fun_NRC_Send_Len > Serve_Data[Serve_Pos].Serve_Fun_Len[0]) && NRC13_total == 2 && @AUTO::Config_Switch == 2)
       {
-        _WriteEx_and_Report("","¸Ã»á»°²»Ö§³ÖTotoal 13");
+        _WriteEx_and_Report("","è¯¥ä¼šè¯ä¸æ”¯æŒTotoal 13");
         _TestResult(SendData,ID,"",NRC31);
       }
       else
@@ -1257,7 +1263,7 @@ void _3E_Serve_01(dword ID)/*3E 00*/
   else if(ID == funreq_ID)
     Temp_ID = 2;
   _Send_Diag(2,ID,Temp);
-  /*Ñ°Ö··½Ê½²»Ö§³Ö*/
+  /*å¯»å€æ–¹å¼ä¸æ”¯æŒ*/
   if(_Check_Serve(0x2E,0,1) & Temp_ID == 0)
     _TestResult(SendData,ID,"",NRC12);
   else
@@ -1269,13 +1275,13 @@ void _3E_Serve_02(dword ID)/*3E 80*/
   byte Temp[2] = {0x3E,0x80};
   byte Temp_ID;
   
-  /*bit0±íÊ¾ÎïÀíÑ°Ö·¡¢bit1±íÊ¾¹¦ÄÜÑ°Ö·*/
+  /*bit0è¡¨ç¤ºç‰©ç†å¯»å€ã€bit1è¡¨ç¤ºåŠŸèƒ½å¯»å€*/
   if(ID == phyreq_ID)
     Temp_ID = 1;
   else if(ID == funreq_ID)
     Temp_ID = 2;
   _Send_Diag(2,ID,Temp);
-  /*Ñ°Ö··½Ê½²»Ö§³Ö*/
+  /*å¯»å€æ–¹å¼ä¸æ”¯æŒ*/
   if(_Check_Serve(0x2E,0,1) & Temp_ID == 0)
     _TestResult(SendData,ID,"",NRC12);
   else
@@ -1291,7 +1297,7 @@ void _3E_Serve_04(dword ID)/*NRC13*/
   {
     if(i==0x02)
     {
-      _WriteEx_and_Report("","±¨ÎÄ³¤¶ÈÕıÈ·£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æŠ¥æ–‡é•¿åº¦æ­£ç¡®ï¼Œè·³è¿‡æµ‹è¯•");
       continue;
     }
     _Send_Diag(i,ID,Tem);
@@ -1312,7 +1318,7 @@ void _3E_Serve_05(dword ID)/*NRC12*/
     if(i==Serve_Data[Serve_Pos].Serve_Fun[Fun_Pos])
     if((Fun_Pos == 1) || (Serve_Data[Serve_Pos].RSP[Fun_Pos] == 1))
     {
-      _WriteEx_and_Report("","×Ó¹¦ÄÜÕıÈ·£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","å­åŠŸèƒ½æ­£ç¡®ï¼Œè·³è¿‡æµ‹è¯•");
       continue;
     }
     _Send_Diag(2,ID,Tem);
@@ -1320,7 +1326,7 @@ void _3E_Serve_05(dword ID)/*NRC12*/
     testWaitForTimeout(50);
   }
 }
-void _3E_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _3E_Serve_NRC(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i;
   byte Send_Data[50];
@@ -1332,7 +1338,7 @@ void _3E_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x3E,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<Fun_NRC_Count;i++)
@@ -1340,10 +1346,10 @@ void _3E_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
       if(Fun_NRC[i] == NRC12 && session == 2 )
         continue;
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
       
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -1361,13 +1367,13 @@ void _3E_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x3E 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Fun[0]);
+    _WriteEx_and_Report("","0x3E 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Fun[0]);
 }
-_Not_Support_Fun(dword ID,dword session)  //²»Ö§³ÖµÄ·şÎñ
+_Not_Support_Fun(dword ID,dword session)  //ä¸æ”¯æŒçš„æœåŠ¡
 {
   int i;
   byte data_[1]={0x01};
-  if((strncmp(ECU_project,"BYD",strlen("BYD")) == 0 || @AUTO::Config_Switch == 1)) //BYD´æÔÚË«±¸·İÎÊÌâ£¬ÎŞ·¨Í£ÁôÔÚBT
+  if((strncmp(ECU_project,"BYD",strlen("BYD")) == 0 || @AUTO::Config_Switch == 1)) //BYDå­˜åœ¨åŒå¤‡ä»½é—®é¢˜ï¼Œæ— æ³•åœç•™åœ¨BT
   {
     for(i=0;i<=0xFF;i++)
     {
@@ -1399,7 +1405,7 @@ _Not_Support_Fun(dword ID,dword session)  //²»Ö§³ÖµÄ·şÎñ
   }
 }
 
-void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*±éÀúNRC22Ìõ¼ş*/
+void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*éå†NRC22æ¡ä»¶*/
 {
   int Serve_Pos,i;
   int Fun_Count;
@@ -1410,14 +1416,14 @@ void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*±éÀúNRC22Ìõ¼ş*/
     Serve_Pos = _Check_Serve(Serv_,0,0);
   snprintf(Temp_Str,elCount(Temp_Str),"");
   snprintf(Temp_Str_,elCount(Temp_Str_),"");
-  snprintf(Temp_Str,elCount(Temp_Str),"     ¿ªÊ¼²âÊÔ%02X·şÎñ",Serv_);
+  snprintf(Temp_Str,elCount(Temp_Str),"     å¼€å§‹æµ‹è¯•%02XæœåŠ¡",Serv_);
   if(Serv_ != 0x31)
   {
     if(Serve_Pos != -1)
     {
       Fun_Count = Serve_Data[Serve_Pos].Serve_Fun_Count;
       Clear_Config_Flage = 0;
-      if(Serv_ == 0x22)  //22·şÎñÌØÊâ´¦Àí,½öÑéÖ¤Ò»¸ö
+      if(Serv_ == 0x22)  //22æœåŠ¡ç‰¹æ®Šå¤„ç†,ä»…éªŒè¯ä¸€ä¸ª
         Fun_Count = 1;
       else if(Serv_ == 0x2E)
       {
@@ -1446,9 +1452,9 @@ void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*±éÀúNRC22Ìõ¼ş*/
       }
       for(i=0;i<Fun_Count;i++)
       {
-        snprintf(Temp_Str,elCount(Temp_Str),"     ¿ªÊ¼²âÊÔ%02X·şÎñ%02X×Ó¹¦ÄÜ,NRC22Ìõ¼ş",Serv_,Serve_Data[Serve_Pos].Serve_Fun[i]);
+        snprintf(Temp_Str,elCount(Temp_Str),"     å¼€å§‹æµ‹è¯•%02XæœåŠ¡%02Xå­åŠŸèƒ½,NRC22æ¡ä»¶",Serv_,Serve_Data[Serve_Pos].Serve_Fun[i]);
         if(Serv_ == 0x14)
-          snprintf(Temp_Str,elCount(Temp_Str),"     ¿ªÊ¼²âÊÔ%02X·şÎñ,NRC22Ìõ¼ş",Serv_);
+          snprintf(Temp_Str,elCount(Temp_Str),"     å¼€å§‹æµ‹è¯•%02XæœåŠ¡,NRC22æ¡ä»¶",Serv_);
         if(_Check_Fun_IDAndSess(Serv_,Serve_Data[Serve_Pos].Serve_Fun[i],ID,Session) == 1)
         {
           _WriteEx_and_Report("","------------------------------------------------------");
@@ -1459,7 +1465,7 @@ void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*±éÀúNRC22Ìõ¼ş*/
         else
         {
           snprintf(Temp_Str_,elCount(Temp_Str_),"0x%02X 0x%02X",Serv_,Serve_Data[Serve_Pos].Serve_Fun[i]);
-          _WriteEx_and_Report(Temp_Str_,"µ±Ç°Ñ°Ö·»ò»á»°ÏÂ²»Ö§³Ö¸Ã×Ó¹¦ÄÜ");
+          _WriteEx_and_Report(Temp_Str_,"å½“å‰å¯»å€æˆ–ä¼šè¯ä¸‹ä¸æ”¯æŒè¯¥å­åŠŸèƒ½");
         }
       }
       if(Clear_Config_Flage == 1)
@@ -1475,7 +1481,7 @@ void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*±éÀúNRC22Ìõ¼ş*/
   {
     byte Send_Data[50];
     char comment[50];
-    snprintf(comment,elCount(comment),"Î´ÔÚStructÖĞ²éÑ¯µ½31·şÎñ NRC ¼ì²âÀı³Ì£º31");
+    snprintf(comment,elCount(comment),"æœªåœ¨Structä¸­æŸ¥è¯¢åˆ°31æœåŠ¡ NRC æ£€æµ‹ä¾‹ç¨‹ï¼š31");
     snprintf(comment,elCount(comment),"%s %02X",comment,(Serve31_NRC_Case >> 16) & 0xFF);
     snprintf(comment,elCount(comment),"%s %02X",comment,(Serve31_NRC_Case >> 8) & 0xFF);
     snprintf(comment,elCount(comment),"%s %02X",comment,Serve31_NRC_Case & 0xFF);
@@ -1495,7 +1501,7 @@ void _NRC22_Test(dword ID,byte Session,byte Serv_,byte Type)/*±éÀúNRC22Ìõ¼ş*/
       testStepFail("",comment);
       return;
     }
-    snprintf(Temp_Str,elCount(Temp_Str),"     ¿ªÊ¼²âÊÔ%02X·şÎñ%02X%02XÀı³Ì,NRC22Ìõ¼ş",Serv_,Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
+    snprintf(Temp_Str,elCount(Temp_Str),"     å¼€å§‹æµ‹è¯•%02XæœåŠ¡%02X%02Xä¾‹ç¨‹,NRC22æ¡ä»¶",Serv_,Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
     {
       _WriteEx_and_Report("","------------------------------------------------------");
       _WriteEx_and_Report("",Temp_Str);
@@ -1515,7 +1521,7 @@ void _85_Serve_01(dword ID,byte session)/*NRC7F*/
       _TestResult(SendData,ID,"",NRC7F);
     }
     else
-      _WriteEx_and_Report("","µ±Ç°²âÊÔÎªÄ¬ÈÏ»á»°");
+      _WriteEx_and_Report("","å½“å‰æµ‹è¯•ä¸ºé»˜è®¤ä¼šè¯");
   }
 }
 void _85_Serve_02(dword ID,byte session)/*85 01/02*/
@@ -1549,7 +1555,7 @@ void _85_Serve_03(dword ID,byte session)/*85 81/82*/
   if(Status != -1)
   {
     if(_Check_Serve(0x85,0,3)==0)
-      _WriteEx_and_Report("","µ±Ç°·şÎñ²»Ö§³Ö¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»");
+      _WriteEx_and_Report("","å½“å‰æœåŠ¡ä¸æ”¯æŒè‚¯å®šå“åº”æŠ‘åˆ¶ä½");
     else
     {
       Send_Data[1] = 0x81;
@@ -1617,7 +1623,7 @@ void _85_Serve_06(dword ID,byte session)/*NRC12*/
   }
 }
 
-void _85_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _85_Serve_NRC(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i,Fun_Pos;
   byte Send_Data[10];
@@ -1629,16 +1635,16 @@ void _85_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x85,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<=Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
       
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -1656,7 +1662,7 @@ void _85_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x85 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Fun[0]);
+    _WriteEx_and_Report("","0x85 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Fun[0]);
 }
 
 void _28_Serve_01(dword ID,byte session)/*NRC7F>13*/
@@ -1678,9 +1684,9 @@ void _28_Serve_01(dword ID,byte session)/*NRC7F>13*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂÖ§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•");
 }
-void _28_Serve_02(dword ID,byte session)/*×Ó¹¦ÄÜ¼°¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»*/
+void _28_Serve_02(dword ID,byte session)/*å­åŠŸèƒ½åŠè‚¯å®šå“åº”æŠ‘åˆ¶ä½*/
 {
   byte Send_Data[20];
   int i,n,flage,len,Poss;
@@ -1747,7 +1753,7 @@ void _28_Serve_05(dword ID,byte session)/*NRC31*/
   }
 }
 
-void _28_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _28_Serve_NRC(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i;
   byte Send_Data[50];
@@ -1759,16 +1765,16 @@ void _28_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x28,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<=Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
       
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -1786,14 +1792,14 @@ void _28_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x28 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Fun[0]);
+    _WriteEx_and_Report("","0x28 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Fun[0]);
 }
 
 void _34_Serve_01(dword ID,byte session)/*NRC7F*/
 {
   byte Send_Data[10] = {0x34,0x00,0x44,0x80,0x03,0x00,0x00,0x00,0x01,0x00};
   _Send_Diag(0x0A,ID,Send_Data);
-  _TestResult(SendData,ID,"",NRC7F);  //Ä¬ÈÏ»á»°
+  _TestResult(SendData,ID,"",NRC7F);  //é»˜è®¤ä¼šè¯
 }
 void _34_Serve_02(dword ID,byte session)/*NRC22/24*/
 {
@@ -1849,7 +1855,7 @@ void _34_Serve_04(dword ID,byte session)/*NRC33*/
     Serve_Poss = _Check_Serve(0x34,0,0);
     if(Serve_Data[Serve_Poss].Security_Access[0] == 0)
     {
-      _WriteEx_and_Report("","ÎŞĞè°²È«·ÃÎÊ");
+      _WriteEx_and_Report("","æ— éœ€å®‰å…¨è®¿é—®");
       return;
     }
     Send_Data[0] = 0X34;
@@ -1896,7 +1902,7 @@ void _34_Serve_05(dword ID,byte session)/*NRC31*/
     }
   }
 }
-void _34_Serve_06(dword ID,byte session)/*Çı¶¯µØÖ·NRCÓÅÏÈ¼¶*/
+void _34_Serve_06(dword ID,byte session)/*é©±åŠ¨åœ°å€NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i,j;
   byte Send_Data[50];
@@ -1911,14 +1917,14 @@ void _34_Serve_06(dword ID,byte session)/*Çı¶¯µØÖ·NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x34,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
         if(Fun_NRC[i-1] == 0x31 && NRC31_total ==1)
@@ -1939,12 +1945,12 @@ void _34_Serve_06(dword ID,byte session)/*Çı¶¯µØÖ·NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x34 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Para[0][0]);
+    _WriteEx_and_Report("","0x34 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Para[0][0]);
   
   NRC_For34_FlashDrv = 0;
 }
 
-void _34_Serve_07(dword ID,byte session)/*APPµØÖ·NRCÓÅÏÈ¼¶*/
+void _34_Serve_07(dword ID,byte session)/*APPåœ°å€NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i,j;
   byte Send_Data[50];
@@ -1960,14 +1966,14 @@ void _34_Serve_07(dword ID,byte session)/*APPµØÖ·NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x34,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      if(i>0 && Skip_Recover == 0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0 && Skip_Recover == 0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);      
       }
@@ -1992,10 +1998,10 @@ void _34_Serve_07(dword ID,byte session)/*APPµØÖ·NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x34 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Para[0][0]);
+    _WriteEx_and_Report("","0x34 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Para[0][0]);
 }
 
-void _34_Serve_06_GAC(dword ID,byte session)/*Çı¶¯µØÖ·NRCÓÅÏÈ¼¶*/
+void _34_Serve_06_GAC(dword ID,byte session)/*é©±åŠ¨åœ°å€NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i,j;
   byte Send_Data[50];
@@ -2033,7 +2039,7 @@ void _34_Serve_06_GAC(dword ID,byte session)/*Çı¶¯µØÖ·NRCÓÅÏÈ¼¶*/
     _TestResult(SendData,ID,"",0x22);
   }
   else
-    _WriteEx_and_Report("","0x34 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Para[0][0]);
+    _WriteEx_and_Report("","0x34 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Para[0][0]);
   
   NRC_For34_FlashDrv = 0;
 }
@@ -2050,7 +2056,7 @@ void _36_Serve_01(dword ID,byte session)/*NRC7F*/
     Serve_Poss = _Check_Serve(0x36,0,0);
     testWaitForTimeout(500);
     _Send_Diag(Serve_Data[Serve_Poss].Serve_Fun_Len[0],ID,Send_Data);
-    _TestResult(SendData,ID,"",NRC7F);  //¹¦ÄÜÑ°Ö·²»Ö§³ÖÁ÷¿ØÖ¡,¿ÉÄÜ´æÔÚÎŞÁ÷¿ØÖ¡ÏÖÏó
+    _TestResult(SendData,ID,"",NRC7F);  //åŠŸèƒ½å¯»å€ä¸æ”¯æŒæµæ§å¸§,å¯èƒ½å­˜åœ¨æ— æµæ§å¸§ç°è±¡
   }
 }
 void _36_Serve_03(dword ID,byte session)/*NRC13*/
@@ -2073,7 +2079,7 @@ void _36_Serve_03(dword ID,byte session)/*NRC13*/
     }
   }
 }
-void _36_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _36_Serve_NRC(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i,j;
   byte Send_Data[50];
@@ -2093,14 +2099,14 @@ void _36_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     _Set_NRC_Step(0x36,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     for(i=0;i<Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -2120,7 +2126,7 @@ void _36_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x36 0x%02Xµ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö",Serve_Data[Serve_Pos].Serve_Fun[0]);
+    _WriteEx_and_Report("","0x36 0x%02Xå½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ",Serve_Data[Serve_Pos].Serve_Fun[0]);
 }
 
 void _37_Serve_01(dword ID,byte session)/*NRC7F*/
@@ -2133,7 +2139,7 @@ void _37_Serve_01(dword ID,byte session)/*NRC7F*/
     Serve_Poss = _Check_Serve(0x37,0,0);
     testWaitForTimeout(500);
     _Send_Diag(Serve_Data[Serve_Poss].Serve_Fun_Len[0],ID,Send_Data);
-    _TestResult(SendData,ID,"",NRC7F);  //¹¦ÄÜÑ°Ö·²»Ö§³ÖÁ÷¿ØÖ¡,¿ÉÄÜ´æÔÚÎŞÁ÷¿ØÖ¡ÏÖÏó
+    _TestResult(SendData,ID,"",NRC7F);  //åŠŸèƒ½å¯»å€ä¸æ”¯æŒæµæ§å¸§,å¯èƒ½å­˜åœ¨æ— æµæ§å¸§ç°è±¡
   }
 }
 void _37_Serve_03(dword ID,byte session)/*NRC13*/
@@ -2174,7 +2180,7 @@ void _37_Serve_04(dword ID,byte session)/*NRC22/24*/
   }
 }
 
-void _37_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _37_Serve_NRC(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
   int Serve_Pos,i,j;
   byte Send_Data[50];
@@ -2195,7 +2201,7 @@ void _37_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
     if(Fun_NRC_Count == 0)
     {
-      _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
       return;
     }
     if(NRC33_Flage == 0)
@@ -2203,8 +2209,8 @@ void _37_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     for(i=0;i<=Fun_NRC_Count;i++)
     {
       if(i<Fun_NRC_Count)
-        _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-      if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+        _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+      if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
       {
         _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
       }
@@ -2225,7 +2231,7 @@ void _37_Serve_NRC(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
   }
   else
-    _WriteEx_and_Report("","0x37 µ±Ç°»á»°»òÑ°Ö·²»Ö§³Ö");
+    _WriteEx_and_Report("","0x37 å½“å‰ä¼šè¯æˆ–å¯»å€ä¸æ”¯æŒ");
 }
 
 void _31_Serve_01(dword ID,byte session)/*NRC7F*/
@@ -2256,7 +2262,7 @@ void _31_Serve_02(dword ID,byte session)/*Response*/
     for(j=0;j<Serve_31_Hex[i].Control_Type_Count;j++)
     {
       Sup_ = _Check_31Serve_IDAndSess(i,j,ID,session);
-      if(Sup_ == 1) // Ñ°Ö·ºÍ»á»°¶¼Ö§³Ö
+      if(Sup_ == 1) // å¯»å€å’Œä¼šè¯éƒ½æ”¯æŒ
       {
         if(Count == 0)
         {
@@ -2264,7 +2270,7 @@ void _31_Serve_02(dword ID,byte session)/*Response*/
             _unlockECU();
         }
         Count++;
-        if(session == 2) //±à³Ì»á»°
+        if(session == 2) //ç¼–ç¨‹ä¼šè¯
         {
           _Get_31_ServeData(i,Send_Data,2,j);
           _Send_Diag(Len_31H,ID,Send_Data);
@@ -2278,7 +2284,7 @@ void _31_Serve_02(dword ID,byte session)/*Response*/
           else
             _TestResult(SendData,ID,"",NRC22);
         }
-        else if(session == 3) //À©Õ¹»á»°
+        else if(session == 3) //æ‰©å±•ä¼šè¯
         {
           _Get_31_ServeData(i,Send_Data,2,j);
           _Send_Diag(Len_31H,ID,Send_Data);
@@ -2287,12 +2293,12 @@ void _31_Serve_02(dword ID,byte session)/*Response*/
           {
             RxLen = DiagGetRespPrimitiveSize(SendData);
             if(RxLen != Serve_31_Hex[i].Control_Type_RxLen[j])
-              testStepFail("","31 %02X %02X %02X µ±Ç°ÏìÓ¦³¤¶ÈÒì³££¬ÆÚÍûÎª %d£¬Êµ¼ÊÎª %d",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],
+              testStepFail("","31 %02X %02X %02X å½“å‰å“åº”é•¿åº¦å¼‚å¸¸ï¼ŒæœŸæœ›ä¸º %dï¼Œå®é™…ä¸º %d",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],
                                                                                           Serve_31_Hex[i].Routine[1],Serve_31_Hex[i].Control_Type_RxLen[j],RxLen);
           }
         }
       }
-      else if(Sup_ == 0) //Ñ°Ö·Ö§³Ö£¬µ«»á»°²»Ö§³Ö
+      else if(Sup_ == 0) //å¯»å€æ”¯æŒï¼Œä½†ä¼šè¯ä¸æ”¯æŒ
       {
         _Get_31_ServeData(i,Send_Data,2,j);
         _Send_Diag(Len_31H,ID,Send_Data);
@@ -2341,12 +2347,12 @@ void _31_Serve_03(dword ID,byte session)/*NRC13*/
             }
           }
           else
-            _TestResult(SendData,ID,"",NRC13);//NRC31ÓÅÏÈ¼¶³£¸ßÓÚtotal_13
+            _TestResult(SendData,ID,"",NRC13);//NRC31ä¼˜å…ˆçº§å¸¸é«˜äºtotal_13
           testWaitForTimeout(100);
         }
         else
         {
-          _WriteEx_and_Report("","¸ÃÀı³Ì²»Ö§³Ö¸Ã»á»°");
+          _WriteEx_and_Report("","è¯¥ä¾‹ç¨‹ä¸æ”¯æŒè¯¥ä¼šè¯");
           break;
         }
       }
@@ -2387,7 +2393,7 @@ void _31_Serve_04(dword ID,byte session)/*NRC12*/
       }
       else
       {
-        _WriteEx_and_Report("","¸ÃÀı³Ì²»Ö§³Ö¸Ã»á»°");
+        _WriteEx_and_Report("","è¯¥ä¾‹ç¨‹ä¸æ”¯æŒè¯¥ä¼šè¯");
         break;
       }
     }
@@ -2409,19 +2415,19 @@ void _31_Serve_05(dword ID,byte session)/*NRC33*/
         continue;
       if(_Check_Serve(Serve_31_Hex[i].Control_Type[j],Temp_RID,11) == 1)
       {
-        writeEx(-3,1,"²âÊÔNRC33: 31 %02X %02X %02X ",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
+        writeEx(-3,1,"æµ‹è¯•NRC33: 31 %02X %02X %02X ",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
         _Get_31_ServeData(i,Send_Data,2,j);
         _Send_Diag(Len_31H,ID,Send_Data);
         _TestResult(SendData,ID,"",NRC33);
       }
       else
       {
-        writeEx(-3,1,"31 %02X %02X %02X ²»Ö§³ÖNRC33 ",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
+        writeEx(-3,1,"31 %02X %02X %02X ä¸æ”¯æŒNRC33 ",Serve_31_Hex[i].Control_Type[j],Serve_31_Hex[i].Routine[0],Serve_31_Hex[i].Routine[1]);
       }
     }
   }
 }
-void _31_Serve_06(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _31_Serve_06(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
   byte Send_Data[50];
   word NRC_RID;
@@ -2433,7 +2439,7 @@ void _31_Serve_06(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     NRC_Case = Serve31_NRC_Case_Pro;
   else
     NRC_Case = Serve31_NRC_Case;
-  snprintf(comment,elCount(comment),"Î´ÔÚStructÖĞ²éÑ¯µ½31·şÎñ NRC ¼ì²âÀı³Ì£º31");
+  snprintf(comment,elCount(comment),"æœªåœ¨Structä¸­æŸ¥è¯¢åˆ°31æœåŠ¡ NRC æ£€æµ‹ä¾‹ç¨‹ï¼š31");
   snprintf(comment,elCount(comment),"%s %02X",comment,(NRC_Case >> 16) & 0xFF);
   snprintf(comment,elCount(comment),"%s %02X",comment,(NRC_Case >> 8) & 0xFF);
   snprintf(comment,elCount(comment),"%s %02X",comment,NRC_Case & 0xFF);
@@ -2456,7 +2462,7 @@ void _31_Serve_06(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
   }
   if(_Check_31Serve_IDAndSess(Serve_Pos,0,ID,session) != 1)
   {
-     _WriteEx_and_Report("","/*-------------- ¸ÃÀı³ÌÔÚµ±Ç°»á»°²»Ö§³Ö£¬²»²âÊÔNRCÓÅÏÈ¼¶ --------------*/");
+     _WriteEx_and_Report("","/*-------------- è¯¥ä¾‹ç¨‹åœ¨å½“å‰ä¼šè¯ä¸æ”¯æŒï¼Œä¸æµ‹è¯•NRCä¼˜å…ˆçº§ --------------*/");
     return;
   }
   NRC_RID = NRC_Case & 0xFFFF;
@@ -2464,8 +2470,8 @@ void _31_Serve_06(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
   for(i=0;i<Fun_NRC_Count;i++)
   {
     if(i<Fun_NRC_Count)
-      _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-    else _WriteEx_and_Report("","/*---------------- ²âÊÔÎŞNRC -----------------*/",Fun_NRC[i]);
+      _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+    else _WriteEx_and_Report("","/*---------------- æµ‹è¯•æ— NRC -----------------*/",Fun_NRC[i]);
 //    if(Fun_NRC[i] == 0x31 && NRC31_Count == 1)
 //    {
 //      _Get_31_ServeData(Serve_Pos,Send_Data,2,0);
@@ -2474,7 +2480,7 @@ void _31_Serve_06(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
 //      Send_Data[Serve_31_Hex[Serve_Pos].Control_Type_TxLen + 2] = 0xFF;
 //      Send_Data[Serve_31_Hex[Serve_Pos].Control_Type_TxLen + 3] = 0xFF;
 //    }
-    if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+    if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
     {
       _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
     }
@@ -2505,7 +2511,7 @@ void _31_Serve_06(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     testWaitForTimeout(100);
   }
 }
-void _31_Serve_06_01(dword ID,byte session)/*GAC-NRCÓÅÏÈ¼¶*/
+void _31_Serve_06_01(dword ID,byte session)/*GAC-NRCä¼˜å…ˆçº§*/
 {
   byte Send_31Data[100];
   int i;
@@ -2541,11 +2547,11 @@ void _31_Serve_08(dword ID,byte Session)/*NRC31*/
   
   snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"%s","");
   testGetCurrentTestCaseTitle(Fault_Data_Write,400);
-  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    ±éÀú31·şÎñNRC31Ê±,Òì³£ÏìÓ¦: \n",Fault_Data_Write);
+  snprintf(Fault_Data_Write,elCount(Fault_Data_Write),"\n %s: \n    éå†31æœåŠ¡NRC31æ—¶,å¼‚å¸¸å“åº”: \n",Fault_Data_Write);
   File_Write(Error_File,Error_FileName,Fault_Data_Write,2);
   if(_Check_Serve31H_(ID,Session) == 0)
   {
-    _WriteEx_and_Report("","µ±Ç°»á»°²»Ö§³Ö");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸æ”¯æŒ");
     return;
   }
   _unlockECU();
@@ -2694,14 +2700,14 @@ void _27_Serve_04(dword ID,byte session)/*NRC24*/
     _TestResult(SendData,ID,"",NRC24);  
   }
 }
-void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
+void _27_Serve_05(dword ID,byte session)/*NRCä¼˜å…ˆçº§*/
 {
    byte Send_Data[100];
   int Serve_Pos;
   
   Serve_Pos = _Check_Serve(0x27,0,0);
   
-  _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+  _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
   testWaitForTimeout(10000);
   _SetSession(session);
   _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -2715,19 +2721,19 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     Send_Data[0] = 0x27;
     if(Request_Error_Count == 1)
     {
-      _WriteEx_and_Report("","Á¬ĞøÇëÇóÖÖ×Ó»áµ¼ÖÂ´íÎó¼ÆÊıÆ÷ÀÛ¼Ó£¬¹ÊÑéÖ¤ÇëÇóÖÖ×ÓÓÅÏÈ¼¶");
+      _WriteEx_and_Report("","è¿ç»­è¯·æ±‚ç§å­ä¼šå¯¼è‡´é”™è¯¯è®¡æ•°å™¨ç´¯åŠ ï¼Œæ•…éªŒè¯è¯·æ±‚ç§å­ä¼˜å…ˆçº§");
       _Set_NRC_Step(0x27,Serve_Data[Serve_Pos].Serve_Fun[0],6,Send_Data);
       if(Fun_NRC_Count == 0)
       {
-        _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+        _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
         return;
       }
       for(i=0;i<=Fun_NRC_Count;i++)
       {
        
         if(i<Fun_NRC_Count)
-          _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-        if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+          _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+        if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
         {
           _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,0,Send_Data);
         }
@@ -2752,19 +2758,19 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
     }
     else
     {
-      _WriteEx_and_Report("","Á¬ĞøÇëÇóÖÖ×ÓÎŞÓ°Ïì£¬¹ÊÑéÖ¤·¢ËÍÃØÔ¿ÓÅÏÈ¼¶");
+      _WriteEx_and_Report("","è¿ç»­è¯·æ±‚ç§å­æ— å½±å“ï¼Œæ•…éªŒè¯å‘é€ç§˜é’¥ä¼˜å…ˆçº§");
       _Set_NRC_Step(0x27,Serve_Data[Serve_Pos].Serve_Fun[1],6,Send_Data);
       if(Fun_NRC_Count == 0)
       {
-        _WriteEx_and_Report("","Î´ÊäÈëNRC£¬Ìø¹ı²âÊÔ");
+        _WriteEx_and_Report("","æœªè¾“å…¥NRCï¼Œè·³è¿‡æµ‹è¯•");
         return;
       }
       for(i=0;i<Fun_NRC_Count;i++)
       {
         
         if(i<Fun_NRC_Count)
-          _WriteEx_and_Report("","/*-------------- ²âÊÔNRC = 0x%X --------------*/",Fun_NRC[i]);
-        if(i>0) //µÚÒ»´Î·´À¡×î¸ßÓÅÏÈ¼¶²»×ö´¦Àí,ÆäÓàÒÀ´Î»Ö¸´
+          _WriteEx_and_Report("","/*-------------- æµ‹è¯•NRC = 0x%X --------------*/",Fun_NRC[i]);
+        if(i>0) //ç¬¬ä¸€æ¬¡åé¦ˆæœ€é«˜ä¼˜å…ˆçº§ä¸åšå¤„ç†,å…¶ä½™ä¾æ¬¡æ¢å¤
         {
           _Recover_NRC_Step(Fun_NRC[i-1],Serve_Pos,1,Send_Data);
           if(Fun_NRC[i-1] == 0x24)
@@ -2781,7 +2787,7 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
   }
 }
 //
-//void _27_Serve_06_2(dword ID,byte session)/*ÏÂµç¶Ô´íÎó¼ÆÊıÓ°Ïì²âÊÔ2*/
+//void _27_Serve_06_2(dword ID,byte session)/*ä¸‹ç”µå¯¹é”™è¯¯è®¡æ•°å½±å“æµ‹è¯•2*/
 //{
 //  dword seed;
 //  int Error_pose;
@@ -2791,7 +2797,7 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
 //  diagStartTesterPresent(Cdd_Name);
 //  testWaitForTimeout(1000);
 //  
-//  _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+//  _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
 //  testWaitForTimeout(10000);
 //  _SetSession(session);
 //  _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -2802,7 +2808,7 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
 //  
 //  for(Error_pose = 1;Error_pose <= Error_Count; Error_pose++)
 //  {
-//    _WriteEx_and_Report("","/*----------²âÊÔ´íÎó¼ÆÊıÎª: %x Ê±ÏÂµç¶Ô´íÎó¼ÆÊıµÄÓ°Ïì--------*/",Error_pose);
+//    _WriteEx_and_Report("","/*----------æµ‹è¯•é”™è¯¯è®¡æ•°ä¸º: %x æ—¶ä¸‹ç”µå¯¹é”™è¯¯è®¡æ•°çš„å½±å“--------*/",Error_pose);
 //    Error_Count_Power = 1;
 //    _Set_Error_Count(ID,Error_pose,session);
 //    Error_Count_Power = 0;
@@ -2845,7 +2851,7 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
 //    _SetSession(session);
 //  } 
 //}
-//void _27_Serve_07_2(dword ID,byte session)/*ÖØÆô¶Ô´íÎó¼ÆÊıÓ°Ïì²âÊÔ*/
+//void _27_Serve_07_2(dword ID,byte session)/*é‡å¯å¯¹é”™è¯¯è®¡æ•°å½±å“æµ‹è¯•*/
 //{
 //  dword seed;
 //  byte Temp[2] ={0x11,0x01};
@@ -2857,10 +2863,10 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
 //  Serve_Pos = _Check_Serve(0x11,0,0);
 //  Temp[1] = Serve_Data[Serve_Pos].Serve_Fun[0];
 //  if( Serve_Data[Serve_Pos].Security_Access[0]==1)
-//    _WriteEx_and_Report("","11¸´Î»ĞèÒª°²È«·ÃÎÊÌõ¼ş£¬´ËÌõÓÃÀı²»ÊÊÓÃ");
+//    _WriteEx_and_Report("","11å¤ä½éœ€è¦å®‰å…¨è®¿é—®æ¡ä»¶ï¼Œæ­¤æ¡ç”¨ä¾‹ä¸é€‚ç”¨");
 //  else
 //  {
-//    _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+//    _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
 //    testWaitForTimeout(10000);
 //    _SetSession(session);
 //    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -2871,7 +2877,7 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
 //    
 //    for(Error_pose = 1;Error_pose <= Error_Count; Error_pose++)
 //    {
-//      _WriteEx_and_Report("","²âÊÔ´íÎó¼ÆÊıÎª: %x Ê±ÏÂµç¶Ô´íÎó¼ÆÊıµÄÓ°Ïì",Error_pose);
+//      _WriteEx_and_Report("","æµ‹è¯•é”™è¯¯è®¡æ•°ä¸º: %x æ—¶ä¸‹ç”µå¯¹é”™è¯¯è®¡æ•°çš„å½±å“",Error_pose);
 //      Error_Count_Reset = 1;
 //      _Set_Error_Count(ID,Error_pose,session);
 //      Error_Count_Reset = 0;
@@ -2919,14 +2925,14 @@ void _27_Serve_05(dword ID,byte session)/*NRCÓÅÏÈ¼¶*/
 //    }
 //  }
 //}
-void _27_Serve_08(dword ID,byte session)/*²»ÕıÈ·±¨ÎÄ¶Ô´íÎó¼ÆÊıÓ°Ïì²âÊÔ*/
+void _27_Serve_08(dword ID,byte session)/*ä¸æ­£ç¡®æŠ¥æ–‡å¯¹é”™è¯¯è®¡æ•°å½±å“æµ‹è¯•*/
 {
   byte Temp[2]={0x27,0x01};
   byte Temp_1[6]={0x27,0x01,0x11,0x11,0x11,0x11};
   byte i;
   
   
-  _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+  _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
   testWaitForTimeout(10000);
   _SetSession(session);
   _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -2960,14 +2966,14 @@ void _27_Serve_08(dword ID,byte session)/*²»ÕıÈ·±¨ÎÄ¶Ô´íÎó¼ÆÊıÓ°Ïì²âÊÔ*/
   testWaitForTimeout(Error_Count_Delay*1.1+1000);
   _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
   if(diagGetLastResponseCode(SendData)==-1)
-    testStepPass("","ÊÕµ½ÕıÏìÓ¦");
+    testStepPass("","æ”¶åˆ°æ­£å“åº”");
   else
   {
-    testStepFail("","Î´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","æœªæ”¶åˆ°æ­£å“åº”");
     testWaitForTimeout(10000);
   }
 }
-void _27_Serve_09(dword ID,byte session)/*½âËøÇé¿öÏÂÔÙ´ÎÇëÇóÖÖ×Ó*/
+void _27_Serve_09(dword ID,byte session)/*è§£é”æƒ…å†µä¸‹å†æ¬¡è¯·æ±‚ç§å­*/
 { 
   byte Temp[2] = {0x27,0x01};
   int i,flage;
@@ -2985,9 +2991,9 @@ void _27_Serve_09(dword ID,byte session)/*½âËøÇé¿öÏÂÔÙ´ÎÇëÇóÖÖ×Ó*/
         flage = 1;
     }
     if(flage == 0)
-      testStepPass("","Í¨¹ı°²È«·ÃÎÊºó£¬ÔÙ´ÎÇëÇóÖÖ×ÓÔòÖÖ×Ó·µ»ØÈ«0");
+      testStepPass("","é€šè¿‡å®‰å…¨è®¿é—®åï¼Œå†æ¬¡è¯·æ±‚ç§å­åˆ™ç§å­è¿”å›å…¨0");
     else
-      testStepFail("","Í¨¹ı°²È«·ÃÎÊºó£¬ÔÙ´ÎÇëÇóÖÖ×Ó´æÔÚ·Ç0Öµ");
+      testStepFail("","é€šè¿‡å®‰å…¨è®¿é—®åï¼Œå†æ¬¡è¯·æ±‚ç§å­å­˜åœ¨é0å€¼");
     _Send_Key(SendKey_Len,ID,seed,0);
     _TestResult(SendData,ID,"",NRC24);
     
@@ -2997,13 +3003,13 @@ void _27_Serve_09(dword ID,byte session)/*½âËøÇé¿öÏÂÔÙ´ÎÇëÇóÖÖ×Ó*/
     _TestResult(SendData,ID,"",-1);
   }
 }
-void _27_Serve_10(dword ID,byte session)/*ÂúÑÓÊ±´íÎó¼ÆÊıÆ÷±ä»¯²âÊÔ*/
+void _27_Serve_10(dword ID,byte session)/*æ»¡å»¶æ—¶é”™è¯¯è®¡æ•°å™¨å˜åŒ–æµ‹è¯•*/
 {
   int i;
   dword seed;
   diagStartTesterPresent(Cdd_Name);
   
-  _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+  _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
   testWaitForTimeout(10000);
   _SetSession(session);
   _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -3041,12 +3047,12 @@ void _27_Serve_10(dword ID,byte session)/*ÂúÑÓÊ±´íÎó¼ÆÊıÆ÷±ä»¯²âÊÔ*/
   _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
   _TestResult(SendData,ID,"",-1);
 }
-//void _27_Serve_11(dword ID,byte session)/*»á»°ÇĞ»»¶Ô10sÑÓÊ±µÄÓ°Ïì²âÊÔ*/
+//void _27_Serve_11(dword ID,byte session)/*ä¼šè¯åˆ‡æ¢å¯¹10så»¶æ—¶çš„å½±å“æµ‹è¯•*/
 //{
 //  byte Send_Data[50];
 //  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
 //  {
-//    _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+//    _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
 //    testWaitForTimeout(10000);
 //    _SetSession(session);
 //    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -3080,13 +3086,13 @@ void _27_Serve_10(dword ID,byte session)/*ÂúÑÓÊ±´íÎó¼ÆÊıÆ÷±ä»¯²âÊÔ*/
 //    diagStopTesterPresent(Cdd_Name);
 //  }
 //}
-//void _27_Serve_12(dword ID,byte session)/*¶Ïµç¶Ô10sÑÓÊ±µÄÓ°Ïì²âÊÔ*/
+//void _27_Serve_12(dword ID,byte session)/*æ–­ç”µå¯¹10så»¶æ—¶çš„å½±å“æµ‹è¯•*/
 //{
 //  byte Send_Data[50];
 //  if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
 //  {
 //    
-//    _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+//    _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
 //    testWaitForTimeout(10000);
 //    _SetSession(session);
 //    _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -3116,7 +3122,7 @@ void _27_Serve_10(dword ID,byte session)/*ÂúÑÓÊ±´íÎó¼ÆÊıÆ÷±ä»¯²âÊÔ*/
 //    diagStopTesterPresent(Cdd_Name);
 //  }
 //}
-void _27_Serve_13(dword ID,byte session)/*¼ì²â°²È«·ÃÎÊ½âËø×´Ì¬*/
+void _27_Serve_13(dword ID,byte session)/*æ£€æµ‹å®‰å…¨è®¿é—®è§£é”çŠ¶æ€*/
 {
   byte Send_Data[50],Pro[2] = {0x10,0x02};
   qword Seed,Seed1;
@@ -3153,9 +3159,9 @@ void _27_Serve_13(dword ID,byte session)/*¼ì²â°²È«·ÃÎÊ½âËø×´Ì¬*/
       if(AES_128 == 0)
       {
         if(Seed == Seed1)
-          testStepFail("","Á½´ÎÇëÇó·µ»ØµÄÖÖ×ÓÒ»ÖÂ");
+          testStepFail("","ä¸¤æ¬¡è¯·æ±‚è¿”å›çš„ç§å­ä¸€è‡´");
         else
-          testStepPass("","Á½´ÎÇëÇó·µ»ØµÄÖÖ×Ó²»Í¬");
+          testStepPass("","ä¸¤æ¬¡è¯·æ±‚è¿”å›çš„ç§å­ä¸åŒ");
       }
       else
       {
@@ -3168,15 +3174,15 @@ void _27_Serve_13(dword ID,byte session)/*¼ì²â°²È«·ÃÎÊ½âËø×´Ì¬*/
           }
         }
         if(flage == 0)
-          testStepFail("","Á½´ÎÇëÇó·µ»ØµÄÖÖ×ÓÒ»ÖÂ");
+          testStepFail("","ä¸¤æ¬¡è¯·æ±‚è¿”å›çš„ç§å­ä¸€è‡´");
         else
-          testStepPass("","Á½´ÎÇëÇó·µ»ØµÄÖÖ×Ó²»Í¬");
+          testStepPass("","ä¸¤æ¬¡è¯·æ±‚è¿”å›çš„ç§å­ä¸åŒ");
       }
       _Clear_Seed();
     }
   }
 }
-void _27_Serve_14(dword ID,byte session)/*Á¬ĞøÇëÇóÖÖ×Ó*/
+void _27_Serve_14(dword ID,byte session)/*è¿ç»­è¯·æ±‚ç§å­*/
 {
   word seed;
   int Count;
@@ -3262,7 +3268,7 @@ void _27_Serve_14(dword ID,byte session)/*Á¬ĞøÇëÇóÖÖ×Ó*/
     _TestResult(SendData,ID,"",-1);
   }
 }
-void _27_Serve_15(dword ID,byte session)/*10sÑÓÊ±Ê±¼ä²âÊÔ*/
+void _27_Serve_15(dword ID,byte session)/*10så»¶æ—¶æ—¶é—´æµ‹è¯•*/
 {
   byte Send_Data[50];
   if(_Check_Serve_IDAndSess(0x27,ID,session)!= -1)
@@ -3274,7 +3280,7 @@ void _27_Serve_15(dword ID,byte session)/*10sÑÓÊ±Ê±¼ä²âÊÔ*/
     int i;
     i=0;
  
-    _WriteEx_and_Report("","/*----------²âÊÔÇ°£¬´íÎó¼ÆÊıÇå0--------*/");
+    _WriteEx_and_Report("","/*----------æµ‹è¯•å‰ï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
     testWaitForTimeout(10000);
     _SetSession(session);
     _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -3298,18 +3304,18 @@ void _27_Serve_15(dword ID,byte session)/*10sÑÓÊ±Ê±¼ä²âÊÔ*/
     endtime=(double)timeNow()/100;
     Change_Time = endtime-starttime;
     if((CountTime - starttime)>=15000)
-      _WriteEx_and_Report("","³¤Ê±¼äÎ´ÊÕµ½ÕıÏìÓ¦,ÌáÇ°ÖÕÖ¹·ÀÖ¹¿¨ËÀ");
-    writeEx(-3,0," µ±Ç°´ÓNRC36µ½Õı³£ÏìÓ¦ÖÖ×ÓÊ±¼äÎª %.2f ms ",Change_Time);
+      _WriteEx_and_Report("","é•¿æ—¶é—´æœªæ”¶åˆ°æ­£å“åº”,æå‰ç»ˆæ­¢é˜²æ­¢å¡æ­»");
+    writeEx(-3,0," å½“å‰ä»NRC36åˆ°æ­£å¸¸å“åº”ç§å­æ—¶é—´ä¸º %.2f ms ",Change_Time);
     if(Error_Count_Delay - Error_Count_Delay_Tolerance<=Change_Time && Change_Time<=Error_Count_Delay + Error_Count_Delay_Tolerance)
-      testStepPass("","µ±Ç°´ÓNRC36µ½Õı³£ÏìÓ¦ÖÖ×ÓÊ±¼äÎª %.2f ms",Change_Time);
+      testStepPass("","å½“å‰ä»NRC36åˆ°æ­£å¸¸å“åº”ç§å­æ—¶é—´ä¸º %.2f ms",Change_Time);
     else
-      testStepFail("","µ±Ç°´ÓNRC36µ½Õı³£ÏìÓ¦ÖÖ×ÓÊ±¼äÎª %.2f ms",Change_Time);
+      testStepFail("","å½“å‰ä»NRC36åˆ°æ­£å¸¸å“åº”ç§å­æ—¶é—´ä¸º %.2f ms",Change_Time);
     testWaitForTimeout(Error_Count_Delay+3000);
     _SetSession(exsession);
     _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
   }
 }
-_27_Serve_16(dword ID,byte Session)  /*Á¬ĞøÖØ¸´ÇëÇóÖÖ×ÓÑéÖ¤ÖØ¸´ÂÊ*/
+_27_Serve_16(dword ID,byte Session)  /*è¿ç»­é‡å¤è¯·æ±‚ç§å­éªŒè¯é‡å¤ç‡*/
 {
   qword i;
   diagStartTesterPresent(Cdd_Name);
@@ -3317,14 +3323,14 @@ _27_Serve_16(dword ID,byte Session)  /*Á¬ĞøÖØ¸´ÇëÇóÖÖ×ÓÑéÖ¤ÖØ¸´ÂÊ*/
   testWaitForTimeout(2000);
   if(Request_Error_Count == 0 && Request_Seed_Consistency == 0)
   {
-    if(AES_128 != 0)      //AES-128Ëã·¨ÒªÇóÇëÇóÖÖ×Ó¾ß±¸Ëæ»úĞÔ
+    if(AES_128 != 0)      //AES-128ç®—æ³•è¦æ±‚è¯·æ±‚ç§å­å…·å¤‡éšæœºæ€§
     {
       for(i=0;i<Request_Seed_Count;i++)
       {
         _get_seed(ID);
         Get_Seed_Flage = 1;
         testWaitForTimeout(200);
-        writeEx(-3,0,"µ±Ç°²âÊÔ´ÎÊı %d ´Î",i+1);
+        writeEx(-3,0,"å½“å‰æµ‹è¯•æ¬¡æ•° %d æ¬¡",i+1);
         if(i%100==0 && i!=0)
         {
           _K15_OFF();
@@ -3339,7 +3345,7 @@ _27_Serve_16(dword ID,byte Session)  /*Á¬ĞøÖØ¸´ÇëÇóÖÖ×ÓÑéÖ¤ÖØ¸´ÂÊ*/
     {
       for(i=0;i<Request_Seed_Count;i++)
       {
-        writeEx(-3,0,"µ±Ç°²âÊÔ´ÎÊı %d ´Î",i+1);
+        writeEx(-3,0,"å½“å‰æµ‹è¯•æ¬¡æ•° %d æ¬¡",i+1);
         _get_seed(ID);
         Get_Seed_Flage = 1;
         if(i==(word)random(Request_Seed_Count))
@@ -3356,10 +3362,10 @@ _27_Serve_16(dword ID,byte Session)  /*Á¬ĞøÖØ¸´ÇëÇóÖÖ×ÓÑéÖ¤ÖØ¸´ÂÊ*/
     _Check_Repeat(Request_Seed_Count,1);
   }
   else
-    _WriteEx_and_Report("","Á¬ĞøÇëÇóÖÖ×Ó´íÎó¼ÆÊıÆ÷ÀÛ¼Ó»òÖÖ×ÓÒ»ÖÂ,Ìø¹ı²âÊÔ");
+    _WriteEx_and_Report("","è¿ç»­è¯·æ±‚ç§å­é”™è¯¯è®¡æ•°å™¨ç´¯åŠ æˆ–ç§å­ä¸€è‡´,è·³è¿‡æµ‹è¯•");
 }
 
-_27_Serve_17(dword ID,byte Session)  /*Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔ*/
+_27_Serve_17(dword ID,byte Session)  /*æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•*/
 {
   int ServePos,i,Flage_Add;
   byte Send_Data[20];
@@ -3374,7 +3380,7 @@ _27_Serve_17(dword ID,byte Session)  /*Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔ*/
     _Send_Diag(Serve_Data[ServePos].Serve_Fun_Len[i],ID,Send_Data);
     if(Flage_Add == 1)
     {
-      if(Serve_Data[ServePos].Serve_Fun_Len[i] == 2)  //Ê¹ÓÃ³¤¶È½øĞĞÅĞ¶Ï,½öµ±³¤¶ÈÎª2Ê±È·ÈÏ·¢ËÍÎªÇëÇóÖÖ×Ó
+      if(Serve_Data[ServePos].Serve_Fun_Len[i] == 2)  //ä½¿ç”¨é•¿åº¦è¿›è¡Œåˆ¤æ–­,ä»…å½“é•¿åº¦ä¸º2æ—¶ç¡®è®¤å‘é€ä¸ºè¯·æ±‚ç§å­
         _TestResult(SendData,ID,"",-1);
       else
         _TestResult(SendData,ID,"",0x35);
@@ -3382,11 +3388,11 @@ _27_Serve_17(dword ID,byte Session)  /*Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔ*/
     else
       _TestResult(SendData,ID,"",0x7E);
     
-    _WriteEx_and_Report("","´Ë´¦¶Ô¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»½øĞĞ²âÊÔ");
+    _WriteEx_and_Report("","æ­¤å¤„å¯¹è‚¯å®šå“åº”æŠ‘åˆ¶ä½è¿›è¡Œæµ‹è¯•");
     if(Serve_Data[ServePos].RSP[i] == 1)
     {
       _Send_Diag(Serve_Data[ServePos].Serve_Fun_Len[i],ID,Send_Data);
-      if(Serve_Data[ServePos].Serve_Fun_Len[i] == 2)  //Ê¹ÓÃ³¤¶È½øĞĞÅĞ¶Ï,½öµ±³¤¶ÈÎª2Ê±È·ÈÏ·¢ËÍÎªÇëÇóÖÖ×Ó
+      if(Serve_Data[ServePos].Serve_Fun_Len[i] == 2)  //ä½¿ç”¨é•¿åº¦è¿›è¡Œåˆ¤æ–­,ä»…å½“é•¿åº¦ä¸º2æ—¶ç¡®è®¤å‘é€ä¸ºè¯·æ±‚ç§å­
         _TestResult(SendData,ID,"",-1);
       else
         _TestResult(SendData,ID,"",0x35);
@@ -3395,7 +3401,7 @@ _27_Serve_17(dword ID,byte Session)  /*Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔ*/
       _TestResult(SendData,ID,"",0x12);
   }
   
-  _WriteEx_and_Report("","/*----------²âÊÔºó£¬´íÎó¼ÆÊıÇå0--------*/");
+  _WriteEx_and_Report("","/*----------æµ‹è¯•åï¼Œé”™è¯¯è®¡æ•°æ¸…0--------*/");
   testWaitForTimeout(Error_Count_Delay*1.1);
   _SetSession(prosession);
   _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -3403,7 +3409,7 @@ _27_Serve_17(dword ID,byte Session)  /*Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔ*/
   testWaitForTimeout(1000);
 }
 
-_27_Serve_18(dword ID,byte Session)  /*½âËøºó¼ÆÊıÆ÷ÇåÁã*/
+_27_Serve_18(dword ID,byte Session)  /*è§£é”åè®¡æ•°å™¨æ¸…é›¶*/
 {
   int i;
   dword seed;
@@ -3414,10 +3420,10 @@ _27_Serve_18(dword ID,byte Session)  /*½âËøºó¼ÆÊıÆ÷ÇåÁã*/
     for(i=1;i<5;i++)
     {
       if(i == 1)
-        _WriteEx_and_Report("","´íÎó¼ÆÊıÆ÷ÀÛ¼Ó,Õı³£½âËø");
+        _WriteEx_and_Report("","é”™è¯¯è®¡æ•°å™¨ç´¯åŠ ,æ­£å¸¸è§£é”");
       else if(i == 2)
       {
-        _WriteEx_and_Report("","»á»°ÇĞ»»");
+        _WriteEx_and_Report("","ä¼šè¯åˆ‡æ¢");
         _SetSession(defsession);
         testWaitForTimeout(1000);
         _SetSession(Session);
@@ -3425,14 +3431,14 @@ _27_Serve_18(dword ID,byte Session)  /*½âËøºó¼ÆÊıÆ÷ÇåÁã*/
       }
       else if(i == 3)
       {
-        _WriteEx_and_Report("","11¸´Î»");
+        _WriteEx_and_Report("","11å¤ä½");
         _Set_11_Restoration(0);
         _SetSession(Session);
         testWaitForTimeout(1000);
       }
       else if(i == 4)
       {
-        _WriteEx_and_Report("","Õı³£ÉÏÏÂµç");
+        _WriteEx_and_Report("","æ­£å¸¸ä¸Šä¸‹ç”µ");
         _K15_OFF();
         _K30_OFF();
         testWaitForTimeout(2000);
@@ -3460,9 +3466,9 @@ _27_Serve_18(dword ID,byte Session)  /*½âËøºó¼ÆÊıÆ÷ÇåÁã*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
-_27_Serve_19(dword ID,byte Session)  /*ÒÑ½âËø×´Ì¬-ÉÏÏÂµç/11¸´Î»*/
+_27_Serve_19(dword ID,byte Session)  /*å·²è§£é”çŠ¶æ€-ä¸Šä¸‹ç”µ/11å¤ä½*/
 {
   int i;
   
@@ -3470,7 +3476,7 @@ _27_Serve_19(dword ID,byte Session)  /*ÒÑ½âËø×´Ì¬-ÉÏÏÂµç/11¸´Î»*/
   {
     for(i=0;i<Serve_11_Unlock_Count;i++)
     {
-      _WriteEx_and_Report("","µ±Ç°²âÊÔ´ÎÊı %d",i+1);
+      _WriteEx_and_Report("","å½“å‰æµ‹è¯•æ¬¡æ•° %d",i+1);
       _SetSession(Session);
       testWaitForTimeout(1000);
       _Send_Key(SendKey_Len,ID,_get_seed(ID),0);
@@ -3496,10 +3502,10 @@ _27_Serve_19(dword ID,byte Session)  /*ÒÑ½âËø×´Ì¬-ÉÏÏÂµç/11¸´Î»*/
     _Check_Repeat(Serve_11_Unlock_Count,1);
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
 
-_27_Serve_20(dword ID,byte Session)  /*ÒÑ½âËø×´Ì¬-»á»°ÇĞ»»*/
+_27_Serve_20(dword ID,byte Session)  /*å·²è§£é”çŠ¶æ€-ä¼šè¯åˆ‡æ¢*/
 {
   byte Send_Data[2] = {0x10,0x02};
   if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
@@ -3523,9 +3529,9 @@ _27_Serve_20(dword ID,byte Session)  /*ÒÑ½âËø×´Ì¬-»á»°ÇĞ»»*/
     _SetSession(defsession);
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
-_27_Serve_21(dword ID,byte Session)  /*Î´½âËø×´Ì¬-11¸´Î»*/
+_27_Serve_21(dword ID,byte Session)  /*æœªè§£é”çŠ¶æ€-11å¤ä½*/
 {
   byte Send_Data[2] = {0x10,0x02};
   int ServePos,i,j,Max_Count,Res11;
@@ -3534,7 +3540,7 @@ _27_Serve_21(dword ID,byte Session)  /*Î´½âËø×´Ì¬-11¸´Î»*/
   if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
   {
     if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
-      _WriteEx_and_Report("","½øÈë±à³Ì»á»°ĞèÒª°²È«·ÃÎÊ,ÓëÓÃÀıĞèÇó²»·û£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","è¿›å…¥ç¼–ç¨‹ä¼šè¯éœ€è¦å®‰å…¨è®¿é—®,ä¸ç”¨ä¾‹éœ€æ±‚ä¸ç¬¦ï¼Œè·³è¿‡æµ‹è¯•");
     else
     {
       ServePos = _Check_Serve(0x11,0,0);
@@ -3558,9 +3564,9 @@ _27_Serve_21(dword ID,byte Session)  /*Î´½âËø×´Ì¬-11¸´Î»*/
             _SetSession(Session);
             Res11 = 0;
             Send_11[1] = (Serve_Data[ServePos].Serve_Fun[0]|0x80);
-            _WriteEx_and_Report("","²âÊÔ11¸´Î»¿Ï¶¨ÏìÓ¦ÒÖÖÆÎ»");
+            _WriteEx_and_Report("","æµ‹è¯•11å¤ä½è‚¯å®šå“åº”æŠ‘åˆ¶ä½");
           }
-          if(Restoration_Error_Count == 1)//¸´Î»»òÖØÆô»áÖØÖÃ¼ÆÊıÆ÷
+          if(Restoration_Error_Count == 1)//å¤ä½æˆ–é‡å¯ä¼šé‡ç½®è®¡æ•°å™¨
             _Check_Error_Count(ID,0);
           else
           {
@@ -3570,7 +3576,7 @@ _27_Serve_21(dword ID,byte Session)  /*Î´½âËø×´Ì¬-11¸´Î»*/
               _TestResult(SendData,ID,"",0x35);
       			  _Send_Diag(2,phyreq_ID,Send_11);
       			  _TestResult(SendData,phyreq_ID,"",Res11);
-      			  testWaitForTimeout(2000); /*11¸´Î»ºóÔö¼ÓÑÓÊ±Ê±¼ä·ÀÖ¹ºóĞø³ö´í*/
+      			  testWaitForTimeout(2000); /*11å¤ä½åå¢åŠ å»¶æ—¶æ—¶é—´é˜²æ­¢åç»­å‡ºé”™*/
               _SetSession(Session);
               testWaitForTimeout(2000);
             }
@@ -3590,7 +3596,7 @@ _27_Serve_21(dword ID,byte Session)  /*Î´½âËø×´Ì¬-11¸´Î»*/
           _Send_Key(SendKey_Len,ID,Seed,1);
           _TestResult(SendData,ID,"",0x24);
           testWaitForTimeout(Error_Count_Delay*0.6-1000);
-          if(Error_Count_Delay_Reset == 1) //¸´Î»ĞèÒªÖØĞÂÆô¶¯ÑÓÊ±Ê±¼ä 
+          if(Error_Count_Delay_Reset == 1) //å¤ä½éœ€è¦é‡æ–°å¯åŠ¨å»¶æ—¶æ—¶é—´ 
           {
             Seed = _get_seed(ID);
             _TestResult(SendData,ID,"",0x37);
@@ -3605,24 +3611,24 @@ _27_Serve_21(dword ID,byte Session)  /*Î´½âËø×´Ì¬-11¸´Î»*/
         }
       }
       else
-        _WriteEx_and_Report("","11·şÎñĞèÒª°²È«·ÃÎÊÓëÓÃÀıĞèÇó²»·û,Ìø¹ı²âÊÔ");
+        _WriteEx_and_Report("","11æœåŠ¡éœ€è¦å®‰å…¨è®¿é—®ä¸ç”¨ä¾‹éœ€æ±‚ä¸ç¬¦,è·³è¿‡æµ‹è¯•");
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
-_27_Serve_22(dword ID,byte Session)  /*Î´½âËø×´Ì¬-ÉÏÏÂµç*/
+_27_Serve_22(dword ID,byte Session)  /*æœªè§£é”çŠ¶æ€-ä¸Šä¸‹ç”µ*/
 {
   int i;
   dword Seed;
   if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
   {
     if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
-      _WriteEx_and_Report("","½øÈë±à³Ì»á»°ĞèÒª°²È«·ÃÎÊ,ÓëÓÃÀıĞèÇó²»·û£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","è¿›å…¥ç¼–ç¨‹ä¼šè¯éœ€è¦å®‰å…¨è®¿é—®,ä¸ç”¨ä¾‹éœ€æ±‚ä¸ç¬¦ï¼Œè·³è¿‡æµ‹è¯•");
     else
     {
       diagStartTesterPresent(Cdd_Name);
-      if(Restoration_Error_Count == 1)//¸´Î»»òÖØÆô»áÖØÖÃ¼ÆÊıÆ÷
+      if(Restoration_Error_Count == 1)//å¤ä½æˆ–é‡å¯ä¼šé‡ç½®è®¡æ•°å™¨
         _Check_Error_Count(ID,0);
       else
       {
@@ -3654,7 +3660,7 @@ _27_Serve_22(dword ID,byte Session)  /*Î´½âËø×´Ì¬-ÉÏÏÂµç*/
       _Send_Key(SendKey_Len,ID,Seed,1);
       _TestResult(SendData,ID,"",0x24);
       testWaitForTimeout(Error_Count_Delay*0.6-1000);
-      if(Error_Count_Delay_Reset == 1) //¸´Î»ĞèÒªÖØĞÂÆô¶¯ÑÓÊ±Ê±¼ä 
+      if(Error_Count_Delay_Reset == 1) //å¤ä½éœ€è¦é‡æ–°å¯åŠ¨å»¶æ—¶æ—¶é—´ 
       {
         Seed = _get_seed(ID);
         _TestResult(SendData,ID,"",0x37);
@@ -3669,16 +3675,16 @@ _27_Serve_22(dword ID,byte Session)  /*Î´½âËø×´Ì¬-ÉÏÏÂµç*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
-_27_Serve_23(dword ID,byte Session)  /*Î´½âËø×´Ì¬-»á»°ÇĞ»»*/
+_27_Serve_23(dword ID,byte Session)  /*æœªè§£é”çŠ¶æ€-ä¼šè¯åˆ‡æ¢*/
 {
   int i;
   dword Seed;
   if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
   {
     if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
-      _WriteEx_and_Report("","½øÈë±à³Ì»á»°ĞèÒª°²È«·ÃÎÊ,ÓëÓÃÀıĞèÇó²»·û£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","è¿›å…¥ç¼–ç¨‹ä¼šè¯éœ€è¦å®‰å…¨è®¿é—®,ä¸ç”¨ä¾‹éœ€æ±‚ä¸ç¬¦ï¼Œè·³è¿‡æµ‹è¯•");
     else
     {
       diagStartTesterPresent(Cdd_Name);
@@ -3708,9 +3714,9 @@ _27_Serve_23(dword ID,byte Session)  /*Î´½âËø×´Ì¬-»á»°ÇĞ»»*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
-_27_Serve_23_01(dword ID,byte Session)  /*Î´½âËø×´Ì¬-»á»°ÇĞ»»*/
+_27_Serve_23_01(dword ID,byte Session)  /*æœªè§£é”çŠ¶æ€-ä¼šè¯åˆ‡æ¢*/
 {
   int i;
   dword Seed;
@@ -3718,7 +3724,7 @@ _27_Serve_23_01(dword ID,byte Session)  /*Î´½âËø×´Ì¬-»á»°ÇĞ»»*/
   if(_Check_Fun_IDAndSess(0x27,RequestSeed_27,ID,Session) == 1)
   {
     if(((_Check_Serve(0x10,0x02,5)==1) || ( (Pre_Programmed_UnlockECU==1) && (Pre_Programmed_1002==1))) && Session == prosession)
-      _WriteEx_and_Report("","½øÈë±à³Ì»á»°ĞèÒª°²È«·ÃÎÊ,ÓëÓÃÀıĞèÇó²»·û£¬Ìø¹ı²âÊÔ");
+      _WriteEx_and_Report("","è¿›å…¥ç¼–ç¨‹ä¼šè¯éœ€è¦å®‰å…¨è®¿é—®,ä¸ç”¨ä¾‹éœ€æ±‚ä¸ç¬¦ï¼Œè·³è¿‡æµ‹è¯•");
     else
     {
       diagStartTesterPresent(Cdd_Name);
@@ -3748,9 +3754,9 @@ _27_Serve_23_01(dword ID,byte Session)  /*Î´½âËø×´Ì¬-»á»°ÇĞ»»*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
-_27_Serve_24(dword ID,byte Session)  /*³¤¶È²»ÕıÈ·µÄÕıÈ·ÃØÔ¿*/
+_27_Serve_24(dword ID,byte Session)  /*é•¿åº¦ä¸æ­£ç¡®çš„æ­£ç¡®ç§˜é’¥*/
 {
   int ServePos,i;
   dword Seed;
@@ -3774,9 +3780,9 @@ _27_Serve_24(dword ID,byte Session)  /*³¤¶È²»ÕıÈ·µÄÕıÈ·ÃØÔ¿*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
-_27_Serve_25(dword ID,byte Session)  /*×Ó¹¦ÄÜ´íÎóµÄÕıÈ·ÃØÔ¿*/
+_27_Serve_25(dword ID,byte Session)  /*å­åŠŸèƒ½é”™è¯¯çš„æ­£ç¡®ç§˜é’¥*/
 {
   int ServePos,i,j;
   dword Seed;
@@ -3793,7 +3799,7 @@ _27_Serve_25(dword ID,byte Session)  /*×Ó¹¦ÄÜ´íÎóµÄÕıÈ·ÃØÔ¿*/
     }
   }
   else
-    _WriteEx_and_Report("","µ±Ç°»á»°ÏÂ²»Ö§³ÖÏà¹Ø×Ó¹¦ÄÜ,Ìø¹ı²âÊÔ(Ö§³ÖµÄ×Ó¹¦ÄÜ²âÊÔÖĞÒÑÑéÖ¤×Ó¹¦ÄÜ·µ»ØÇé¿ö)");
+    _WriteEx_and_Report("","å½“å‰ä¼šè¯ä¸‹ä¸æ”¯æŒç›¸å…³å­åŠŸèƒ½,è·³è¿‡æµ‹è¯•(æ”¯æŒçš„å­åŠŸèƒ½æµ‹è¯•ä¸­å·²éªŒè¯å­åŠŸèƒ½è¿”å›æƒ…å†µ)");
 }
 
 
@@ -3845,47 +3851,47 @@ on timer Def_TimeCount
   setTimer(Def_TimeCount,2000);
 }
 
-void Other_GAC_01() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÎŞÕï¶Ï±¨ÎÄÇëÇó*/
+void Other_GAC_01() /*åœ¨å¼•å¯¼ç¨‹åºçš„é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æ— è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 {
   byte Send_Data_3E[2] = {0x3E,0x00};
   _K15_OFF();
   testWaitForTimeout(2000);
   _K15_ON();
-  testWaitForTimeout(300000);//µÈ´ı300s
+  testWaitForTimeout(300000);//ç­‰å¾…300s
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",0);
 }
-void Other_GAC_02() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÎŞÕï¶Ï±¨ÎÄÇëÇó*/
+void Other_GAC_02() /*åœ¨å¼•å¯¼ç¨‹åºçš„é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æ— è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 {
   byte Send_Data_3E[2] = {0x3E,0x00};
   _K15_OFF();
   testWaitForTimeout(2000);
   _K15_ON();
-  testWaitForTimeout(301000);//µÈ´ı301s
+  testWaitForTimeout(301000);//ç­‰å¾…301s
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",0);
 }
-void Other_GAC_03() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÎŞÕï¶Ï±¨ÎÄÇëÇó*/
+void Other_GAC_03() /*åœ¨å¼•å¯¼ç¨‹åºçš„é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æ— è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 {
   byte Send_Data_3E[2] = {0x3E,0x00};
   _K15_OFF();
   testWaitForTimeout(2000);
   _K15_ON();
-  testWaitForTimeout(298000);//µÈ´ı298s
+  testWaitForTimeout(298000);//ç­‰å¾…298s
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",-1);
 }
-void Other_GAC_04() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÎŞÕï¶Ï±¨ÎÄÇëÇó*/
+void Other_GAC_04() /*åœ¨å¼•å¯¼ç¨‹åºçš„é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æ— è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 {
   byte Send_Data_3E[2] = {0x3E,0x00};
   _K15_OFF();
   testWaitForTimeout(2000);
   _K15_ON();
-  testWaitForTimeout(100000);//µÈ´ı100s
+  testWaitForTimeout(100000);//ç­‰å¾…100s
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",-1);
 }
-void Other_GAC_05() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÓĞÕï¶Ï±¨ÎÄÇëÇó*/
+void Other_GAC_05() /*åœ¨å¼•å¯¼ç¨‹åºçš„é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æœ‰è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 {
   message *Msg;
   byte Send_Data_3E[2] = {0x3E,0x00};
@@ -3911,21 +3917,21 @@ void Other_GAC_05() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÓĞÕï¶Ï±¨ÎÄÇëÇó*/
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",0);
 }
-void Other_GAC_06() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÓĞÕï¶Ï±¨ÎÄÇëÇó*/
+void Other_GAC_06() /*åœ¨å¼•å¯¼ç¨‹åºçš„é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æœ‰è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 {
   byte Send_Data_3E[2] = {0x3E,0x00};
   _K15_OFF();
   testWaitForTimeout(2000);
   _K15_ON();
-  testWaitForTimeout(280000);//µÈ´ı280s
+  testWaitForTimeout(280000);//ç­‰å¾…280s
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",-1);
   _SetSession(defsession);
-  testWaitForTimeout(21000);//µÈ´ı21s
+  testWaitForTimeout(21000);//ç­‰å¾…21s
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",0);
 }
-void Other_GAC_07() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÓĞÕï¶Ï±¨ÎÄÇëÇó*/
+void Other_GAC_07() /*åœ¨å¼•å¯¼ç¨‹åºçš„é»˜è®¤ä¼šè¯ä¸‹ä¼‘çœ éªŒè¯-300så†…æœ‰è¯Šæ–­æŠ¥æ–‡è¯·æ±‚*/
 {
   message *Msg;
   byte Send_Data_3E[2] = {0x3E,0x00};
@@ -3957,7 +3963,7 @@ void Other_GAC_07() /*ÔÚÒıµ¼³ÌĞòµÄÄ¬ÈÏ»á»°ÏÂĞİÃßÑéÖ¤-300sÄÚÓĞÕï¶Ï±¨ÎÄÇëÇó*/
   _Send_Diag(2,phyreq_ID,Send_Data_3E);
   _TestResult(SendData,phyreq_ID,"",-1);
 }
-void Other_GAC_08() /*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
+void Other_GAC_08() /*1101å“åº”åæ—¶é—´æµ‹è¯•*/
 {
   byte Send_Data_11[2] = {0x11,0x01};
   message *Msg;
@@ -3985,16 +3991,16 @@ void Other_GAC_08() /*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
   End_Time = (double)timeNow()/100;
   Change_Time = End_Time - Start_Time;
   if(Change_Time > 500)
-    testStepFail("","²âÊÔÊ±¼äÒÑ³¬¹ı×î´óÖµ500ms£¬µ±Ç°Îª %.2f ms",Change_Time);
+    testStepFail("","æµ‹è¯•æ—¶é—´å·²è¶…è¿‡æœ€å¤§å€¼500msï¼Œå½“å‰ä¸º %.2f ms",Change_Time);
   else
-    testStepPass("","µ±Ç°ÏìÓ¦Ê±¼äÎª %.2f ms",Change_Time);
+    testStepPass("","å½“å‰å“åº”æ—¶é—´ä¸º %.2f ms",Change_Time);
   
   if(Response == 1 && Msg.byte(1) == 0x50)
-    testStepPass("","ÊÕµ½ÕıÏìÓ¦");
+    testStepPass("","æ”¶åˆ°æ­£å“åº”");
   else
-    testStepFail("","Õï¶ÏÃüÁîÎ´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","è¯Šæ–­å‘½ä»¤æœªæ”¶åˆ°æ­£å“åº”");
 }
-void Other_GAC_09() /*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
+void Other_GAC_09() /*1101å“åº”åæ—¶é—´æµ‹è¯•*/
 {
   byte Send_Data_11[2] = {0x11,0x01};
   double Start_Time,End_Time,Change_Time,Count_Time;
@@ -4022,16 +4028,16 @@ void Other_GAC_09() /*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
   End_Time = (double)timeNow()/100;
   Change_Time = End_Time - Start_Time;
   if(Change_Time > 500)
-    testStepFail("","²âÊÔÊ±¼äÒÑ³¬¹ı×î´óÖµ500ms£¬µ±Ç°Îª %.2f ms",Change_Time);
+    testStepFail("","æµ‹è¯•æ—¶é—´å·²è¶…è¿‡æœ€å¤§å€¼500msï¼Œå½“å‰ä¸º %.2f ms",Change_Time);
   else
-    testStepPass("","µ±Ç°ÏìÓ¦Ê±¼äÎª %.2f ms",Change_Time);
+    testStepPass("","å½“å‰å“åº”æ—¶é—´ä¸º %.2f ms",Change_Time);
   
   if(Response == 1 && Msg.byte(1) == 0x51)
-    testStepPass("","ÊÕµ½ÕıÏìÓ¦");
+    testStepPass("","æ”¶åˆ°æ­£å“åº”");
   else
-    testStepFail("","Õï¶ÏÃüÁîÎ´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","è¯Šæ–­å‘½ä»¤æœªæ”¶åˆ°æ­£å“åº”");
 }
-void Other_GAC_10() /*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
+void Other_GAC_10() /*1101å“åº”åæ—¶é—´æµ‹è¯•*/
 {
   byte Send_Data_11[2] = {0x11,0x01};
   byte Send_Data_10[2] = {0x10,0x03};
@@ -4065,21 +4071,21 @@ void Other_GAC_10() /*1101ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
   End_Time = (double)timeNow()/100;
   Change_Time = End_Time - Start_Time;
   if(Change_Time > 500)
-    testStepFail("","²âÊÔÊ±¼äÒÑ³¬¹ı×î´óÖµ500ms£¬µ±Ç°Îª %.2f ms",Change_Time);
+    testStepFail("","æµ‹è¯•æ—¶é—´å·²è¶…è¿‡æœ€å¤§å€¼500msï¼Œå½“å‰ä¸º %.2f ms",Change_Time);
   else
-    testStepPass("","µ±Ç°ÏìÓ¦Ê±¼äÎª %.2f ms",Change_Time);
+    testStepPass("","å½“å‰å“åº”æ—¶é—´ä¸º %.2f ms",Change_Time);
   
   if(Response == 1 && Msg.byte(1) == 0x50)
-    testStepPass("","ÊÕµ½ÕıÏìÓ¦");
+    testStepPass("","æ”¶åˆ°æ­£å“åº”");
   else
-    testStepFail("","Õï¶ÏÃüÁîÎ´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","è¯Šæ–­å‘½ä»¤æœªæ”¶åˆ°æ­£å“åº”");
   
   cancelTimer(CAN_BUS_loader_L);
   BUS_loader_H = 95;
   BUS_loader_L = 90;
   count_Bus = 0;
 }
-void Other_GAC_11() /*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
+void Other_GAC_11() /*1002å“åº”åæ—¶é—´æµ‹è¯•*/
 {
   byte Send_Data_10[2] = {0x10,0x02};
   double Start_Time,End_Time,Change_Time,Count_Time;
@@ -4107,16 +4113,16 @@ void Other_GAC_11() /*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
   End_Time = (double)timeNow()/100;
   Change_Time = End_Time - Start_Time;
   if(Change_Time > 500)
-    testStepFail("","²âÊÔÊ±¼äÒÑ³¬¹ı×î´óÖµ500ms£¬µ±Ç°Îª %.2f ms",Change_Time);
+    testStepFail("","æµ‹è¯•æ—¶é—´å·²è¶…è¿‡æœ€å¤§å€¼500msï¼Œå½“å‰ä¸º %.2f ms",Change_Time);
   else
-    testStepPass("","µ±Ç°ÏìÓ¦Ê±¼äÎª %.2f ms",Change_Time);
+    testStepPass("","å½“å‰å“åº”æ—¶é—´ä¸º %.2f ms",Change_Time);
   
   if(Response == 1 && Msg.byte(1) == 0x67)
-    testStepPass("","ÊÕµ½ÕıÏìÓ¦");
+    testStepPass("","æ”¶åˆ°æ­£å“åº”");
   else
-    testStepFail("","Õï¶ÏÃüÁîÎ´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","è¯Šæ–­å‘½ä»¤æœªæ”¶åˆ°æ­£å“åº”");
 }
-void Other_GAC_12() /*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
+void Other_GAC_12() /*1002å“åº”åæ—¶é—´æµ‹è¯•*/
 {
   byte Send_Data_10[2] = {0x10,0x02};
   double Start_Time,End_Time,Change_Time,Count_Time;
@@ -4144,16 +4150,16 @@ void Other_GAC_12() /*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
   End_Time = (double)timeNow()/100;
   Change_Time = End_Time - Start_Time;
   if(Change_Time > 500)
-    testStepFail("","²âÊÔÊ±¼äÒÑ³¬¹ı×î´óÖµ500ms£¬µ±Ç°Îª %.2f ms",Change_Time);
+    testStepFail("","æµ‹è¯•æ—¶é—´å·²è¶…è¿‡æœ€å¤§å€¼500msï¼Œå½“å‰ä¸º %.2f ms",Change_Time);
   else
-    testStepPass("","µ±Ç°ÏìÓ¦Ê±¼äÎª %.2f ms",Change_Time);
+    testStepPass("","å½“å‰å“åº”æ—¶é—´ä¸º %.2f ms",Change_Time);
   
   if(Response == 1 && Msg.byte(1) == 0x51)
-    testStepPass("","ÊÕµ½ÕıÏìÓ¦");
+    testStepPass("","æ”¶åˆ°æ­£å“åº”");
   else
-    testStepFail("","Õï¶ÏÃüÁîÎ´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","è¯Šæ–­å‘½ä»¤æœªæ”¶åˆ°æ­£å“åº”");
 }
-void Other_GAC_13() /*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
+void Other_GAC_13() /*1002å“åº”åæ—¶é—´æµ‹è¯•*/
 {
   byte Send_Data_27[2] = {0x27,0x11};
   byte Send_Data_10[2] = {0x10,0x02};
@@ -4189,14 +4195,14 @@ void Other_GAC_13() /*1002ÏìÓ¦ºóÊ±¼ä²âÊÔ*/
   End_Time = (double)timeNow()/100;
   Change_Time = End_Time - Start_Time;
   if(Change_Time > 500)
-    testStepFail("","²âÊÔÊ±¼äÒÑ³¬¹ı×î´óÖµ500ms£¬µ±Ç°Îª %.2f ms",Change_Time);
+    testStepFail("","æµ‹è¯•æ—¶é—´å·²è¶…è¿‡æœ€å¤§å€¼500msï¼Œå½“å‰ä¸º %.2f ms",Change_Time);
   else
-    testStepPass("","µ±Ç°ÏìÓ¦Ê±¼äÎª %.2f ms",Change_Time);
+    testStepPass("","å½“å‰å“åº”æ—¶é—´ä¸º %.2f ms",Change_Time);
   
   if(Response == 1 && Msg.byte(1) == 0x67)
-    testStepPass("","ÊÕµ½ÕıÏìÓ¦");
+    testStepPass("","æ”¶åˆ°æ­£å“åº”");
   else
-    testStepFail("","Õï¶ÏÃüÁîÎ´ÊÕµ½ÕıÏìÓ¦");
+    testStepFail("","è¯Šæ–­å‘½ä»¤æœªæ”¶åˆ°æ­£å“åº”");
   
   cancelTimer(CAN_BUS_loader_L);
   BUS_loader_H = 95;

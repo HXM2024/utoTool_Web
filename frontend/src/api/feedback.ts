@@ -19,7 +19,7 @@ export interface FeedbackIssue {
   updatedAt?: string
 }
 
-/** 读取问题清单（共享盘优先，共享盘不可达时回落本地缓存） */
+/** 读取问题清单（共享盘 feedback.csv 优先，不可达时回落本地缓存） */
 export const getFeedbackIssues = () =>
   client.get('/feedback/list') as unknown as Promise<any>
 

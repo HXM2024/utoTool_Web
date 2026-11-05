@@ -17,9 +17,9 @@ variables
 }
 void Init_TP()
 {
-  _WriteEx_and_Report("","³õÊ¼»¯");
+  _WriteEx_and_Report("","åˆå§‹åŒ–");
   Get_value();
-  diagStopTesterPresent(Cdd_Name);/*¹Ø±ÕcddÎÄ¼ş£¬·ÀÖ¹×Ô¶¯·¢Á÷¿ØÖ¡¶Ô²âÊÔÔì³É¸ÉÈÅ*/
+  diagStopTesterPresent(Cdd_Name);/*å…³é—­cddæ–‡ä»¶ï¼Œé˜²æ­¢è‡ªåŠ¨å‘æµæ§å¸§å¯¹æµ‹è¯•é€ æˆå¹²æ‰°*/
   creat_log("\\UDS_TP_Logging\\");
   startLogging();
 }
@@ -75,26 +75,26 @@ _Get_TP_DID(char str[])
   }
 }
 
-_TPsendmsg_Phy(byte data[],byte length,byte type)   //ÎïÀíÑ°Ö··¢ËÍ
+_TPsendmsg_Phy(byte data[],byte length,byte type)   //ç‰©ç†å¯»å€å‘é€
 {
   char comment[50];
   int i;
   message * msg;
   msg.id = @DID::phyreq_ID;
-  msg.dlc=length;//½«±¨ÎÄ³¤¶È¸³Öµµ½message¶ÔÏó
-  msg.DataLength=length;//½«±¨ÎÄ³¤¶È¸³Öµµ½message¶ÔÏó
+  msg.dlc=length;//å°†æŠ¥æ–‡é•¿åº¦èµ‹å€¼åˆ°messageå¯¹è±¡
+  msg.DataLength=length;//å°†æŠ¥æ–‡é•¿åº¦èµ‹å€¼åˆ°messageå¯¹è±¡
   
   if(elCount(data)>=length)
   {
     for(i=0;i<length;i++)
-      msg.byte(i)=data[i];//½«ÊıÖµ¸³Öµµ½message¶ÔÏó
+      msg.byte(i)=data[i];//å°†æ•°å€¼èµ‹å€¼åˆ°messageå¯¹è±¡
   }
   else
   {
     for(i=0;i<elCount(data);i++)
-      msg.byte(i)=data[i];//½«ÊıÖµ¸³Öµµ½message¶ÔÏó
+      msg.byte(i)=data[i];//å°†æ•°å€¼èµ‹å€¼åˆ°messageå¯¹è±¡
     for(i=elCount(data);i<length;i++)
-      msg.byte(i)=Send_filler;//Ä¬ÈÏÌî³äÖµ
+      msg.byte(i)=Send_filler;//é»˜è®¤å¡«å……å€¼
   }
   if(type==1)
   {
@@ -106,18 +106,18 @@ _TPsendmsg_Phy(byte data[],byte length,byte type)   //ÎïÀíÑ°Ö··¢ËÍ
     msg.FDF = 0;
     msg.BRS = 0;
   }
-  output(msg);//·¢ËÍ±¨ÎÄ
-  //ÅĞ¶Ï·¢ËÍ±¨ÎÄµÄÖ¡ÀàĞÍ²¢Ğ´Èë±¨¸æ
+  output(msg);//å‘é€æŠ¥æ–‡
+  //åˆ¤æ–­å‘é€æŠ¥æ–‡çš„å¸§ç±»å‹å¹¶å†™å…¥æŠ¥å‘Š
   if((msg.byte(0)&0xF0)==0x00)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍµ¥Ö¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€å•å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x10)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÊ×Ö¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€é¦–å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x20)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÁ¬ĞøÖ¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€è¿ç»­å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x30)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÁ÷¿ØÖ¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€æµæ§å¸§æŠ¥æ–‡");
   else
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍ±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€æŠ¥æ–‡");
   
   for(i=0;i<elCount(data);i++)
   {
@@ -126,16 +126,16 @@ _TPsendmsg_Phy(byte data[],byte length,byte type)   //ÎïÀíÑ°Ö··¢ËÍ
   testCaseComment(comment);
 }
 
-_TPsendmsg_Fun(byte data[],byte length,byte type)  //¹¦ÄÜÑ°Ö··¢ËÍ
+_TPsendmsg_Fun(byte data[],byte length,byte type)  //åŠŸèƒ½å¯»å€å‘é€
 {
   char comment[50];
   byte i;
   message * msg;
   msg.id=@DID::funreq_ID;
-  msg.dlc=length;//½«±¨ÎÄ³¤¶È¸³Öµµ½message¶ÔÏó
-  msg.DataLength=length;//½«±¨ÎÄ³¤¶È¸³Öµµ½message¶ÔÏó
+  msg.dlc=length;//å°†æŠ¥æ–‡é•¿åº¦èµ‹å€¼åˆ°messageå¯¹è±¡
+  msg.DataLength=length;//å°†æŠ¥æ–‡é•¿åº¦èµ‹å€¼åˆ°messageå¯¹è±¡
   for(i=0;i<length;i++)
-    msg.byte(i)=data[i];//½«ÊıÖµ¸³Öµµ½message¶ÔÏó
+    msg.byte(i)=data[i];//å°†æ•°å€¼èµ‹å€¼åˆ°messageå¯¹è±¡
   if(type==1)
   {
     msg.FDF = 1;
@@ -146,19 +146,19 @@ _TPsendmsg_Fun(byte data[],byte length,byte type)  //¹¦ÄÜÑ°Ö··¢ËÍ
     msg.FDF = 0;
     msg.BRS = 0;
   }
-  output(msg);//·¢ËÍ±¨ÎÄ
+  output(msg);//å‘é€æŠ¥æ–‡
   
-  //ÅĞ¶Ï·¢ËÍ±¨ÎÄµÄÖ¡ÀàĞÍ²¢Ğ´Èë±¨¸æ
+  //åˆ¤æ–­å‘é€æŠ¥æ–‡çš„å¸§ç±»å‹å¹¶å†™å…¥æŠ¥å‘Š
   if((msg.byte(0)&0xF0)==0x00)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍµ¥Ö¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€å•å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x10)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÊ×Ö¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€é¦–å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x20)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÁ¬ĞøÖ¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€è¿ç»­å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x30)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÁ÷¿ØÖ¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€æµæ§å¸§æŠ¥æ–‡");
   else
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍ±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€æŠ¥æ–‡");
   
   for(i=0;i<length;i++)
   {
@@ -167,16 +167,16 @@ _TPsendmsg_Fun(byte data[],byte length,byte type)  //¹¦ÄÜÑ°Ö··¢ËÍ
   testCaseComment(comment);
 }
 
-_TPsendmsg(byte data[],byte length,dword ID,byte type)   //ÊäÈëID·¢ËÍ
+_TPsendmsg(byte data[],byte length,dword ID,byte type)   //è¾“å…¥IDå‘é€
 {
   char comment[50];
   byte i;
   message * msg;
   msg.id = ID;
-  msg.dlc=length;//½«±¨ÎÄ³¤¶È¸³Öµµ½message¶ÔÏó
-  msg.DataLength=length;//½«±¨ÎÄ³¤¶È¸³Öµµ½message¶ÔÏó
+  msg.dlc=length;//å°†æŠ¥æ–‡é•¿åº¦èµ‹å€¼åˆ°messageå¯¹è±¡
+  msg.DataLength=length;//å°†æŠ¥æ–‡é•¿åº¦èµ‹å€¼åˆ°messageå¯¹è±¡
   for(i=0;i<length;i++)
-    msg.byte(i)=data[i];//½«ÊıÖµ¸³Öµµ½message¶ÔÏó
+    msg.byte(i)=data[i];//å°†æ•°å€¼èµ‹å€¼åˆ°messageå¯¹è±¡
   if(type==1)
   {
     msg.FDF = 1;
@@ -187,19 +187,19 @@ _TPsendmsg(byte data[],byte length,dword ID,byte type)   //ÊäÈëID·¢ËÍ
     msg.FDF = 0;
     msg.BRS = 0;
   }
-  output(msg);//·¢ËÍ±¨ÎÄ
+  output(msg);//å‘é€æŠ¥æ–‡
   
-  //ÅĞ¶Ï·¢ËÍ±¨ÎÄµÄÖ¡ÀàĞÍ²¢Ğ´Èë±¨¸æ
+  //åˆ¤æ–­å‘é€æŠ¥æ–‡çš„å¸§ç±»å‹å¹¶å†™å…¥æŠ¥å‘Š
   if((msg.byte(0)&0xF0)==0x00)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍµ¥Ö¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€å•å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x10)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÊ×Ö¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€é¦–å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x20)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÁ¬ĞøÖ¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€è¿ç»­å¸§æŠ¥æ–‡");
   else if((msg.byte(0)&0xF0)==0x30)
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍÁ÷¿ØÖ¡±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€æµæ§å¸§æŠ¥æ–‡");
   else
-    snprintf(comment,elCount(comment),"ÒÑ·¢ËÍ±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²å‘é€æŠ¥æ–‡");
   
   for(i=0;i<length;i++)
   {
@@ -208,7 +208,7 @@ _TPsendmsg(byte data[],byte length,dword ID,byte type)   //ÊäÈëID·¢ËÍ
   testCaseComment(comment);
 }
 
-_TPgetFC(byte passcondition)   //Á÷¿ØÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á÷¿ØÖ¡,µ±Îª0x30»ò0x32Ê±ÅĞ¶Ïµ±Ç°Byte0ÏàÆ¥Åä
+_TPgetFC(byte passcondition)   //æµæ§å¸§--------ä»…å½“ä¸º0æ—¶æœŸæœ›ä¸æ”¶åˆ°æµæ§å¸§,å½“ä¸º0x30æˆ–0x32æ—¶åˆ¤æ–­å½“å‰Byte0ç›¸åŒ¹é…
 {
   message 0x00 msg;
   char comment[50];
@@ -217,7 +217,7 @@ _TPgetFC(byte passcondition)   //Á÷¿ØÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á÷¿ØÖ¡,µ±Îª0x3
   {
     testGetWaitEventMsgData(msg);
     
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
     {
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
@@ -229,51 +229,51 @@ _TPgetFC(byte passcondition)   //Á÷¿ØÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á÷¿ØÖ¡,µ±Îª0x3
       getFS=msg.byte(0)&0x0F;
       
       if(passcondition==0)
-        testStepFail("ÊÕµ½Á÷¿ØÖ¡");
+        testStepFail("æ”¶åˆ°æµæ§å¸§");
       else if(passcondition == 0x30)
       {
         if((msg.byte(0)==0x30)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
         {
-          testStepPass("ÊÕµ½Á÷¿ØÖ¡,¸ñÊ½ÕıÈ·");
+          testStepPass("æ”¶åˆ°æµæ§å¸§,æ ¼å¼æ­£ç¡®");
         }
         else
-          testStepFail("ÊÕµ½Á÷¿ØÖ¡£¬µ«¸ñÊ½²»ÕıÈ·");
+          testStepFail("æ”¶åˆ°æµæ§å¸§ï¼Œä½†æ ¼å¼ä¸æ­£ç¡®");
       }
       else if(passcondition == 0x32)
       {
         if((msg.byte(0)==0x32)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
         {
-          testStepPass("ÊÕµ½Á÷¿ØÖ¡,¸ñÊ½ÕıÈ·");
+          testStepPass("æ”¶åˆ°æµæ§å¸§,æ ¼å¼æ­£ç¡®");
         }
         else
-          testStepFail("ÊÕµ½Á÷¿ØÖ¡£¬µ«¸ñÊ½²»ÕıÈ·");
+          testStepFail("æ”¶åˆ°æµæ§å¸§ï¼Œä½†æ ¼å¼ä¸æ­£ç¡®");
       }
       else
       {
         if((msg.byte(0)==0x30)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
         {
-          testStepPass("ÊÕµ½Á÷¿ØÖ¡,¸ñÊ½ÕıÈ·");
+          testStepPass("æ”¶åˆ°æµæ§å¸§,æ ¼å¼æ­£ç¡®");
         }
        else if ((msg.byte(0)==0x32)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
         {
-          testStepPass("ÊÕµ½Á÷¿ØÖ¡,¸ñÊ½ÕıÈ·");
+          testStepPass("æ”¶åˆ°æµæ§å¸§,æ ¼å¼æ­£ç¡®");
         }
         else
-          testStepFail("ÊÕµ½Á÷¿ØÖ¡£¬µ«¸ñÊ½²»ÕıÈ·");
+          testStepFail("æ”¶åˆ°æµæ§å¸§ï¼Œä½†æ ¼å¼ä¸æ­£ç¡®");
       }
     }
     else
-      testStepFail("ÊÕµ½·ÇÁ÷¿ØÖ¡");
+      testStepFail("æ”¶åˆ°éæµæ§å¸§");
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½Á÷¿ØÖ¡»òÊı¾İÖ¡");
+      testStepPass("æœªæ”¶åˆ°æµæ§å¸§æˆ–æ•°æ®å¸§");
     else
-      testStepFail("Î´ÊÕµ½Á÷¿ØÖ¡»òÊı¾İÖ¡");
+      testStepFail("æœªæ”¶åˆ°æµæ§å¸§æˆ–æ•°æ®å¸§");
   }
 }
-_Check_TPgetFC_FS(byte FS)   //Á÷¿ØÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á÷¿ØÖ¡
+_Check_TPgetFC_FS(byte FS)   //æµæ§å¸§--------ä»…å½“ä¸º0æ—¶æœŸæœ›ä¸æ”¶åˆ°æµæ§å¸§
 {
   message 0x00 msg;
   char comment[50];
@@ -282,7 +282,7 @@ _Check_TPgetFC_FS(byte FS)   //Á÷¿ØÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á÷¿ØÖ¡
   if(testWaitForMessage(@DID::Response_ID,1000))
   {
     testGetWaitEventMsgData(msg);
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
     {
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
@@ -294,21 +294,21 @@ _Check_TPgetFC_FS(byte FS)   //Á÷¿ØÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á÷¿ØÖ¡
       byte_0 = (0x30|FS);
       if((msg.byte(0)==byte_0)&&(msg.byte(1)==BS)&&(msg.byte(2)==STmin)&&(msg.byte(3)==TP_filler)&&(msg.byte(4)==TP_filler)&&(msg.byte(5)==TP_filler)&&(msg.byte(6)==TP_filler)&&(msg.byte(7)==TP_filler))
       {
-        testStepPass("ÊÕµ½Á÷¿ØÖ¡,¸ñÊ½ÕıÈ·,FSÕıÈ·");
+        testStepPass("æ”¶åˆ°æµæ§å¸§,æ ¼å¼æ­£ç¡®,FSæ­£ç¡®");
       }
       else
-        testStepFail("ÊÕµ½Á÷¿ØÖ¡£¬µ«¸ñÊ½²»ÕıÈ·");
+        testStepFail("æ”¶åˆ°æµæ§å¸§ï¼Œä½†æ ¼å¼ä¸æ­£ç¡®");
     }
     else
-      testStepFail("ÊÕµ½Á÷¿ØÖ¡»òFS´íÎó");
+      testStepFail("æ”¶åˆ°æµæ§å¸§æˆ–FSé”™è¯¯");
   }
   else
   {
-    testStepFail("Î´ÊÕµ½Á÷¿ØÖ¡»òÊı¾İÖ¡");
+    testStepFail("æœªæ”¶åˆ°æµæ§å¸§æˆ–æ•°æ®å¸§");
   }
 }
 
-int _TPgetFF(byte passcondition)//Ê×Ö¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Ê×Ö¡
+int _TPgetFF(byte passcondition)//é¦–å¸§--------ä»…å½“ä¸º0æ—¶æœŸæœ›ä¸æ”¶åˆ°é¦–å¸§
 {
   message 0x00 msg;
   char comment[50];
@@ -319,7 +319,7 @@ int _TPgetFF(byte passcondition)//Ê×Ö¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Ê×Ö¡
   {
     testGetWaitEventMsgData(msg);
     
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
     {
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
@@ -329,28 +329,28 @@ int _TPgetFF(byte passcondition)//Ê×Ö¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Ê×Ö¡
     if((msg.byte(0)&0xF0)==0x10)
     {
       if(passcondition==0)
-        testStepFail("ÊÕµ½Ê×Ö¡");
+        testStepFail("æ”¶åˆ°é¦–å¸§");
       else
       {
-        testStepPass("ÊÕµ½Ê×Ö¡");
+        testStepPass("æ”¶åˆ°é¦–å¸§");
         Len = (msg.byte(0)&0x0F);
         Len = (int)(Len*256 + msg.byte(1));
       }
     }
     else
-      testStepFail("ÊÕµ½·ÇÊ×Ö¡");
+      testStepFail("æ”¶åˆ°éé¦–å¸§");
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½Ê×Ö¡»òÊı¾İÖ¡");
+      testStepPass("æœªæ”¶åˆ°é¦–å¸§æˆ–æ•°æ®å¸§");
     else
-      testStepFail("Î´ÊÕµ½Ê×Ö¡»òÊı¾İÖ¡");
+      testStepFail("æœªæ”¶åˆ°é¦–å¸§æˆ–æ•°æ®å¸§");
   }
   return Len;
 }
 
-_TPgetCF_21(byte passcondition)   //Á¬ĞøÖ¡_21--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
+_TPgetCF_21(byte passcondition)   //è¿ç»­å¸§_21--------ä»…å½“ä¸º0æ—¶æœŸæœ›ä¸æ”¶åˆ°è¿ç»­å¸§
 {
   message 0x00 msg;
   char comment[50];
@@ -359,7 +359,7 @@ _TPgetCF_21(byte passcondition)   //Á¬ĞøÖ¡_21--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
   {
     testGetWaitEventMsgData(msg);
     
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
     {
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
@@ -369,23 +369,23 @@ _TPgetCF_21(byte passcondition)   //Á¬ĞøÖ¡_21--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
     if((msg.byte(0))==0x21)
     {
       if(passcondition==0)
-        testStepFail("ÊÕµ½Á¬ĞøÖ¡");
+        testStepFail("æ”¶åˆ°è¿ç»­å¸§");
       else
-        testStepPass("ÊÕµ½Á¬ĞøÖ¡");
+        testStepPass("æ”¶åˆ°è¿ç»­å¸§");
     }
     else
-      testStepFail("ÊÕµ½·ÇÁ¬ĞøÖ¡");
+      testStepFail("æ”¶åˆ°éè¿ç»­å¸§");
     
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepPass("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
     else
-      testStepFail("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepFail("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
   }
 }
-_TPgetCF_22(byte passcondition)  //Á¬ĞøÖ¡_22--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
+_TPgetCF_22(byte passcondition)  //è¿ç»­å¸§_22--------ä»…å½“ä¸º0æ—¶æœŸæœ›ä¸æ”¶åˆ°è¿ç»­å¸§
 {
   message 0x00 msg;
   char comment[50];
@@ -394,7 +394,7 @@ _TPgetCF_22(byte passcondition)  //Á¬ĞøÖ¡_22--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
   {
     testGetWaitEventMsgData(msg);
     
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
     {
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
@@ -404,23 +404,23 @@ _TPgetCF_22(byte passcondition)  //Á¬ĞøÖ¡_22--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
     if((msg.byte(0))==0x22)
     {
       if(passcondition==0)
-        testStepFail("ÊÕµ½Á¬ĞøÖ¡");
+        testStepFail("æ”¶åˆ°è¿ç»­å¸§");
       else
-        testStepPass("ÊÕµ½Á¬ĞøÖ¡");
+        testStepPass("æ”¶åˆ°è¿ç»­å¸§");
     }
     else
-      testStepFail("ÊÕµ½·ÇÁ¬ĞøÖ¡");
+      testStepFail("æ”¶åˆ°éè¿ç»­å¸§");
     
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepPass("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
     else
-      testStepFail("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepFail("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
   }
 }
-_TPgetCF(byte passcondition)  //Á¬ĞøÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
+_TPgetCF(byte passcondition)  //è¿ç»­å¸§--------ä»…å½“ä¸º0æ—¶æœŸæœ›ä¸æ”¶åˆ°è¿ç»­å¸§
 {
   message 0x00 msg;
   char comment[50];
@@ -429,7 +429,7 @@ _TPgetCF(byte passcondition)  //Á¬ĞøÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
   {
     testGetWaitEventMsgData(msg);
     
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
     {
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
@@ -438,22 +438,22 @@ _TPgetCF(byte passcondition)  //Á¬ĞøÖ¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½Á¬ĞøÖ¡
     if((msg.byte(0)&0xf0)==0x20)
     {
       if(passcondition==0)
-        testStepFail("ÊÕµ½Á¬ĞøÖ¡");
+        testStepFail("æ”¶åˆ°è¿ç»­å¸§");
       else
-        testStepPass("ÊÕµ½Á¬ĞøÖ¡");
+        testStepPass("æ”¶åˆ°è¿ç»­å¸§");
     }
     else
-      testStepFail("ÊÕµ½·ÇÁ¬ĞøÖ¡");
+      testStepFail("æ”¶åˆ°éè¿ç»­å¸§");
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepPass("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
     else
-      testStepFail("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepFail("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
   }
 }
-_TPgetNotCF(byte passcondition,byte SN)  //ÅĞ¶ÏºóĞøÊı¾İ²»ÎªÊäÈëÁ¬ĞøÖ¡
+_TPgetNotCF(byte passcondition,byte SN)  //åˆ¤æ–­åç»­æ•°æ®ä¸ä¸ºè¾“å…¥è¿ç»­å¸§
 {
   message 0x00 msg;
   char comment[50];
@@ -461,24 +461,24 @@ _TPgetNotCF(byte passcondition,byte SN)  //ÅĞ¶ÏºóĞøÊı¾İ²»ÎªÊäÈëÁ¬ĞøÖ¡
   if(testWaitForMessage(@DID::Response_ID,1000))
   {
     testGetWaitEventMsgData(msg);
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
     testCaseComment(comment);
     if((msg.byte(0)&0x0f)==SN)
-      testStepPass("Î´ÊÕµ½¶ÔÓ¦ºóĞøÖ¡");
+      testStepPass("æœªæ”¶åˆ°å¯¹åº”åç»­å¸§");
     else
-      testStepFail("ÊÕµ½¶ÔÓ¦ºóĞøÖ¡");
+      testStepFail("æ”¶åˆ°å¯¹åº”åç»­å¸§");
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½ºóĞø±¨ÎÄ");
+      testStepPass("æœªæ”¶åˆ°åç»­æŠ¥æ–‡");
     else
-      testStepFail("Î´ÊÕµ½ºóĞø±¨ÎÄ");
+      testStepFail("æœªæ”¶åˆ°åç»­æŠ¥æ–‡");
   }
 }
-_Check_TPgetCF(byte passcondition,int Len,byte SN)  //¼ì²âÁ¬ĞøÖ¡½áÊøºóµÄÌî³äÖµ£¬Ô¤ÆÚDID·´À¡×Ü³¤¶È
+_Check_TPgetCF(byte passcondition,int Len,byte SN)  //æ£€æµ‹è¿ç»­å¸§ç»“æŸåçš„å¡«å……å€¼ï¼Œé¢„æœŸDIDåé¦ˆæ€»é•¿åº¦
 {
   message 0x00 msg;
   char comment[50];
@@ -490,23 +490,23 @@ _Check_TPgetCF(byte passcondition,int Len,byte SN)  //¼ì²âÁ¬ĞøÖ¡½áÊøºóµÄÌî³äÖµ£¬
   if(testWaitForMessage(@DID::Response_ID,300))
   {
     testGetWaitEventMsgData(msg);
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
     testCaseComment(comment);
     if((msg.byte(0)&0xf0)==0x20)
     {
       if(passcondition==0)
-        testStepFail("ÊÕµ½Á¬ĞøÖ¡");
+        testStepFail("æ”¶åˆ°è¿ç»­å¸§");
       else
       {
-        testStepPass("ÊÕµ½Á¬ĞøÖ¡");
+        testStepPass("æ”¶åˆ°è¿ç»­å¸§");
         if(SN>0xF)
           SN = SN - 0xF -1;
         if((msg.byte(0)&0x0f)==(SN&0x0F))
-          testStepPass("","ÊÕµ½Á¬ĞøÖ¡ĞòÁĞºÅÓëÔ¤ÆÚÒ»ÖÂ£¬0x%02X",((SN&0x0F)|0x20));
+          testStepPass("","æ”¶åˆ°è¿ç»­å¸§åºåˆ—å·ä¸é¢„æœŸä¸€è‡´ï¼Œ0x%02X",((SN&0x0F)|0x20));
         else
-          testStepFail("","ÊÕµ½Á¬ĞøÖ¡ĞòÁĞºÅÓëÔ¤ÆÚ²»Ò»ÖÂ,Ô¤ÆÚÎª0x%x,Êµ¼ÊÎª0x%x",(SN&0x0F),(msg.byte(0)&0x0f));
+          testStepFail("","æ”¶åˆ°è¿ç»­å¸§åºåˆ—å·ä¸é¢„æœŸä¸ä¸€è‡´,é¢„æœŸä¸º0x%x,å®é™…ä¸º0x%x",(SN&0x0F),(msg.byte(0)&0x0f));
         if(Response_CanFD == 0)
         {
           Start_Len = ((msg.byte(0)&0x0F)-1)*7+6;
@@ -519,9 +519,9 @@ _Check_TPgetCF(byte passcondition,int Len,byte SN)  //¼ì²âÁ¬ĞøÖ¡½áÊøºóµÄÌî³äÖµ£¬
                 Flage = 1;
             }
             if(Flage==1)
-              testStepFail("·ÇÊı¾İÓòÌî³äÖµ³öÏÖ´íÎó");
+              testStepFail("éæ•°æ®åŸŸå¡«å……å€¼å‡ºç°é”™è¯¯");
             else
-              testStepPass("·ÇÊı¾İÓòÌî³äÖµÓëÔ¤ÆÚÒ»ÖÂ");
+              testStepPass("éæ•°æ®åŸŸå¡«å……å€¼ä¸é¢„æœŸä¸€è‡´");
           }
         }
         else
@@ -536,29 +536,29 @@ _Check_TPgetCF(byte passcondition,int Len,byte SN)  //¼ì²âÁ¬ĞøÖ¡½áÊøºóµÄÌî³äÖµ£¬
                 Flage = 1;
             }
             if(Flage==1)
-              testStepFail("·ÇÊı¾İÓòÌî³äÖµ³öÏÖ´íÎó");
+              testStepFail("éæ•°æ®åŸŸå¡«å……å€¼å‡ºç°é”™è¯¯");
             else
-              testStepPass("·ÇÊı¾İÓòÌî³äÖµÓëÔ¤ÆÚÒ»ÖÂ");
+              testStepPass("éæ•°æ®åŸŸå¡«å……å€¼ä¸é¢„æœŸä¸€è‡´");
           }
         }
       }
     }
     else
-      testStepFail("ÊÕµ½·ÇÁ¬ĞøÖ¡");
+      testStepFail("æ”¶åˆ°éè¿ç»­å¸§");
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepPass("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
     else
-      testStepFail("Î´ÊÕµ½Á¬ĞøÖ¡»òÊı¾İÖ¡");
+      testStepFail("æœªæ”¶åˆ°è¿ç»­å¸§æˆ–æ•°æ®å¸§");
   }
 }
 /*
-    Type==0:ÅĞ¶ÏÊÇ·ñÎªNRC13»òNRC31
-    Type==1:ÅĞ¶ÏÊÇ·ñÎª¾ßÌåNRC7F
-    Type==2:ÅĞ¶ÏÊÇ·ñÎª¾ßÌåNRC13
-    Type==3:ÅĞ¶ÏÎªNRCµ«²»ÅĞ¶Ï¾ßÌåÖµ
+    Type==0:åˆ¤æ–­æ˜¯å¦ä¸ºNRC13æˆ–NRC31
+    Type==1:åˆ¤æ–­æ˜¯å¦ä¸ºå…·ä½“NRC7F
+    Type==2:åˆ¤æ–­æ˜¯å¦ä¸ºå…·ä½“NRC13
+    Type==3:åˆ¤æ–­ä¸ºNRCä½†ä¸åˆ¤æ–­å…·ä½“å€¼
 */
 _Check_NRC(byte Type)
 {
@@ -567,10 +567,10 @@ _Check_NRC(byte Type)
   int i;
   int Flage;
   Flage = 0;
-  if(testWaitForMessage(@DID::Response_ID,2000))//¶ÔÓÚ½ÓÊÕIDµÈ´ı1000ms£¬ÊÕµ½±¨ÎÄ·µ»ØÖµÎª1
+  if(testWaitForMessage(@DID::Response_ID,2000))//å¯¹äºæ¥æ”¶IDç­‰å¾…1000msï¼Œæ”¶åˆ°æŠ¥æ–‡è¿”å›å€¼ä¸º1
   {
-    testGetWaitEventMsgData(msg);//½«ÊÕµ½µÄ±¨ÎÄ¸³Öµ¸ømsg
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    testGetWaitEventMsgData(msg);//å°†æ”¶åˆ°çš„æŠ¥æ–‡èµ‹å€¼ç»™msg
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
     testCaseComment(comment);
@@ -579,28 +579,28 @@ _Check_NRC(byte Type)
       if(Type == 0)
       {
         if((msg.byte(3)==0x13) ||(msg.byte(3)==0x31))
-          testStepPass("","ÊÕµ½NRCÂë0x%2X",msg.byte(3));
+          testStepPass("","æ”¶åˆ°NRCç 0x%2X",msg.byte(3));
         else
-          testStepFail("","ÊÕµ½·ÇÔ¤ÆÚNRCÂë0x%2X",msg.byte(3));
+          testStepFail("","æ”¶åˆ°éé¢„æœŸNRCç 0x%2X",msg.byte(3));
       }
       else if(Type == 1)
       {
         if((msg.byte(3)==0x7F) )
-          testStepPass("","ÊÕµ½NRCÂë0x%2X",msg.byte(3));
+          testStepPass("","æ”¶åˆ°NRCç 0x%2X",msg.byte(3));
         else
-          testStepFail("","ÊÕµ½·ÇÔ¤ÆÚNRCÂë0x%2X",msg.byte(3));
+          testStepFail("","æ”¶åˆ°éé¢„æœŸNRCç 0x%2X",msg.byte(3));
       }
       else if(Type == 2)
       {
         if((msg.byte(3)==0x13) )
-          testStepPass("","ÊÕµ½NRCÂë0x%2X",msg.byte(3));
+          testStepPass("","æ”¶åˆ°NRCç 0x%2X",msg.byte(3));
         else
-          testStepFail("","ÊÕµ½·ÇÔ¤ÆÚNRCÂë0x%2X",msg.byte(3));
+          testStepFail("","æ”¶åˆ°éé¢„æœŸNRCç 0x%2X",msg.byte(3));
       }
       else if(Type == 3)
       {
         if((msg.byte(1)==0x7F) )
-          testStepPass("","ÊÕµ½NRCÂë0x%2X",msg.byte(3));
+          testStepPass("","æ”¶åˆ°NRCç 0x%2X",msg.byte(3));
       }
       for(i=4;i<8;i++)
       {
@@ -608,23 +608,23 @@ _Check_NRC(byte Type)
           Flage = 1;
       }
       if(Flage == 0)
-        testStepPass("·ÇÊı¾İÓòÌî³äÖµÓëÔ¤ÆÚÒ»ÖÂ");
+        testStepPass("éæ•°æ®åŸŸå¡«å……å€¼ä¸é¢„æœŸä¸€è‡´");
       else
-        testStepFail("·ÇÊı¾İÓòÌî³äÖµ³öÏÖ´íÎó");
+        testStepFail("éæ•°æ®åŸŸå¡«å……å€¼å‡ºç°é”™è¯¯");
     }
     else
-      testStepFail("Î´ÊÕµ½NRCÂë");
+      testStepFail("æœªæ”¶åˆ°NRCç ");
   }
   else
-    testStepFail("Î´ÊÕµ½ÏìÓ¦");
+    testStepFail("æœªæ”¶åˆ°å“åº”");
 }
 
  _Check_NoResponse(dword Time)
 {
   if(testWaitForMessage(@DID::Response_ID,Time))
-    testStepFail("ÊÕµ½ÏìÓ¦Êı¾İ");
+    testStepFail("æ”¶åˆ°å“åº”æ•°æ®");
   else
-    testStepPass("Î´ÊÕµ½ÏìÓ¦Êı¾İ");
+    testStepPass("æœªæ”¶åˆ°å“åº”æ•°æ®");
 }
 
 int _Check_NoResponse_(dword Time)
@@ -632,19 +632,19 @@ int _Check_NoResponse_(dword Time)
   int Flage;
   if(testWaitForMessage(@DID::Response_ID,Time))
   {
-    testStepFail("ÊÕµ½ÏìÓ¦Êı¾İ");
+    testStepFail("æ”¶åˆ°å“åº”æ•°æ®");
     Flage = -1;
   }
   else
   {
-    testStepPass("Î´ÊÕµ½ÏìÓ¦Êı¾İ");
+    testStepPass("æœªæ”¶åˆ°å“åº”æ•°æ®");
     Flage = 1;
   }
   return Flage;
 }
 /*
-  Type == 1 : ÆÚÍûÓ¦´ğ
-  Type == 0 : ÆÚÍû²»Ó¦´ğ
+  Type == 1 : æœŸæœ›åº”ç­”
+  Type == 0 : æœŸæœ›ä¸åº”ç­”
 */
 int _Check_ResponseRx_(byte Type, word Time)
 {
@@ -655,12 +655,12 @@ int _Check_ResponseRx_(byte Type, word Time)
   {
     if(Re == 0)
     {
-      testStepFail("Î´ÊÕµ½ÏìÓ¦Êı¾İ");
+      testStepFail("æœªæ”¶åˆ°å“åº”æ•°æ®");
       Flage = -1;
     }
     else
     {
-      testStepPass("ÊÕµ½ÏìÓ¦Êı¾İ");
+      testStepPass("æ”¶åˆ°å“åº”æ•°æ®");
       Flage = 1;
     }
   }
@@ -668,19 +668,19 @@ int _Check_ResponseRx_(byte Type, word Time)
   {
     if(Re == 0)
     {
-      testStepPass("Î´ÊÕµ½ÏìÓ¦Êı¾İ");
+      testStepPass("æœªæ”¶åˆ°å“åº”æ•°æ®");
       Flage = 1;
     }
     else
     {
-      testStepFail("ÊÕµ½ÏìÓ¦Êı¾İ");
+      testStepFail("æ”¶åˆ°å“åº”æ•°æ®");
       Flage = -1;
     }
   }
   return Flage;
 }
 
-_TPgetSF(byte passcondition)  //µ¥Ö¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½µ¥Ö¡
+_TPgetSF(byte passcondition)  //å•å¸§--------ä»…å½“ä¸º0æ—¶æœŸæœ›ä¸æ”¶åˆ°å•å¸§
 {
   message 0x00 msg;
   char comment[50];
@@ -688,49 +688,49 @@ _TPgetSF(byte passcondition)  //µ¥Ö¡--------½öµ±Îª0Ê±ÆÚÍû²»ÊÕµ½µ¥Ö¡
   byte Flage;
   byte i;
   Flage =0;
-  if(testWaitForMessage(@DID::Response_ID,1000))//¶ÔÓÚ½ÓÊÕIDµÈ´ı1000ms£¬ÊÕµ½±¨ÎÄ·µ»ØÖµÎª1
+  if(testWaitForMessage(@DID::Response_ID,1000))//å¯¹äºæ¥æ”¶IDç­‰å¾…1000msï¼Œæ”¶åˆ°æŠ¥æ–‡è¿”å›å€¼ä¸º1
   {
-    testGetWaitEventMsgData(msg);//½«ÊÕµ½µÄ±¨ÎÄ¸³Öµ¸ømsg
+    testGetWaitEventMsgData(msg);//å°†æ”¶åˆ°çš„æŠ¥æ–‡èµ‹å€¼ç»™msg
     
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
     {
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
     }
     testCaseComment(comment);
     
-    if((msg.byte(0)&0xF0)==0x00)//ÅĞ¶ÏÊÇ²»ÊÇµ¥Ö¡
+    if((msg.byte(0)&0xF0)==0x00)//åˆ¤æ–­æ˜¯ä¸æ˜¯å•å¸§
     {
       if(passcondition==0)
-        testStepFail("ÊÕµ½µ¥Ö¡ÏìÓ¦");
+        testStepFail("æ”¶åˆ°å•å¸§å“åº”");
       else
       {
-        testStepPass("ÊÕµ½µ¥Ö¡ÏìÓ¦");
+        testStepPass("æ”¶åˆ°å•å¸§å“åº”");
         SF_DL = msg.byte(0)&0x0F;
         if(SF_DL!=7)
         {
-          /*·ÇÊı¾İ²¿·ÖÌî³äÖµ*/
+          /*éæ•°æ®éƒ¨åˆ†å¡«å……å€¼*/
           for(i=SF_DL+1;i<8;i++)
           {
             if(msg.byte(i)!= TP_filler)
               Flage=1;
           }
           if(Flage==1)
-            testStepFail("·ÇÊı¾İÓòÌî³äÖµ´æÔÚ·ÇÔ¤ÆÚÇé¿ö");
+            testStepFail("éæ•°æ®åŸŸå¡«å……å€¼å­˜åœ¨éé¢„æœŸæƒ…å†µ");
           else
-            testStepPass("·ÇÊı¾İÓòÌî³äÖµÓëÔ¤ÆÚÒ»ÖÂ");
+            testStepPass("éæ•°æ®åŸŸå¡«å……å€¼ä¸é¢„æœŸä¸€è‡´");
         }
       }
     }
     else
-      testStepFail("ÊÕµ½·Çµ¥Ö¡ÏìÓ¦");
+      testStepFail("æ”¶åˆ°éå•å¸§å“åº”");
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½µ¥Ö¡»òÊı¾İÖ¡");
+      testStepPass("æœªæ”¶åˆ°å•å¸§æˆ–æ•°æ®å¸§");
     else
-      testStepFail("Î´ÊÕµ½µ¥Ö¡»òÊı¾İÖ¡");
+      testStepFail("æœªæ”¶åˆ°å•å¸§æˆ–æ•°æ®å¸§");
   }
 }
 _Check_10_01(byte passcondition)
@@ -740,29 +740,29 @@ _Check_10_01(byte passcondition)
   byte Flage;
   byte i;
   Flage =0;
-  if(testWaitForMessage(@DID::Response_ID,1000))//¶ÔÓÚ½ÓÊÕIDµÈ´ı1000ms£¬ÊÕµ½±¨ÎÄ·µ»ØÖµÎª1
+  if(testWaitForMessage(@DID::Response_ID,1000))//å¯¹äºæ¥æ”¶IDç­‰å¾…1000msï¼Œæ”¶åˆ°æŠ¥æ–‡è¿”å›å€¼ä¸º1
   {
-    testGetWaitEventMsgData(msg);//½«ÊÕµ½µÄ±¨ÎÄ¸³Öµ¸ømsg
-    snprintf(comment,elCount(comment),"ÒÑÊÕµ½±¨ÎÄ");
+    testGetWaitEventMsgData(msg);//å°†æ”¶åˆ°çš„æŠ¥æ–‡èµ‹å€¼ç»™msg
+    snprintf(comment,elCount(comment),"å·²æ”¶åˆ°æŠ¥æ–‡");
     for(i=0;i<8;i++)
       snprintf(comment,elCount(comment),"%s %02X",comment,msg.byte(i));
     testCaseComment(comment);
     if(msg.byte(1)==0x50 &&  msg.byte(2)==0x01)
     {
       if(passcondition==0)
-        testStepFail("ÊÕµ½10 01ÕıÏìÓ¦");
+        testStepFail("æ”¶åˆ°10 01æ­£å“åº”");
       else
-        testStepPass("ÊÕµ½10 01ÕıÏìÓ¦");
+        testStepPass("æ”¶åˆ°10 01æ­£å“åº”");
     }
     else
-      testStepFail("ÊÕµ½·ÇÔ¤ÆÚÏìÓ¦");
+      testStepFail("æ”¶åˆ°éé¢„æœŸå“åº”");
   }
   else
   {
     if(passcondition==0)
-      testStepPass("Î´ÊÕµ½Ó¦´ğ");
+      testStepPass("æœªæ”¶åˆ°åº”ç­”");
     else
-      testStepFail("Î´ÊÕµ½Ó¦´ğ");
+      testStepFail("æœªæ”¶åˆ°åº”ç­”");
   }
 }
 
@@ -799,9 +799,9 @@ _Get_HardwareTest_Data_Value()
   }
 }
 /*
-    ¼ì²â·µ»Ø±¨ÎÄÊÇ·ñÓëÔ¤ÆÚÒ»ÖÂ
-    µ±Ex_LenÎª-1Ê±£¬ÆÚÍû²»ÏìÓ¦
-    ID£ºÏìÓ¦ID
+    æ£€æµ‹è¿”å›æŠ¥æ–‡æ˜¯å¦ä¸é¢„æœŸä¸€è‡´
+    å½“Ex_Lenä¸º-1æ—¶ï¼ŒæœŸæœ›ä¸å“åº”
+    IDï¼šå“åº”ID
 */
 _Check_ResTP(dword ID,byte Ex[],int Ex_Len)
 {
@@ -819,25 +819,25 @@ _Check_ResTP(dword ID,byte Ex[],int Ex_Len)
       {
         if(Msg.byte(i) != Ex[i])
         {
-          testStepFail("","Byte_%d·´À¡ÓëÔ¤ÆÚ²»Ò»ÖÂ,·´À¡ÖµÎª0x%02X,Ô¤ÆÚÖµÎª0x%02X",i,Msg.byte(i),Ex[i]);
+          testStepFail("","Byte_%dåé¦ˆä¸é¢„æœŸä¸ä¸€è‡´,åé¦ˆå€¼ä¸º0x%02X,é¢„æœŸå€¼ä¸º0x%02X",i,Msg.byte(i),Ex[i]);
           Flage = 1;
         }
       }
       if(Flage == 0)
-        testStepPass("","·´À¡ÓëÔ¤ÆÚÒ»ÖÂ");
+        testStepPass("","åé¦ˆä¸é¢„æœŸä¸€è‡´");
     }
     else
-      testStepFail("","ÆÚÍûÊÕµ½ÏìÓ¦£¬Êµ¼ÊÎŞÓ¦´ğ");
+      testStepFail("","æœŸæœ›æ”¶åˆ°å“åº”ï¼Œå®é™…æ— åº”ç­”");
   }
   else
   {
     if(Re != 0)
-      testStepFail("","ÆÚÍûÎŞÏìÓ¦£¬Êµ¼ÊÊÕµ½Ó¦´ğ");
+      testStepFail("","æœŸæœ›æ— å“åº”ï¼Œå®é™…æ”¶åˆ°åº”ç­”");
     else if(Re == 0)
-      testStepPass("","ÆÚÍûÎŞÏìÓ¦£¬Êµ¼ÊÎ´ÊÕµ½Ó¦´ğÓëÔ¤ÆÚÒ»ÖÂ");
+      testStepPass("","æœŸæœ›æ— å“åº”ï¼Œå®é™…æœªæ”¶åˆ°åº”ç­”ä¸é¢„æœŸä¸€è‡´");
   }
 }
-_CAN_TP_SF_1()  /*µ¥Ö¡ÇëÇó±¨ÎÄSF_DL´íÎó²âÊÔ*/
+_CAN_TP_SF_1()  /*å•å¸§è¯·æ±‚æŠ¥æ–‡SF_DLé”™è¯¯æµ‹è¯•*/
 {
   byte Data[8] = {0x00,0x22,0xf1,0x80,0x55,0x55,0x55,0x55};
   byte Len[3] = {0x00,0x08,0x09};
@@ -850,37 +850,37 @@ _CAN_TP_SF_1()  /*µ¥Ö¡ÇëÇó±¨ÎÄSF_DL´íÎó²âÊÔ*/
     testWaitForTimeout(2000);
   }
 }
-_CAN_TP_SF_2()  /*µ¥Ö¡ÇëÇóCANÖ¡±¨ÎÄµÄDLC´íÎó²âÊÔ*/
+_CAN_TP_SF_2()  /*å•å¸§è¯·æ±‚CANå¸§æŠ¥æ–‡çš„DLCé”™è¯¯æµ‹è¯•*/
 {
   byte Data[3] = {0x02,0x22,0xf1};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetSF(0);
 }
-_CAN_TP_SF_3()  /*µ¥Ö¡ÇëÇóCANÖ¡±¨ÎÄµÄDLC´íÎó²âÊÔ*/
+_CAN_TP_SF_3()  /*å•å¸§è¯·æ±‚CANå¸§æŠ¥æ–‡çš„DLCé”™è¯¯æµ‹è¯•*/
 {
   byte Data[5] = {0x04,0x22,0xf1,0x80,0x55};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetSF(0);
 }
-_CAN_TP_SF_4()  /*µ¥Ö¡ÇëÇóCANÖ¡±¨ÎÄµÄDLC´íÎó²âÊÔ*/
+_CAN_TP_SF_4()  /*å•å¸§è¯·æ±‚CANå¸§æŠ¥æ–‡çš„DLCé”™è¯¯æµ‹è¯•*/
 {
   byte Data[7] = {0x06,0x22,0xf1,0x80,0x55,0x55,0x55};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetSF(0);
 }
-_CAN_TP_SF_5()  /*Ğ­Òé¿ØÖÆĞÅÏ¢ÎªFFµÄµ¥Ö¡ÇëÇó±¨ÎÄ²âÊÔ*/
+_CAN_TP_SF_5()  /*åè®®æ§åˆ¶ä¿¡æ¯ä¸ºFFçš„å•å¸§è¯·æ±‚æŠ¥æ–‡æµ‹è¯•*/
 {
   byte Data[8] = {0xff,0x22,0xf1,0x80,0x55,0x55,0x55,0x55};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetSF(0);
 }
-_CAN_TP_SF_6()  /*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄµ¥Ö¡ÏìÓ¦±¨ÎÄSF_DLÓĞĞ§*/
+_CAN_TP_SF_6()  /*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„å•å¸§å“åº”æŠ¥æ–‡SF_DLæœ‰æ•ˆ*/
 {
   byte Data[8] = {0x02,0x10,0x01,0x55,0x55,0x55,0x55,0x55};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetSF(1);
 }
-_CAN_TP_SF_7()  /*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄµ¥Ö¡ÏìÓ¦±¨ÎÄSF_DLÓĞĞ§*//*±ä¸üÎª¶àÖ¡ÏìÓ¦*/
+_CAN_TP_SF_7()  /*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„å•å¸§å“åº”æŠ¥æ–‡SF_DLæœ‰æ•ˆ*//*å˜æ›´ä¸ºå¤šå¸§å“åº”*/
 {
   byte Data[8] = {0x03,0x22,0xff,0xff,0x55,0x55,0x55,0x55};
   _Get_TP_DID("TP_CAN_DID");
@@ -890,19 +890,19 @@ _CAN_TP_SF_7()  /*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄµ¥Ö¡ÏìÓ¦±¨ÎÄSF_DLÓĞĞ§*//*±ä¸üÎª¶àÖ¡ÏìÓ¦*/
   _TPgetFF(1);
 }
 
-_CAN_TP_FF_1()/*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+_CAN_TP_FF_1()/*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   byte Data[8] = {0x10,0x00,0x31,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetFF(0);
 }
-_CAN_TP_FF_2()/*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+_CAN_TP_FF_2()/*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   byte Data[8] = {0x10,0x07,0x31,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetFF(0);
 }
-_CAN_TP_FF_3()/*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+_CAN_TP_FF_3()/*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   byte Data[8] = {0x1F,0xFF,0x31,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Phy(Data,elCount(Data),0);
@@ -911,13 +911,13 @@ _CAN_TP_FF_3()/*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
   else
     _TPgetFC(0x32);
 }
-_CAN_TP_FF_4()/*¹¦ÄÜÑ°Ö·ÇëÇóÊ×Ö¡²âÊÔ*/
+_CAN_TP_FF_4()/*åŠŸèƒ½å¯»å€è¯·æ±‚é¦–å¸§æµ‹è¯•*/
 {
   byte Data[8] = {0x1F,0xFF,0x31,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Fun(Data,elCount(Data),0);
   _TPgetFF(0);
 }
-_CAN_TP_FF_5()/*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄÊ×Ö¡ÏìÓ¦±¨ÎÄFF_DL*/
+_CAN_TP_FF_5()/*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„é¦–å¸§å“åº”æŠ¥æ–‡FF_DL*/
 {
   byte Data[8] = {0x03,0x22,0xF1,0x80,0x00,0x00,0x00,0x00};
   _Get_TP_DID("TP_CAN_DID");
@@ -926,7 +926,7 @@ _CAN_TP_FF_5()/*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄÊ×Ö¡ÏìÓ¦±¨ÎÄFF_DL*/
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetFF(1);
 }
-_CAN_TP_CF_1()/*Í£Ö¹·¢ËÍºóĞø²¿·ÖÁ¬ĞøÖ¡*/
+_CAN_TP_CF_1()/*åœæ­¢å‘é€åç»­éƒ¨åˆ†è¿ç»­å¸§*/
 {
   byte Data[8] = {0x10,0x23,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -939,14 +939,14 @@ _CAN_TP_CF_1()/*Í£Ö¹·¢ËÍºóĞø²¿·ÖÁ¬ĞøÖ¡*/
   _TPgetCF(0);
   _TPgetCF(0);
 }
-_CAN_TP_CF_2()/*²»·¢ËÍËùÓĞÁ¬ĞøÖ¡*/
+_CAN_TP_CF_2()/*ä¸å‘é€æ‰€æœ‰è¿ç»­å¸§*/
 {
   byte Data[8] = {0x10,0x23,0x22,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetFC(1);
   _TPgetCF(0);
 }
-_CAN_TP_CF_3()/*²»·¢ËÍÄ³Á¬ĞøÖ¡*/
+_CAN_TP_CF_3()/*ä¸å‘é€æŸè¿ç»­å¸§*/
 {
   byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -958,7 +958,7 @@ _CAN_TP_CF_3()/*²»·¢ËÍÄ³Á¬ĞøÖ¡*/
   _TPsendmsg_Phy(Data2,elCount(Data2),0);
   _TPgetCF(0);
 }
-_CAN_TP_CF_4()/*ÖØ¸´·¢ËÍµÚÒ»¸öÁ¬ĞøÖ¡*/
+_CAN_TP_CF_4()/*é‡å¤å‘é€ç¬¬ä¸€ä¸ªè¿ç»­å¸§*/
 {
   byte Data[8] = {0x10,0x14,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1010,7 +1010,7 @@ _CAN_TP_CF_4()/*ÖØ¸´·¢ËÍµÚÒ»¸öÁ¬ĞøÖ¡*/
   }
   testWaitForTimeout(1000);
 }
-_CAN_TP_CF_5()/*¶àÖ¡ÇëÇó±¨ÎÄÁ¬ĞøÖ¡DLC´íÎó*/
+_CAN_TP_CF_5()/*å¤šå¸§è¯·æ±‚æŠ¥æ–‡è¿ç»­å¸§DLCé”™è¯¯*/
 {
   byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1043,7 +1043,7 @@ _CAN_TP_CF_5()/*¶àÖ¡ÇëÇó±¨ÎÄÁ¬ĞøÖ¡DLC´íÎó*/
     _TPgetCF(0);
   }
 }
-_CAN_TP_CF_7()/*´íÎóÁ¬ĞøÖ¡±¨ÎÄ*/
+_CAN_TP_CF_7()/*é”™è¯¯è¿ç»­å¸§æŠ¥æ–‡*/
 {
   byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x41,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1089,19 +1089,19 @@ _CAN_TP_CF_7()/*´íÎóÁ¬ĞøÖ¡±¨ÎÄ*/
   _TPgetCF(0);
   testWaitForTimeout(1000);
 }
-_CAN_TP_CF_8()/*ºóĞøÖ¡ÇëÇó²âÊÔ*/
+_CAN_TP_CF_8()/*åç»­å¸§è¯·æ±‚æµ‹è¯•*/
 {
   byte Data[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetCF(0);
 }
-_CAN_TP_CF_9()/*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄÁ÷¿ØÖ¡ÖĞµÄBSºÍSTmin*/
+_CAN_TP_CF_9()/*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„æµæ§å¸§ä¸­çš„BSå’ŒSTmin*/
 {
   byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetFC(1);
 }
-_CAN_TP_CF_10()/*Á¬ĞøÖ¡SNÖµ²âÊÔ*/
+_CAN_TP_CF_10()/*è¿ç»­å¸§SNå€¼æµ‹è¯•*/
 {
   byte Data[8] = {0x10,0x29,0x22,0x35,0x70,0x00,0x00,0x00};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1215,7 +1215,7 @@ _CAN_TP_CF_10()/*Á¬ĞøÖ¡SNÖµ²âÊÔ*/
   testWaitForTimeout(3000);
   
 }
-_CAN_TP_CF_11()/*È·ÈÏ¿ØÖÆÆ÷µÄÁ÷¿ØÖÆÖ¡²ÎÊıSTminÓĞĞ§*/
+_CAN_TP_CF_11()/*ç¡®è®¤æ§åˆ¶å™¨çš„æµæ§åˆ¶å¸§å‚æ•°STminæœ‰æ•ˆ*/
 {
   byte Data[8] = {0x10,0x1B,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1228,7 +1228,7 @@ _CAN_TP_CF_11()/*È·ÈÏ¿ØÖÆÆ÷µÄÁ÷¿ØÖÆÖ¡²ÎÊıSTminÓĞĞ§*/
   _TPsendmsg_Phy(Data_3,elCount(Data_3),0);
   _Check_NRC(0);
 }
-_CAN_TP_CF_12()/*²»·¢ËÍÁ÷¿ØÖÆÖ¡*/
+_CAN_TP_CF_12()/*ä¸å‘é€æµæ§åˆ¶å¸§*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   _Get_TP_DID("TP_CAN_DID");
@@ -1238,7 +1238,7 @@ _CAN_TP_CF_12()/*²»·¢ËÍÁ÷¿ØÖÆÖ¡*/
   _TPgetFF(1);
   _TPgetCF(0);
 }
-_CAN_TP_CF_13()/*ÖØ¸´·¢ËÍÁ÷¿ØÖÆÖ¡*/
+_CAN_TP_CF_13()/*é‡å¤å‘é€æµæ§åˆ¶å¸§*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1275,10 +1275,10 @@ _CAN_TP_CF_13()/*ÖØ¸´·¢ËÍÁ÷¿ØÖÆÖ¡*/
     snprintf(Temp_Str,elCount(Temp_Str),"");
     for(i=0;i<3;i++)
       snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_1[i]);
-    testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ms",N_Cs_Time);
+    testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d ms",N_Cs_Time);
   }
 }
-_CAN_TP_CF_14()/*³¤¶È²»ÕıÈ·Á÷¿ØÖÆÖ¡*/
+_CAN_TP_CF_14()/*é•¿åº¦ä¸æ­£ç¡®æµæ§åˆ¶å¸§*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[7] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55};
@@ -1290,7 +1290,7 @@ _CAN_TP_CF_14()/*³¤¶È²»ÕıÈ·Á÷¿ØÖÆÖ¡*/
   _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
   _TPgetCF(0);
 }
-_CAN_TP_CF_15()/*¹¦ÄÜÑ°Ö·Á÷¿ØÖÆÖ¡*/
+_CAN_TP_CF_15()/*åŠŸèƒ½å¯»å€æµæ§åˆ¶å¸§*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1302,13 +1302,14 @@ _CAN_TP_CF_15()/*¹¦ÄÜÑ°Ö·Á÷¿ØÖÆÖ¡*/
   _TPsendmsg_Fun(Data_1,elCount(Data_1),0);
   _TPgetCF(0);
 }
-_CAN_TP_CF_16()/*ÎŞĞ§Á÷¿ØÖÆÖ¡-FSÎŞĞ§Öµ*/
+_CAN_TP_CF_16()/*æ— æ•ˆæµæ§åˆ¶å¸§-FSæ— æ•ˆå€¼*/
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x3F,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
   byte fs_[3] = {0x33,0x39,0x3F};
   int i;
-  
+
+  _Get_DID_TP(Data,2);
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetFF(1);
   for(i=0;i<elcount(fs_);i++)
@@ -1318,13 +1319,13 @@ _CAN_TP_CF_16()/*ÎŞĞ§Á÷¿ØÖÆÖ¡-FSÎŞĞ§Öµ*/
     _Check_NoResponse_(20);
   }
 }
-_CAN_TP_CF_17()/*Á÷¿ØÖ¡ÇëÇó²âÊÔ*/
+_CAN_TP_CF_17()/*æµæ§å¸§è¯·æ±‚æµ‹è¯•*/
 {
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
   _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
   _TPgetCF(0);
 }
-_CAN_TP_CF_18()/*Á÷¿ØÖÆ×´Ì¬ÎªOVFLWÒç³ö*/
+_CAN_TP_CF_18()/*æµæ§åˆ¶çŠ¶æ€ä¸ºOVFLWæº¢å‡º*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x32,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1336,7 +1337,7 @@ _CAN_TP_CF_18()/*Á÷¿ØÖÆ×´Ì¬ÎªOVFLWÒç³ö*/
   _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
   _TPgetCF(0);
 }
-_CAN_TP_CF_19()/*µÈ´ıÁ÷¿ØÖÆÖ¡*/
+_CAN_TP_CF_19()/*ç­‰å¾…æµæ§åˆ¶å¸§*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1365,21 +1366,21 @@ _CAN_TP_CF_19()/*µÈ´ıÁ÷¿ØÖÆÖ¡*/
       _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
       _TPgetCF(0);
 }
-_CAN_TP_CF_20()/*Î´ÖªÇëÇó±¨ÎÄ²âÊÔ*/
+_CAN_TP_CF_20()/*æœªçŸ¥è¯·æ±‚æŠ¥æ–‡æµ‹è¯•*/
 {
   byte Data[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
   _TPsendmsg_Phy(Data,elCount(Data),0);
   _TPgetFF(0);
 }
-_CAN_TP_Disturb_1() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+_CAN_TP_Disturb_1() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
-  byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+  byte Data_1[8] = {0x30,0x00,0x0A,0x55,0x55,0x55,0x55,0x55}; //ç”±äºå‡ºç°å“åº”è¿‡å¿«æƒ…å†µï¼Œæ•…æ­¤å¤„ä¿®æ”¹æ—¶é—´ä¸º0x0A
   byte Data_2[8] = {0x03,0x22,0xF1,0x84,0x55,0x55,0x55,0x55};
   int i,Temp_SN,len;
   _Get_DID_TP(Data,2);
   if(_TP_CAN_DID_Len<=0x0D)
-    writeEx(-3,0,"µ±Ç°Ñ¡ÔñDID·´À¡½öÁ½Ö¡,ÎŞ·¨²âÊÔ¶àÖ¡¸ÉÈÅ");
+    writeEx(-3,0,"å½“å‰é€‰æ‹©DIDåé¦ˆä»…ä¸¤å¸§,æ— æ³•æµ‹è¯•å¤šå¸§å¹²æ‰°");
   else
   {
     _TPsendmsg_Phy(Data,elCount(Data),0);
@@ -1399,7 +1400,7 @@ _CAN_TP_Disturb_1() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
       _TPgetNotCF(1,2);
   }
 }
-_CAN_TP_Disturb_2() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+_CAN_TP_Disturb_2() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1407,7 +1408,7 @@ _CAN_TP_Disturb_2() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
   int i,Temp_SN,len;
   _Get_DID_TP(Data,2);
   if(_TP_CAN_DID_Len<=0x0D)
-    writeEx(-3,0,"µ±Ç°Ñ¡ÔñDID·´À¡½öÁ½Ö¡,ÎŞ·¨²âÊÔ¶àÖ¡¸ÉÈÅ");
+    writeEx(-3,0,"å½“å‰é€‰æ‹©DIDåé¦ˆä»…ä¸¤å¸§,æ— æ³•æµ‹è¯•å¤šå¸§å¹²æ‰°");
   else
   {
     _TPsendmsg_Phy(Data,elCount(Data),0);
@@ -1427,7 +1428,7 @@ _CAN_TP_Disturb_2() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
       _TPgetNotCF(1,2);
   }
 }
-_CAN_TP_Disturb_3() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ¬ĞøÖ¡¸ÉÈÅ*/
+_CAN_TP_Disturb_3() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸè¿ç»­å¸§å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1435,7 +1436,7 @@ _CAN_TP_Disturb_3() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ¬ĞøÖ¡¸ÉÈÅ*/
   int i,Temp_SN,len;
   _Get_DID_TP(Data,2);
   if(_TP_CAN_DID_Len<=0x0D)
-    writeEx(-3,0,"µ±Ç°Ñ¡ÔñDID·´À¡½öÁ½Ö¡,ÎŞ·¨²âÊÔ¶àÖ¡¸ÉÈÅ");
+    writeEx(-3,0,"å½“å‰é€‰æ‹©DIDåé¦ˆä»…ä¸¤å¸§,æ— æ³•æµ‹è¯•å¤šå¸§å¹²æ‰°");
   else
   {
     _TPsendmsg_Phy(Data,elCount(Data),0);
@@ -1450,7 +1451,7 @@ _CAN_TP_Disturb_3() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ¬ĞøÖ¡¸ÉÈÅ*/
       _Check_TPgetCF(1,len,i);
   }
 }
-_CAN_TP_Disturb_4() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ÷¿ØÖÆÖ¡¸ÉÈÅ*/
+_CAN_TP_Disturb_4() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæµæ§åˆ¶å¸§å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1458,7 +1459,7 @@ _CAN_TP_Disturb_4() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ÷¿ØÖÆÖ¡¸ÉÈÅ*/
   int i,Temp_SN,len;
   _Get_DID_TP(Data,2);
   if(_TP_CAN_DID_Len<=0x0D)
-    writeEx(-3,0,"µ±Ç°Ñ¡ÔñDID·´À¡½öÁ½Ö¡,ÎŞ·¨²âÊÔ¶àÖ¡¸ÉÈÅ");
+    writeEx(-3,0,"å½“å‰é€‰æ‹©DIDåé¦ˆä»…ä¸¤å¸§,æ— æ³•æµ‹è¯•å¤šå¸§å¹²æ‰°");
   else
   {
     _TPsendmsg_Phy(Data,elCount(Data),0);
@@ -1473,7 +1474,7 @@ _CAN_TP_Disturb_4() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ÷¿ØÖÆÖ¡¸ÉÈÅ*/
       _Check_TPgetCF(1,len,i);
   }
 }
-_CAN_TP_Disturb_5() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÎ´Öª±¨ÎÄ¸ÉÈÅ*/
+_CAN_TP_Disturb_5() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -1481,7 +1482,7 @@ _CAN_TP_Disturb_5() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÎ´Öª±¨ÎÄ¸ÉÈÅ*/
   int i,Temp_SN,len;
   _Get_DID_TP(Data,2);
   if(_TP_CAN_DID_Len<=0x0D)
-    writeEx(-3,0,"µ±Ç°Ñ¡ÔñDID·´À¡½öÁ½Ö¡,ÎŞ·¨²âÊÔ¶àÖ¡¸ÉÈÅ");
+    writeEx(-3,0,"å½“å‰é€‰æ‹©DIDåé¦ˆä»…ä¸¤å¸§,æ— æ³•æµ‹è¯•å¤šå¸§å¹²æ‰°");
   else
   {
     _TPsendmsg_Phy(Data,elCount(Data),0);
@@ -1496,7 +1497,7 @@ _CAN_TP_Disturb_5() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÎ´Öª±¨ÎÄ¸ÉÈÅ*/
       _Check_TPgetCF(1,len,i);
   }
 }
-_CAN_TP_Disturb_6() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+_CAN_TP_Disturb_6() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[8] = {0x10,0x11,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1584,7 +1585,7 @@ _CAN_TP_Disturb_6() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
     }
   }
 }
-_CAN_TP_Disturb_7() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+_CAN_TP_Disturb_7() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   byte Data[8] = {0x10,0x13,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1637,7 +1638,7 @@ _CAN_TP_Disturb_7() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
     _Check_NRC(0);
   }
 }
-_CAN_TP_Disturb_8() /*ÎÕÊÖÃüÁî¸ÉÈÅ¶àÖ¡ÇëÇó*/
+_CAN_TP_Disturb_8() /*æ¡æ‰‹å‘½ä»¤å¹²æ‰°å¤šå¸§è¯·æ±‚*/
 {
   byte Data[8] = {0x10,0x11,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1699,7 +1700,7 @@ _CAN_TP_Disturb_8() /*ÎÕÊÖÃüÁî¸ÉÈÅ¶àÖ¡ÇëÇó*/
       _Check_TPgetCF(1,Len,i); 
   }
 }
-_CAN_TP_Disturb_9() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Á÷¿ØÖÆ±¨ÎÄ¸ÉÈÅ*/
+_CAN_TP_Disturb_9() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æµæ§åˆ¶æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[8] = {0x10,0x14,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1714,7 +1715,7 @@ _CAN_TP_Disturb_9() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Á÷¿ØÖÆ±¨ÎÄ¸ÉÈÅ*/
   _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
   _Check_NRC(0);
 }
-_CAN_TP_Disturb_10() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Î´Öª±¨ÎÄ¸ÉÈÅ*/
+_CAN_TP_Disturb_10() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[8] = {0x10,0x14,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1729,7 +1730,7 @@ _CAN_TP_Disturb_10() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Î´Öª±¨ÎÄ¸ÉÈÅ*/
   _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
   _Check_NRC(0);
 }
-_CAN_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
+_CAN_TP_Time_1()/* N_Bsæ—¶é—´æµ‹è¯• */
 {
   byte Data[8] = {0x10,0x0D,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1742,9 +1743,9 @@ _CAN_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
   _TPgetFC(1);
   end_time=(double)timeNow()/100;
   if(end_time - start_time <= N_Bs_Time)
-    testStepPass("","N_BsÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","N_Bså“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","N_BsÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(end_time - start_time));
+    testStepFail("","N_Bså“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(end_time - start_time));
   testWaitForTimeout(1000);
   {
     _Get_DID_TP(Data,2);
@@ -1768,7 +1769,7 @@ _CAN_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
       _Check_TPgetCF(1,_TP_CAN_DID_Len,i); 
   }
 }
-_CAN_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
+_CAN_TP_Time_2()/* N_Cræ—¶é—´æµ‹è¯• */
 {
   byte Data[8] = {0x10,0x0D,0x22,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1789,7 +1790,7 @@ _CAN_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
   if(_Check_Serve_IDAndSess(0x22,funreq_ID,defsession) != 1)
   {
     Loop_Count = 1;
-    _WriteEx_and_Report("","22·şÎñ²»Ö§³Ö¹¦ÄÜÑ°Ö·¶ÁÈ¡");
+    _WriteEx_and_Report("","22æœåŠ¡ä¸æ”¯æŒåŠŸèƒ½å¯»å€è¯»å–");
   }
   for(j=0;j<Loop_Count;j++)
   {
@@ -1818,9 +1819,9 @@ _CAN_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
       writeEx(-3,0,"%.2f ms",DiffTime);
     }
     if(Max_Time<N_Cr_Time)
-      testStepPass("","N_CrÊ±¼ä·ûºÏĞèÇó£¬×î´ó¼ä¸ôÊ±¼äÎª %d ms",Max_Time);
+      testStepPass("","N_Cræ—¶é—´ç¬¦åˆéœ€æ±‚ï¼Œæœ€å¤§é—´éš”æ—¶é—´ä¸º %d ms",Max_Time);
     else
-      testStepFail("","×î´ó¼ä¸ôÊ±¼äÎª %d ms ,´óÓÚÔ¤ÆÚÊ±¼ä %d ms",Max_Time,N_Cr_Time);
+      testStepFail("","æœ€å¤§é—´éš”æ—¶é—´ä¸º %d ms ,å¤§äºé¢„æœŸæ—¶é—´ %d ms",Max_Time,N_Cr_Time);
   
     testWaitForTimeout(3000);
   }
@@ -1858,7 +1859,7 @@ _CAN_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
     _Check_NRC(0);
   }
 }
-_CAN_TP_Time_3()/* BSÖµ²âÊÔ */
+_CAN_TP_Time_3()/* BSå€¼æµ‹è¯• */
 {
   byte Data[8] = {0x1F,0xFF,0x2E,0x35,0x70,0x00,0x00,0x00};
   byte Data_03[8] = {0x02,0x10,0x03,0x00,0x00,0x00,0x00,0x00};
@@ -1930,7 +1931,7 @@ _CAN_TP_Time_3()/* BSÖµ²âÊÔ */
   _Check_NRC(3);
 }
 
-_CAN_TP_Time_4()/* N_CsÊ±¼ä²âÊÔ */
+_CAN_TP_Time_4()/* N_Csæ—¶é—´æµ‹è¯• */
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -1947,19 +1948,21 @@ _CAN_TP_Time_4()/* N_CsÊ±¼ä²âÊÔ */
   start_time3=(double)timeNow()/100;
   testWaitForTimeout(1000);
   if(start_time2 - start_time <= N_Cs_Time + N_Cs_Time_Tolerance)
-    testStepPass("","Á¬ĞøÖ¡1£ºN_CsÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","è¿ç»­å¸§1ï¼šN_Cså“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","Á¬ĞøÖ¡1£ºN_CsÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(start_time2 - start_time));
+    testStepFail("","è¿ç»­å¸§1ï¼šN_Cså“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(start_time2 - start_time));
   if(start_time3 - start_time2 <= N_Cs_Time + N_Cs_Time_Tolerance)
-    testStepPass("","Á¬ĞøÖ¡2£ºN_CsÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","è¿ç»­å¸§2ï¼šN_Cså“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","Á¬ĞøÖ¡2£ºN_CsÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(start_time3 - start_time2));
+    testStepFail("","è¿ç»­å¸§2ï¼šN_Cså“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(start_time3 - start_time2));
 }
-_CAN_TP_Time_5()/* N_BrÊ±¼ä²âÊÔ */
+_CAN_TP_Time_5()/* N_Bræ—¶é—´æµ‹è¯• */
 {
   byte Data[8] = {0x10,0x0D,0x22,0x35,0x70,0x00,0x00,0x00};
   double start_time,start_time2;
   int i,Temp_SN;
+  
+  _Get_DID_TP(Data,3);
   _TPsendmsg_Phy(Data,elCount(Data),0);
   start_time=(double)timeNow()/100;
   _TPgetFC(1);
@@ -1967,14 +1970,14 @@ _CAN_TP_Time_5()/* N_BrÊ±¼ä²âÊÔ */
   testWaitForTimeout(1000);
 
   if(start_time2 - start_time <= N_Br_Time + N_Br_Time_Tolerance)
-    testStepPass("","N_BrÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","N_Brå“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","N_BrÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(start_time2 - start_time));
+    testStepFail("","N_Brå“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(start_time2 - start_time));
 }
 
 
 
-_CAN_TP_Stmin_1()/* StminÖµ²âÊÔ */
+_CAN_TP_Stmin_1()/* Stminå€¼æµ‹è¯• */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -2014,9 +2017,9 @@ _CAN_TP_Stmin_1()/* StminÖµ²âÊÔ */
     if(Stmin[j] != N_Cs_Time)
     {
       if(Min_Time<Stmin[j])
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ms",Stmin[j]);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d ms",Stmin[j]);
       else
-        testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",Stmin[j]);
+        testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",Stmin[j]);
     }
     else
     {
@@ -2025,22 +2028,22 @@ _CAN_TP_Stmin_1()/* StminÖµ²âÊÔ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ms",Stmin[j]);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d ms",Stmin[j]);
       }
       else if(Min_Time>=Stmin[j] + N_Cs_Time_Tolerance)
       {
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼ä´óÓÚ %d ms",Stmin[j]);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å¤§äº %d ms",Stmin[j]);
       }
       else
-        testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",Stmin[j]);
+        testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",Stmin[j]);
     }
     testWaitForTimeout(3000);
   }
 }
-_CAN_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
+_CAN_TP_Stmin_1_()/* Stminå€¼æµ‹è¯•_è¾¹ç•Œå€¼ */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -2100,10 +2103,10 @@ _CAN_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ms",Stmin[j]);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d ms",Stmin[j]);
       }
       else
-        testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",Stmin[j]);
+        testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",Stmin[j]);
     }
     else if(j==1)
     {
@@ -2112,10 +2115,10 @@ _CAN_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ¡À%dms",Stmin[j],N_Cs_Time_Tolerance);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d Â±%dms",Stmin[j],N_Cs_Time_Tolerance);
       }
       else
-        testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ¡À%dms",Stmin[j],N_Cs_Time_Tolerance);
+        testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d Â±%dms",Stmin[j],N_Cs_Time_Tolerance);
     }
     else
     {
@@ -2124,15 +2127,15 @@ _CAN_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×î´ó¼ä¸ôÊ±¼ä´óÓÚ %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+        testStepFail(Temp_Str,"æœ€å¤§é—´éš”æ—¶é—´å¤§äº %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
       }
       else
-        testStepPass("","×î´ó¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»´óÓÚ %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+        testStepPass("","æœ€å¤§é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å¤§äº %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
     }
     testWaitForTimeout(3000);
   }
 }
-_CAN_TP_Stmin_2()/* StminÎŞĞ§²âÊÔ-us¼¶Öµ */
+_CAN_TP_Stmin_2()/* Stminæ— æ•ˆæµ‹è¯•-usçº§å€¼ */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -2178,24 +2181,24 @@ _CAN_TP_Stmin_2()/* StminÎŞĞ§²âÊÔ-us¼¶Öµ */
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %.2f ms",_us);
+      testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %.2f ms",_us);
     }
     else
-      testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %.2f ms",_us);
+      testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %.2f ms",_us);
     if(Max_Time>=N_Cr_Time)
     {
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×î´ó¼ä¸ôÊ±¼ä´óÓÚ %d ms",N_Cr_Time);
+      testStepFail(Temp_Str,"æœ€å¤§é—´éš”æ—¶é—´å¤§äº %d ms",N_Cr_Time);
     }
     else
-      testStepPass("","×î´ó¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»´óÓÚ %d ms",N_Cr_Time);
+      testStepPass("","æœ€å¤§é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å¤§äº %d ms",N_Cr_Time);
     
     testWaitForTimeout(3000);
   }
 }
-_CAN_TP_Stmin_3()/* StminÎŞĞ§²âÊÔ-±£ÁôÖµ */
+_CAN_TP_Stmin_3()/* Stminæ— æ•ˆæµ‹è¯•-ä¿ç•™å€¼ */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -2235,16 +2238,16 @@ _CAN_TP_Stmin_3()/* StminÎŞĞ§²âÊÔ-±£ÁôÖµ */
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ¡À%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+      testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d Â±%dms",N_Cs_Time,N_Cs_Time_Tolerance);
     }
     else
-      testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",N_Cs_Time);
+      testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",N_Cs_Time);
     
     testWaitForTimeout(3000);
   }
 }
 
-_CAN_TP_FC_8() /*¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ*/
+_CAN_TP_FC_8() /*æ§åˆ¶å™¨æ”¶åˆ°çš„BlockSizeæµ‹è¯•*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -2277,9 +2280,9 @@ _CAN_TP_FC_8() /*¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ*/
       }
       Fal = _Check_NoResponse_(500);
       if(Fal == -1)
-        testStepFail("","0x%02X BlockSize¿éÊÕµ½³¬¹ıÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepFail("","0x%02X BlockSizeå—æ”¶åˆ°è¶…è¿‡é¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
       else
-        testStepPass("","0x%02X BlockSize¿éÊÕµ½·ûºÏÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepPass("","0x%02X BlockSizeå—æ”¶åˆ°ç¬¦åˆé¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
     }
     else
     {
@@ -2287,9 +2290,9 @@ _CAN_TP_FC_8() /*¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ*/
         _Check_TPgetCF(1,FF_DL,i);
       Fal = _Check_NoResponse_(500);
       if(Fal == -1)
-        testStepFail("","0x%02X BlockSize¿éÊÕµ½³¬¹ıÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepFail("","0x%02X BlockSizeå—æ”¶åˆ°è¶…è¿‡é¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
       else
-        testStepPass("","0x%02X BlockSize¿éÊÕµ½·ûºÏÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepPass("","0x%02X BlockSizeå—æ”¶åˆ°ç¬¦åˆé¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
     
     }
     testWaitForTimeout(3000);
@@ -2353,7 +2356,7 @@ int _Get_CF_SN(int Len)
 }
 
 
-_CANFD_TP_SF_1() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL¡Ü8£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_1() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DLâ‰¤8ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[8] = {0x00,0x22,0xf1,0x80,0x55,0x55,0x55,0x55};
   byte Len[4] = {0x00,0x01,0x08,0x09};
@@ -2370,7 +2373,7 @@ _CANFD_TP_SF_1() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL¡Ü8£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_2() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=12£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_2() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=12ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[12] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x00,0x00};
   byte Len[4] = {0x07,0x08,0x0A,0x0B};
@@ -2406,7 +2409,7 @@ _CANFD_TP_SF_2() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=12£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_3() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=16£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_3() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=16ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[16] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Len[4] = {0x0A,0x0B,0x0E,0x0F};
@@ -2442,7 +2445,7 @@ _CANFD_TP_SF_3() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=16£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_4() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=20£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_4() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=20ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[20] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Len[4] = {0x0E,0x0F,0x12,0x13};
@@ -2478,7 +2481,7 @@ _CANFD_TP_SF_4() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=20£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_5() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=24£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_5() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=24ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[24] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Len[4] = {0x12,0x13,0x16,0x17};
@@ -2514,7 +2517,7 @@ _CANFD_TP_SF_5() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=24£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_6() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=32£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_6() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=32ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[32] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Len[4] = {0x16,0x17,0x1E,0x1F};
@@ -2550,7 +2553,7 @@ _CANFD_TP_SF_6() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=32£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_7() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=48£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_7() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=48ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[48] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Len[4] = {0x1E,0x1F,0x2E,0x2F};
@@ -2586,7 +2589,7 @@ _CANFD_TP_SF_7() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=48£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_8() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=64£©SF_DL²âÊÔ*/
+_CANFD_TP_SF_8() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=64ï¼‰SF_DLæµ‹è¯•*/
 {
   byte Data[64] = {0x00,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Len[4] = {0x2E,0x2F,0x3E,0x3F};
@@ -2622,7 +2625,7 @@ _CANFD_TP_SF_8() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=64£©SF_DL²âÊÔ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_SF_9() /*Ğ­Òé¿ØÖÆĞÅÏ¢ÎªFFµÄµ¥Ö¡ÇëÇó±¨ÎÄ²âÊÔ(CAN_DL)*/
+_CANFD_TP_SF_9() /*åè®®æ§åˆ¶ä¿¡æ¯ä¸ºFFçš„å•å¸§è¯·æ±‚æŠ¥æ–‡æµ‹è¯•(CAN_DL)*/
 {
   byte Data[64] = {0xFF,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   _Get_DID_TP(Data,2);
@@ -2635,7 +2638,7 @@ _CANFD_TP_SF_9() /*Ğ­Òé¿ØÖÆĞÅÏ¢ÎªFFµÄµ¥Ö¡ÇëÇó±¨ÎÄ²âÊÔ(CAN_DL)*/
   _TPsendmsg_Phy(Data,64,1);
   _TPgetSF(0);
 }
-_CANFD_TP_FF_1() /*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+_CANFD_TP_FF_1() /*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   byte Data[8] = {0x10,0x00,0xf1,0x80,0x00,0x00,0x00,0x00};
   byte Filler[9] = {0x0A,0x0B,0x0F,0x13,0x17,0x1F,0x2F,0x2F,0x3E};
@@ -2662,7 +2665,7 @@ _CANFD_TP_FF_1() /*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
   }
 }
 
-_CANFD_TP_FF_2() /*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+_CANFD_TP_FF_2() /*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   byte Data[64] = {0x10,0x22,0xf1,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Temp_FF_DL[2][2] = {{0x10,0xFF},{0x1F,0xFF}};
@@ -2721,7 +2724,7 @@ _CANFD_TP_FF_2() /*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
     
   }
 }
-_CANFD_TP_FF_3() /*¹¦ÄÜÑ°Ö·ÇëÇóÊ×Ö¡²âÊÔ*/
+_CANFD_TP_FF_3() /*åŠŸèƒ½å¯»å€è¯·æ±‚é¦–å¸§æµ‹è¯•*/
 {
   byte Data[64] = {0x1F,0xFF,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   _Get_DID_TP(Data,3);
@@ -2744,7 +2747,7 @@ _CANFD_TP_FF_4() /*FF_DL<4095*/
 }
 _CANFD_TP_FF_5() /*FF_DL>4095*/
 {
-  writeEx(-3,0,"Ä¿Ç°ÎŞ³¤¶È´óÓÚ4095µÄ±¨ÎÄ,Ìø¹ı²âÊÔ");
+  writeEx(-3,0,"ç›®å‰æ— é•¿åº¦å¤§äº4095çš„æŠ¥æ–‡,è·³è¿‡æµ‹è¯•");
 //  {
 //    byte Data[8] = {0x03,0x22,0xF1,0x80,0x11,0x11,0x11,0x11};
 //    _Get_DID_TP(Data,3);
@@ -2752,7 +2755,7 @@ _CANFD_TP_FF_5() /*FF_DL>4095*/
 //    _TPgetFC(1);
 //  }
 }
-_CANFD_TP_CF_1() /*Í£Ö¹·¢ËÍºóĞø²¿·ÖÁ¬ĞøÖ¡*/
+_CANFD_TP_CF_1() /*åœæ­¢å‘é€åç»­éƒ¨åˆ†è¿ç»­å¸§*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
@@ -2762,7 +2765,7 @@ _CANFD_TP_CF_1() /*Í£Ö¹·¢ËÍºóĞø²¿·ÖÁ¬ĞøÖ¡*/
   _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
   _TPgetCF(0);
 }
-_CANFD_TP_CF_2() /*²»·¢ËÍËùÓĞÁ¬ĞøÖ¡*/
+_CANFD_TP_CF_2() /*ä¸å‘é€æ‰€æœ‰è¿ç»­å¸§*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   _Get_DID_TP(Data,3);
@@ -2770,7 +2773,7 @@ _CANFD_TP_CF_2() /*²»·¢ËÍËùÓĞÁ¬ĞøÖ¡*/
   _TPgetFC(1);
   _TPgetCF(0);
 }
-_CANFD_TP_CF_3() /*²»·¢ËÍÄ³Á¬ĞøÖ¡*/
+_CANFD_TP_CF_3() /*ä¸å‘é€æŸè¿ç»­å¸§*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Data_1[64] = {0x22,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
@@ -2780,7 +2783,7 @@ _CANFD_TP_CF_3() /*²»·¢ËÍÄ³Á¬ĞøÖ¡*/
   _TPsendmsg_Phy(Data_1,elcount(Data_1),1);
   _TPgetCF(0);
 }
-_CANFD_TP_CF_4() /*ÖØ¸´·¢ËÍµÚÒ»¸öÁ¬ĞøÖ¡*/
+_CANFD_TP_CF_4() /*é‡å¤å‘é€ç¬¬ä¸€ä¸ªè¿ç»­å¸§*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
@@ -2828,7 +2831,7 @@ _CANFD_TP_CF_4() /*ÖØ¸´·¢ËÍµÚÒ»¸öÁ¬ĞøÖ¡*/
   _TPgetCF(0);
   testWaitForTimeout(2000);
 }
-_CANFD_TP_CF_6() /*Á¬ĞøÖ¡SNÖµ²âÊÔ*/
+_CANFD_TP_CF_6() /*è¿ç»­å¸§SNå€¼æµ‹è¯•*/
 {
   byte Data[64] = {0x12,0xB4,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
@@ -2853,7 +2856,7 @@ _CANFD_TP_CF_6() /*Á¬ĞøÖ¡SNÖµ²âÊÔ*/
     Wait_Time = STmin;
   Data[0] = 0x14;
   Data[1] = 0xEB;
-  /*SN>15´Ó1¿ªÊ¼*/
+  /*SN>15ä»1å¼€å§‹*/
   flage = 0;
   m=1;
   Start_Byte = 0x21;
@@ -2892,7 +2895,7 @@ _CANFD_TP_CF_6() /*Á¬ĞøÖ¡SNÖµ²âÊÔ*/
   _TPgetCF(0);
   testWaitForTimeout(2000);
   
-  /*SN>15´Ó0¿ªÊ¼*/
+  /*SN>15ä»0å¼€å§‹*/
   Data[0] = 0x14;
   Data[1] = 0xEB;
   flage = 0;
@@ -2933,7 +2936,7 @@ _CANFD_TP_CF_6() /*Á¬ĞøÖ¡SNÖµ²âÊÔ*/
   _Check_NRC(0);
   testWaitForTimeout(1000);
 }
-_CANFD_TP_CF_7() /*´íÎóÁ¬ĞøÖ¡±¨ÎÄ*/
+_CANFD_TP_CF_7() /*é”™è¯¯è¿ç»­å¸§æŠ¥æ–‡*/
 {
   byte Data[64] = {0x10,0xFB,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Data_1[64] = {0x31,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
@@ -2975,21 +2978,21 @@ _CANFD_TP_CF_7() /*´íÎóÁ¬ĞøÖ¡±¨ÎÄ*/
     testWaitForTimeout(1000);
   }
 }
-_CANFD_TP_CF_8() /*ºóĞøÖ¡ÇëÇó²âÊÔ*/
+_CANFD_TP_CF_8() /*åç»­å¸§è¯·æ±‚æµ‹è¯•*/
 {
   byte Data[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   _TPsendmsg_Phy(Data,elcount(Data),1);
   _TPgetFC(0);
 }
-_CANFD_TP_CF_9() /*×îºóÒ»¸öÁ¬ĞøÖ¡CAN_DL²âÊÔ*/
+_CANFD_TP_CF_9() /*æœ€åä¸€ä¸ªè¿ç»­å¸§CAN_DLæµ‹è¯•*/
 {
   byte Data_1[64] = {0x10,0x7D,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_2[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_3[64] = {0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Change[32] = {0x7D,0X7E,0X84,0X85,0X84,0X85,0X88,0X89,0X88,0X89,0X8C,0X8D,0X8C,0X8D,0X90,0X91,0X90,0X91,0X94,0X95,0X94,0X95,0X9C,0X9D,0X9C,0X9D,0XAC,0XAD,0XAC,0XAD,0XBC,0XBD};
   byte Len[32] = {8,8,8,8,12,12,12,12,16,16,16,16,20,20,20,20,24,24,24,24,32,32,32,32,48,48,48,48,64,64,64,64};
-  byte Res_NRC13[17] = {1,2,3,6,7,10,11,14,15,18,19,22,23,26,27,30,31};/*»ØNRC13Ïî´ÎËùÔÚÎ»ÖÃ*/
-  byte Res_NRC13_ForTPLastCFLen[24] = {1,2,3,5,6,7,9,10,11,13,14,15,17,18,19,21,22,23,25,26,27,29,30,31};/*²»¹Ü¿Ø³¤¶È·µ»ØNRC13ËùÔÚÎ»ÖÃ*/
+  byte Res_NRC13[17] = {1,2,3,6,7,10,11,14,15,18,19,22,23,26,27,30,31};/*å›NRC13é¡¹æ¬¡æ‰€åœ¨ä½ç½®*/
+  byte Res_NRC13_ForTPLastCFLen[24] = {1,2,3,5,6,7,9,10,11,13,14,15,17,18,19,21,22,23,25,26,27,29,30,31};/*ä¸ç®¡æ§é•¿åº¦è¿”å›NRC13æ‰€åœ¨ä½ç½®*/
   byte i;
   for(i=0;i<32;i++)
   {
@@ -3014,7 +3017,7 @@ _CANFD_TP_CF_9() /*×îºóÒ»¸öÁ¬ĞøÖ¡CAN_DL²âÊÔ*/
   }
 }
 
-_CANFD_TP_Disturb_1() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+_CANFD_TP_Disturb_1() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3054,7 +3057,7 @@ _CANFD_TP_Disturb_1() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
     }
   }
 }
-_CANFD_TP_Disturb_2() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+_CANFD_TP_Disturb_2() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3094,7 +3097,7 @@ _CANFD_TP_Disturb_2() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
     }
   }
 }
-_CANFD_TP_Disturb_3() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ¬ĞøÖ¡¸ÉÈÅ*/
+_CANFD_TP_Disturb_3() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸè¿ç»­å¸§å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3124,7 +3127,7 @@ _CANFD_TP_Disturb_3() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ¬ĞøÖ¡¸ÉÈÅ*/
     }
   }
 }
-_CANFD_TP_Disturb_4() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ÷¿ØÖÆÖ¡¸ÉÈÅ*/
+_CANFD_TP_Disturb_4() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæµæ§åˆ¶å¸§å¹²æ‰°*/
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3154,7 +3157,7 @@ _CANFD_TP_Disturb_4() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ÷¿ØÖÆÖ¡¸ÉÈÅ*/
     }
   }
 }
-_CANFD_TP_Disturb_5() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÎ´Öª±¨ÎÄ¸ÉÈÅ*/
+_CANFD_TP_Disturb_5() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
    byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3184,7 +3187,7 @@ _CANFD_TP_Disturb_5() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÎ´Öª±¨ÎÄ¸ÉÈÅ*/
     }
   }
 }
-_CANFD_TP_Disturb_6() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+_CANFD_TP_Disturb_6() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3271,7 +3274,7 @@ _CANFD_TP_Disturb_6() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
     }
   }
 }
-_CANFD_TP_Disturb_7() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+_CANFD_TP_Disturb_7() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3325,7 +3328,7 @@ _CANFD_TP_Disturb_7() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
     _Check_NRC(0);
   }
 }
-_CANFD_TP_Disturb_8() /*ÎÕÊÖÃüÁî¸ÉÈÅ¶àÖ¡ÇëÇó*/
+_CANFD_TP_Disturb_8() /*æ¡æ‰‹å‘½ä»¤å¹²æ‰°å¤šå¸§è¯·æ±‚*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3425,7 +3428,7 @@ _CANFD_TP_Disturb_8() /*ÎÕÊÖÃüÁî¸ÉÈÅ¶àÖ¡ÇëÇó*/
     }
   }
 }
-_CANFD_TP_Disturb_9() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Á÷¿ØÖÆ±¨ÎÄ¸ÉÈÅ*/
+_CANFD_TP_Disturb_9() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æµæ§åˆ¶æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3441,7 +3444,7 @@ _CANFD_TP_Disturb_9() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Á÷¿ØÖÆ±¨ÎÄ¸ÉÈÅ*/
   _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
   _Check_NRC(0);
 }
-_CANFD_TP_Disturb_10() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Î´Öª±¨ÎÄ¸ÉÈÅ*/
+_CANFD_TP_Disturb_10() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3457,7 +3460,7 @@ _CANFD_TP_Disturb_10() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Î´Öª±¨ÎÄ¸ÉÈÅ*/
   _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
   _Check_NRC(0);
 }
-_CANFD_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
+_CANFD_TP_Time_1()/* N_Bsæ—¶é—´æµ‹è¯• */
 {
   byte Data[64] = {0x10,0xBC,0x22,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3473,9 +3476,9 @@ _CANFD_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
   _TPgetFC(1);
   end_time=(double)timeNow()/100;
   if(end_time - start_time <= N_Bs_Time)
-    testStepPass("","N_BsÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","N_Bså“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","N_BsÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(end_time - start_time));
+    testStepFail("","N_Bså“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(end_time - start_time));
   testWaitForTimeout(1000);
   {
     _TPsendmsg_Phy(Data_2,elCount(Data_2),1);
@@ -3495,7 +3498,7 @@ _CANFD_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
       _Check_TPgetCF(1,Len,i); 
   }
 }
-//_CANFD_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
+//_CANFD_TP_Time_2()/* N_Cræ—¶é—´æµ‹è¯• */
 //{
 //  byte Data[64] = {0x10,0x7D,0x22,0xF1,0xF0,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
 //  byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3518,9 +3521,9 @@ _CANFD_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
 //    _TPgetCF_22(1);
 //    end_time_1=(double)timeNow()/100;
 //    if(_max((end_time_1 - end_time),(end_time - start_time)) <= N_Cr_Time)
-//      testStepPass("","N_CrÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+//      testStepPass("","N_Crå“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
 //    else
-//      testStepFail("","N_CrÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",_max((end_time_1 - end_time),(end_time - start_time)));
+//      testStepFail("","N_Crå“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",_max((end_time_1 - end_time),(end_time - start_time)));
 //  }
 //  else if(_TP_CAN_DID_Len >0x7)
 //  {
@@ -3531,14 +3534,14 @@ _CANFD_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
 //    _TPgetCF_21(1);
 //    end_time=(double)timeNow()/100; 
 //    if((end_time - start_time)<= N_Cr_Time)
-//      testStepPass("","N_CrÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+//      testStepPass("","N_Crå“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
 //    else
-//      testStepFail("","N_CrÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(end_time - start_time));
+//      testStepFail("","N_Crå“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(end_time - start_time));
 //  }
 //  else
 //  {
-//    writeEx(-3,0,"ÊäÈëDIDµÄ³¤¶È¹ı¶Ì,½öµ¥Ö¡");
-//    testStep("","ËùÑ¡DID³¤¶È²»×ã,Ìø¹ıÊ±¼ä²âÊÔ");
+//    writeEx(-3,0,"è¾“å…¥DIDçš„é•¿åº¦è¿‡çŸ­,ä»…å•å¸§");
+//    testStep("","æ‰€é€‰DIDé•¿åº¦ä¸è¶³,è·³è¿‡æ—¶é—´æµ‹è¯•");
 //  }
 //  testWaitForTimeout(1000);
 //  
@@ -3559,7 +3562,7 @@ _CANFD_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
 //    _Check_NRC(0);
 //  }
 //}
-_CANFD_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
+_CANFD_TP_Time_2()/* N_Cræ—¶é—´æµ‹è¯• */
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3595,9 +3598,9 @@ _CANFD_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
       writeEx(-3,0,"%.2f ms",DiffTime);
     }
     if(Max_Time<N_Cr_Time)
-      testStepPass("","N_CrÊ±¼ä·ûºÏĞèÇó£¬×î´ó¼ä¸ôÊ±¼äÎª %d ms",Max_Time);
+      testStepPass("","N_Cræ—¶é—´ç¬¦åˆéœ€æ±‚ï¼Œæœ€å¤§é—´éš”æ—¶é—´ä¸º %d ms",Max_Time);
     else
-      testStepFail("","×î´ó¼ä¸ôÊ±¼äÎª %d ms ,´óÓÚÔ¤ÆÚÊ±¼ä %d ms",Max_Time,N_Cr_Time);
+      testStepFail("","æœ€å¤§é—´éš”æ—¶é—´ä¸º %d ms ,å¤§äºé¢„æœŸæ—¶é—´ %d ms",Max_Time,N_Cr_Time);
   }
   testWaitForTimeout(3000);
   
@@ -3624,9 +3627,9 @@ _CANFD_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
       writeEx(-3,0,"%.2f ms",DiffTime);
     }
     if(Max_Time<N_Cr_Time)
-      testStepPass("","N_CrÊ±¼ä·ûºÏĞèÇó£¬×î´ó¼ä¸ôÊ±¼äÎª %d ms",Max_Time);
+      testStepPass("","N_Cræ—¶é—´ç¬¦åˆéœ€æ±‚ï¼Œæœ€å¤§é—´éš”æ—¶é—´ä¸º %d ms",Max_Time);
     else
-      testStepFail("","×î´ó¼ä¸ôÊ±¼äÎª %d ms ,´óÓÚÔ¤ÆÚÊ±¼ä %d ms",Max_Time,N_Cr_Time);
+      testStepFail("","æœ€å¤§é—´éš”æ—¶é—´ä¸º %d ms ,å¤§äºé¢„æœŸæ—¶é—´ %d ms",Max_Time,N_Cr_Time);
   }
   testWaitForTimeout(3000);
   
@@ -3670,7 +3673,7 @@ _CANFD_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
 }
 
 
-_CANFD_TP_Time_4()/* N_CsÊ±¼ä²âÊÔ */
+_CANFD_TP_Time_4()/* N_Csæ—¶é—´æµ‹è¯• */
 {
   byte Data[8] = {0x03,0x22,0x35,0x70,0x00,0x00,0x00,0x00};
   byte Data_1[8] = {0x30,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3678,7 +3681,7 @@ _CANFD_TP_Time_4()/* N_CsÊ±¼ä²âÊÔ */
   int i,Temp_SN;
   _Get_DID_TP(Data,2);
   Data[0] = 1 + _TP_CAN_DID_Input;
-  //´ıĞŞ¸ÄÅĞ¶Ï£¬µ±Ä³¸öÏîÄ¿²»Ö§³Ö¶à¸öDID¶ÁÈ¡Ê±²âÊÔ¼ä¸ôÊ±¼ä¸ÄÎª·¢ËÍÁ÷¿ØÖ¡Ê±¼äµ½½ÓÊÕµ½µÚÒ»Ö¡ºóĞøÖ¡Ê±¼ä
+  //å¾…ä¿®æ”¹åˆ¤æ–­ï¼Œå½“æŸä¸ªé¡¹ç›®ä¸æ”¯æŒå¤šä¸ªDIDè¯»å–æ—¶æµ‹è¯•é—´éš”æ—¶é—´æ”¹ä¸ºå‘é€æµæ§å¸§æ—¶é—´åˆ°æ¥æ”¶åˆ°ç¬¬ä¸€å¸§åç»­å¸§æ—¶é—´
   _TPsendmsg_Phy(Data,elCount(Data),1);
   _TPgetFF(1);
   start_time=(double)timeNow()/100;
@@ -3689,15 +3692,15 @@ _CANFD_TP_Time_4()/* N_CsÊ±¼ä²âÊÔ */
   start_time3=(double)timeNow()/100;
   testWaitForTimeout(1000);
   if(start_time2 - start_time <= N_Cs_Time + N_Cs_Time_Tolerance)
-    testStepPass("","Á¬ĞøÖ¡1£ºN_CsÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","è¿ç»­å¸§1ï¼šN_Cså“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","Á¬ĞøÖ¡1£ºN_CsÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(start_time2 - start_time));
+    testStepFail("","è¿ç»­å¸§1ï¼šN_Cså“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(start_time2 - start_time));
   if(start_time3 - start_time2 <= N_Cs_Time + N_Cs_Time_Tolerance)
-    testStepPass("","Á¬ĞøÖ¡2£ºN_CsÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","è¿ç»­å¸§2ï¼šN_Cså“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","Á¬ĞøÖ¡2£ºN_CsÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(start_time3 - start_time2));
+    testStepFail("","è¿ç»­å¸§2ï¼šN_Cså“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(start_time3 - start_time2));
 }
-_CANFD_TP_Time_5()/* N_BrÊ±¼ä²âÊÔ */
+_CANFD_TP_Time_5()/* N_Bræ—¶é—´æµ‹è¯• */
 {
   byte Data[64] = {0x10,0x7D,0x22,0x35,0x70,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   double start_time,start_time2;
@@ -3709,13 +3712,13 @@ _CANFD_TP_Time_5()/* N_BrÊ±¼ä²âÊÔ */
   testWaitForTimeout(1000);
 
   if(start_time2 - start_time <= N_Br_Time + N_Br_Time_Tolerance)
-    testStepPass("","N_BrÏìÓ¦Ê±¼äÔÚ¹æ¶¨·¶Î§ÄÚ");
+    testStepPass("","N_Brå“åº”æ—¶é—´åœ¨è§„å®šèŒƒå›´å†…");
   else
-    testStepFail("","N_BrÏìÓ¦Ê±¼ä²»ÔÚ¹æ¶¨·¶Î§ÄÚ%.2f ms",(start_time2 - start_time));
+    testStepFail("","N_Brå“åº”æ—¶é—´ä¸åœ¨è§„å®šèŒƒå›´å†…%.2f ms",(start_time2 - start_time));
 }
 
 
-_CANFD_TP_FC_1()/* EPSÓ¦´ğÁ÷¿ØÖ¡BSÖµ²âÊÔ */
+_CANFD_TP_FC_1()/* EPSåº”ç­”æµæ§å¸§BSå€¼æµ‹è¯• */
 {
   byte Data[64] = {0x1F,0xFF,0x2e,0x3a,0x19,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
   byte Data_1[64] = {0x21,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00};
@@ -3791,7 +3794,7 @@ _CANFD_TP_FC_1()/* EPSÓ¦´ğÁ÷¿ØÖ¡BSÖµ²âÊÔ */
   
 }
 
-_CANFD_TP_Stmin_1()/* StminÖµ²âÊÔ */
+_CANFD_TP_Stmin_1()/* Stminå€¼æµ‹è¯• */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3833,10 +3836,10 @@ _CANFD_TP_Stmin_1()/* StminÖµ²âÊÔ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ms",Time_Send);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d ms",Time_Send);
       }
       else
-        testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",Stmin[j]);
+        testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",Stmin[j]);
     }
     else
     {
@@ -3845,23 +3848,23 @@ _CANFD_TP_Stmin_1()/* StminÖµ²âÊÔ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ¡À %dms",N_Cs_Time,N_Cs_Time_Tolerance);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d Â± %dms",N_Cs_Time,N_Cs_Time_Tolerance);
       }
       else if(Min_Time>=N_Cs_Time + N_Cs_Time_Tolerance)
       {
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼ä´óÓÚ %d ¡À %dms",N_Cs_Time,N_Cs_Time_Tolerance);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å¤§äº %d Â± %dms",N_Cs_Time,N_Cs_Time_Tolerance);
       }
       else
-        testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",Stmin[j]);
+        testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",Stmin[j]);
     }
     testWaitForTimeout(3000);
   }
 }
 
-_CANFD_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
+_CANFD_TP_Stmin_1_()/* Stminå€¼æµ‹è¯•_è¾¹ç•Œå€¼ */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3918,10 +3921,10 @@ _CANFD_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ms",Stmin[j]);
+        testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d ms",Stmin[j]);
       }
       else
-        testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",Stmin[j]);
+        testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",Stmin[j]);
     }
     else if(j==1)
     {
@@ -3930,10 +3933,10 @@ _CANFD_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"¼ä¸ôÊ±¼ä²»·ûºÏ %d ¡À%dms",Stmin[j],N_Cs_Time_Tolerance);
+        testStepFail(Temp_Str,"é—´éš”æ—¶é—´ä¸ç¬¦åˆ %d Â±%dms",Stmin[j],N_Cs_Time_Tolerance);
       }
       else
-        testStepPass("","¼ä¸ôÊ±¼ä·ûºÏĞèÇó %d ¡À%dms",Stmin[j],N_Cs_Time_Tolerance);
+        testStepPass("","é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ %d Â±%dms",Stmin[j],N_Cs_Time_Tolerance);
     }
     else
     {
@@ -3942,15 +3945,15 @@ _CANFD_TP_Stmin_1_()/* StminÖµ²âÊÔ_±ß½çÖµ */
         snprintf(Temp_Str,elCount(Temp_Str),"");
         for(i=0;i<3;i++)
           snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-        testStepFail(Temp_Str,"×î´ó¼ä¸ôÊ±¼ä´óÓÚ %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+        testStepFail(Temp_Str,"æœ€å¤§é—´éš”æ—¶é—´å¤§äº %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
       }
       else
-        testStepPass("","×î´ó¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»´óÓÚ %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+        testStepPass("","æœ€å¤§é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å¤§äº %d +%dms",N_Cs_Time,N_Cs_Time_Tolerance);
     }
     testWaitForTimeout(3000);
   }
 }
-_CANFD_TP_Stmin_2()/* StminÎŞĞ§²âÊÔ-us¼¶Öµ */
+_CANFD_TP_Stmin_2()/* Stminæ— æ•ˆæµ‹è¯•-usçº§å€¼ */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -3993,25 +3996,25 @@ _CANFD_TP_Stmin_2()/* StminÎŞĞ§²âÊÔ-us¼¶Öµ */
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %.2f ms",_us);
+      testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %.2f ms",_us);
     }
     else
-      testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %.2f ms",_us);
+      testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %.2f ms",_us);
     if(Max_Time>=N_Cr_Time)
     {
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×î´ó¼ä¸ôÊ±¼ä´óÓÚ %d ms",N_Cr_Time);
+      testStepFail(Temp_Str,"æœ€å¤§é—´éš”æ—¶é—´å¤§äº %d ms",N_Cr_Time);
     }
     else
-      testStepPass("","×î´ó¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»´óÓÚ %d ms",N_Cr_Time);
+      testStepPass("","æœ€å¤§é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å¤§äº %d ms",N_Cr_Time);
     
     testWaitForTimeout(3000);
   }
 }
 
-_CANFD_TP_Stmin_3()/* StminÎŞĞ§²âÊÔ-±£ÁôÖµ */
+_CANFD_TP_Stmin_3()/* Stminæ— æ•ˆæµ‹è¯•-ä¿ç•™å€¼ */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -4049,23 +4052,23 @@ _CANFD_TP_Stmin_3()/* StminÎŞĞ§²âÊÔ-±£ÁôÖµ */
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ¡À%dms",N_Cs_Time,N_Cs_Time_Tolerance);
+      testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d Â±%dms",N_Cs_Time,N_Cs_Time_Tolerance);
     }
     else
-      testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇó²»Ğ¡ÓÚ %d ms",N_Cs_Time);
+      testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚ä¸å°äº %d ms",N_Cs_Time);
     
     testWaitForTimeout(3000);
   }
 }
 
-_CANFD_TP_FC_2() /*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄÁ÷¿ØÖ¡ÖĞµÄBSºÍSTmin*/
+_CANFD_TP_FC_2() /*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„æµæ§å¸§ä¸­çš„BSå’ŒSTmin*/
 {
   byte Data[64] = {0x10,0xBC,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   _Get_DID_TP(Data,3);
   _TPsendmsg_Phy(Data,elcount(Data),1);
   _TPgetFC(0x30);
 }
-_CANFD_TP_FC_2_() /*È·ÈÏ¿ØÖÆÆ÷µÄÁ÷¿ØÖÆÖ¡²ÎÊıSTminÓĞĞ§*/
+_CANFD_TP_FC_2_() /*ç¡®è®¤æ§åˆ¶å™¨çš„æµæ§åˆ¶å¸§å‚æ•°STminæœ‰æ•ˆ*/
 {
   byte Data[64] = {0x10,0xFB,0x22,0x80,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
   byte Data_1[64] = {0x21,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11,0x11};
@@ -4080,14 +4083,14 @@ _CANFD_TP_FC_2_() /*È·ÈÏ¿ØÖÆÆ÷µÄÁ÷¿ØÖÆÖ¡²ÎÊıSTminÓĞĞ§*/
   }
   _Check_NRC(0);
 }
-_CANFD_TP_FC_3() /*ÉÏÎ»»úÊÕµ½Ê×Ö¡ºó,²»·¢ËÍÁ÷¿ØÖ¡*/
+_CANFD_TP_FC_3() /*ä¸Šä½æœºæ”¶åˆ°é¦–å¸§å,ä¸å‘é€æµæ§å¸§*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
   _TPgetFF(1);
   _Check_NoResponse(500);
 }
-_CANFD_TP_FC_4()/* ÉÏÎ»»úÊÕµ½Ê×Ö¡ºó,ÖØ¸´·¢ËÍÁ÷¿ØÖ¡ */
+_CANFD_TP_FC_4()/* ä¸Šä½æœºæ”¶åˆ°é¦–å¸§å,é‡å¤å‘é€æµæ§å¸§ */
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x28,0x55,0x55,0x55,0x55,0x55};
@@ -4123,23 +4126,23 @@ _CANFD_TP_FC_4()/* ÉÏÎ»»úÊÕµ½Ê×Ö¡ºó,ÖØ¸´·¢ËÍÁ÷¿ØÖ¡ */
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼äĞ¡ÓÚ %d ms,²»·ûºÏµÚÒ»Ö¡Á÷¿ØÖ¡Öµ",N_Cs_Time);
+      testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å°äº %d ms,ä¸ç¬¦åˆç¬¬ä¸€å¸§æµæ§å¸§å€¼",N_Cs_Time);
     }
     if(Min_Time>=N_Cs_Time + N_Cs_Time_Tolerance)
     {
       snprintf(Temp_Str,elCount(Temp_Str),"");
       for(i=0;i<3;i++)
         snprintf(Temp_Str,elCount(Temp_Str),"%s 0x%02X",Temp_Str,Data_Send_2[i]);
-      testStepFail(Temp_Str,"×îĞ¡¼ä¸ôÊ±¼ä´óÓÚ %d ms,²»·ûºÏµÚÒ»Ö¡Á÷¿ØÖ¡Öµ",N_Cs_Time);
+      testStepFail(Temp_Str,"æœ€å°é—´éš”æ—¶é—´å¤§äº %d ms,ä¸ç¬¦åˆç¬¬ä¸€å¸§æµæ§å¸§å€¼",N_Cs_Time);
     }
     else
-      testStepPass("","×îĞ¡¼ä¸ôÊ±¼ä·ûºÏĞèÇóÔÚ %d ¡À %dmsÄÚ,·ûºÏµÚÒ»Ö¡Á÷¿ØÖ¡Öµ",N_Cs_Time,N_Cs_Time_Tolerance);
+      testStepPass("","æœ€å°é—´éš”æ—¶é—´ç¬¦åˆéœ€æ±‚åœ¨ %d Â± %dmså†…,ç¬¦åˆç¬¬ä¸€å¸§æµæ§å¸§å€¼",N_Cs_Time,N_Cs_Time_Tolerance);
     
     testWaitForTimeout(1000);
   }
 }
 
-_CANFD_TP_FC_5() /*³¤¶È²»ÕıÈ·Á÷¿ØÖÆÖ¡*/
+_CANFD_TP_FC_5() /*é•¿åº¦ä¸æ­£ç¡®æµæ§åˆ¶å¸§*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -4151,7 +4154,7 @@ _CANFD_TP_FC_5() /*³¤¶È²»ÕıÈ·Á÷¿ØÖÆÖ¡*/
   _TPsendmsg_Phy(Data_Send_2,6,1);
   _Check_NoResponse(500);
 }
-_CANFD_TP_FC_6() /*ÉÏÎ»»ú·¢ËÍ¹¦ÄÜÑ°Ö·Á÷¿ØÖ¡*/
+_CANFD_TP_FC_6() /*ä¸Šä½æœºå‘é€åŠŸèƒ½å¯»å€æµæ§å¸§*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -4163,7 +4166,7 @@ _CANFD_TP_FC_6() /*ÉÏÎ»»ú·¢ËÍ¹¦ÄÜÑ°Ö·Á÷¿ØÖ¡*/
   _TPsendmsg_Fun(Data_Send_2,elcount(Data_Send_2),1);
   _Check_NoResponse(500);
 }
-_CANFD_TP_FC_7() /*Á÷¿ØÖÆ×´Ì¬ÎªOVFLWÒç³ö*/
+_CANFD_TP_FC_7() /*æµæ§åˆ¶çŠ¶æ€ä¸ºOVFLWæº¢å‡º*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x32,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -4176,7 +4179,7 @@ _CANFD_TP_FC_7() /*Á÷¿ØÖÆ×´Ì¬ÎªOVFLWÒç³ö*/
   _Check_NoResponse(500);
 }
 
-_CANFD_TP_FC_8() /*¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ*/
+_CANFD_TP_FC_8() /*æ§åˆ¶å™¨æ”¶åˆ°çš„BlockSizeæµ‹è¯•*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -4208,9 +4211,9 @@ _CANFD_TP_FC_8() /*¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ*/
       }
       Fal = _Check_NoResponse_(500);
       if(Fal == -1)
-        testStepFail("","0x%02X BlockSize¿éÊÕµ½³¬¹ıÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepFail("","0x%02X BlockSizeå—æ”¶åˆ°è¶…è¿‡é¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
       else
-        testStepPass("","0x%02X BlockSize¿éÊÕµ½·ûºÏÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepPass("","0x%02X BlockSizeå—æ”¶åˆ°ç¬¦åˆé¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
     }
     else
     {
@@ -4218,16 +4221,16 @@ _CANFD_TP_FC_8() /*¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ*/
         _Check_TPgetCF(1,FF_DL,i);
       Fal = _Check_NoResponse_(500);
       if(Fal == -1)
-        testStepFail("","0x%02X BlockSize¿éÊÕµ½³¬¹ıÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepFail("","0x%02X BlockSizeå—æ”¶åˆ°è¶…è¿‡é¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
       else
-        testStepPass("","0x%02X BlockSize¿éÊÕµ½·ûºÏÔ¤ÆÚµÄÁ÷¿ØÖ¡ÊıÁ¿",BlockSize[j]);
+        testStepPass("","0x%02X BlockSizeå—æ”¶åˆ°ç¬¦åˆé¢„æœŸçš„æµæ§å¸§æ•°é‡",BlockSize[j]);
     
     }
     testWaitForTimeout(3000);
   }
 }
 
-_CANFD_TP_FC_10() /*ÎŞĞ§Á÷¿ØÖÆÖ¡-FSÎŞĞ§Öµ*/
+_CANFD_TP_FC_10() /*æ— æ•ˆæµæ§åˆ¶å¸§-FSæ— æ•ˆå€¼*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -4247,7 +4250,7 @@ _CANFD_TP_FC_10() /*ÎŞĞ§Á÷¿ØÖÆÖ¡-FSÎŞĞ§Öµ*/
   _Check_NoResponse(500);
 }
 
-_CANFD_TP_FC_11() /*µÈ´ıÁ÷¿ØÖÆÖ¡*/
+_CANFD_TP_FC_11() /*ç­‰å¾…æµæ§åˆ¶å¸§*/
 {
   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
   byte Data_Send_2[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
@@ -4277,14 +4280,14 @@ _CANFD_TP_FC_11() /*µÈ´ıÁ÷¿ØÖÆÖ¡*/
   testWaitForTimeout(2000);
 }
 
-_CANFD_TP_FC_12() /*Á÷¿ØÖ¡ÇëÇó²âÊÔ*/
+_CANFD_TP_FC_12() /*æµæ§å¸§è¯·æ±‚æµ‹è¯•*/
 {
   byte Data_Send_1[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
   
   _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
   _TPgetFF(0);
 }
-_CANFD_TP_FC_13() /*·¢ËÍÎ´ÖªÀàĞÍµÄÕï¶ÏÖ¡*/
+_CANFD_TP_FC_13() /*å‘é€æœªçŸ¥ç±»å‹çš„è¯Šæ–­å¸§*/
 {
   byte Data_Send_1[8] = {0x66,0x66,0x66,0x66,0x66,0x66,0x66,0x66};
   
@@ -4293,308 +4296,308 @@ _CANFD_TP_FC_13() /*·¢ËÍÎ´ÖªÀàĞÍµÄÕï¶ÏÖ¡*/
 }
 
 
-testcase Can_TP_SF_1()/*µ¥Ö¡ÇëÇó±¨ÎÄSF_DL´íÎó²âÊÔ*/
+testcase Can_TP_SF_1()/*å•å¸§è¯·æ±‚æŠ¥æ–‡SF_DLé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_SF_1();
   End_TP();
 }
-testcase Can_TP_SF_2()/*µ¥Ö¡ÇëÇóCANÖ¡±¨ÎÄµÄDLC´íÎó²âÊÔ*/
+testcase Can_TP_SF_2()/*å•å¸§è¯·æ±‚CANå¸§æŠ¥æ–‡çš„DLCé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_SF_2();
   End_TP();
 }
-testcase Can_TP_SF_3() /*µ¥Ö¡ÇëÇóCANÖ¡±¨ÎÄµÄDLC´íÎó²âÊÔ*/
+testcase Can_TP_SF_3() /*å•å¸§è¯·æ±‚CANå¸§æŠ¥æ–‡çš„DLCé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_SF_3();
   End_TP();
 }
-testcase Can_TP_SF_4()/*µ¥Ö¡ÇëÇóCANÖ¡±¨ÎÄµÄDLC´íÎó²âÊÔ*/
+testcase Can_TP_SF_4()/*å•å¸§è¯·æ±‚CANå¸§æŠ¥æ–‡çš„DLCé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_SF_4();
   End_TP();
 }
-testcase Can_TP_SF_5() /*Ğ­Òé¿ØÖÆĞÅÏ¢ÎªFFµÄµ¥Ö¡ÇëÇó±¨ÎÄ²âÊÔ*/
+testcase Can_TP_SF_5() /*åè®®æ§åˆ¶ä¿¡æ¯ä¸ºFFçš„å•å¸§è¯·æ±‚æŠ¥æ–‡æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_SF_5();
   End_TP();
 }
-testcase Can_TP_SF_6()/*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄµ¥Ö¡ÏìÓ¦±¨ÎÄSF_DLÓĞĞ§*/
+testcase Can_TP_SF_6()/*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„å•å¸§å“åº”æŠ¥æ–‡SF_DLæœ‰æ•ˆ*/
 {
   Init_TP();
   _CAN_TP_SF_6();
   End_TP();
 }
-testcase Can_TP_SF_7()/*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄµ¥Ö¡ÏìÓ¦±¨ÎÄSF_DLÓĞĞ§*/
+testcase Can_TP_SF_7()/*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„å•å¸§å“åº”æŠ¥æ–‡SF_DLæœ‰æ•ˆ*/
 {
   Init_TP();
   _CAN_TP_SF_7();
   End_TP();
 }
-testcase Can_TP_FF_1()/*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+testcase Can_TP_FF_1()/*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_FF_1();
   End_TP();
 }
-testcase Can_TP_FF_2()/*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+testcase Can_TP_FF_2()/*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_FF_2();
   End_TP();
 }
-testcase Can_TP_FF_3()/*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+testcase Can_TP_FF_3()/*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_FF_3();
   End_TP();
 }
-testcase Can_TP_FF_4()/*¹¦ÄÜÑ°Ö·ÇëÇóÊ×Ö¡²âÊÔ*/
+testcase Can_TP_FF_4()/*åŠŸèƒ½å¯»å€è¯·æ±‚é¦–å¸§æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_FF_4();
   End_TP();
 }
-testcase Can_TP_FF_5()/*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄÊ×Ö¡ÏìÓ¦±¨ÎÄFF_DL*/
+testcase Can_TP_FF_5()/*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„é¦–å¸§å“åº”æŠ¥æ–‡FF_DL*/
 {
   Init_TP();
   _CAN_TP_FF_5();
   End_TP();
 }
-testcase Can_TP_CF_1()/*Í£Ö¹·¢ËÍºóĞø²¿·ÖÁ¬ĞøÖ¡*/
+testcase Can_TP_CF_1()/*åœæ­¢å‘é€åç»­éƒ¨åˆ†è¿ç»­å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_1();
   End_TP();
 }
-testcase Can_TP_CF_2()/*²»·¢ËÍËùÓĞÁ¬ĞøÖ¡*/
+testcase Can_TP_CF_2()/*ä¸å‘é€æ‰€æœ‰è¿ç»­å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_2();
   End_TP();
 }
-testcase Can_TP_CF_3()/*²»·¢ËÍÄ³Á¬ĞøÖ¡*/
+testcase Can_TP_CF_3()/*ä¸å‘é€æŸè¿ç»­å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_3();
   End_TP();
 }
-testcase Can_TP_CF_4()/*ÖØ¸´·¢ËÍµÚÒ»¸öÁ¬ĞøÖ¡*/
+testcase Can_TP_CF_4()/*é‡å¤å‘é€ç¬¬ä¸€ä¸ªè¿ç»­å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_4();
   End_TP();
 }
-testcase Can_TP_CF_5()/*¶àÖ¡ÇëÇó±¨ÎÄÁ¬ĞøÖ¡DLC´íÎó*/
+testcase Can_TP_CF_5()/*å¤šå¸§è¯·æ±‚æŠ¥æ–‡è¿ç»­å¸§DLCé”™è¯¯*/
 {
   Init_TP();
   _CAN_TP_CF_5();
   End_TP();
 }
-testcase Can_TP_CF_7()/*´íÎóÁ¬ĞøÖ¡±¨ÎÄ*/
+testcase Can_TP_CF_7()/*é”™è¯¯è¿ç»­å¸§æŠ¥æ–‡*/
 {
   Init_TP();
   _CAN_TP_CF_7();
   End_TP();
 }
-testcase Can_TP_CF_8()/*ºóĞøÖ¡ÇëÇó²âÊÔ*/
+testcase Can_TP_CF_8()/*åç»­å¸§è¯·æ±‚æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_CF_8();
   End_TP();
 }
-testcase Can_TP_CF_9()/*È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄÁ÷¿ØÖ¡ÖĞµÄBSºÍSTmin*/
+testcase Can_TP_CF_9()/*ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„æµæ§å¸§ä¸­çš„BSå’ŒSTmin*/
 {
   Init_TP();
   _CAN_TP_CF_9();
   End_TP();
 }
-testcase Can_TP_CF_10()/*Á¬ĞøÖ¡SNÖµ²âÊÔ*/ 
+testcase Can_TP_CF_10()/*è¿ç»­å¸§SNå€¼æµ‹è¯•*/ 
 {
   Init_TP();
   _CAN_TP_CF_10();
   End_TP();
 }
-testcase Can_TP_CF_11()/*È·ÈÏ¿ØÖÆÆ÷µÄÁ÷¿ØÖÆÖ¡²ÎÊıSTminÓĞĞ§*/
+testcase Can_TP_CF_11()/*ç¡®è®¤æ§åˆ¶å™¨çš„æµæ§åˆ¶å¸§å‚æ•°STminæœ‰æ•ˆ*/
 {
   Init_TP();
   _CAN_TP_CF_11();
   End_TP();
 }
-testcase Can_TP_CF_12()/*²»·¢ËÍÁ÷¿ØÖÆÖ¡*/
+testcase Can_TP_CF_12()/*ä¸å‘é€æµæ§åˆ¶å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_12();
   End_TP();
 }
-testcase Can_TP_CF_13()/*ÖØ¸´·¢ËÍÁ÷¿ØÖÆÖ¡*/
+testcase Can_TP_CF_13()/*é‡å¤å‘é€æµæ§åˆ¶å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_13();
   End_TP();
 }
-testcase Can_TP_CF_14()/*³¤¶È²»ÕıÈ·Á÷¿ØÖÆÖ¡*/
+testcase Can_TP_CF_14()/*é•¿åº¦ä¸æ­£ç¡®æµæ§åˆ¶å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_14();
   End_TP();
 }
-testcase Can_TP_CF_15()/*¹¦ÄÜÑ°Ö·Á÷¿ØÖÆÖ¡*/
+testcase Can_TP_CF_15()/*åŠŸèƒ½å¯»å€æµæ§åˆ¶å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_15();
   End_TP();
 }
-testcase Can_TP_CF_16()/*ÎŞĞ§Á÷¿ØÖÆÖ¡-FSÎŞĞ§Öµ*/
+testcase Can_TP_CF_16()/*æ— æ•ˆæµæ§åˆ¶å¸§-FSæ— æ•ˆå€¼*/
 {
   Init_TP();
   _CAN_TP_CF_16();
   End_TP();
 }
-testcase Can_TP_CF_17()/*Á÷¿ØÖ¡ÇëÇó²âÊÔ*/
+testcase Can_TP_CF_17()/*æµæ§å¸§è¯·æ±‚æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_CF_17();
   End_TP();
 }
-testcase Can_TP_CF_18()/*Á÷¿ØÖÆ×´Ì¬ÎªOVFLWÒç³ö*/
+testcase Can_TP_CF_18()/*æµæ§åˆ¶çŠ¶æ€ä¸ºOVFLWæº¢å‡º*/
 {
   Init_TP();
   _CAN_TP_CF_18();
   End_TP();
 }
-testcase Can_TP_CF_19()/*µÈ´ıÁ÷¿ØÖÆÖ¡*/
+testcase Can_TP_CF_19()/*ç­‰å¾…æµæ§åˆ¶å¸§*/
 {
   Init_TP();
   _CAN_TP_CF_19();
   End_TP();
 }
-testcase Can_TP_CF_20()/*Î´ÖªÇëÇó±¨ÎÄ²âÊÔ*/
+testcase Can_TP_CF_20()/*æœªçŸ¥è¯·æ±‚æŠ¥æ–‡æµ‹è¯•*/
 {
   Init_TP();
   _CAN_TP_CF_20();
   End_TP();
 }
-testcase Can_TP_Disturb_1()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+testcase Can_TP_Disturb_1()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_1();
   End_TP();
 }
-testcase Can_TP_Disturb_2()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+testcase Can_TP_Disturb_2()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_2();
   End_TP();
 }
-testcase Can_TP_Disturb_3()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ¬ĞøÖ¡¸ÉÈÅ*/
+testcase Can_TP_Disturb_3()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸè¿ç»­å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_3();
   End_TP();
 }
-testcase Can_TP_Disturb_4()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ÷¿ØÖÆÖ¡¸ÉÈÅ*/
+testcase Can_TP_Disturb_4()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæµæ§åˆ¶å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_4();
   End_TP();
 }
-testcase Can_TP_Disturb_5() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÎ´Öª±¨ÎÄ¸ÉÈÅ*/
+testcase Can_TP_Disturb_5() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_5();
   End_TP();
 }
-testcase Can_TP_Disturb_6() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+testcase Can_TP_Disturb_6() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_6();
   End_TP();
 }
-testcase Can_TP_Disturb_7() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+testcase Can_TP_Disturb_7() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_7();
   End_TP();
 }
-testcase Can_TP_Disturb_8()/*ÎÕÊÖÃüÁî¸ÉÈÅ¶àÖ¡ÇëÇó*/
+testcase Can_TP_Disturb_8()/*æ¡æ‰‹å‘½ä»¤å¹²æ‰°å¤šå¸§è¯·æ±‚*/
 {
   Init_TP();
   _CAN_TP_Disturb_8();
   End_TP();
 }
-testcase Can_TP_Disturb_9()/*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Á÷¿ØÖÆ±¨ÎÄ¸ÉÈÅ*/
+testcase Can_TP_Disturb_9()/*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æµæ§åˆ¶æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_9();
   End_TP();
 }
-testcase Can_TP_Disturb_10()/*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Î´Öª±¨ÎÄ¸ÉÈÅ*/
+testcase Can_TP_Disturb_10()/*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CAN_TP_Disturb_10();
   End_TP();
 }
-testcase Can_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
+testcase Can_TP_Time_1()/* N_Bsæ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CAN_TP_Time_1();
   End_TP();
 }
-testcase Can_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
+testcase Can_TP_Time_2()/* N_Cræ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CAN_TP_Time_2();
   End_TP();
 }
-testcase Can_TP_Time_3()/* BSÖµ²âÊÔ */
+testcase Can_TP_Time_3()/* BSå€¼æµ‹è¯• */
 {
   Init_TP();
   _CAN_TP_Time_3();
   End_TP();
 }
-testcase Can_TP_Time_4()/* N_CsÊ±¼ä²âÊÔ */
+testcase Can_TP_Time_4()/* N_Csæ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CAN_TP_Time_4();
   End_TP();
 }
-testcase Can_TP_Time_5()/* N_BrÊ±¼ä²âÊÔ */
+testcase Can_TP_Time_5()/* N_Bræ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CAN_TP_Time_5();
   End_TP();
 }
 
-testcase Can_TP_Stmin_1()/* StminÖµ²âÊÔ */
+testcase Can_TP_Stmin_1()/* Stminå€¼æµ‹è¯• */
 {
   Init_TP();
   _CAN_TP_Stmin_1();
   End_TP();
 }
-testcase Can_TP_Stmin_1_()/* StminÖµ²âÊÔ-±ß½çÖµ */
+testcase Can_TP_Stmin_1_()/* Stminå€¼æµ‹è¯•-è¾¹ç•Œå€¼ */
 {
   Init_TP();
   _CAN_TP_Stmin_1_();
   End_TP();
 }
-testcase Can_TP_Stmin_2()/* StminÎŞĞ§²âÊÔ-us¼¶Öµ */
+testcase Can_TP_Stmin_2()/* Stminæ— æ•ˆæµ‹è¯•-usçº§å€¼ */
 {
   Init_TP();
   _CAN_TP_Stmin_2();
   End_TP();
 }
-testcase Can_TP_Stmin_3()/* StminÎŞĞ§²âÊÔ-±£ÁôÖµ */
+testcase Can_TP_Stmin_3()/* Stminæ— æ•ˆæµ‹è¯•-ä¿ç•™å€¼ */
 {
   Init_TP();
   _CAN_TP_Stmin_3();
   End_TP();
 }
-testcase Can_TP_FC_8()/* ¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ */
+testcase Can_TP_FC_8()/* æ§åˆ¶å™¨æ”¶åˆ°çš„BlockSizeæµ‹è¯• */
 {
   Init_TP();
   _CAN_TP_FC_8();
@@ -4602,73 +4605,73 @@ testcase Can_TP_FC_8()/* ¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ */
 }
 /************************CANFD********************/
 
-testcase CanFD_TP_SF_1() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL¡Ü8£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_1() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DLâ‰¤8ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_1();
   End_TP();
 }
-testcase CanFD_TP_SF_2() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=12£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_2() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=12ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_2();
   End_TP();
 }
-testcase CanFD_TP_SF_3() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=16£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_3() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=16ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_3();
   End_TP();
 }
-testcase CanFD_TP_SF_4() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=20£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_4() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=20ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_4();
   End_TP();
 }
-testcase CanFD_TP_SF_5() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=24£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_5() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=24ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_5();
   End_TP();
 }
-testcase CanFD_TP_SF_6() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=32£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_6() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=32ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_6();
   End_TP();
 }
-testcase CanFD_TP_SF_7() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=48£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_7() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=48ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_7();
   End_TP();
 }
-testcase CanFD_TP_SF_8() /*µ¥Ö¡ÇëÇó±¨ÎÄ£¨CAN_DL=64£©SF_DL²âÊÔ*/
+testcase CanFD_TP_SF_8() /*å•å¸§è¯·æ±‚æŠ¥æ–‡ï¼ˆCAN_DL=64ï¼‰SF_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_SF_8();
   End_TP();
 }
-testcase CanFD_TP_SF_9() /*Ğ­Òé¿ØÖÆĞÅÏ¢ÎªFFµÄµ¥Ö¡ÇëÇó±¨ÎÄ²âÊÔ(CAN_DL)*/
+testcase CanFD_TP_SF_9() /*åè®®æ§åˆ¶ä¿¡æ¯ä¸ºFFçš„å•å¸§è¯·æ±‚æŠ¥æ–‡æµ‹è¯•(CAN_DL)*/
 {
   Init_TP();
   _CANFD_TP_SF_9();
   End_TP();
 }
-testcase CanFD_TP_FF_1() /*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+testcase CanFD_TP_FF_1() /*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_FF_1();
   End_TP();
 }
-testcase CanFD_TP_FF_2() /*Ê×Ö¡ÇëÇó±¨ÎÄFF_DL´íÎó²âÊÔ*/
+testcase CanFD_TP_FF_2() /*é¦–å¸§è¯·æ±‚æŠ¥æ–‡FF_DLé”™è¯¯æµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_FF_2();
   End_TP();
 }
-testcase CanFD_TP_FF_3() /*¹¦ÄÜÑ°Ö·ÇëÇóÊ×Ö¡²âÊÔ*/
+testcase CanFD_TP_FF_3() /*åŠŸèƒ½å¯»å€è¯·æ±‚é¦–å¸§æµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_FF_3();
@@ -4686,236 +4689,236 @@ testcase CanFD_TP_FF_5() /*FF_DL>4095*/
   _CANFD_TP_FF_5();
   End_TP();
 }
-testcase CanFD_TP_CF_1() /*Í£Ö¹·¢ËÍºóĞø²¿·ÖÁ¬ĞøÖ¡*/
+testcase CanFD_TP_CF_1() /*åœæ­¢å‘é€åç»­éƒ¨åˆ†è¿ç»­å¸§*/
 {
   Init_TP();
   _CANFD_TP_CF_1();
   End_TP();
 }
-testcase CanFD_TP_CF_2() /*²»·¢ËÍËùÓĞÁ¬ĞøÖ¡*/
+testcase CanFD_TP_CF_2() /*ä¸å‘é€æ‰€æœ‰è¿ç»­å¸§*/
 {
   Init_TP();
   _CANFD_TP_CF_2();
   End_TP();
 }
-testcase CanFD_TP_CF_3() /*²»·¢ËÍÄ³Á¬ĞøÖ¡*/
+testcase CanFD_TP_CF_3() /*ä¸å‘é€æŸè¿ç»­å¸§*/
 {
   Init_TP();
   _CANFD_TP_CF_3();
   End_TP();
 }
-testcase CanFD_TP_CF_4() /*ÖØ¸´·¢ËÍµÚÒ»¸öÁ¬ĞøÖ¡*/
+testcase CanFD_TP_CF_4() /*é‡å¤å‘é€ç¬¬ä¸€ä¸ªè¿ç»­å¸§*/
 {
   Init_TP();
   _CANFD_TP_CF_4();
   End_TP();
 }
-testcase CanFD_TP_CF_6() /*SN>15´Ó1¿ªÊ¼*/
+testcase CanFD_TP_CF_6() /*SN>15ä»1å¼€å§‹*/
 {
   Init_TP();
   _CANFD_TP_CF_6();
   End_TP();
 }
-testcase CanFD_TP_CF_7() /*´íÎóÁ¬ĞøÖ¡±¨ÎÄ*/
+testcase CanFD_TP_CF_7() /*é”™è¯¯è¿ç»­å¸§æŠ¥æ–‡*/
 {
   Init_TP();
   _CANFD_TP_CF_7();
   End_TP();
 }
-testcase CanFD_TP_CF_8() /*ºóĞøÖ¡ÇëÇó²âÊÔ*/
+testcase CanFD_TP_CF_8() /*åç»­å¸§è¯·æ±‚æµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_CF_8();
   End_TP();
 }
-testcase CanFD_TP_CF_9() /*×îºóÒ»¸öÁ¬ĞøÖ¡CAN_DL²âÊÔ*/
+testcase CanFD_TP_CF_9() /*æœ€åä¸€ä¸ªè¿ç»­å¸§CAN_DLæµ‹è¯•*/
 {
   Init_TP();
   _CANFD_TP_CF_9();
   End_TP();
 }
-testcase CanFD_TP_Disturb_1()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_1()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_1();
   End_TP();
 }
-testcase CanFD_TP_Disturb_2()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_2()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸå¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_2();
   End_TP();
 }
-testcase CanFD_TP_Disturb_3()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ¬ĞøÖ¡¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_3()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸè¿ç»­å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_3();
   End_TP();
 }
-testcase CanFD_TP_Disturb_4()/*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÁ÷¿ØÖÆÖ¡¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_4()/*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæµæ§åˆ¶å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_4();
   End_TP();
 }
-testcase CanFD_TP_Disturb_5() /*¿ØÖÆÆ÷¶àÖ¡·¢ËÍ±»·ÇÔ¤ÆÚÎ´Öª±¨ÎÄ¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_5() /*æ§åˆ¶å™¨å¤šå¸§å‘é€è¢«éé¢„æœŸæœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_5();
   End_TP();
 }
-testcase CanFD_TP_Disturb_6() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄµ¥Ö¡ÇëÇó±¨ÎÄ¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_6() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å•å¸§è¯·æ±‚æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_6();
   End_TP();
 }
-testcase CanFD_TP_Disturb_7() /*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»ĞÂµÄ¶àÖ¡ÇëÇó±¨ÎÄµÚÒ»Ö¡¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_7() /*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æ–°çš„å¤šå¸§è¯·æ±‚æŠ¥æ–‡ç¬¬ä¸€å¸§å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_7();
   End_TP();
 }
-testcase CanFD_TP_Disturb_8()/*ÎÕÊÖÃüÁî¸ÉÈÅ¶àÖ¡ÇëÇó*/
+testcase CanFD_TP_Disturb_8()/*æ¡æ‰‹å‘½ä»¤å¹²æ‰°å¤šå¸§è¯·æ±‚*/
 {
   Init_TP();
   _CANFD_TP_Disturb_8();
   End_TP();
 }
-testcase CanFD_TP_Disturb_9()/*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Á÷¿ØÖÆ±¨ÎÄ¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_9()/*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æµæ§åˆ¶æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_9();
   End_TP();
 }
-testcase CanFD_TP_Disturb_10()/*¿ØÖÆÆ÷¶àÖ¡½ÓÊÕ±»Î´Öª±¨ÎÄ¸ÉÈÅ*/
+testcase CanFD_TP_Disturb_10()/*æ§åˆ¶å™¨å¤šå¸§æ¥æ”¶è¢«æœªçŸ¥æŠ¥æ–‡å¹²æ‰°*/
 {
   Init_TP();
   _CANFD_TP_Disturb_10();
   End_TP();
 }
-testcase CanFD_TP_Time_1()/* N_BsÊ±¼ä²âÊÔ */
+testcase CanFD_TP_Time_1()/* N_Bsæ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_Time_1();
   End_TP();
 }
-testcase CanFD_TP_Time_2()/* N_CrÊ±¼ä²âÊÔ */
+testcase CanFD_TP_Time_2()/* N_Cræ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_Time_2();
   End_TP();
 }
-testcase CanFD_TP_Time_3()/* EPSÓ¦´ğÁ÷¿ØÖ¡BSÖµ²âÊÔ */
+testcase CanFD_TP_Time_3()/* EPSåº”ç­”æµæ§å¸§BSå€¼æµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_FC_1();
   End_TP();
 }
-testcase CanFD_TP_Time_4()/* N_CsÊ±¼ä²âÊÔ */
+testcase CanFD_TP_Time_4()/* N_Csæ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_Time_4();
   End_TP();
 }
-testcase CanFD_TP_Time_5()/* N_BrÊ±¼ä²âÊÔ */
+testcase CanFD_TP_Time_5()/* N_Bræ—¶é—´æµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_Time_5();
   End_TP();
 }
 
-testcase CANFD_TP_Stmin_1()/* StminÖµ²âÊÔ */
+testcase CANFD_TP_Stmin_1()/* Stminå€¼æµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_Stmin_1();
   End_TP();
 }
-testcase CANFD_TP_Stmin_1_()/* StminÖµ²âÊÔ-±ß½çÖµ */
+testcase CANFD_TP_Stmin_1_()/* Stminå€¼æµ‹è¯•-è¾¹ç•Œå€¼ */
 {
   Init_TP();
   _CANFD_TP_Stmin_1_();
   End_TP();
 }
-testcase CANFD_TP_Stmin_2()/* StminÎŞĞ§²âÊÔ-us¼¶Öµ */
+testcase CANFD_TP_Stmin_2()/* Stminæ— æ•ˆæµ‹è¯•-usçº§å€¼ */
 {
   Init_TP();
   _CANFD_TP_Stmin_2();
   End_TP();
 }
-testcase CANFD_TP_Stmin_3()/* StminÎŞĞ§²âÊÔ-±£ÁôÖµ */
+testcase CANFD_TP_Stmin_3()/* Stminæ— æ•ˆæµ‹è¯•-ä¿ç•™å€¼ */
 {
   Init_TP();
   _CANFD_TP_Stmin_3();
   End_TP();
 }
-testcase CANFD_TP_FC_2()/* È·ÈÏ¿ØÖÆÆ÷·¢ËÍµÄÁ÷¿ØÖ¡ÖĞµÄBSºÍSTmin */
+testcase CANFD_TP_FC_2()/* ç¡®è®¤æ§åˆ¶å™¨å‘é€çš„æµæ§å¸§ä¸­çš„BSå’ŒSTmin */
 {
   Init_TP();
   _CANFD_TP_FC_2();
   End_TP();
 }
-testcase CANFD_TP_FC_2_()/* È·ÈÏ¿ØÖÆÆ÷µÄÁ÷¿ØÖÆÖ¡²ÎÊıSTminÓĞĞ§ */
+testcase CANFD_TP_FC_2_()/* ç¡®è®¤æ§åˆ¶å™¨çš„æµæ§åˆ¶å¸§å‚æ•°STminæœ‰æ•ˆ */
 {
   Init_TP();
   _CANFD_TP_FC_2_();
   End_TP();
 }
-testcase CANFD_TP_FC_3()/* ÉÏÎ»»úÊÕµ½Ê×Ö¡ºó,²»·¢ËÍÁ÷¿ØÖ¡ */
+testcase CANFD_TP_FC_3()/* ä¸Šä½æœºæ”¶åˆ°é¦–å¸§å,ä¸å‘é€æµæ§å¸§ */
 {
   Init_TP();
   _CANFD_TP_FC_3();
   End_TP();
 }
-testcase CANFD_TP_FC_4()/* ÉÏÎ»»úÊÕµ½Ê×Ö¡ºó,ÖØ¸´·¢ËÍÁ÷¿ØÖ¡ */
+testcase CANFD_TP_FC_4()/* ä¸Šä½æœºæ”¶åˆ°é¦–å¸§å,é‡å¤å‘é€æµæ§å¸§ */
 {
   Init_TP();
   _CANFD_TP_FC_4();
   End_TP();
 }
-testcase CANFD_TP_FC_5()/* ³¤¶È²»ÕıÈ·Á÷¿ØÖÆÖ¡ */
+testcase CANFD_TP_FC_5()/* é•¿åº¦ä¸æ­£ç¡®æµæ§åˆ¶å¸§ */
 {
   Init_TP();
   _CANFD_TP_FC_5();
   End_TP();
 }
-testcase CANFD_TP_FC_6()/* ÉÏÎ»»ú·¢ËÍ¹¦ÄÜÑ°Ö·Á÷¿ØÖ¡ */
+testcase CANFD_TP_FC_6()/* ä¸Šä½æœºå‘é€åŠŸèƒ½å¯»å€æµæ§å¸§ */
 {
   Init_TP();
   _CANFD_TP_FC_6();
   End_TP();
 }
-testcase CANFD_TP_FC_7()/* Á÷¿ØÖÆ×´Ì¬ÎªOVFLWÒç³ö */
+testcase CANFD_TP_FC_7()/* æµæ§åˆ¶çŠ¶æ€ä¸ºOVFLWæº¢å‡º */
 {
   Init_TP();
   _CANFD_TP_FC_7();
   End_TP();
 }
-testcase CANFD_TP_FC_8()/* ¿ØÖÆÆ÷ÊÕµ½µÄBlockSize²âÊÔ */
+testcase CANFD_TP_FC_8()/* æ§åˆ¶å™¨æ”¶åˆ°çš„BlockSizeæµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_FC_8();
   End_TP();
 }
-testcase CANFD_TP_FC_10()/* ÎŞĞ§Á÷¿ØÖÆÖ¡-FSÎŞĞ§Öµ */
+testcase CANFD_TP_FC_10()/* æ— æ•ˆæµæ§åˆ¶å¸§-FSæ— æ•ˆå€¼ */
 {
   Init_TP();
   _CANFD_TP_FC_10();
   End_TP();
 }
-testcase CANFD_TP_FC_11()/* µÈ´ıÁ÷¿ØÖÆÖ¡ */
+testcase CANFD_TP_FC_11()/* ç­‰å¾…æµæ§åˆ¶å¸§ */
 {
   Init_TP();
   _CANFD_TP_FC_11();
   End_TP();
 }
-testcase CANFD_TP_FC_12()/* Á÷¿ØÖ¡ÇëÇó²âÊÔ */
+testcase CANFD_TP_FC_12()/* æµæ§å¸§è¯·æ±‚æµ‹è¯• */
 {
   Init_TP();
   _CANFD_TP_FC_12();
   End_TP();
 }
-testcase CANFD_TP_FC_13()/* ·¢ËÍÎ´ÖªÀàĞÍµÄÕï¶ÏÖ¡ */
+testcase CANFD_TP_FC_13()/* å‘é€æœªçŸ¥ç±»å‹çš„è¯Šæ–­å¸§ */
 {
   Init_TP();
   _CANFD_TP_FC_13();

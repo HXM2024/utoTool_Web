@@ -1803,7 +1803,7 @@ void _10_Phy_Ex_13(dword ID)
       _Other_1002();
       _Send_Diag(2,ID,Temp_1);  
       _TestResult(SendData,ID,"",-1);
-      _Send_And_Check_NowSession(ID,exsession); 
+      _Send_And_Check_NowSession(ID,2); 
     }
     else 
     {
@@ -1891,60 +1891,120 @@ void _10_Phy_Ex_20(dword ID)/*NRC22预编程*/
   {
     if(Pre_Programmed_1002 == 1 )
     {
-      _WriteEx_and_Report("步骤1","发送 02 10 03 55 55 55 55 55");
-      _Send_Diag(2,ID,Temp_0);  
-      _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
-      _Send_And_Check_NowSession(ID,exsession); 
-      _Pre_Programmed();
-      _WriteEx_and_Report("步骤3","发送 02 10 01 55 55 55 55 55");
-      _Send_Diag(2,ID,Temp_1);  
-      _Check_10_01(6,Temp_1[1],P2can_server,P2_can_server);
-      _Send_And_Check_NowSession(ID,defsession); 
-      _WriteEx_and_Report("步骤4","发送 02 10 03 55 55 55 55 55");
-      _Send_Diag(2,ID,Temp_0); 
-      _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server); 
+      _WriteEx_and_Report("步骤1","通过安全访问发送报文");
       _unlockECU();
-      _WriteEx_and_Report("步骤7","发送 02 10 02 55 55 55 55 55");
-      _Send_Diag(2,ID,Temp_2);  
-      _TestResult(SendData,ID,"",NRC22);
+      _Send_Diag(2,ID,Temp_2);  _TestResult(SendData,ID,"",NRC22);
+      _Send_Diag(4,ID,Temp_3);  _TestResult(SendData,ID,"",-1);
       _Send_And_Check_NowSession(ID,exsession); 
-      _WriteEx_and_Report("步骤8","发送 04 14 FF FF FF 55 55 55");
-      _Send_Diag(4,ID,Temp_3);  
-      _TestResult(SendData,ID,"",-1);
       if(Serve_Data[Serve_Pos].RSP[Fun_Pos] == 1)
       {
-        _WriteEx_and_Report("步骤9","发送 02 10 82 55 55 55 55 55");
-        _Send_Diag(2,ID,Temp_2);  
-        _TestResult(SendData,ID,"",NRC22);
+        _Send_Diag(2,ID,Temp_4);  _TestResult(SendData,ID,"",NRC22);
+        _Send_Diag(4,ID,Temp_3);  _TestResult(SendData,ID,"",-1);
         _Send_And_Check_NowSession(ID,exsession); 
-        _WriteEx_and_Report("步骤10","发送 04 14 FF FF FF 55 55 55");
-        _Send_Diag(4,ID,Temp_3);  
-        _TestResult(SendData,ID,"",-1);
       }
-      else
-        _WriteEx_and_Report("","10 02不支持肯定响应抑制位");
-      
-      _WriteEx_and_Report("","发送预编程报文");
-      _get_Arry("Pre_Programmed");
-      _Send_Diag(Arry_Len,phyreq_ID,Arry_Data);
-      _TestResult(SendData,phyreq_ID,"",-1);
-      
-      _WriteEx_and_Report("步骤12","发送 02 10 03 55 55 55 55 55");
-      _Send_Diag(2,ID,Temp_0);  
-      _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
+      if(Pre_Programmed_UnlockECU == 1)
+        return;
+      _WriteEx_and_Report("步骤2","通过预编程后从03会话切换到01会话被清除");
+      _Send_Diag(2,ID,Temp_0);  _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
       _Send_And_Check_NowSession(ID,exsession); 
+      _Pre_Programmed();
+      _Send_Diag(2,ID,Temp_1);  _Check_10_01(6,Temp_1[1],P2can_server,P2_can_server);
+      _Send_And_Check_NowSession(ID,defsession); 
+      _Send_Diag(2,ID,Temp_0);  _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
       _unlockECU();
-      _WriteEx_and_Report("步骤15","发送 02 10 02 55 55 55 55 55");
-      _Send_Diag(2,ID,Temp_2);
-      _TestResult(SendData,ID,"",-1);
+      _Send_Diag(2,ID,Temp_2);  _TestResult(SendData,ID,"",NRC22);
+      _Send_Diag(4,ID,Temp_3);  _TestResult(SendData,ID,"",-1);
+      _Send_And_Check_NowSession(ID,exsession); 
+      if(Serve_Data[Serve_Pos].RSP[Fun_Pos] == 1)
+      {
+        _Send_Diag(2,ID,Temp_4);  _TestResult(SendData,ID,"",NRC22);
+        _Send_Diag(4,ID,Temp_3);  _TestResult(SendData,ID,"",-1);
+        _Send_And_Check_NowSession(ID,exsession); 
+      }
+      _WriteEx_and_Report("步骤3","通过预编程后从03会话切换到03会话不被清除");
+      _Send_Diag(2,ID,Temp_0);  _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
+      _Pre_Programmed();
+      _Send_Diag(2,ID,Temp_0);  _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
+      _Pre_Programmed();
+      _unlockECU();
+      _Send_Diag(2,ID,Temp_2);  _TestResult(SendData,ID,"",-1);
       testWaitForTimeout(2000);
       _Send_And_Check_NowSession(ID,2); 
-      _WriteEx_and_Report("步骤16","发送 04 14 FF FF FF 55 55 55");
-      _Send_Diag(4,ID,Temp_3);  
-      _TestResult(SendData,ID,"",NRC11);
-      _Send_Diag(2,ID,Temp_1);  
-      _TestResult(SendData,ID,"",-1);
-      _Send_And_Check_NowSession(ID,defsession); 
+      _Send_Diag(4,ID,Temp_3);  _TestResult(SendData,ID,"",NRC11);
+      _SetSession(defsession);
+      testWaitForTimeout(2000);
+
+      if(Serve_Data[Serve_Pos].RSP[Fun_Pos] == 1)
+      {
+        _WriteEx_and_Report("步骤4","测试肯定响应抑制位");
+        _Send_Diag(2,ID,Temp_0);  _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
+        _Pre_Programmed();
+        _Send_Diag(2,ID,Temp_0);  _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
+        _Pre_Programmed();
+        _unlockECU();
+        _Send_Diag(2,ID,Temp_4);  _TestResult(SendData,ID,"",0);
+        testWaitForTimeout(2000);
+        _Send_And_Check_NowSession(ID,2); 
+        _Send_Diag(4,ID,Temp_3);  _TestResult(SendData,ID,"",NRC11);
+        _SetSession(defsession);
+        testWaitForTimeout(2000);
+      }
+
+      // _WriteEx_and_Report("步骤1","发送 02 10 03 55 55 55 55 55");
+      // _Send_Diag(2,ID,Temp_0);  
+      // _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
+      // _Send_And_Check_NowSession(ID,exsession); 
+      // _Pre_Programmed();
+      // _WriteEx_and_Report("步骤3","发送 02 10 01 55 55 55 55 55");
+      // _Send_Diag(2,ID,Temp_1);  
+      // _Check_10_01(6,Temp_1[1],P2can_server,P2_can_server);
+      // _Send_And_Check_NowSession(ID,defsession); 
+      // _WriteEx_and_Report("步骤4","发送 02 10 03 55 55 55 55 55");
+      // _Send_Diag(2,ID,Temp_0); 
+      // _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server); 
+      // _unlockECU();
+      // _WriteEx_and_Report("步骤7","发送 02 10 02 55 55 55 55 55");
+      // _Send_Diag(2,ID,Temp_2);  
+      // _TestResult(SendData,ID,"",NRC22);
+      // _Send_And_Check_NowSession(ID,exsession); 
+      // _WriteEx_and_Report("步骤8","发送 04 14 FF FF FF 55 55 55");
+      // _Send_Diag(4,ID,Temp_3);  
+      // _TestResult(SendData,ID,"",-1);
+      // if(Serve_Data[Serve_Pos].RSP[Fun_Pos] == 1)
+      // {
+      //   _WriteEx_and_Report("步骤9","发送 02 10 82 55 55 55 55 55");
+      //   _Send_Diag(2,ID,Temp_2);  
+      //   _TestResult(SendData,ID,"",NRC22);
+      //   _Send_And_Check_NowSession(ID,exsession); 
+      //   _WriteEx_and_Report("步骤10","发送 04 14 FF FF FF 55 55 55");
+      //   _Send_Diag(4,ID,Temp_3);  
+      //   _TestResult(SendData,ID,"",-1);
+      // }
+      // else
+      //   _WriteEx_and_Report("","10 02不支持肯定响应抑制位");
+      
+      // _WriteEx_and_Report("","发送预编程报文");
+      // _get_Arry("Pre_Programmed");
+      // _Send_Diag(Arry_Len,phyreq_ID,Arry_Data);
+      // _TestResult(SendData,phyreq_ID,"",-1);
+      
+      // _WriteEx_and_Report("步骤12","发送 02 10 03 55 55 55 55 55");
+      // _Send_Diag(2,ID,Temp_0);  
+      // _Check_10_01(6,Temp_0[1],P2can_server,P2_can_server);
+      // _Send_And_Check_NowSession(ID,exsession); 
+      // _unlockECU();
+      // _WriteEx_and_Report("步骤15","发送 02 10 02 55 55 55 55 55");
+      // _Send_Diag(2,ID,Temp_2);
+      // _TestResult(SendData,ID,"",-1);
+      // testWaitForTimeout(2000);
+      // _Send_And_Check_NowSession(ID,2); 
+      // _WriteEx_and_Report("步骤16","发送 04 14 FF FF FF 55 55 55");
+      // _Send_Diag(4,ID,Temp_3);  
+      // _TestResult(SendData,ID,"",NRC11);
+      // _Send_Diag(2,ID,Temp_1);  
+      // _TestResult(SendData,ID,"",-1);
+      // testWaitForTimeout(2000);
+      // _Send_And_Check_NowSession(ID,defsession); 
     }
     if(Pre_Programmed_1002 == 0)
       _WriteEx_and_Report("跳过测试","该项目服务无预编程条件");
@@ -13562,7 +13622,7 @@ _High_BUS_loader_H_1(byte type,dword Time)/*对中*//*0:干扰报文优先级高
     testWaitForTimeout(100);
     _Set_11_Restoration(Time,0);
     
-    testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500);
+    (CAN_Init_Time-Wait_Time_11+500>0)?testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500):testWaitForTimeout(1000);
     _85_Check_DTC(1,0);
     x++;
 //    ChkCreate_ErrorFramesOccured(0,0,500);
@@ -13662,8 +13722,6 @@ _High_BUS_loader_H_3(byte type,dword Time)/*写DID_对中*//*0:干扰报文优�
   _get_2E_DID(Traversal_DID[0]);
   if(strncmp(ECU_project,"BYD",strlen(ECU_project)) == 0 && strlen(ECU_project) == strlen("BYD"))
   {
-    if(AES_128 == 2)
-      
     if((DID_2E_SendData_1[0] == 0x2E) && ((DID_2E_SendData_1[1] == 0xF1 && DID_2E_SendData_1[2] == 0xA1) || (DID_2E_SendData_1[1] == 0x21 && DID_2E_SendData_1[1] == 0x00)))
     {
       _Clear_BYD_Config_(0);
@@ -13733,7 +13791,7 @@ _High_BUS_loader_H_3(byte type,dword Time)/*写DID_对中*//*0:干扰报文优�
       _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID,Time);
       _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
     }
-    testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500);
+    (CAN_Init_Time-Wait_Time_11+500>0)?testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500):testWaitForTimeout(1000);
     _85_Check_DTC(1,0);
     x++;
   }while(Time_Flage==0);
@@ -13830,7 +13888,7 @@ _High_BUS_loader_H_4(byte type,dword Time)/*写DID_对中   负载率波动*//*0
       _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID,Time);
       _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
     }
-    testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500);
+    (CAN_Init_Time-Wait_Time_11+500>0)?testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500):testWaitForTimeout(1000);
     _85_Check_DTC(1,0);
     x++;
   }while(Time_Flage==0);
@@ -13919,7 +13977,7 @@ _High_BUS_loader_H_5(dword Time)/*写DID_对中/负载由外部IG模块输入*/
       _Send_Diag(Read_2E_DID_Len,phyreq_ID,Read_2E_DID,Time);
       _Check_Response_2E(SendData,DID_2E_SendData_2_Len,DID_2E_SendData_2);
     }
-    testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500);
+    (CAN_Init_Time-Wait_Time_11+500>0)?testWaitForTimeout(CAN_Init_Time-Wait_Time_11+500):testWaitForTimeout(1000);
     _85_Check_DTC(1,0);
     x++;
   }while(Time_Flage==0);

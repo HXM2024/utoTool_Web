@@ -37,7 +37,7 @@ on sysvar sysvar::Test::Clear_PathInput
     sysSetVariableString(sysvar::AUTO::RSA1,"");
     sysSetVariableString(sysvar::AUTO::CBF1,"");
     
-    writeEx(-3,0,"Çå³ıÎÄ¼şÊäÈë");
+    writeEx(-3,0,"æ¸…é™¤æ–‡ä»¶è¾“å…¥");
   }
 }
 on sysvar sysvar::AUTO::Clear_Software1
@@ -60,7 +60,7 @@ on sysvar sysvar::AUTO::Clear_Software1
     
     sysSetVariableString(sysvar::AUTO::RSA1,"");
     sysSetVariableString(sysvar::AUTO::CBF1,"");
-    writeEx(-3,0,"Çå³ıÈí¼ş1ÊäÈë");
+    writeEx(-3,0,"æ¸…é™¤è½¯ä»¶1è¾“å…¥");
   }
 }
 on sysvar sysvar::AUTO::Clear_Software2
@@ -83,7 +83,7 @@ on sysvar sysvar::AUTO::Clear_Software2
     
     sysSetVariableString(sysvar::AUTO::RSA2,"");
     sysSetVariableString(sysvar::AUTO::CBF2,"");
-    writeEx(-3,0,"Çå³ıÈí¼ş2ÊäÈë");
+    writeEx(-3,0,"æ¸…é™¤è½¯ä»¶2è¾“å…¥");
   }
 }
 on sysvar sysvar::AUTO::Config_SGMW_SlectALL
@@ -133,14 +133,14 @@ on sysvar sysvar::AUTO::Config_SGMW_ClearALL
 }
 
 
-/*****************ĞÂÀÏ»¯°å******************/
-//RelayON(¶Ë¿ÚX) £º¶Ë¿ÚX ºÚÉ«½Ó¿Ú-»ÆÉ«½Ó¿Ú
-//RelayOFF(¶Ë¿ÚX)£º¶Ë¿ÚX ºÚÉ«½Ó¿Ú-ÂÌÉ«½Ó¿Ú
+/*****************æ–°è€åŒ–æ¿******************/
+//RelayON(ç«¯å£X) ï¼šç«¯å£X é»‘è‰²æ¥å£-é»„è‰²æ¥å£
+//RelayOFF(ç«¯å£X)ï¼šç«¯å£X é»‘è‰²æ¥å£-ç»¿è‰²æ¥å£
 void RelayON(byte Ctr_state)
 {
   Relaymsg.id=0x101;
   switch(Ctr_state)
-  {//ÖÃÎª0
+  {//ç½®ä¸º0
     case 1:LHB_State &=0xFE;break;
     case 2:LHB_State &=0xFD;break;
     case 3:LHB_State &=0xFB;break;
@@ -153,7 +153,7 @@ void RelayOFF(byte Ctr_state)
 { 
   Relaymsg.id=0x101;
   switch(Ctr_state)
-  {//ÖÃÎª1
+  {//ç½®ä¸º1
     case 1:LHB_State |=1;break;
     case 2:LHB_State |=2;break;
     case 3:LHB_State |=4;break;

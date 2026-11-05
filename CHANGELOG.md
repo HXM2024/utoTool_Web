@@ -12,6 +12,167 @@
 
 ---
 
+## [1.0.54] - 2026-11-03
+
+**版本号**：`1.0.54`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.54.exe`（172,773,661 字节，SHA256 `5159D9886E84CDDEDBEA786359EE4B7A8CA26AC571F33ADF4A3E9BA0B2954C8F`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.54",
+  "release_notes": "本版本更新：\n- 基于最新 NewCode 重新集成 UDS/BOOT 模块（处理器与最新源逐方法同步，补 BOOT 31 服务 Control_Type_RxLen）\n- 修复模板解压后文件落点错误（UDS 写入 Testmodule_UDS 工程目录，BOOT 解压到 #BT自动化测试工具#V1.0.17 工程目录）\n- 修复 zip 中文文件名乱码（已标记 UTF-8 的条目不再二次转码）及 22_DID 生成时字符串与整型比较报错",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.54.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.54）
+
+---
+
+### [1.0.54] - 2026-11-04
+
+**会话主题**：Angle偏移支持多个角度信号，合并为一条用例
+
+**变更内容**：
+
+1. **Angle偏移改为多信号合并**（`backend/templates/capl.py`、`backend/processors/excel_processor.py`）
+   - 不再为每个信号生成 `<信号名>_TurnWheel`，统一生成一条 `AngleOffset_TurnWheel`
+   - `kAngleMin` / `kAngleMax` / `chk` 均声明为按信号数量定长的数组，每个信号各启动一条 `ChkStart_MsgSignalValueInvalid` 后台越界检查
+   - 只弹一次窗、只转动一次方向盘，随后逐个停止检查并按信号名分别输出 PASS/FAIL
+   - 补回上电漂移/时序检查：转动到位后记录各信号基准角度，下电再上电，按信号逐个直接调用 `TestFunction.cin` 里的 `WatchAnglePowerOn`（显式传信号对象与承载报文 ID）
+2. **前端 Angle偏移 卡片支持多组**（`frontend/src/views/CANView.vue`）
+   - 卡片改为分组录入（拖入或手动添加多个角度信号），并兼容旧配置的 `angleOffsetSignal` 字符串
+   - 卡片说明同步补充第 ④ 步上电漂移/时序检查
+
+**相关文件**：`backend/templates/capl.py`、`backend/processors/excel_processor.py`、`frontend/src/views/CANView.vue`
+
+---
+
+### [1.0.54] - 2026-11-03
+
+**会话主题**：基于最新 `NewCode/Excel2Case(New).py` 重新集成 UDS / BOOT 模块
+
+**变更内容**：
+
+1. **处理器与最新源逐方法同步**（`backend/processors/uds_processor.py`、`backend/processors/boot_processor.py`）
+   - 用 AST 方法级比对确认 `UDSExcelProcessor` / `BTExcelProcessor` 方法集合与最新源完全一致，剩余差异仅为既有移植适配（GUI → logger、缺 sheet 抛 `RuntimeError`、`_save_file` 非交互）
+   - BOOT `process_31H` 补最新源 260130 新增的 `Control_Type_RxLen`：结构体写入 `Serve_31_Hex[{Poss}].Control_Type_RxLen[{structDIIndex}]`，数据行取 `columns[5]`，与 `Control_Type_TxLen` 并列
+   - UDS `OEM_Config` 项目匹配由 `"Geely3.0"` 改回 `"Geely"`；`compare_strings` 恢复源版字母比较分支
+   - 删除源文件已不存在的 `create_zip_from_folder`（UDS / BOOT 各一处），并移除 BOOT `__init__` 中源文件已不存在的三行结构体变量声明
+2. **zip 中文文件名乱码修复**（两个处理器 + `backend/utils/uds_helpers.py` 同款逻辑）
+   - `extract_zip_with_encoding` 仅对未标记 UTF-8 的条目（`file_info.flag_bits & 0x800` 为 0）做 `cp437 → gbk` 还原，已标记 UTF-8 的条目不再二次转码
+3. **模板工程解压与文件落点修复**（`backend/core/uds_module.py`、`backend/core/boot_module.py`）
+   - BOOT 处理器 `_save_file` 把 `#BT自动化测试工具#V1.0.17.zip` 解压到 `base_dir/#BT自动化测试工具#V1.0.17/`（原先解压到 `base_dir` 却指向 `base_dir/#BT.../Testmodule/Test_UDS`，目录不存在），并兼容 zip 内多一层同名目录的情况
+   - BOOT 模块改为「先解压模板、再写入」：ini / struct 落到 `#BT自动化测试工具#V1.0.17/Testmodule/Test_UDS`，`template_dir` 返回真实存在的工程目录
+   - UDS 模块模板模式解压 `Testmodule_UDS.zip` 后，把生成的 `UDS_Main_info.ini` / `Struct.cin` 写入 `output_dir/Testmodule_UDS` 工程目录（此前只返回字符串、未落盘到工程内）
+4. **22_DID 生成崩溃修复**（`backend/core/uds_module.py`）
+   - `_build_excel_with_tree_service` 复制其他 sheet 时去掉 `dtype=str`，保留 openpyxl 原生类型；修复 `process_22_DID` 中 `if self.SupportDID_Read > 1` 因 `DID_22_Support` 被读成字符串而抛 `TypeError`
+
+**验证**：
+
+- AST 方法级比对：源 `UDSExcelProcessor` / `BTExcelProcessor` 与移植版方法集合一致，无缺失/多余方法
+- UDS 生成内容：`UDS_Main_info.ini` 含 `DID_22_Traversal`、`DID_2E_Traversal`、`FunDID_`、`ALL_DTC`、`Freeze_Frame`、`DTC_ExtendedDataRecord`；`Struct.cin` 含 `Serve_Support`、`Serve_31_Hex`、`TestCase_EOL`、`.Control_Type_RxLen[`
+- BOOT 生成内容：`BT_UDS_Main_info.ini` 含 31 服务例程配置；`Struct.can` 含 `Serve_31_Hex` 与 `Control_Type_RxLen`
+- 处理器直连与 `ConfigService` 模块两条模板路径的文件落点均正确
+- Flask 接口冒烟：`/api/uds/parse`、`/api/boot/parse` 均返回 200
+- `python -m py_compile` 通过（`uds_processor.py`、`boot_processor.py`、`uds_module.py`、`boot_module.py`）
+- 未修改 `E:\Python\AutoTool_Web\NewCode` 下任何文件
+
+**相关文件**：`backend/processors/uds_processor.py`、`backend/processors/boot_processor.py`、`backend/core/uds_module.py`、`backend/core/boot_module.py`
+
+---
+
+## [1.0.53] - 2026-11-03
+
+**版本号**：`1.0.53`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.53.exe`（172,773,618 字节，SHA256 `385596E938F55FA4AF7C2AED161520E907A3894DFBDAC9FC5190CE40A158C890`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.53",
+  "release_notes": "本版本更新：\n- 修复吉利 3.0（GEEA_3.0）E2E_CRC 退化成 CRC=0（DBC 导入补读 GenSigFuncType，树/配置两路统一补齐 sg、sgi、did）\n- 修复 Busoff-counter 开关不生效（首帧校验改传 {FirstStart}：0=恢复后首帧从 0 开始，last=不校验首帧只校验 +1 递增）\n- 修复 Config_Diag 用例不生成（collectConfigData 补写 checkboxStates.configDiag，AllConfig_Diag / EraseConfig_Diag 正常生成）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.53.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.53）
+
+---
+
+### [1.0.53] - 2026-11-03
+
+**会话主题**：CAN 模块三处生成缺陷修复（吉利 3.0 E2E_CRC 块、Busoff-counter 开关、Config_Diag 用例）
+
+**变更内容**：
+
+1. **吉利 3.0（GEEA_3.0）E2E_CRC 退化为 `CRC=0;`**（`frontend/src/utils/dbc.ts`、`frontend/src/views/CANView.vue`、`backend/processors/excel_processor.py`）
+   - `DbcRecord` 补读 `GenSigFuncType` 列，使 DBC 上传时被后端归一化的 `Counter` 信号能被识别（否则 `da[]` 里 Counter 不紧随 DataID，CRC 必错）
+   - `buildDbcTreeFromRaw` / `buildSignalRowsFromRaw` / 表格行三处的信号类型取值改为 `Signal_Type || GenSigFuncType`
+   - 树 → 配置 JSON 的两条分支（DBC 导入时「信号与报文平级」、配置加载时「信号在报文 children 内」）统一补齐 `sg`（`SIG_GROUP_`）/ `sgi`（`SIG_GROUP_Index`）/ `did`（`GenSigDataID` 兜底），修复平级分支此前漏写导致保存出的配置 `sg=0/did=0`
+   - 后端 `_build_crc_block` 在信号缺少 `SIG_GROUP_` 时补一条告警日志，说明 `da[]` 无法组装的原因
+2. **Busoff-counter 开关不生效**（`backend/templates/capl.py`、`backend/processors/excel_processor.py`）
+   - `testcase_BusOffTxMsg_Counter` 原先把 `getSignal()+1` 当作 `FirstStart` 传入，该参数只认「0 = 首帧从 0 开始 / 非 0 = 不校验首帧」，实际恒为「不校验」，切换开关生成内容毫无变化；改为 `{FirstStart}` 占位
+   - 生成时传 `self._counter_first_start('counterBusOffStart')`：`0` → 恢复后首帧必须为 0；`last` → 不校验首帧、只校验后续 +1 递增
+   - 实测同一配置两档取值生成的 `*_BusOff_Counter` 由 `...,0)` 变为 `...,-1)`，`11Reset-counter` 保持原行为（`*_11Reset_Counter` 同步变化）
+3. **Config_Diag 用例不生成**（`frontend/src/views/CANView.vue`）
+   - `collectConfigData()` 收集 `OtherCheckboxes` 时只遍历了 `otherFieldDefs` / `groupCardDefs` / `hexIdCardDefs` / `compoundSliderDefs`，而 Config_Diag 是独立卡片，其开关状态只存在于 `otherCheckboxStates.configDiag`，从未写入配置
+   - 后端 `checkbox_states['configDiag']` 因此恒为 `False`，`_add_Config_Diag_testcases()` 被跳过，`AllConfig_Diag` / `EraseConfig_Diag` / `PartialConfig_Diag_N` 全部缺失
+   - 补充一行 `checkboxClean.configDiag = !!otherCheckboxStates.value.configDiag`；实测同一配置关闭时无任何 Config_Diag 用例，打开后生成 `AllConfig_Diag` 与 `EraseConfig_Diag`（`PartialConfig_Diag_N` 需在卡片「+ 添加」录入后才生成）
+
+**验证**：
+
+- `python -m py_compile` 通过（`excel_processor.py`、`capl.py`）
+- `npm run build`（`vue-tsc && vite build`）构建成功，`frontend/dist` 已更新
+- 用配置 `55` 在临时目录各生成两轮，逐条比对 `CheckCounter` 语句与 Config_Diag 用例是否存在，结果与上述预期一致
+
+**相关文件**：`frontend/src/utils/dbc.ts`、`frontend/src/views/CANView.vue`、`backend/processors/excel_processor.py`、`backend/templates/capl.py`、`frontend/dist`
+
+---
+
+## [1.0.52] - 2026-11-02
+
+**版本号**：`1.0.52`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.52.exe`（172,662,724 字节，SHA256 `F3AB509E968DB2F257575BF4306FB4393F6F632230BCAE1178B2E8664C7168FD`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.52",
+  "release_notes": "本版本更新：\n- Function 模块支持多选连线后右击批量改编号（多选 ≥2 条连线右击编号徽标，整批写入同一组编号，一次 Ctrl+Z 全部撤销）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.52.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.52）
+
+---
+
+### [1.0.52] - 2026-11-02
+
+**会话主题**：Function 模块支持多选连线后右击批量改编号
+
+**变更内容**：
+
+1. **批量改编号入口**（`frontend/src/components/graph/CaseFrameCanvas.vue`）：
+   - 显式多选 ≥2 条连线（Ctrl/Shift 单击、拖拽框选）后，右击其中任意一条的编号徽标或连线本体，打开批量编号面板，头部显示「批量 · N 条连线」
+   - 未多选时保持原有行为：单条右击预览该编号用例代码，双击编号徽标单条改号
+2. **批量写入规则**：
+   - 面板中选中/手填的一组编号统一写入所有目标连线；注入线写 `seq + pair`，结果线/链式线写 `pair`，与单条改号规则一致
+   - 候选编号取本工况在用编号与全部目标线已填编号的并集；批量目标仅为显式选中的连线，不含「同编号自动高亮」的连线
+   - 整批改动只触发一次 `emitChange()`，一次 Ctrl+Z 可全部撤销；未修改直接确认则仅关闭面板
+3. **提示文案**：画布帮助气泡与编号徽标 title 补充「多选 ≥2 条连线后右击编号徽标 = 批量改编号」
+
+**验证**：
+
+- `npx vue-tsc --noEmit` 通过，无类型/模板错误
+- `npm run build`（`vue-tsc && vite build`）构建成功
+
+**相关文件**：`frontend/src/components/graph/CaseFrameCanvas.vue`
+
+---
+
 ## [1.0.51] - 2026-10-31
 
 **版本号**：`1.0.51`（`frontend/package.json` 的 `version`）

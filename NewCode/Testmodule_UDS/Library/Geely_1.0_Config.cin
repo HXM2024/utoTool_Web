@@ -306,6 +306,439 @@ void Config_ALL_Geely1_0()
   }
 }
 
+
+
+/*
+    Geely1.0以及以上平台NRC22测试发送数据
+    Serve：对应服务
+    Res_1:发送数据1对应返回值
+    Res_2:发送数据2对应返回值
+    仅存在一次发送时使用Res_2对应的值
+*/
+int Geely_NRC22_Test_1_0(byte Serve,dword ID,byte Session,int Res_1,int Res_2)
+{
+  byte Send_10[2]={0x10,0x02};
+  byte Send_11[2]={0x11,0x01};
+  // byte Send_28[3]={0x28,0x00,0x01};
+  // byte Send_85_1[2]={0x85,0x02};
+  // byte Send_85_2[2]={0x85,0x01};
+  
+  // if(GetInformationFlage == 0 && Serve == 0x10)
+  // {
+  //   /*--------获取预编程数据--------*/
+  //   _get_Arry("Pre_Programmed");
+  //   for(i=0;i<Arry_Len;i++)
+  //     Data_Programmed[i] = Arry_Data[i];
+  //   Data_Programmed_Count = Arry_Len;
+  //   GetInformationFlage = 1;
+  // }
+  if(Serve == 0x10)
+  {
+    // _Send_Diag(Data_Programmed_Count,ID,Data_Programmed);
+    // _Check_31Routine_Rx(Data_Programmed,Res_1);
+    _SetSession(exsession);
+    _Send_Diag(2,ID,Send_10);
+    _TestResult(SendData,ID,"",Res_2);
+    if(diagGetLastResponseCode(SendData) == -1)
+      testWaitForTimeout(2000);
+    _SetSession(defsession);
+    testWaitForTimeout(2000);
+    // if(diagGetLastResponseCode(SendData) == -1)
+    // {
+    //   testWaitForTimeout(2000);
+    //   _SetSession(defsession);
+    //   testWaitForTimeout(2000);
+    //   if(Session != defsession)
+    //     _SetSession(Session);
+    // }
+  }
+  else if(Serve == 0x11)
+  {
+    _Send_Diag(2,ID,Send_11);
+    _TestResult(SendData,ID,"",Res_2);
+    if(diagGetLastResponseCode(SendData) == -1)
+    {
+      testWaitForTimeout(2000);
+      if(Session != defsession)
+        _SetSession(Session);
+    }
+  }
+  // else if(Serve == 0x28)
+  // {
+  //   _Send_Diag(3,ID,Send_28);
+  //   _TestResult(SendData,ID,"",Res_2);
+  // }
+  // else if(Serve == 0x85)
+  // {
+  //   _Send_Diag(2,ID,Send_85_1);
+  //   _TestResult(SendData,ID,"",Res_2);
+  //   _Send_Diag(2,ID,Send_85_2);
+  //   _TestResult(SendData,ID,"",Res_2);
+  // }
+  
+  return diagGetLastResponseCode(SendData);
+}
+
+void Serve_NRC22CarSpd_Lower_GEEA1_0(byte Serve,dword ID,byte Session,byte Type) //NRC22-车速小于3
+{
+  int i;
+  int Res_Send_1_Step1,Res_Send_2_Step1;
+  
+  _Get_NRC_Mapping(Serve);
+  _Set_Ready(0);
+  _Set_CarSpd(NRC22_CarSpd-0.5);
+  _Set_Sig(Gears_Signal,0);
+  _Set_Sig(PowerMode,0);
+  _Set_Sig(PowerMode_Invalid_Sig,2);
+  
+  testWaitForTimeout(500);
+  for(i=0;i<2;i++)
+  {
+    if(i==0)
+    {
+      _WriteEx_and_Report("","车速小于3且有效");_Reset_CarSpd_Invalid();
+      Res_Send_1_Step1 = -1; Res_Send_2_Step1 = -1;
+    }
+    else
+    {
+      _WriteEx_and_Report("","车速小于3且无效");_Set_CarSpd_Invalid(Struct_CarSpd.Invalid_Value[0]);
+      Res_Send_1_Step1 = CarSpd_Invalid_NRC;  Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+    }
+    if(Session != defsession && Serve!= 0x10)
+      _SetSession(Session);
+    
+    
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+   
+    _WriteEx_and_Report("","步骤2测试,丢失车速节点"); 
+    if(i==0)
+    {
+      Res_Send_1_Step1 = 1;
+      Res_Send_2_Step1 = -1;
+    }
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤3测试,恢复车速节点后制造无效");
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    _Set_CarSpd_Invalid(Struct_CarSpd.Invalid_Value[0]);
+    {
+      Res_Send_1_Step1 = CarSpd_Invalid_NRC;  
+      Res_Send_2_Step1 = CarSpd_Invalid_NRC;
+    }
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤4测试，再次丢失车速节点");
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    _Reset_CarSpd_Invalid();
+    testWaitForTimeout(2000);
+  }
+}
+
+void Serve_NRC22CarSpd_Upper_GEEA1_0(byte Serve,dword ID,byte Session,byte Type) //NRC22-车速大于3
+{
+  int i;
+  int Res_Send_1_Step1,Res_Send_2_Step1;
+
+  _Get_NRC_Mapping(Serve);
+  _Set_Ready(0);
+  _Set_CarSpd(NRC22_CarSpd+0.5);
+  _Set_Sig(Gears_Signal,0);
+  _Set_Sig(PowerMode,0);
+  _Set_Sig(PowerMode_Invalid_Sig,2);
+  
+  testWaitForTimeout(500);
+  for(i=0;i<2;i++)
+  {
+    if(i==0)
+    {
+      _WriteEx_and_Report("","车速大于3且有效");_Reset_CarSpd_Invalid();
+    }
+    else
+    {
+      _WriteEx_and_Report("","车速大于3且无效");_Set_CarSpd_Invalid(Struct_CarSpd.Invalid_Value[0]);
+    }
+    if(Session != defsession && Serve!= 0x10)
+      _SetSession(Session);
+
+    Res_Send_1_Step1 = CarSpd_NRC;  Res_Send_2_Step1 = CarSpd_NRC;
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+   
+    _WriteEx_and_Report("","步骤2测试,丢失车速节点"); 
+    
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤3测试,恢复车速节点后制造无效");
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    _Set_CarSpd_Invalid(Struct_CarSpd.Invalid_Value[0]);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤4测试，再次丢失车速节点");
+    _TestDisableMsg(Struct_CarSpd.Sig_Id);
+    testWaitForTimeout(Struct_CarSpd.Lost_Time+500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _TestEnableMsg(Struct_CarSpd.Sig_Id);
+    _Reset_CarSpd_Invalid();
+    testWaitForTimeout(2000);
+  }
+}
+
+void Serve_NRC22_Gears_GEEA1_0(byte Serve,dword ID,byte Session,byte Type) //NRC22-档位
+{
+  int i;
+  int Res_Send_1_Step1,Res_Send_2_Step1;
+  byte ValueRange[5] = {0x00,0x0C,0x0A,0x0B,0x0F};
+  
+  _Get_NRC_Mapping(Serve);
+  _Set_Ready(0);
+  _Set_CarSpd(NRC22_CarSpd-0.5);
+  _Set_Sig(PowerMode,0);
+  _Set_Sig(PowerMode_Invalid_Sig,2);
+  
+  testWaitForTimeout(500);
+  for(i=0;i<elcount(ValueRange);i++)
+  {
+    if(Session != defsession && Serve!= 0x10)
+      _SetSession(Session);
+    _Set_Sig(Gears_Signal,ValueRange[i]);
+    testWaitForTimeout(1000);
+
+    if(ValueRange[i] == 0 || ValueRange[i] == 0x0A)
+    {
+      Res_Send_1_Step1 = -1; Res_Send_2_Step1 = -1;
+    }
+    else
+    {
+      Res_Send_1_Step1 = Gear_NRC; Res_Send_2_Step1 = Gear_NRC;
+    }
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+   
+    _WriteEx_and_Report("","步骤2测试,丢失档位节点"); 
+    _TestDisableMsg(Gears_ID);
+    testWaitForTimeout(1500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤3测试,恢复档位节点后制造无效");
+    {
+      Res_Send_1_Step1 = Gear_NRC; Res_Send_2_Step1 = Gear_NRC;
+    }
+    _TestEnableMsg(Gears_ID);
+    testWaitForTimeout(1500);
+    _Set_Sig(Gears_CRC_Signal,2);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤4测试，再次丢失档位节点");
+    _TestDisableMsg(Gears_ID);
+    testWaitForTimeout(1500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _TestEnableMsg(Gears_ID);
+    _Set_Sig(Gears_CRC_Signal,0);
+    testWaitForTimeout(2000);
+  }
+}
+
+void Serve_NRC22_Ready_GEEA1_0(byte Serve,dword ID,byte Session,byte Type) //NRC22-Ready
+{
+  int i;
+  int Res_Send_1_Step1,Res_Send_2_Step1;
+  
+  _Get_NRC_Mapping(Serve);
+  _Set_CarSpd(NRC22_CarSpd-0.5);
+  _Set_Sig(Gears_Signal,0);
+  _Set_Sig(PowerMode,0);
+  _Set_Sig(PowerMode_Invalid_Sig,2);
+
+  testWaitForTimeout(500);
+  for(i=0;i<2;i++)
+  {
+    if(Session != defsession && Serve!= 0x10)
+      _SetSession(Session);
+    if(i==0)
+    {
+      Res_Send_1_Step1 = -1; Res_Send_2_Step1 = -1;
+    }
+    else
+    {
+      Res_Send_1_Step1 = Ready_NRC; Res_Send_2_Step1 = Ready_NRC;
+    }
+    _Set_Ready(i);
+    testWaitForTimeout(1000);
+    _WriteEx_and_Report("","步骤1测试");
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+   
+    _WriteEx_and_Report("","步骤2测试,丢失发动机节点"); 
+    _TestDisableMsg(Struct_Ready.Sig_Id);
+    testWaitForTimeout(Struct_Ready.Lost_Time+500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤3测试,恢复发动机节点后制造无效");
+    {
+      Res_Send_1_Step1 = Ready_NRC; Res_Send_2_Step1 = Ready_NRC;
+    }
+    _TestEnableMsg(Struct_Ready.Sig_Id);
+    testWaitForTimeout(Struct_Ready.Lost_Time+500);
+    _Set_Sig(Struct_Ready.ReadyInvalid_Sig,Struct_Ready.Invalid_Value[0]);
+    testWaitForTimeout(1000);
+
+    _Invalid_Node(Struct_Ready.Sig_Id);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _WriteEx_and_Report("","步骤4测试，再次丢失发动机节点");
+    _TestDisableMsg(Struct_Ready.Sig_Id);
+    testWaitForTimeout(Struct_Ready.Lost_Time+500);
+    Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+    _TestEnableMsg(Struct_Ready.Sig_Id);
+    _Set_Sig(Struct_Ready.ReadyInvalid_Sig,Struct_Ready.Normal_Value[0]);
+    testWaitForTimeout(2000);
+  }
+}
+
+void Serve_NRC22_PEPS_GEEA1_0(byte Serve,dword ID,byte Session,byte Type) //NRC22-PEPS
+{
+  int i,j;
+  int Res_Send_1_Step1,Res_Send_2_Step1;
+  
+  _Get_NRC_Mapping(Serve);
+  _Set_Ready(0);
+  _Set_CarSpd(NRC22_CarSpd-0.5);
+  _Set_Sig(Gears_Signal,0);
+  testWaitForTimeout(500);
+
+  for(i=0;i<5;i++)//PEPS电源模式循环
+  {
+    _Set_Sig(PowerMode,i);
+    testWaitForTimeout(1000);
+    for(j=0;j<4;j++)//PEPS有效性信号循环
+    {
+      if(Session != defsession && Serve!= 0x10)
+        _SetSession(Session);
+      if(j==2 && i !=2)
+      {
+        Res_Send_1_Step1 = -1;  Res_Send_2_Step1 = -1;
+      }
+      else
+      {
+        Res_Send_1_Step1 = 0x22; Res_Send_2_Step1 = 0x22;
+      }
+      writeEx(-3,0,"当前测试电源模式信号为 %d ，有效性信号为 %d",i,j);
+      testStep("","当前测试电源模式信号为 %d ，有效性信号为 %d",i,j);
+      _Set_Sig(PowerMode_Invalid_Sig,j);
+      testWaitForTimeout(1000);
+      _WriteEx_and_Report("","步骤1");
+      Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+    
+      _WriteEx_and_Report("","步骤2,丢失电源模式节点"); 
+      _TestDisableMsg(PowerMode_ID);
+      testWaitForTimeout(1000);
+      Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+      
+      _WriteEx_and_Report("","步骤3,恢复电源模式节点后制造无效");
+      {
+        Res_Send_1_Step1 = 0x22; Res_Send_2_Step1 = 0x22;
+      }
+      _TestEnableMsg(PowerMode_ID);
+      testWaitForTimeout(1000);
+      _Set_Sig(PowerMode_CRC_Sig,2);
+      testWaitForTimeout(1000);
+      Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+      
+      _WriteEx_and_Report("","步骤4，再次丢失电源模式节点");
+      _TestDisableMsg(PowerMode_ID);
+      testWaitForTimeout(1000);
+      Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+      
+      _TestEnableMsg(PowerMode_ID);
+      _Set_Sig(PowerMode_Invalid_Sig,2);
+      _Set_Sig(PowerMode_CRC_Sig,0);
+      testWaitForTimeout(1000);
+    }
+  }
+}
+
+void Serve_NRC22_PowerUp_GEEA1_0(byte Serve,dword ID,byte Session,byte Type) //NRC22-PowerUp
+{
+  int i,ID_Range_Index;
+  int Res_Send_1_Step1,Res_Send_2_Step1;
+  dword ID_Range[10];
+  
+  _Get_NRC_Mapping(Serve);
+  ID_Range[0] = PowerMode_ID;
+  ID_Range[1] = Struct_CarSpd.Sig_Id;
+  ID_Range[2] = Struct_Ready.Sig_Id;
+  ID_Range[3] = Gears_ID;  
+  ID_Range_Index = 4;
+  if(Gears_ID == Struct_Ready.Sig_Id)
+    ID_Range_Index = 3;
+
+  _WriteEx_and_Report("","步骤1-3测试");
+
+  Res_Send_1_Step1 = -1; Res_Send_2_Step1 = -1;
+  _Set_Sig(Gears_Signal,0);
+  _Set_CarSpd(0);   _Set_Ready(0);
+  _Set_Sig(PowerMode,1);  _Set_Sig(PowerMode_Invalid_Sig,2);
+  testWaitForTimeout(1000);
+  _K15_OFF();
+  testWaitForTimeout(3000);
+  _Set_Sig(Gears_Signal,0x0C);
+  _Set_CarSpd(NRC22_CarSpd+1);   _Set_Ready(0);
+  _Set_Sig(PowerMode,2);  _Set_Sig(PowerMode_Invalid_Sig,1);
+  testWaitForTimeout(1000);
+  for(i=0;i<ID_Range_Index;i++)
+    _TestDisableMsg(ID_Range[i]);
+  testWaitForTimeout(1000);
+  _K15_ON();
+  testWaitForTimeout(3000);
+  if(Session != defsession)
+    _SetSession(Session);
+  Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+
+  _WriteEx_and_Report("","步骤4测试");
+  Res_Send_1_Step1 = 0x22; Res_Send_2_Step1 = 0x22;
+  for(i=0;i<ID_Range_Index;i++)
+    _TestEnableMsg(ID_Range[i]);
+  testWaitForTimeout(2000);
+  Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+  
+  _WriteEx_and_Report("","步骤5-7测试");
+  Res_Send_1_Step1 = -1; Res_Send_2_Step1 = -1;
+  _Set_Sig(Gears_Signal,0);
+  _Set_CarSpd(0);   _Set_Ready(0);
+  _Set_Sig(PowerMode,1);  _Set_Sig(PowerMode_Invalid_Sig,2);
+  testWaitForTimeout(1000);
+  _K15_OFF();
+  testWaitForTimeout(3000);
+  for(i=0;i<ID_Range_Index;i++)
+    _TestDisableMsg(ID_Range[i]);
+  testWaitForTimeout(1000);
+  _K15_ON();
+  testWaitForTimeout(3000);
+  if(Session != defsession)
+    _SetSession(Session);
+  Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+
+  _WriteEx_and_Report("","步骤8测试");
+  for(i=0;i<ID_Range_Index;i++)
+    _TestEnableMsg(ID_Range[i]);
+  testWaitForTimeout(2000);
+  Geely_NRC22_Test_1_0(Serve,ID,Session,Res_Send_1_Step1,Res_Send_2_Step1);
+}
+
+
 testcase Case_Config_MPV()
 {
   Init_Geely1_0_Config();
@@ -395,4 +828,66 @@ testcase Case_Config_ALL_Geely1_0()
   Init_Geely1_0_Config();
   Config_ALL_Geely1_0();
   _End();
+}
+
+
+testcase Case_Serve_CarSpd_Lower_GEEA1_0()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22CarSpd_Lower_GEEA1_0(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_CarSpd_Upper_GEEA1_0()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22CarSpd_Upper_GEEA1_0(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_Gears_GEEA1_0()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_Gears_GEEA1_0(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_Ready_GEEA1_0()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_Ready_GEEA1_0(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_PEPS_GEEA1_0()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_PEPS_GEEA1_0(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
+}
+testcase Case_Serve_PowerUp_GEEA1_0()
+{
+  GetInformationFromTitle();
+  if(Session_From_Title == defsession)
+    Init_Main_Def();
+  else
+    Init_Main_Ex();
+  Serve_NRC22_PowerUp_GEEA1_0(Serve_Form_Title,ID_From_Title,Session_From_Title,0);
+  End_Main();
 }

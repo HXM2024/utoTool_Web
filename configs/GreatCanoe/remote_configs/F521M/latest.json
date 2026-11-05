@@ -1,0 +1,1004 @@
+{
+  "tree": [
+    {
+      "l": "Node_201",
+      "c": [
+        {
+          "l": "Msg_201",
+          "id": 513,
+          "d": "8",
+          "cy": "100",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x201_HCU_Counter_201",
+              "bs": 7,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x201_VehRdySts",
+              "bs": 3,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x201_VehSpdAvgDrvnVHCU",
+              "sb": 1,
+              "bs": 15,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x201_VehSpdAvgDrvnHCU",
+              "sb": 1,
+              "bs": 14,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.015625,
+              "mx": 511.984375,
+              "u": "km/h",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x201_HCU_Checksum_201",
+              "sb": 7,
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_C9",
+      "c": [
+        {
+          "l": "Msg_C9",
+          "id": 201,
+          "d": "8",
+          "cy": "10",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "xC9_EngRunAtv",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xC9_PT_CrnkAct",
+              "bs": 6,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xC9_EngSpdStat",
+              "bs": 1,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xC9_EngSpd",
+              "sb": 1,
+              "bs": 15,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.25,
+              "mx": 16383.75,
+              "u": "rpm",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "xC9_Counter_C9",
+              "sb": 6,
+              "bs": 55,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "xC9_Checksum_C9",
+              "sb": 7,
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_605",
+          "id": 1541,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x605_NMEPSInd",
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_429",
+          "id": 1065,
+          "d": "8",
+          "cy": "100",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x429_EPSCurrStModeSSt",
+              "sb": 1,
+              "bs": 15,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "1",
+              "vd": "4: Unusedandreserved（预留）\n3: Sport（运动模式）\n2: Comfortable（舒适模式）\n1: Normal（标准模式）\n0: Unavailable（不可用）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_1E5",
+          "id": 485,
+          "d": "8",
+          "cy": "10",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x1E5_StrWhAngV",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Invalid（无效）\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_StrWhlAngSenCalStat",
+              "bs": 6,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: Description for the value '0x3'\n2: Calibrated（校准）\n1: Estimated（预估）\n0: Unknown（未使用）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_DrvStrInterDete",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: NotInterference（未干预）\n0: Interference（干预）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_DrvStrInterDeteV",
+              "bs": 3,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Description for the value '0x1'\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_StrngWhlAngSnsrInit",
+              "bs": 2,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: False（未完成）\n0: True（完成）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_DirctnOfStrTorq",
+              "bs": 1,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Description for the value '0x1'\n0: postive",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_DrvStrTorqV",
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Invalid（无效）\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_StrWhAng",
+              "sb": 1,
+              "bs": 15,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mn": -2047.9375,
+              "mx": 2047.9375,
+              "u": "deg",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_PwrStrIO",
+              "sb": 3,
+              "bs": 28,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: True（指示）\n0: False（不指示）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_StrLdAtv",
+              "sb": 3,
+              "bs": 27,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: True\n0: False",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_EPS_APACntlSta",
+              "sb": 3,
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_StWhlAngAliveRollCnt",
+              "sb": 4,
+              "bs": 39,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1E5_EPSProId",
+              "sb": 4,
+              "bs": 35,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "3",
+              "vd": "7: Reserved（预留国太阳）\n6: LH（恒隆）\n5: SB（新世宝）\n4: DH（东华）\n3: LR（龙润）\n2: TKP（蒂森克虏伯）\n1: NEXTEER（耐世特）\n0: Unknown（未使用）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_EPSAdvFunSSt",
+              "sb": 5,
+              "bs": 47,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: Reserved（预留）\n6: Reserved（预留）\n5: Reserved（预留）\n4: !ADAS&APA\n3: ADAS&APA\n2: ADAS（仅配置ADAS功能）\n1: APA（仅配置APA功能）\n0: Unused（未配置）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_DrvStrTorq",
+              "sb": 5,
+              "bs": 41,
+              "ln": 10,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mx": 10.23,
+              "u": "N.m",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E5_StrWhAngExPrtVal",
+              "sb": 7,
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        },
+        {
+          "l": "Msg_1E6",
+          "id": 486,
+          "d": "8",
+          "cy": "10",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x1E6_StWhlAngInfmtnRollCnt",
+              "bs": 7,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1E6_EPS_LKARespTorq",
+              "bs": 2,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mn": -10.24,
+              "mx": 10.23,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E6_SterFltMod",
+              "sb": 3,
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E6_EPS_ADAS_ModAvail",
+              "sb": 4,
+              "bs": 39,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E6_EPS_ADAS_ModActv",
+              "sb": 4,
+              "bs": 38,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E6_SterModV",
+              "sb": 4,
+              "bs": 35,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E6_SterMod",
+              "sb": 4,
+              "bs": 34,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E6_EPSWorkCur",
+              "sb": 5,
+              "bs": 47,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.25,
+              "mx": 16383.75,
+              "u": "A",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E6_StWhlAngInfmtnCksm",
+              "sb": 7,
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_348",
+      "c": [
+        {
+          "l": "Msg_348",
+          "id": 840,
+          "d": "6",
+          "cy": "10",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x348_LtFntWhlGrndVlctyV",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Description for the value '0x1'\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x348_LtFntWhlGrndVlcty",
+              "bs": 6,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mx": 655.35,
+              "u": "km/h",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x348_RtFntWhlGrndVlctyV",
+              "sb": 2,
+              "bs": 22,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Description for the value '0x1'\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x348_RtFntWhlGrndVlcty",
+              "sb": 2,
+              "bs": 21,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mx": 655.35,
+              "u": "km/h",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x348_Counter_348",
+              "sb": 4,
+              "bs": 33,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x348_Checksum_348",
+              "sb": 5,
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_17D",
+      "c": [
+        {
+          "l": "Msg_17D",
+          "id": 381,
+          "d": "8",
+          "cy": "100",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x17D_ABS_17D_Counter",
+              "sb": 1,
+              "bs": 11,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x17D_VehSpdAvgDrvn_ABS",
+              "sb": 2,
+              "bs": 19,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.015625,
+              "mx": 360,
+              "u": "km/h",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x17D_ABS_17D_Checksum",
+              "sb": 5,
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            },
+            {
+              "l": "x17D_VehSpdAvgDrvnV_ABS",
+              "sb": 7,
+              "bs": 61,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Invalid（无效）\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1E9",
+      "c": [
+        {
+          "l": "Msg_1E9",
+          "id": 489,
+          "d": "8",
+          "cy": "20",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x1E9_VSELatAccV",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Invalid（无效）\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E9_VSELatAcc",
+              "bs": 3,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "f": 0.015625,
+              "mn": -32,
+              "mx": 31.984375,
+              "u": "m/s^2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E9_VehDynYawRateV",
+              "sb": 4,
+              "bs": 36,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Invalid（无效）\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E9_VehDynYawRate",
+              "sb": 4,
+              "bs": 35,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "f": 0.0625,
+              "mn": -128,
+              "mx": 127.9375,
+              "u": "deg/sec",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E9_Counter_1E9",
+              "sb": 6,
+              "bs": 49,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1E9_Checksum_1E9",
+              "sb": 7,
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_421",
+      "c": [
+        {
+          "l": "Msg_421",
+          "id": 1057,
+          "d": "8",
+          "cy": "100",
+          "mt": "CAN_Standard",
+          "st": "not_used",
+          "c": [
+            {
+              "l": "x421_EPSCurrStModeSRq",
+              "sb": 1,
+              "bs": 15,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: Unusedandreserved（预留）\n6: Unusedandreserved（预留）\n5: Unusedandreserved（预留）\n4: Unusedandreserved（预留）\n3: Sport（运动模式）\n2: Comfortable（舒适模式）\n1: Normal（标准模式）\n0: NoRequest（无控制请求）",
+              "sst": "not_used",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_120",
+      "c": [
+        {
+          "l": "Msg_120",
+          "id": 288,
+          "d": "5",
+          "cy": "100",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x120_VehOdo",
+              "bs": 7,
+              "ln": 32,
+              "bo": "Motorola MSB",
+              "f": 0.015625,
+              "mx": 67108863,
+              "u": "Km",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x120_VehOdoV",
+              "sb": 4,
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Description for the value '0x1'\n0: Valid（有效）",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_53D",
+      "c": [
+        {
+          "l": "Msg_53D",
+          "id": 1341,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x53D_second",
+              "bs": 7,
+              "ln": 6,
+              "bo": "Motorola MSB",
+              "mx": 59,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x53D_Minute",
+              "sb": 1,
+              "bs": 15,
+              "ln": 6,
+              "bo": "Motorola MSB",
+              "mx": 59,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x53D_Hour",
+              "sb": 2,
+              "bs": 23,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mx": 23,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x53D_Day",
+              "sb": 3,
+              "bs": 31,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mn": 1,
+              "mx": 31,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x53D_Month",
+              "sb": 4,
+              "bs": 39,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mn": 1,
+              "mx": 12,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x53D_Year",
+              "sb": 5,
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "o": 2010,
+              "mn": 2010,
+              "mx": 2265,
+              "iv": "2010",
+              "u": "year",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_375",
+      "c": [
+        {
+          "l": "Msg_375",
+          "id": 885,
+          "d": "8",
+          "cy": "50",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x375_ADASCtrlSts",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x375_ADASGnrSts3RlCout",
+              "sb": 6,
+              "bs": 51,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x375_ADASGnrSts3Cksm",
+              "sb": 7,
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_225",
+      "c": [
+        {
+          "l": "Msg_225",
+          "id": 549,
+          "d": "8",
+          "cy": "20",
+          "mt": "CAN_Standard",
+          "c": [
+            {
+              "l": "x225_ADASCmnd1AlvRollingcounter",
+              "bs": 7,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x225_EPS_ADASCtrlModRqst",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x225_EPS_ADASCtrlMod",
+              "bs": 2,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x225_StinsReq",
+              "sb": 2,
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 100,
+              "u": "%",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x225_StrgWhlVibwarnReq",
+              "sb": 3,
+              "bs": 31,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x225_DrvStrgAngReqV",
+              "sb": 4,
+              "bs": 38,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x225_DrvStrgAngReq",
+              "sb": 4,
+              "bs": 37,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "o": -740,
+              "mn": -740,
+              "mx": 740,
+              "u": " deg ",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x225_ADASCmnd1Checksum",
+              "sb": 7,
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_CheckSum"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "",
+    "onValue": "",
+    "offValue": ""
+  },
+  "spd": "",
+  "ch": 1,
+  "relay": 0,
+  "dtc": [],
+  "oem": "SGWM",
+  "_meta": {
+    "config_name": "F521M",
+    "digest": "47511cd880d84a824e47844b3cca0607b6b65260"
+  }
+}

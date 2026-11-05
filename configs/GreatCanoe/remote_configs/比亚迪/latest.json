@@ -1,0 +1,3597 @@
+{
+  "tree": [
+    {
+      "l": "Node_9D",
+      "c": [
+        {
+          "l": "Msg_9D",
+          "id": 157,
+          "d": "16",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x9D_Checksum_09D_S",
+              "ln": 16,
+              "mx": 4129,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x9D_Rolling_counter_09D_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x9D_MotorTorqueUpperLimit_X9D",
+              "sb": 4,
+              "bs": 32,
+              "ln": 12,
+              "f": 0.01,
+              "mx": 10,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x9D_MotorTorqueLowerLimit_X9D",
+              "sb": 5,
+              "bs": 44,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -10,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x9D_BiVC_Function_X9D",
+              "sb": 7,
+              "bs": 56,
+              "ln": 4,
+              "mx": 15,
+              "iv": "0",
+              "vd": "7: ADT(漂移模式)\n6: SMC(对开路面稳定控制)\n5: CDS(碰撞识别控制)\n4: IRR(智能路况识别)\n3: RC(遥控驾驶)\n2: USC(极致转向)\n1: TSC(爆胎)\n0: Normal",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x9D_BiVCECU_AngleReq_St",
+              "sb": 7,
+              "bs": 60,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "2: Active\n1: Ready\n0: No request",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x9D_BiVC_ECU_AngleReq",
+              "sb": 8,
+              "bs": 64,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x9D_BiVC_Vibration_Cmd",
+              "sb": 10,
+              "bs": 80,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "5: Level 5（DMS振感曲线）\n4: Level 4（DMS振感曲线）\n3: Level 3（low）\n2: Level 2（middle）\n1: Level 1（high）\n0: invalid",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x9D_SVC_VibrationCmdvld",
+              "sb": 10,
+              "bs": 83,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_10C",
+      "c": [
+        {
+          "l": "Msg_10C",
+          "id": 268,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x10C_Checksum_S",
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x10C_Alive_counter_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_Vehicle_speed",
+              "sb": 4,
+              "bs": 35,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_VehicleSpeed_Status",
+              "sb": 5,
+              "bs": 47,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FL_1F0_S",
+              "sb": 6,
+              "bs": 48,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FR_1F0_S",
+              "sb": 7,
+              "bs": 60,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Wheel_Speed_RL_1F0_S",
+              "sb": 9,
+              "bs": 72,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Wheel_Speed_RR_1F0_S",
+              "sb": 10,
+              "bs": 84,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FR_Stats_1F0_S",
+              "sb": 12,
+              "bs": 96,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Wheel_Speed_FL_Stats_1F0_S",
+              "sb": 12,
+              "bs": 97,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Wheel_Speed_RR_Stats_1F0_S",
+              "sb": 12,
+              "bs": 98,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_WheelSpeed_RL_Status_1F0_S",
+              "sb": 12,
+              "bs": 99,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_FL_Wheel_Pulse_Counter",
+              "sb": 14,
+              "bs": 112,
+              "ln": 10,
+              "mx": 1022,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_FR_Wheel_Pulse_Counter",
+              "sb": 15,
+              "bs": 122,
+              "ln": 10,
+              "mx": 1022,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_RL_Wheel_Pulse_Counter",
+              "sb": 16,
+              "bs": 132,
+              "ln": 10,
+              "mx": 1022,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_RR_Wheel_Pulse_Counter",
+              "sb": 17,
+              "bs": 142,
+              "ln": 10,
+              "mx": 1022,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_RR_Wheel_Pulse_Counter_Validity",
+              "sb": 19,
+              "bs": 152,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_RL_Wheel_Pulse_Counter_Validity",
+              "sb": 19,
+              "bs": 153,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_FR_Wheel_Pulse_Counter_Validity",
+              "sb": 19,
+              "bs": 154,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_FL_Wheel_Pulse_Counter_Validity",
+              "sb": 19,
+              "bs": 155,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10C_EBD_Active",
+              "sb": 19,
+              "bs": 156,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_EBD_Fault",
+              "sb": 19,
+              "bs": 157,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_ABS_Active",
+              "sb": 19,
+              "bs": 158,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_ABS_Fault",
+              "sb": 19,
+              "bs": 159,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_VDC_Active",
+              "sb": 20,
+              "bs": 160,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_VDC_Fault",
+              "sb": 20,
+              "bs": 161,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_ESP_OFF_S",
+              "sb": 20,
+              "bs": 162,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_IPB_Active",
+              "sb": 20,
+              "bs": 163,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Yaw_Rate_Signal",
+              "sb": 28,
+              "bs": 225,
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -2.0943,
+              "mn": -2.0943,
+              "mx": 6.638709285,
+              "iv": "-8.87",
+              "u": "rad/s",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Yaw_Rate_Offset",
+              "sb": 29,
+              "bs": 237,
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -0.13,
+              "mn": -0.13,
+              "mx": 8.603009285,
+              "iv": "-2.76",
+              "u": "rad/s",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Yaw_rate_status",
+              "sb": 31,
+              "bs": 249,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_AX",
+              "sb": 31,
+              "bs": 250,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_AX_Offset",
+              "sb": 32,
+              "bs": 262,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_AX_Status",
+              "sb": 34,
+              "bs": 274,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_AY",
+              "sb": 34,
+              "bs": 275,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_AY_Offset",
+              "sb": 35,
+              "bs": 287,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_AY_Status",
+              "sb": 37,
+              "bs": 299,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Automatic_Braking_Available",
+              "sb": 37,
+              "bs": 303,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Automatic_Braking_Active",
+              "sb": 38,
+              "bs": 304,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x10C_Brake_Pedal_Status",
+              "sb": 43,
+              "bs": 349,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_94",
+          "id": 148,
+          "d": "16",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x94_Checksum_094_S",
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x94_Rolling_counter_094_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x94_EPSAngleCtrlSt_094_S",
+              "sb": 4,
+              "bs": 32,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "4: Permanently Failed\n3: Temporary Failed\n2: Active\n1: Ready\n0: Not Ready",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_StrngWhlTorqVD_094_S",
+              "sb": 4,
+              "bs": 35,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_StrngWhlTorq_094_S",
+              "sb": 4,
+              "bs": 36,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -13.5,
+              "mx": 13.5,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x94_EPSAngleCtrlDlvdValue_094_S",
+              "sb": 6,
+              "bs": 48,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x94_EPSAngleCtrlDlvdTorsionBar_094_S",
+              "sb": 8,
+              "bs": 64,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -5,
+              "mx": 5,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x94_EPS_InterDect_094_S",
+              "sb": 9,
+              "bs": 76,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_EPS_InterDectVD",
+              "sb": 9,
+              "bs": 77,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_Request_Angle_Over_Range",
+              "sb": 9,
+              "bs": 78,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_Request_Angle_speed_Over_Range",
+              "sb": 9,
+              "bs": 79,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_EPSAngleCtrlAbortFeedback",
+              "sb": 10,
+              "bs": 80,
+              "ln": 4,
+              "mx": 15,
+              "iv": "0",
+              "vd": "9: CurPinAngle ±DeviationAngle\n8: Over Angle Velocity\n7: Over Angle Max Value\n6: EPS Permanently error\n5: EPS Temporary error\n4: BiVC ECU Signal error\n3: Request Error\n2: Vehicle Speed Invalid\n1: Driver override\n0: No interruption",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_SAC_FunOutTq",
+              "sb": 10,
+              "bs": 84,
+              "ln": 12,
+              "f": 0.1,
+              "o": -204.8,
+              "mn": -204.8,
+              "mx": 204.7,
+              "iv": "-204",
+              "u": "N·m",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_Motor_Winding_Temper",
+              "sb": 12,
+              "bs": 96,
+              "ln": 11,
+              "f": 0.2,
+              "o": -60,
+              "mn": -60,
+              "mx": 349.4,
+              "iv": "-60",
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_EPS_Vibration_State",
+              "sb": 13,
+              "bs": 107,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: 震动\n0: 未震动",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_Vibration_Control",
+              "sb": 13,
+              "bs": 108,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Prohibit\n0: Allowed",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_Vibration_interface_mode",
+              "sb": 13,
+              "bs": 109,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "2: 幅频受控模式\n1: 档位模式\n0: 无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_Actual_Vibration_Gear",
+              "sb": 13,
+              "bs": 111,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "5: DMS振感曲线Moderate\n4: DMS振感曲线Severe\n3: LDW振感曲线Low\n2: LDW振感曲线Middle\n1: LDW振感曲线high\n0: 无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x94_EPS_Unvibration_Feedback",
+              "sb": 14,
+              "bs": 114,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: EPS永久故障\n6: EPS临时故障\n5: 配置字未打开\n4: 请求振频超限\n3: 请求振幅超限\n2: 振动间歇中\n1: 无振动请求\n0: 初始化",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_6D",
+          "id": 109,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x6D_Counter_S",
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x6D_Checksum_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC16_All"
+            },
+            {
+              "l": "x6D_EPS_AgCtrlAvl",
+              "sb": 4,
+              "bs": 32,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_AgCtrlSts",
+              "sb": 4,
+              "bs": 34,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: ESA/AES active\n2: active\n1: Ready\n0: No active",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_TqCtrlAvl",
+              "sb": 4,
+              "bs": 36,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_TqCtrlSts",
+              "sb": 4,
+              "bs": 38,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: Reserved\n2: active\n1: Ready\n0: No active",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_LdwWarnAvl",
+              "sb": 5,
+              "bs": 40,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_LdwWarnSts",
+              "sb": 5,
+              "bs": 42,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAg",
+              "sb": 5,
+              "bs": 44,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAgVld",
+              "sb": 7,
+              "bs": 60,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAgRat",
+              "sb": 7,
+              "bs": 61,
+              "ln": 15,
+              "f": 0.1,
+              "mn": -1500,
+              "mx": 1500,
+              "u": "°/s",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_SteerPinionAgRatVld",
+              "sb": 9,
+              "bs": 76,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAg",
+              "sb": 9,
+              "bs": 77,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAgVld",
+              "sb": 11,
+              "bs": 93,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAgRat",
+              "sb": 11,
+              "bs": 94,
+              "ln": 15,
+              "f": 0.1,
+              "mn": -1500,
+              "mx": 1500,
+              "u": "°/s",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_SteerWheelAgRatVld",
+              "sb": 13,
+              "bs": 109,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_AsscMotCrtTq",
+              "sb": 13,
+              "bs": 110,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_AsscMotCrtTqVld",
+              "sb": 15,
+              "bs": 121,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTq",
+              "sb": 15,
+              "bs": 122,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTqVld",
+              "sb": 16,
+              "bs": 133,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTqFlt",
+              "sb": 16,
+              "bs": 134,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_DrvrSteerTqFltVld",
+              "sb": 18,
+              "bs": 145,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_SteerDrvrOvrd",
+              "sb": 18,
+              "bs": 146,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_SteerDrvrOvrdVld",
+              "sb": 18,
+              "bs": 147,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_AdsReqErrorFb",
+              "sb": 18,
+              "bs": 148,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: other error\n6: E2E 故障\n5: AgReq Out of Limit\n4: AgSpdReq Out of Limit\n3: AgReq Invalid or Timeout\n2: TqReq Out of Limit\n1: TqReq Invalid or Timeout\n0: No error",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_AbortFb",
+              "sb": 18,
+              "bs": 151,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "5: High Function Priority Intervene\n4: EPS Internal Failure\n3: ADS Request Abnormal\n2: Driver interference StrWhl\n1: Other Abnormal\n0: no Abnormal",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_SteerMod",
+              "sb": 19,
+              "bs": 154,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "5: Failure\n4: Torque control(emergency)\n3: Torque control(common)\n2: Angle control\n1: Power steer\n0: Initial",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EpsFltSts",
+              "sb": 19,
+              "bs": 157,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "2: Fatal failure  （严重故障）\n1: Slight failure （一般故障）\n0: No failure",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_BoostMod",
+              "sb": 19,
+              "bs": 159,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: unknow\n2: Sport Mode\n1: Comfort Mode\n0: Standar Mode",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_TasCalSts",
+              "sb": 20,
+              "bs": 161,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x6D_EPS_Tq1",
+              "sb": 20,
+              "bs": 162,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_Tq2",
+              "sb": 21,
+              "bs": 173,
+              "ln": 11,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x6D_EPS_Fastbatterry_tempreture",
+              "sb": 23,
+              "bs": 184,
+              "ln": 11,
+              "f": 0.2,
+              "o": -60,
+              "mn": -60,
+              "mx": 349.4,
+              "iv": "-60",
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_1FC",
+          "id": 508,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1FC_EPSAngleCtrlSt_S",
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "5: ESA/AES Active\n4: Permanently Failed\n3: Temporary Failed\n2: Active\n1: Ready\n0: Not Ready",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1FC_StrngWhlTorqVD_1FC_S",
+              "bs": 3,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Valid\n0: Invalid",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1FC_StrngWhlTorq_1FC_S",
+              "bs": 4,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x1FC_EPSAngleCtrlDlvdValue_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x1FC_EPSAngleCtrlDlvdTorsionBar_S",
+              "sb": 4,
+              "bs": 32,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -5,
+              "mx": 5,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x1FC_Vibration_status",
+              "sb": 5,
+              "bs": 44,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: Vibration\n0: No vibration",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1FC_LKA_tune_status",
+              "sb": 5,
+              "bs": 45,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: LKA_tune\n0: Ordinary_tune",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1FC_Request_Angle_Over_Range",
+              "sb": 5,
+              "bs": 46,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1FC_Request_Angle_speed_Over_Range",
+              "sb": 5,
+              "bs": 47,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1FC_EPSAngleCtrlAbortFeedback",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "iv": "0",
+              "vd": "11: High Function Priority Intervene\n10: ActiveCurPinAngleDeviationAngErr\n9: EPS Permanently error\n8: Angle Value over range\n7: Angle Slope over range\n6: EPS Temporary error\n5: ADAS ECU Signal error\n4: ADAS Request Error\n3: Vehicle Speed Invalid\n2: Driver override\n1: 预留\n0: No interruption",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1FC_Counter_1FC_S",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1FC_Checksum_1FC_S",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        },
+        {
+          "l": "Msg_135",
+          "id": 309,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x135_EPS_StrWhlTorqVD",
+              "sb": 2,
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x135_EPS_StrWhlTorqVal",
+              "sb": 3,
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x135_EPS_InterDect",
+              "sb": 4,
+              "bs": 36,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x135_EPS_InterDectVD",
+              "sb": 4,
+              "bs": 37,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x135_EPS_APA_CtrlStas",
+              "sb": 4,
+              "bs": 38,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "3: Permanent Inhibited\n2: Active\n1: Available for control\n0: Temporary Inhibited",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x135_EPS_APA_APA_CtrlAbortFeed",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "iv": "0",
+              "vd": "15: Other Faults\n14: Over Angle Velocity\n13: Over Angle Max Value\n12: Incorrect Handshaking\n11: TAS Angle Error\n10: Reserved\n9: Vehicle Speed Signal Error\n8: Vehicle Speed Over Limit\n7: APA Signal Error\n6: Target Angle Velocity Over Limit\n5: Target Angle Over Limit\n4: Reserved\n3: EPS Permanent Error\n2: EPS Temporary Error\n1: Driver Interruption\n0: No Interruption",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x135_EPS_MsgCounter_x135",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x135_EPS_Checksum_x135",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        },
+        {
+          "l": "Msg_27F",
+          "id": 639,
+          "d": "8",
+          "cy": "40",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x27F_EPS_DST_Control_status",
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "3: Permanent Inhibited\n2: Active\n1: Available for control\n0: Temporary Inhibited",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x27F_EPS_DST_Value",
+              "sb": 1,
+              "bs": 8,
+              "ln": 12,
+              "f": 0.01,
+              "o": -10,
+              "mn": -10,
+              "mx": 10,
+              "iv": "-10",
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x27F_EPS_DST_Value_VD",
+              "sb": 2,
+              "bs": 20,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x27F_Steering_Wheel_Torque_VD",
+              "sb": 2,
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x27F_Steering_Wheel_Torque",
+              "sb": 3,
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "o": -10,
+              "mn": -10,
+              "mx": 10,
+              "iv": "-10",
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x27F_EPS_MsgCounter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x27F_EPS_Checksum",
+              "sb": 7,
+              "bs": 56,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        },
+        {
+          "l": "Msg_11F",
+          "id": 287,
+          "d": "5",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x11F_LWS_ANGLE",
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x11F_LWS_SPEED",
+              "sb": 2,
+              "bs": 16,
+              "f": 4,
+              "mx": 1016,
+              "u": "°/S",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x11F_Failure_Status",
+              "sb": 3,
+              "bs": 24,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: 传感器有效\n0: 传感器无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x11F_Sensor_Calibration_Stats",
+              "sb": 3,
+              "bs": 25,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: 零点标定成功\n0: 零点未标定",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x11F_TRIM_Trimming_Stats",
+              "sb": 3,
+              "bs": 26,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x11F_SF1_5_Internal_Stats",
+              "sb": 3,
+              "bs": 27,
+              "ln": 5,
+              "mx": 31,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x11F_SAS_Conter",
+              "sb": 4,
+              "bs": 32,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x11F_SAS_CheckSum",
+              "sb": 4,
+              "bs": 36,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Hig_xor_low"
+            }
+          ]
+        },
+        {
+          "l": "Msg_24C",
+          "id": 588,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x24C_EPS_Fault_Waring",
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: 一般故障\n2: 一般故障(禁止遥控驾驶)\n1: 严重故障\n0: 正常",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24C_Steering_mode_state",
+              "sb": 1,
+              "bs": 8,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "4: 运动+\n3: 运动\n2: 舒适+\n1: 舒适\n0: 默认/无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24C_Steering_mode_Settings",
+              "sb": 1,
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: 禁止\n0: 允许",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24C_CODE",
+              "sb": 1,
+              "bs": 12,
+              "ln": 4,
+              "mx": 15,
+              "vd": "7: 龙润",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24C_SFS_configuration",
+              "sb": 2,
+              "bs": 16,
+              "ln": 1,
+              "mx": 1,
+              "iv": "0",
+              "vd": "1: 激活\n0: 未激活",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x24C_Counter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x24C_Checksum",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        },
+        {
+          "l": "Msg_318",
+          "id": 792,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x318_EPS_LKA_Control_State",
+              "ln": 3,
+              "mx": 7,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x318_LKA_tune_status",
+              "bs": 3,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x318_EPS_LKA_Abort_Feedback",
+              "bs": 4,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x318_LKA_Control_Delivered_Value",
+              "sb": 1,
+              "bs": 8,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -5,
+              "mx": 5,
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x318_LKA_CtrlDlvdValue_VD",
+              "sb": 2,
+              "bs": 20,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x318_HandsOffDetStVD",
+              "sb": 2,
+              "bs": 22,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x318_StrngWhlTorqVD",
+              "sb": 2,
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x318_StrngWhlTorq",
+              "sb": 3,
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x318_Vibration_status",
+              "sb": 4,
+              "bs": 36,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x318_EPS_2_MsgCounter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x318_EPS_2_Checksum",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_57",
+      "c": [
+        {
+          "l": "Msg_57",
+          "id": 87,
+          "d": "64",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x57_ADS_SteerAgReq",
+              "ln": 16,
+              "f": 0.1,
+              "mn": -720,
+              "mx": 720,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x57_ADS_SteerAgVld",
+              "sb": 2,
+              "bs": 16,
+              "ln": 2,
+              "mx": 3,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_ADS_SteerAgEna",
+              "sb": 2,
+              "bs": 18,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: ESA/AES active\n2: Active\n1: Ready\n0: No request",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_ADS_SteerGainLevel",
+              "sb": 2,
+              "bs": 20,
+              "f": 0.01,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_ADS_SteerTqReq",
+              "sb": 3,
+              "bs": 28,
+              "ln": 13,
+              "f": 0.02,
+              "mn": -20,
+              "mx": 20,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x57_ADS_SteerTqVld",
+              "sb": 5,
+              "bs": 41,
+              "ln": 2,
+              "mx": 3,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_ADS_SteerTqMod",
+              "sb": 5,
+              "bs": 43,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_ADS_SteerTqEna",
+              "sb": 5,
+              "bs": 45,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "2: Active\n1: Ready\n0: No request",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_ADS_LdwWarningCmd",
+              "sb": 6,
+              "bs": 52,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_ADS_LdwWarningCmdVld",
+              "sb": 6,
+              "bs": 54,
+              "ln": 2,
+              "mx": 3,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x57_Counter_057_S",
+              "sb": 60,
+              "bs": 480,
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x57_Checksum_057_S",
+              "sb": 62,
+              "bs": 496,
+              "ln": 16,
+              "mx": 65535,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC16_All"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_223",
+      "c": [
+        {
+          "l": "Msg_223",
+          "id": 547,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x223_AX_S",
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "u": "m/s2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x223_AX_offset_S",
+              "sb": 1,
+              "bs": 12,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "u": "m/s2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x223_AY_S",
+              "sb": 3,
+              "bs": 24,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "u": "m/s2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x223_AY_Offset_S",
+              "sb": 4,
+              "bs": 36,
+              "ln": 12,
+              "f": 0.027126736,
+              "o": -21.593,
+              "mn": -21.593,
+              "mx": 21.593,
+              "iv": "3.526",
+              "u": "m/s2",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_357",
+      "c": [
+        {
+          "l": "Msg_357",
+          "id": 855,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x357_Child_ID_355_S_03",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x357_EPS_PowerPercentage_S",
+              "sb": 1,
+              "bs": 8,
+              "ln": 10,
+              "f": 0.1,
+              "mx": 100,
+              "u": "%",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x357_EPS_Assist_Status_S",
+              "sb": 2,
+              "bs": 18,
+              "ln": 3,
+              "mx": 8,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x357_EPSSteeringTorque_S",
+              "sb": 3,
+              "bs": 24,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -12.5,
+              "mx": 12.5,
+              "u": "N.m",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x357_EPS_Motor_Torque_355_S",
+              "sb": 4,
+              "bs": 36,
+              "ln": 12,
+              "f": 0.01,
+              "mn": -20.48,
+              "mx": 20.47,
+              "u": "N.m",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x357_Motor_Temperature_355_S",
+              "sb": 6,
+              "bs": 48,
+              "ln": 11,
+              "f": 0.2,
+              "o": -60,
+              "mn": -60,
+              "mx": 349.4,
+              "iv": "-60",
+              "u": "℃",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_356",
+      "c": [
+        {
+          "l": "Msg_356",
+          "id": 854,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x356_Child_ID_355_S_02",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_Network_BusOFF_S",
+              "sb": 1,
+              "bs": 8,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_VehicleSpeedCommucation_S",
+              "sb": 1,
+              "bs": 9,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_WheelSpeedCommucation_S",
+              "sb": 1,
+              "bs": 10,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_VCU_ok_Commucation_S",
+              "sb": 1,
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_BCM_ON_Commucation_S",
+              "sb": 1,
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_APA_Commucationn_S",
+              "sb": 1,
+              "bs": 13,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_ADAS_Commucation_S",
+              "sb": 1,
+              "bs": 14,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_VOT_Communication_S",
+              "sb": 1,
+              "bs": 15,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_SMS_Communication_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_DST_Communication_S",
+              "sb": 2,
+              "bs": 17,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_LDW_Communication_S",
+              "sb": 2,
+              "bs": 18,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_SCU_Communication_S",
+              "sb": 2,
+              "bs": 19,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_EPB_Communication_S",
+              "sb": 2,
+              "bs": 20,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_Motor_Current_355_S",
+              "sb": 2,
+              "bs": 21,
+              "o": -125,
+              "mn": -125,
+              "mx": 125,
+              "iv": "-125",
+              "u": "A",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_SteeringMode",
+              "sb": 3,
+              "bs": 29,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: 竞速\n6: 特殊手感2\n5: 特殊手感1\n4: 运动+\n3: 运动\n2: 舒适+\n1: 舒适\n0: 无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_LWS_ANGLE",
+              "sb": 4,
+              "bs": 32,
+              "ln": 16,
+              "f": 0.1,
+              "o": -720,
+              "mn": -720,
+              "mx": 720,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_LWS_SPEED",
+              "sb": 6,
+              "bs": 48,
+              "f": 4,
+              "mx": 1016,
+              "u": "°/s",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_EPSAngleCtrlAbortFeedback",
+              "sb": 7,
+              "bs": 56,
+              "ln": 4,
+              "mx": 15,
+              "iv": "0",
+              "vd": "10: ActiveAngleError\n9: LKAAngleSlopeLimitation\n8: LKAAngleValueLimitation\n7: EPS Permanently error\n6: EPS Temporary error\n5: ADAS ECU Signal error\n4: ADAS Activation Request Error\n3: Vehicle Speed Invalid\n2: Driver override\n1: Driver hands off\n0: No interruption",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x356_EPS_APA_CtrlAbortFeed",
+              "sb": 7,
+              "bs": 60,
+              "ln": 4,
+              "mx": 15,
+              "iv": "0",
+              "vd": "15: Other Faults\n14: Over Angle Velocity\n13: Over Angle Max Value\n12: Incorrect Handshaking\n11: TAS Angle Error\n10: Reserved\n9: Vehicle Speed Signal Error\n8: Vehicle Speed Over Limit\n7: APA Signal Error\n6: APA Angle Velocity Over Limit\n5: APA Target Angle Over Limit\n4: Reserved\n3: EPS Permanent Error\n2: EPS Temporary Error\n1: Driver Interruption\n0: No Interruption",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_358",
+      "c": [
+        {
+          "l": "Msg_358",
+          "id": 856,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x358_Child_ID_355_S",
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPSMotorFault_S",
+              "sb": 1,
+              "bs": 8,
+              "ln": 1,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPSTorqueSensorFault_S",
+              "sb": 1,
+              "bs": 9,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPSAngleSensorFault_S",
+              "sb": 1,
+              "bs": 10,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPSECUFault_S",
+              "sb": 1,
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPSECUCalibration_Failure_S",
+              "sb": 1,
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_FRICTION_DETECTED_ERROR_S",
+              "sb": 1,
+              "bs": 13,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPS_PowerFailure_S",
+              "sb": 1,
+              "bs": 14,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_CONFIGURATIONFailure_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EndProtection_S",
+              "sb": 2,
+              "bs": 18,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_OverProtection_S",
+              "sb": 2,
+              "bs": 20,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_TemperatureProtection_S",
+              "sb": 2,
+              "bs": 21,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_PDC_Status_S",
+              "sb": 2,
+              "bs": 22,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_TSC_Status_S",
+              "sb": 3,
+              "bs": 24,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_Shimmy_Status_S",
+              "sb": 3,
+              "bs": 26,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_AFC_Status_S",
+              "sb": 3,
+              "bs": 28,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_AngleZeroCalibration",
+              "sb": 3,
+              "bs": 30,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_SFS_Configuration_S",
+              "sb": 4,
+              "bs": 32,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_RCS_Configuration_S",
+              "sb": 4,
+              "bs": 33,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_LKA_Angle_Configuration_S",
+              "sb": 4,
+              "bs": 34,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_LKA_BarTorque_Configuration_S",
+              "sb": 4,
+              "bs": 35,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_LKA_MotorTorque_Configuration_S",
+              "sb": 4,
+              "bs": 36,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_APA_Configuration_S",
+              "sb": 4,
+              "bs": 37,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_VOT_Configuration_S",
+              "sb": 4,
+              "bs": 38,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_SMSATSConfiguration_S",
+              "sb": 4,
+              "bs": 39,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPS_Tuning_Number_S",
+              "sb": 5,
+              "bs": 40,
+              "ln": 5,
+              "mx": 31,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_TAS_SENTAngleOriginal",
+              "sb": 5,
+              "bs": 45,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_SBC_Warning_S",
+              "sb": 5,
+              "bs": 46,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_DST_Configuration_S",
+              "sb": 5,
+              "bs": 47,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_ADS_AngPortConfigState",
+              "sb": 6,
+              "bs": 48,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_ADS_MotTorquePortConfigState",
+              "sb": 6,
+              "bs": 49,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPS_AdsReqErrorFb",
+              "sb": 6,
+              "bs": 50,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: other error\n6: E2E 故障\n5: AgReq Out of Limit\n4: AgSpdReq Out of Limit\n3: AgReq Invalid or Timeout\n2: TqReq Out of Limit\n1: TqReq Invalid or Timeout\n0: No error",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x358_EPS_AbortFb",
+              "sb": 6,
+              "bs": 53,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "4: EPS Internal Failure\n3: ADS Request Abnormal\n2: driver interference StrWhl\n1: Other Abnormal\n0: no Abnormal",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_336",
+      "c": [
+        {
+          "l": "Msg_336",
+          "id": 822,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x336_Hand_marker",
+              "bs": 2,
+              "ln": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x336_Target_gear",
+              "bs": 3,
+              "ln": 3,
+              "mx": 7,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_4BF",
+      "c": [
+        {
+          "l": "Msg_4BF",
+          "id": 1215,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x4BF_Limit_mode_instruction",
+              "sb": 7,
+              "bs": 58,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: 极限续航模式关闭\n2: 极致版极限续航模式开启\n1: 标准版极限续航模式开启\n0: 无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_241",
+      "c": [
+        {
+          "l": "Msg_241",
+          "id": 577,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x241_Vehicle_Torque",
+              "ln": 16,
+              "o": -12000,
+              "mn": -12000,
+              "mx": 12000,
+              "iv": "-1200",
+              "u": "Nm",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x241_Vehicle_Torque_State",
+              "sb": 5,
+              "bs": 46,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_134",
+      "c": [
+        {
+          "l": "Msg_134",
+          "id": 308,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x134_APA_MainStas",
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: ParkAssist_Standby\n6: Failure\n5: Guidance Completed\n4: Guidance Terminated\n3: Guidance Suspend\n2: Guidance Active\n1: Serching\n0: Passive",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x134_APA_SteeringCtrlReqForEPS",
+              "sb": 1,
+              "bs": 11,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x134_APA_SteeringCtrlReqForEPSVD",
+              "sb": 1,
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1",
+              "iv2": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x134_APA_Tar_StrAgl",
+              "sb": 2,
+              "bs": 16,
+              "ln": 16,
+              "f": 0.1,
+              "o": -780,
+              "mn": -780,
+              "mx": 779.9,
+              "iv": "-780",
+              "u": "°",
+              "iv2": "0xFFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x134_APA_MsgCounter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x134_APA_Checksum",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_432",
+      "c": [
+        {
+          "l": "Msg_432",
+          "id": 1074,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x432_LDW",
+              "bs": 4,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x432_LKS_HWA",
+              "bs": 5,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x432_TJA",
+              "bs": 7,
+              "ln": 1,
+              "mx": 1,
+              "iv": "1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1E2",
+      "c": [
+        {
+          "l": "Msg_1E2",
+          "id": 482,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1E2_MotorTorqueU_pperLimit",
+              "ln": 10,
+              "f": 0.01,
+              "mx": 5,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x1E2_MotorTorqueL_owerLimit",
+              "sb": 1,
+              "bs": 10,
+              "ln": 10,
+              "f": 0.01,
+              "mn": -5,
+              "u": "Nm",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x1E2_ADAS_ECU_AngleReq_St",
+              "sb": 2,
+              "bs": 20,
+              "ln": 2,
+              "mx": 3,
+              "iv": "0",
+              "vd": "3: ESA/AES active\n2: Active\n1: Ready\n0: Inhibited",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1E2_ADAS_ECU_AngleReq",
+              "sb": 3,
+              "bs": 24,
+              "ln": 16,
+              "f": 0.1,
+              "mn": -780,
+              "mx": 779.9,
+              "u": "°",
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x1E2_MsgCounter1E2",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1E2_Checksum1E2",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_316",
+      "c": [
+        {
+          "l": "Msg_316",
+          "id": 790,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x316_Left_line_tracking_status",
+              "bs": 4,
+              "ln": 2,
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x316_Lane_auxiliary_mode_state",
+              "bs": 6,
+              "ln": 2,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x316_MPC_TorqueReq",
+              "sb": 2,
+              "bs": 16,
+              "ln": 11,
+              "f": 0.01,
+              "mn": -10.24,
+              "mx": 10.23,
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x316_MPC_TorqueReqSt",
+              "sb": 3,
+              "bs": 27,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x316_Right_line_tracking_status",
+              "sb": 4,
+              "bs": 34,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x316_LDW_Waring_style",
+              "sb": 6,
+              "bs": 48,
+              "ln": 2,
+              "mn": -2,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "signed"
+            },
+            {
+              "l": "x316_Message_alive_counter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x316_Messge_check_sum",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_12D",
+      "c": [
+        {
+          "l": "Msg_12D",
+          "id": 301,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x12D_Power_gear",
+              "sb": 4,
+              "bs": 34,
+              "ln": 3,
+              "mx": 7,
+              "iv2": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x12D_MsgCounter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x12D_Checksum_BCM",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_2B6",
+      "c": [
+        {
+          "l": "Msg_2B6",
+          "id": 694,
+          "d": "8",
+          "cy": "500",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x2B6_Date_year",
+              "o": 2000,
+              "mn": 2001,
+              "mx": 2255,
+              "iv": "2000",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2B6_Date_month",
+              "sb": 1,
+              "bs": 8,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2B6_Date_day",
+              "sb": 2,
+              "bs": 16,
+              "mx": 255,
+              "iv2": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2B6_hours",
+              "sb": 3,
+              "bs": 24,
+              "mx": 255,
+              "iv2": "0x18",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2B6_minutes",
+              "sb": 4,
+              "bs": 32,
+              "mx": 255,
+              "iv2": "0x3C",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2B6_second",
+              "sb": 5,
+              "bs": 40,
+              "mx": 255,
+              "iv2": "0x3C",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2B6_week",
+              "sb": 6,
+              "bs": 48,
+              "ln": 3,
+              "mx": 7,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x2B6_Time_system",
+              "sb": 6,
+              "bs": 51,
+              "ln": 2,
+              "mx": 3,
+              "iv2": "0x0",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_4E3",
+      "c": [
+        {
+          "l": "Msg_4E3",
+          "id": 1251,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x4E3_Steering_mode_Settings2",
+              "sb": 3,
+              "bs": 26,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "3: 运动\n2: 预留\n1: 舒适\n0: 无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_3E3",
+      "c": [
+        {
+          "l": "Msg_3E3",
+          "id": 995,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x3E3_Return_to_factory_flag",
+              "sb": 2,
+              "bs": 23,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_240",
+      "c": [
+        {
+          "l": "Msg_240",
+          "id": 576,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x240_Actual_road_pattern",
+              "sb": 5,
+              "bs": 43,
+              "ln": 3,
+              "mx": 7,
+              "iv": "0",
+              "vd": "7: 预留\n6: 预留\n5: 预留\n4: 沙地\n3: 泥泞地面/车辙地\n2: 草地/砂砾地/雪地\n1: 普通模式\n0: 无效",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_410",
+      "c": [
+        {
+          "l": "Msg_410",
+          "id": 1040,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x410_Remote_driving_condition",
+              "bs": 5,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_341",
+      "c": [
+        {
+          "l": "Msg_341",
+          "id": 833,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x341_The_back_indicator_amp",
+              "sb": 1,
+              "bs": 8,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_27E",
+      "c": [
+        {
+          "l": "Msg_27E",
+          "id": 638,
+          "d": "8",
+          "cy": "40",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x27E_MStrWhlOffs",
+              "ln": 16,
+              "f": 0.0009765625,
+              "o": -10,
+              "mn": -10,
+              "mx": 10,
+              "iv": "-10",
+              "u": "Nm",
+              "iv2": "0xFFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x27E_ESP_DST_OK",
+              "sb": 2,
+              "bs": 16,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x27E_Message_counter",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x27E_CheckSum_ESP6",
+              "sb": 7,
+              "bs": 56,
+              "mn": -128,
+              "mx": 127,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_123",
+      "c": [
+        {
+          "l": "Msg_123",
+          "id": 291,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x123_IPB_BRAKE_PEDAL_STARUS",
+              "sb": 5,
+              "bs": 43,
+              "ln": 2,
+              "mx": 3,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x123_ESP_Active",
+              "sb": 6,
+              "bs": 53,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x123_TCS_Fault",
+              "sb": 6,
+              "bs": 54,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x123_VDC_Fault",
+              "sb": 6,
+              "bs": 55,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_218",
+      "c": [
+        {
+          "l": "Msg_218",
+          "id": 536,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x218_Electric_Park_Brake_Status",
+              "sb": 1,
+              "bs": 9,
+              "ln": 3,
+              "mx": 7,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_222",
+      "c": [
+        {
+          "l": "Msg_222",
+          "id": 546,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x222_Yaw_Rate_Signal",
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -2.0943,
+              "mn": -2.0943,
+              "mx": 6.638709285,
+              "iv": "-8.87",
+              "u": "rad/s",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_Yaw_Rate_Offset",
+              "sb": 1,
+              "bs": 12,
+              "ln": 12,
+              "f": 0.002132603,
+              "o": -0.13,
+              "mn": -0.13,
+              "mx": 0.13,
+              "iv": "-2.76",
+              "u": "rad/s",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_EBD_Active",
+              "sb": 3,
+              "bs": 24,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_ABS_Active",
+              "sb": 3,
+              "bs": 25,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_EBD_Fault",
+              "sb": 3,
+              "bs": 26,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_ABS_Fault",
+              "sb": 3,
+              "bs": 27,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_TCS_Active",
+              "sb": 3,
+              "bs": 28,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_VDC_Active",
+              "sb": 3,
+              "bs": 30,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_Yaw_rate_status",
+              "sb": 3,
+              "bs": 31,
+              "ln": 1,
+              "mx": 1,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x222_Counter_222",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x222_Checksum_222",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1F0",
+      "c": [
+        {
+          "l": "Msg_1F0",
+          "id": 496,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x1F0_Wheel_Speed_FL_1F0_S",
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_FR_Stats_1F0_S",
+              "sb": 1,
+              "bs": 12,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_FL_Stats_1F0_S",
+              "sb": 1,
+              "bs": 13,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_RR_Stats_1F0_S",
+              "sb": 1,
+              "bs": 14,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_WheelSpeed_RL_Status_1F0_S",
+              "sb": 1,
+              "bs": 15,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_FR_1F0_S",
+              "sb": 2,
+              "bs": 16,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_RL_1F0_S",
+              "sb": 3,
+              "bs": 28,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_Wheel_Speed_RR_1F0_S",
+              "sb": 5,
+              "bs": 40,
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x1F0_Message_Counter_1F0_S",
+              "sb": 6,
+              "bs": 52,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1F0_Checksum_1F0_S",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC8_2F_All"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_121",
+      "c": [
+        {
+          "l": "Msg_121",
+          "id": 289,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x121_Vehicle_speed",
+              "ln": 12,
+              "f": 0.06875,
+              "mx": 281.53125,
+              "u": "km/h",
+              "iv2": "0xFFF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x121_VehicleSpeed_Status",
+              "sb": 1,
+              "bs": 15,
+              "ln": 1,
+              "mx": 1,
+              "iv2": "0x1",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            },
+            {
+              "l": "x121_ESP1_MSG_Counter",
+              "sb": 6,
+              "bs": 48,
+              "ln": 4,
+              "mx": 15,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x121_ESP1_Checksum",
+              "sb": 7,
+              "bs": 56,
+              "mx": 255,
+              "sst": "Cyclic",
+              "dt": "Unsigned",
+              "gs": "CRC_Xor_FF"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_35C",
+      "c": [
+        {
+          "l": "Msg_35C",
+          "id": 860,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x35C_Gear_recognition",
+              "sb": 1,
+              "bs": 8,
+              "ln": 3,
+              "mx": 7,
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_299",
+      "c": [
+        {
+          "l": "Msg_299",
+          "id": 665,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD_Standard",
+          "c": [
+            {
+              "l": "x299_Remote_control_command",
+              "sb": 2,
+              "bs": 20,
+              "ln": 4,
+              "mx": 15,
+              "iv2": "0xF",
+              "sst": "Cyclic",
+              "dt": "Unsigned"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "",
+    "onValue": "",
+    "offValue": ""
+  },
+  "spd": "",
+  "ch": 1,
+  "relay": 0,
+  "dtc": [],
+  "oem": "BYD",
+  "name": "比亚迪",
+  "_meta": {
+    "config_name": "比亚迪",
+    "digest": "09cef1baafbdbf06d81d5dfcfdfff4c5cd6d0859"
+  }
+}

@@ -1,0 +1,749 @@
+{
+  "tree": [
+    {
+      "l": "Node_758",
+      "c": [
+        {
+          "l": "Msg_758",
+          "id": 1880,
+          "d": "8",
+          "c": [
+            {
+              "l": "x758_BTreset",
+              "bs": 7,
+              "bo": "Motorola LSB"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_225",
+      "c": [
+        {
+          "l": "Msg_225",
+          "id": 549,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x225_ADASCmnd1AlvRollingcounter",
+              "bs": 7,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "gs": "Counter"
+            },
+            {
+              "l": "x225_EPS_ADASCtrlModRqst",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x225_EPS_ADASCtrlMod",
+              "bs": 2,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7
+            },
+            {
+              "l": "x225_StinsReq",
+              "bs": 23,
+              "bo": "Motorola LSB",
+              "mx": 100,
+              "u": "%"
+            },
+            {
+              "l": "x225_StrgWhlVibwarnReq",
+              "bs": 31,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x225_DrvStrgAngReqV",
+              "bs": 38,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x225_DrvStrgAngReq",
+              "bs": 37,
+              "ln": 14,
+              "bo": "Motorola LSB",
+              "f": 0.1,
+              "o": -740,
+              "mn": -740,
+              "mx": 740,
+              "u": " deg "
+            },
+            {
+              "l": "x225_ADASCmnd1Checksum",
+              "bs": 63,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "gs": "CRC_Hig_xor_low"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_375",
+      "c": [
+        {
+          "l": "Msg_375",
+          "id": 885,
+          "d": "8",
+          "cy": "50",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x375_ADASCtrlSts",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x375_ADASGnrSts3RlCout",
+              "bs": 51,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15
+            },
+            {
+              "l": "x375_ADASGnrSts3Cksm",
+              "bs": 63,
+              "bo": "Motorola LSB",
+              "mx": 255
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_201",
+      "c": [
+        {
+          "l": "Msg_201",
+          "id": 513,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x201_HCU_Counter_201",
+              "bs": 7,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "gs": "Counter"
+            },
+            {
+              "l": "x201_VehRdySts",
+              "bs": 3,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x201_VehSpdAvgDrvnVHCU",
+              "bs": 15,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x201_VehSpdAvgDrvnHCU",
+              "bs": 14,
+              "ln": 15,
+              "bo": "Motorola LSB",
+              "f": 0.015625,
+              "mx": 511.984375,
+              "u": "km/h"
+            },
+            {
+              "l": "x201_HCU_Checksum_201",
+              "bs": 63,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "gs": "CRC_Hig_xor_low"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_605",
+          "id": 1541,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x605_NMEPSInd",
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_429",
+      "c": [
+        {
+          "l": "Msg_429",
+          "id": 1065,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x429_EPSCurrStModeSSt",
+              "bs": 15,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "vd": "4=UnusedandreservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 3=SportÃ‚Â£Ã‚Â¨Ãƒâ€�Ãƒâ€¹Ã‚Â¶Ã‚Â¯Ãƒâ€žÃ‚Â£ÃƒÅ Ã‚Â½Ã‚Â£Ã‚Â©; 2=ComfortableÃ‚Â£Ã‚Â¨ÃƒÅ ÃƒÂ¦ÃƒÅ ÃƒÅ Ãƒâ€žÃ‚Â£ÃƒÅ Ã‚Â½Ã‚Â£Ã‚Â©; 1=NormalÃ‚Â£Ã‚Â¨Ã‚Â±ÃƒÂªÃƒâ€”Ã‚Â¼Ãƒâ€žÃ‚Â£ÃƒÅ Ã‚Â½Ã‚Â£Ã‚Â©; 0=UnavailableÃ‚Â£Ã‚Â¨Ã‚Â²Ã‚Â»Ã‚Â¿Ãƒâ€°Ãƒâ€œÃƒÆ’Ã‚Â£Ã‚Â©"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_1E5",
+          "id": 485,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x1E5_StrWhAngV",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=InvalidÃ‚Â£Ã‚Â¨ÃƒÅ½ÃƒÅ¾Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_StrWhlAngSenCalStat",
+              "bs": 6,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "vd": "3=Description for the value '0x3'; 2=CalibratedÃ‚Â£Ã‚Â¨Ãƒï¿½Ã‚Â£Ãƒâ€”Ã‚Â¼Ã‚Â£Ã‚Â©; 1=EstimatedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ã‚Â¹Ãƒâ‚¬Ã‚Â£Ã‚Â©; 0=UnknownÃ‚Â£Ã‚Â¨ÃƒÅ½Ã‚Â´ÃƒÅ Ã‚Â¹Ãƒâ€œÃƒÆ’Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_DrvStrInterDete",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=NotInterferenceÃ‚Â£Ã‚Â¨ÃƒÅ½Ã‚Â´Ã‚Â¸Ãƒâ€°Ãƒâ€�Ã‚Â¤Ã‚Â£Ã‚Â©; 0=InterferenceÃ‚Â£Ã‚Â¨Ã‚Â¸Ãƒâ€°Ãƒâ€�Ã‚Â¤Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_DrvStrInterDeteV",
+              "bs": 3,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=Description for the value '0x1'; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_StrngWhlAngSnsrInit",
+              "bs": 2,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=FalseÃ‚Â£Ã‚Â¨ÃƒÅ½Ã‚Â´Ãƒï¿½ÃƒÂªÃ‚Â³Ãƒâ€°Ã‚Â£Ã‚Â©; 0=TrueÃ‚Â£Ã‚Â¨Ãƒï¿½ÃƒÂªÃ‚Â³Ãƒâ€°Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_DirctnOfStrTorq",
+              "bs": 1,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=Description for the value '0x1'; 0=postive"
+            },
+            {
+              "l": "x1E5_DrvStrTorqV",
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=InvalidÃ‚Â£Ã‚Â¨ÃƒÅ½ÃƒÅ¾Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_StrWhAng",
+              "bs": 15,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.0625,
+              "mn": -2047.9375,
+              "mx": 2047.9375,
+              "u": "deg"
+            },
+            {
+              "l": "x1E5_PwrStrIO",
+              "bs": 28,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=TrueÃ‚Â£Ã‚Â¨Ãƒâ€“Ã‚Â¸ÃƒÅ Ã‚Â¾Ã‚Â£Ã‚Â©; 0=FalseÃ‚Â£Ã‚Â¨Ã‚Â²Ã‚Â»Ãƒâ€“Ã‚Â¸ÃƒÅ Ã‚Â¾Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_StrLdAtv",
+              "bs": 27,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=True; 0=False"
+            },
+            {
+              "l": "x1E5_Counter_1E5",
+              "bs": 39,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "gs": "Counter"
+            },
+            {
+              "l": "x1E5_EPSProId",
+              "bs": 35,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "vd": "7=ReservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â¹ÃƒÂºÃƒÅ’Ã‚Â«Ãƒâ€˜ÃƒÂ´Ã‚Â£Ã‚Â©; 6=LHÃ‚Â£Ã‚Â¨Ã‚ÂºÃƒÂ£Ãƒâ€šÃ‚Â¡Ã‚Â£Ã‚Â©; 5=SBÃ‚Â£Ã‚Â¨Ãƒï¿½Ãƒâ€šÃƒÅ Ãƒâ‚¬Ã‚Â±Ã‚Â¦Ã‚Â£Ã‚Â©; 4=DHÃ‚Â£Ã‚Â¨Ã‚Â¶Ã‚Â«Ã‚Â»Ã‚ÂªÃ‚Â£Ã‚Â©; 3=LRÃ‚Â£Ã‚Â¨Ãƒï¿½ÃƒÂºÃƒË†ÃƒÂ³Ã‚Â£Ã‚Â©; 2=TKPÃ‚Â£Ã‚Â¨Ã‚ÂµÃƒâ„¢Ãƒâ€°Ã‚Â­Ã‚Â¿Ãƒâ€¹Ãƒâ€šÃ‚Â²Ã‚Â²Ã‚Â®Ã‚Â£Ã‚Â©; 1=NEXTEERÃ‚Â£Ã‚Â¨Ãƒâ€žÃƒï¿½ÃƒÅ Ãƒâ‚¬ÃƒÅ’ÃƒËœÃ‚Â£Ã‚Â©; 0=UnknownÃ‚Â£Ã‚Â¨ÃƒÅ½Ã‚Â´ÃƒÅ Ã‚Â¹Ãƒâ€œÃƒÆ’Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_EPSAdvFunSSt",
+              "bs": 47,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "vd": "7=ReservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 6=ReservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 5=ReservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 4=!ADAS&APA; 3=ADAS&APA; 2=ADASÃ‚Â£Ã‚Â¨Ã‚Â½ÃƒÂ¶Ãƒâ€¦ÃƒÂ¤Ãƒâ€“ÃƒÆ’ADASÃ‚Â¹Ã‚Â¦Ãƒâ€žÃƒÅ“Ã‚Â£Ã‚Â©; 1=APAÃ‚Â£Ã‚Â¨Ã‚Â½ÃƒÂ¶Ãƒâ€¦ÃƒÂ¤Ãƒâ€“ÃƒÆ’APAÃ‚Â¹Ã‚Â¦Ãƒâ€žÃƒÅ“Ã‚Â£Ã‚Â©; 0=UnusedÃ‚Â£Ã‚Â¨ÃƒÅ½Ã‚Â´Ãƒâ€¦ÃƒÂ¤Ãƒâ€“ÃƒÆ’Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E5_DrvStrTorq",
+              "bs": 41,
+              "ln": 10,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "mx": 10.23,
+              "u": "N.m"
+            },
+            {
+              "l": "x1E5_Checksum_1E5",
+              "bs": 63,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "gs": "CRC_Hig_xor_low"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_348",
+      "c": [
+        {
+          "l": "Msg_348",
+          "id": 840,
+          "d": "6",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x348_LtFntWhlGrndVlctyV",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=Description for the value '0x1'; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x348_LtFntWhlGrndVlcty",
+              "bs": 6,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "mx": 655.35,
+              "u": "km/h"
+            },
+            {
+              "l": "x348_RtFntWhlGrndVlctyV",
+              "bs": 22,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=Description for the value '0x1'; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x348_RtFntWhlGrndVlcty",
+              "bs": 21,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "mx": 655.35,
+              "u": "km/h"
+            },
+            {
+              "l": "x348_Counter_348",
+              "bs": 33,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "gs": "Counter"
+            },
+            {
+              "l": "x348_Checksum_348",
+              "bs": 47,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "gs": "CRC_Hig_xor_low"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_17D",
+      "c": [
+        {
+          "l": "Msg_17D",
+          "id": 381,
+          "d": "8",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x17D_ABS_17D_Counter",
+              "bs": 11,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "gs": "Counter"
+            },
+            {
+              "l": "x17D_VehSpdAvgDrvn_ABS",
+              "bs": 19,
+              "ln": 15,
+              "bo": "Motorola LSB",
+              "f": 0.015625,
+              "mx": 360,
+              "u": "km/h"
+            },
+            {
+              "l": "x17D_ABS_17D_Checksum",
+              "bs": 47,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "gs": "CRC_Hig_xor_low"
+            },
+            {
+              "l": "x17D_VehSpdAvgDrvnV_ABS",
+              "bs": 61,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=InvalidÃ‚Â£Ã‚Â¨ÃƒÅ½ÃƒÅ¾Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_1E9",
+          "id": 489,
+          "d": "8",
+          "cy": "20",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x1E9_VSELatAccV",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=InvalidÃ‚Â£Ã‚Â¨ÃƒÅ½ÃƒÅ¾Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E9_VSELatAcc",
+              "bs": 3,
+              "ln": 12,
+              "bo": "Motorola LSB",
+              "f": 0.015625,
+              "mn": -32,
+              "mx": 31.984375,
+              "u": "m/s^2"
+            },
+            {
+              "l": "x1E9_VehDynYawRateV",
+              "bs": 36,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=InvalidÃ‚Â£Ã‚Â¨ÃƒÅ½ÃƒÅ¾Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            },
+            {
+              "l": "x1E9_VehDynYawRate",
+              "bs": 35,
+              "ln": 12,
+              "bo": "Motorola LSB",
+              "f": 0.0625,
+              "mn": -128,
+              "mx": 127.9375,
+              "u": "deg/sec"
+            },
+            {
+              "l": "x1E9_Counter_1E9",
+              "bs": 49,
+              "ln": 2,
+              "bo": "Motorola LSB",
+              "mx": 3,
+              "gs": "Counter"
+            },
+            {
+              "l": "x1E9_Checksum_1E9",
+              "bs": 63,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "gs": "CRC_Hig_xor_low"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_421",
+      "c": [
+        {
+          "l": "Msg_421",
+          "id": 1057,
+          "d": "8",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x421_EPSCurrStModeSRq",
+              "bs": 15,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7,
+              "vd": "7=UnusedandreservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 6=UnusedandreservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 5=UnusedandreservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 4=UnusedandreservedÃ‚Â£Ã‚Â¨Ãƒâ€�Ã‚Â¤Ãƒï¿½ÃƒÂ´Ã‚Â£Ã‚Â©; 3=SportÃ‚Â£Ã‚Â¨Ãƒâ€�Ãƒâ€¹Ã‚Â¶Ã‚Â¯Ãƒâ€žÃ‚Â£ÃƒÅ Ã‚Â½Ã‚Â£Ã‚Â©; 2=ComfortableÃ‚Â£Ã‚Â¨ÃƒÅ ÃƒÂ¦ÃƒÅ ÃƒÅ Ãƒâ€žÃ‚Â£ÃƒÅ Ã‚Â½Ã‚Â£Ã‚Â©; 1=NormalÃ‚Â£Ã‚Â¨Ã‚Â±ÃƒÂªÃƒâ€”Ã‚Â¼Ãƒâ€žÃ‚Â£ÃƒÅ Ã‚Â½Ã‚Â£Ã‚Â©; 0=NoRequestÃ‚Â£Ã‚Â¨ÃƒÅ½ÃƒÅ¾Ã‚Â¿ÃƒËœÃƒâ€“Ãƒâ€ Ãƒâ€¡ÃƒÂ«Ãƒâ€¡ÃƒÂ³Ã‚Â£Ã‚Â©"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_120",
+      "c": [
+        {
+          "l": "Msg_120",
+          "id": 288,
+          "d": "5",
+          "cy": "100",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x120_VehOdo",
+              "bs": 7,
+              "ln": 32,
+              "bo": "Motorola LSB",
+              "f": 0.015625,
+              "mx": 67108863,
+              "u": "Km"
+            },
+            {
+              "l": "x120_VehOdoV",
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1,
+              "vd": "1=Description for the value '0x1'; 0=ValidÃ‚Â£Ã‚Â¨Ãƒâ€œÃƒï¿½Ãƒï¿½Ã‚Â§Ã‚Â£Ã‚Â©"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_53D",
+      "c": [
+        {
+          "l": "Msg_53D",
+          "id": 1341,
+          "d": "8",
+          "cy": "1000",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x53D_second",
+              "bs": 7,
+              "ln": 6,
+              "bo": "Motorola LSB",
+              "mx": 59
+            },
+            {
+              "l": "x53D_Minute",
+              "bs": 15,
+              "ln": 6,
+              "bo": "Motorola LSB",
+              "mx": 59
+            },
+            {
+              "l": "x53D_Hour",
+              "bs": 23,
+              "ln": 5,
+              "bo": "Motorola LSB",
+              "mx": 23
+            },
+            {
+              "l": "x53D_Day",
+              "bs": 31,
+              "ln": 5,
+              "bo": "Motorola LSB",
+              "mn": 1,
+              "mx": 31,
+              "iv": "1.0"
+            },
+            {
+              "l": "x53D_Month",
+              "bs": 39,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mn": 1,
+              "mx": 12,
+              "iv": "1.0"
+            },
+            {
+              "l": "x53D_Year",
+              "bs": 47,
+              "bo": "Motorola LSB",
+              "o": 2010,
+              "mn": 2010,
+              "mx": 2265,
+              "u": "year"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_1E6",
+          "id": 486,
+          "d": "8",
+          "cy": "10",
+          "mt": "CANFD",
+          "c": [
+            {
+              "l": "x1E6_Counter_1E6",
+              "bs": 7,
+              "ln": 4,
+              "bo": "Motorola LSB",
+              "mx": 15,
+              "gs": "Counter"
+            },
+            {
+              "l": "x1E6_EPS_LKARespTorq",
+              "bs": 2,
+              "ln": 11,
+              "bo": "Motorola LSB",
+              "f": 0.01,
+              "mn": -10.24,
+              "mx": 10.23,
+              "u": "Nm"
+            },
+            {
+              "l": "x1E6_SterFltMod",
+              "bs": 31,
+              "bo": "Motorola LSB",
+              "mx": 3
+            },
+            {
+              "l": "x1E6_EPS_ADAS_ModAvail",
+              "bs": 39,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x1E6_EPS_ADAS_ModActv",
+              "bs": 38,
+              "ln": 3,
+              "bo": "Motorola LSB",
+              "mx": 7
+            },
+            {
+              "l": "x1E6_SterModV",
+              "bs": 35,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x1E6_SterMod",
+              "bs": 34,
+              "ln": 1,
+              "bo": "Motorola LSB",
+              "mx": 1
+            },
+            {
+              "l": "x1E6_EPSWorkCur",
+              "bs": 47,
+              "ln": 16,
+              "bo": "Motorola LSB",
+              "f": 0.25,
+              "mx": 16383.75,
+              "u": "A"
+            },
+            {
+              "l": "x1E6_Checksum_1E6",
+              "bs": 63,
+              "bo": "Motorola LSB",
+              "mx": 255,
+              "gs": "CRC_Hig_xor_low"
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "x201_VehRdySts",
+    "onValue": "1",
+    "offValue": "0"
+  },
+  "spd": "x17D_VehSpdAvgDrvn_ABS",
+  "ch": 1,
+  "relay": 0,
+  "dtc": [],
+  "oem": "SGWM",
+  "_meta": {
+    "config_name": "LRD008(F610S)",
+    "digest": "7d6e3b4b7423cbea17d5d7fcf8be29dd730fda3c"
+  }
+}

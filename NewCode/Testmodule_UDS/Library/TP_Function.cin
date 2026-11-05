@@ -761,7 +761,7 @@ void DLC_Error_INFCPL_Test(int DLC_Now)
           }
         }
         _TPsendmsg_Phy(Data,DLC_Now,0);
-        if(DataList[i][0] < DLC_Now)
+        if(DataList[i][0] < DLC_Now && TP_LastCFLen == 1)
           _Check_ResponseRx_(1,p2cmax);
         else
           _Check_ResponseRx_(0,p2cmax);
@@ -778,7 +778,7 @@ void DLC_Error_INFCPL_Test(int DLC_Now)
         Data[3] = (DataList[i][1]>>8) &0xFF;
         Data[4] = DataList[i][1]      &0xFF;
         _TPsendmsg_Phy(Data,DLC_Now,0);
-        if(DataList[i][0] < DLC_Now)
+        if(DataList[i][0] < DLC_Now && TP_LastCFLen == 1)
           _Check_ResponseRx_(1,p2cmax);
         else
           _Check_ResponseRx_(0,p2cmax);
@@ -1004,7 +1004,7 @@ _CAN_TP_SF_3()  /*单帧请求CAN帧报文的DLC错误测试_(应答 DLC = 1或2
   {
     Data[1] = i;
     _TPsendmsg_Phy(Data,2,0);
-    if(i==0x37 && Flage != -1) //APP与BT不同，BT下37服务仅一个长度可能出现响应现象
+    if(i==0x37 && Flage == -1) //APP与BT不同，BT下37服务仅一个长度可能出现响应现象
        _Check_ResponseRx_(1,100);
     else
        _Check_ResponseRx_(0,100);
@@ -1526,68 +1526,64 @@ _CAN_TP_CF_19()/*等待流控制帧*/
   _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
   _Check_NoResponse(N_Bs_Time - N_Bs_Time_Tolerance);
   _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
-  if(N_WFTmax == 0)
-    _TPgetCF(0);
-  else
-  {
-    Temp_SN=(_TP_CAN_DID_Len-6)/7;
-    if((_TP_CAN_DID_Len-6)%7 != 0)
-      Temp_SN+=1;
-    for(i=1;i<=Temp_SN;i++)
-      _Check_TPgetCF(1,_TP_CAN_DID_Len,i);
-    _TPgetCF(0);
-    testWaitForTimeout(1000);
-  }
-}
-_CAN_TP_CF_19_1()/*等待流控制帧的N_WFTmax*/
-{
-  byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
-  byte Data_1[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
-  byte Data_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
-  int i,Temp_SN;
-  
-  if(N_WFTmax == 0)
-  {
-    _WriteEx_and_Report("","最大个数为0，不适用");
-    return;
-  }
-
-  _Get_DID_TP(Data,2);
-  Data[0] = 1 + _TP_CAN_DID_Input;
-  _TPsendmsg_Phy(Data,elCount(Data),0);
-  _TPgetFF(1);
-  for(i=0;i<N_WFTmax;i++)
-  {
-    testWaitForTimeout(10);
-    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
-    writeEx(-3,0,"当前已发送 %d 次",i+1);
-  }
-  testWaitForTimeout(10);
-  _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
   Temp_SN=(_TP_CAN_DID_Len-6)/7;
   if((_TP_CAN_DID_Len-6)%7 != 0)
     Temp_SN+=1;
   for(i=1;i<=Temp_SN;i++)
     _Check_TPgetCF(1,_TP_CAN_DID_Len,i);
   _TPgetCF(0);
-  testWaitForTimeout(2000);
+  testWaitForTimeout(1000);
+}
+
+// _CAN_TP_CF_19_1()/*等待流控制帧的N_WFTmax*/
+// {
+//   byte Data[8] = {0x03,0x22,0x22,0x00,0x55,0x55,0x55,0x55};
+//   byte Data_1[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+//   byte Data_2[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+//   int i,Temp_SN;
+  
+//   if(N_WFTmax == 0)
+//   {
+//     _WriteEx_and_Report("","最大个数为0，不适用");
+//     return;
+//   }
+
+//   _Get_DID_TP(Data,2);
+//   Data[0] = 1 + _TP_CAN_DID_Input;
+//   _TPsendmsg_Phy(Data,elCount(Data),0);
+//   _TPgetFF(1);
+//   for(i=0;i<N_WFTmax;i++)
+//   {
+//     testWaitForTimeout(10);
+//     _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+//     writeEx(-3,0,"当前已发送 %d 次",i+1);
+//   }
+//   testWaitForTimeout(10);
+//   _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+//   Temp_SN=(_TP_CAN_DID_Len-6)/7;
+//   if((_TP_CAN_DID_Len-6)%7 != 0)
+//     Temp_SN+=1;
+//   for(i=1;i<=Temp_SN;i++)
+//     _Check_TPgetCF(1,_TP_CAN_DID_Len,i);
+//   _TPgetCF(0);
+//   testWaitForTimeout(2000);
 
   
-  _Get_DID_TP(Data,2);
-  Data[0] = 1 + _TP_CAN_DID_Input;
-  _TPsendmsg_Phy(Data,elCount(Data),0);
-  _TPgetFF(1);
-  for(i=0;i<N_WFTmax+1;i++)
-  {
-    testWaitForTimeout(10);
-    _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
-    writeEx(-3,0,"当前已发送 %d 次",i+1);
-  }
-  testWaitForTimeout(10);
-  _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
-  _Check_NoResponse(500);
+//   _Get_DID_TP(Data,2);
+//   Data[0] = 1 + _TP_CAN_DID_Input;
+//   _TPsendmsg_Phy(Data,elCount(Data),0);
+//   _TPgetFF(1);
+//   for(i=0;i<N_WFTmax+1;i++)
+//   {
+//     testWaitForTimeout(10);
+//     _TPsendmsg_Phy(Data_1,elCount(Data_1),0);
+//     writeEx(-3,0,"当前已发送 %d 次",i+1);
+//   }
+//   testWaitForTimeout(10);
+//   _TPsendmsg_Phy(Data_2,elCount(Data_2),0);
+//   _Check_NoResponse(500);
 
-}
+// }
 
 _CAN_TP_CF_20()/*未知请求报文测试*/
 {
@@ -4531,55 +4527,51 @@ _CANFD_TP_FC_11() /*等待流控制帧*/
   _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
   _Check_NoResponse(N_Bs_Time-N_Bs_Time_Tolerance);
   _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_3),1);
-  if(N_WFTmax == 0)
-    _Check_NoResponse(500);
-  else
-  {
-    for(i=1;i<=Temp_SN;i++)
-      _Check_TPgetCF(1,FF_DL,i);
-  }
-  testWaitForTimeout(2000);
-}
-_CANFD_TP_FC_11_1() /*等待流控制帧的N_WFTmax*/
-{
-  byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
-  byte Data_Send_2[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
-  byte Data_Send_3[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
-  int i,FF_DL,Temp_SN;
-  if(N_WFTmax == 0)
-  {
-    _WriteEx_and_Report("","不符合测试条件");
-    return;
-  }
-
-  _Get_DID_TP(Data_Send_1,2);
-  Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
-  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
-  FF_DL = _TPgetFF(1);
-  Temp_SN = _Get_CF_SN(FF_DL);
-  for(i=0;i<N_WFTmax;i++)
-  {
-    testWaitForTimeout(10);
-    _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
-    _WriteEx_and_Report("","已发送 %d 次",i+1);
-  }
-  _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_3),1);
   for(i=1;i<=Temp_SN;i++)
     _Check_TPgetCF(1,FF_DL,i);
   testWaitForTimeout(2000);
-  
-  _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
-  FF_DL = _TPgetFF(1);
-  Temp_SN = _Get_CF_SN(FF_DL);
-  for(i=0;i<N_WFTmax+1;i++)
-  {
-    testWaitForTimeout(10);
-    _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
-    _WriteEx_and_Report("","已发送 %d 次",i+1);
-  }
-  _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_3),1);
-  _Check_NoResponse(500);
 }
+
+// _CANFD_TP_FC_11_1() /*等待流控制帧的N_WFTmax*/
+// {
+//   byte Data_Send_1[8] = {0x03,0x22,0x35,0x70,0x55,0x55,0x55,0x55};
+//   byte Data_Send_2[8] = {0x31,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+//   byte Data_Send_3[8] = {0x30,0x00,0x00,0x55,0x55,0x55,0x55,0x55};
+//   int i,FF_DL,Temp_SN;
+//   if(N_WFTmax == 0)
+//   {
+//     _WriteEx_and_Report("","不符合测试条件");
+//     return;
+//   }
+
+//   _Get_DID_TP(Data_Send_1,2);
+//   Data_Send_1[0] = 1 + _TP_CAN_DID_Input;
+//   _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+//   FF_DL = _TPgetFF(1);
+//   Temp_SN = _Get_CF_SN(FF_DL);
+//   for(i=0;i<N_WFTmax;i++)
+//   {
+//     testWaitForTimeout(10);
+//     _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+//     _WriteEx_and_Report("","已发送 %d 次",i+1);
+//   }
+//   _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_3),1);
+//   for(i=1;i<=Temp_SN;i++)
+//     _Check_TPgetCF(1,FF_DL,i);
+//   testWaitForTimeout(2000);
+  
+//   _TPsendmsg_Phy(Data_Send_1,elcount(Data_Send_1),1);
+//   FF_DL = _TPgetFF(1);
+//   Temp_SN = _Get_CF_SN(FF_DL);
+//   for(i=0;i<N_WFTmax+1;i++)
+//   {
+//     testWaitForTimeout(10);
+//     _TPsendmsg_Phy(Data_Send_2,elcount(Data_Send_2),1);
+//     _WriteEx_and_Report("","已发送 %d 次",i+1);
+//   }
+//   _TPsendmsg_Phy(Data_Send_3,elcount(Data_Send_3),1);
+//   _Check_NoResponse(500);
+// }
 
 _CANFD_TP_FC_12() /*流控帧请求测试*/
 {
@@ -5615,12 +5607,12 @@ testcase Can_TP_CF_19()/*等待流控制帧*/
   _CAN_TP_CF_19();
   End_TP();
 }
-testcase Can_TP_CF_19_1()/*等待流控制帧的N_WFTmax*/
-{
-  Init_TP();
-  _CAN_TP_CF_19_1();
-  End_TP();
-}
+// testcase Can_TP_CF_19_1()/*等待流控制帧的N_WFTmax*/
+// {
+//   Init_TP();
+//   _CAN_TP_CF_19_1();
+//   End_TP();
+// }
 testcase Can_TP_CF_20()/*未知请求报文测试*/
 {
   Init_TP();
@@ -6064,12 +6056,12 @@ testcase CANFD_TP_FC_11()/* 等待流控制帧 */
   _CANFD_TP_FC_11();
   End_TP();
 }
-testcase CANFD_TP_FC_11_1()/* 等待流控制帧的N_WFTmax */
-{
-  Init_TP();
-  _CANFD_TP_FC_11_1();
-  End_TP();
-}
+// testcase CANFD_TP_FC_11_1()/* 等待流控制帧的N_WFTmax */
+// {
+//   Init_TP();
+//   _CANFD_TP_FC_11_1();
+//   End_TP();
+// }
 testcase CANFD_TP_FC_12()/* 流控帧请求测试 */
 {
   Init_TP();

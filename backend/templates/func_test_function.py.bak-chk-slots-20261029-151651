@@ -1,0 +1,2652 @@
+"""FuncTestFunction CAPL 函数库（功能模块）。
+
+来源：由 test_function.py 的 TestFunction 拆分而来，删除 CAN 自动化测试专用用例函数
+（顶层 testfunction Msg_*、canbusoff、Disturbance、故障注入、故障诊断、
+Checkmsg / CheckMsgCyc / CheckCounter / SigRamp / msgswitch / _cntrset、CRC 等）后得到，
+保留功能模块所需的共用函数与专用函数（如 SetSignalRate / SetSignalRamp / SignalWaitCheckRate）。
+共用基座见 test_function.TestFunctionBase，CAN 专用函数见 can_test_function.CanTestFunction。
+"""
+
+from backend.templates.relay import build_relay_section
+
+
+FuncTestFunction = '''
+/*@!Encoding:936*/
+
+includes
+{
+  /*#include "DTC_Configuration.cin"*/
+  #include "ArrayFuncTest.cin"
+}
+
+variables
+{ 
+/*
+  diagRequest ABS_ESP.FaultMemory_ReadAllIdentified req1902;
+  diagRequest ABS_ESP.FaultMemory_Clear req14;
+  diagRequest ABS_ESP.KeyLevel1_Send Req2701;
+  diagRequest ABS_ESP.SeedLevel1_Request Req2702;
+  */
+  msTimer timer_BusLoad,StmControlDestroy;
+  int BusLoadnum;
+  dword BusLoadID;
+  float BusLoadTarget;      //目标总线负载率(%)
+  float BusLoadPerFrame;    //标定值: 单帧带来的负载增量(%)
+  //每次测量的等待(ms), 必须 >= 2 个总线统计周期(默认统计周期1s)
+  //用 TestWaitForTimeout 等待: 只等待, 不在测试报告里生成等待步骤
+  int BusLoadSettle = 2000;
+  char SigName[200],ExpectHear[200],ExpectValue[20],ResultValue[200];
+  char ECU[20]="XCPDemo";
+  byte saveDTC[100];//存储多个故障用于显示
+  byte State;
+  dword mRampId = 0;
+  // 背景检测（Chk）公共参数（全部走 TSL 背景检查，不做采样）
+  const float CHK_HIGH_LIMIT = 1.0e15;   // “大于”检查的上界
+  const float CHK_LOW_LIMIT  = -1.0e15;  // “小于”检查的下界
+  const int   CHK_MAX = 8;               // 同时进行的背景检测上限
+  msTimer timer_ChkDestroy;      // 定时释放用（到期判定并释放当前全部检测）
+  // 槽位数组：支持同时对多个对象做背景检测，每个槽位各自独立判定
+  dword mChkIds[CHK_MAX];        // Chk 背景检查句柄
+  int   mChkConds[CHK_MAX];      // 0 区间内 1 区间外 2 大于 3 小于 4 维持 5 不等于 6 等于
+  int   mChkExpects[CHK_MAX];    // 0 期望无违规事件 1 期望出现违规事件
+  float mChkLows[CHK_MAX];       // 下限 / 阈值
+  float mChkHighs[CHK_MAX];      // 上限
+  char  mChkNames[CHK_MAX][200]; // 被检对象名（报告用）
+  int   mChkCount = 0;           // 当前在跑的检测数量
+}
+/// <EnvCfg>
+MagneticBrake(int index)
+{
+  
+}
+/**********************************
+ Function name:   Msgtranjudge
+判断外发报文是否出现在CAN总线上
+ID[]：ID数组
+tran：0：期望不出现，1：期望出现
+***********************************/
+/// <MsgCheck>
+byte Msgtranjudge(word ID[],byte tran)
+{
+  int i,ii;
+  for(i=0;i<elcount(ID);i++)
+  {  TestJoinMessageEvent(ID[i]);
+  }
+  if(tran==0)
+  { 
+    ii=TestWaitForAnyJoinedEvent(50);
+    if(ii==0)//停止发送
+    {testSteppass("检测ECU通信","EPS停止发送报文。");return 1;}
+    else if(ii>0)
+    {testStepfail("检测ECU通信","EPS正常发送报文。");return 0;}
+   }
+  if(tran==1)
+  { 
+  ii=TestWaitForAnyJoinedEvent(1000);
+    if(ii==0)//停止发送
+    {testStepfail("检测ECU通信","EPS停止发送报文。");return 0;}
+    else if(ii>0)
+    {testSteppass("检测ECU通信","EPS正常发送报文。");return 1;}
+   }
+  if(tran==2)
+  { 
+   ii=TestWaitForAnyJoinedEvent(1000);
+    if(ii==0)//停止发送
+    {testStepWarning("检测ECU通信","EPS停止发送报文。");return 0;}
+    else if(ii>0)
+    {testStepWarning("检测ECU通信","EPS正常发送报文。");return 1;}
+   }
+
+}
+/// <MsgCheck>
+void CheckErrorFrame()
+{
+  message 0 msg;
+  int i,numCheckEvents;
+  int checkId;
+  checkId = ChkStart_ErrorFramesOccured();
+  ChkControl_Start(checkId);
+  testWaitForTimeout(5000);
+  ChkControl_Stop(checkId);
+  numCheckEvents = ChkQuery_NumEvents(checkId);
+  if (numCheckEvents > 0)
+    {TestStepFail("Error Frame occurred!","Error Frame numCheckEvents  %d",numCheckEvents);}
+    else
+    {TestSteppass("Error Frame unoccurred!","undetected  Error Frame");}
+}
+on errorFrame
+{
+  char buff[100];
+  snprintf(buff,100,"ErrorFrame occurred %X",this.ID);
+  TestSupplyTextEvent(buff);
+}
+/// <MsgCheck>
+void CheckBusMsg(dword ID, int Exp)
+{
+  dword index = 0;
+  int i;
+
+  TestJoinMessageEvent(ID);
+
+  if(Exp==0)
+  {
+    if(TestWaitForAnyJoinedEvent(2000) > 0)
+      {TestStepFail("CheckBusMsg","总线上有报文%X",ID);}
+    else
+      {TestSteppass("CheckBusMsg","总线上无报文%X",ID);}  
+  }
+  if(Exp==1)
+  {
+    if(TestWaitForAnyJoinedEvent(2000) > 0)
+      {TestSteppass("CheckBusMsg","总线上有报文%X",ID);}
+    else
+      {TestStepFail("CheckBusMsg","总线上无报文%X",ID);}  
+  }  
+}
+/*
+/// <MsgCheck>
+void CheckBusMsg(dword ID, int Exp)
+{
+  dword index = 0;
+  int i;
+
+  TestJoinMessageEvent(ID);
+
+  if(Exp==0)
+  {
+    if(TestWaitForAnyJoinedEvent(2000) > 0)
+      {TestStepFail("CheckBusMsg","总线上有报文%X",ID);}
+    else
+      {TestSteppass("CheckBusMsg","总线上无报文%X",ID);}  
+  }
+  if(Exp==1)
+  {
+    if(TestWaitForAnyJoinedEvent(2000) > 0)
+      {TestSteppass("CheckBusMsg","总线上有报文%X",ID);}
+    else
+      {TestStepFail("CheckBusMsg","总线上无报文%X",ID);}  
+  }  
+}
+*/
+/// <PowerCtl>
+void K30oN()
+{
+  @sysvar::Prog_power::K30=1;
+}
+/// <PowerCtl>
+void K30oFF()
+{
+  @sysvar::Prog_power::K30=0;
+}
+/// <BusCtl>
+void BusOff_ON()
+{
+  RelayOFF(5);
+}
+/// <BusCtl>
+void BusOff_OFF()
+{
+  RelayON(5);
+}
+/// <PowerCtl>
+void IGoN()
+{
+  RelayON(1);
+}
+/// <PowerCtl>
+void IGoFF()
+{
+  RelayOFF(1);
+}
+/// <PowerCtl>
+void Ready_On()
+{
+  /*Ready_On*/; 
+}
+/// <PowerCtl>
+void Ready_Off()
+{
+  /*Ready_Off*/; 
+}
+/// <EnvCfg>
+void Init()
+{
+  @sysvar::Prog_power::K30Curr=10;
+  VoltSet(12);  
+  @sysvar::Prog_power::K30=1;
+  Ready_Off();
+  Wait(500);
+  IGoFF();
+  Wait(1000);
+  IGoN();
+  Ready_On();  
+  /*CarMode*/
+  /*usageMode*/
+  Wait(5000);
+  Req14();
+  Wait(1000);
+}
+/// <EnvCfg>
+void OperationCycle()
+{
+  //@sysvar::Prog_power::K30Port=4;
+  @sysvar::Prog_power::K30Curr=10;
+  VoltSet(12);  
+  @sysvar::Prog_power::K30=1;
+  Ready_Off();
+  Wait(2000);
+  IGoFF();
+  Wait(3000);
+  IGoN(); 
+  Wait(1000);
+  Ready_On();  
+  Wait(6000);
+}
+/// <Utility>
+void Wait(long time)
+{
+  testWaitForTimeout(time);
+}
+/// <Diag>
+void Req14()
+{ 
+  int i;
+  char Code[100];
+  diagRequest  *  req14;
+  diagSetTarget ("ABS_ESP");
+
+  // 这样些可以不依赖dbc文件的定义，方便平台共用，也可以使用dbc中定义的诊断名称
+  diagResize(req14,4);
+  DiagSetPrimitiveByte(req14,0,0x14);
+  DiagSetPrimitiveByte(req14,1,0xFF);
+  DiagSetPrimitiveByte(req14,2,0xFF); 
+  DiagSetPrimitiveByte(req14,3,0xFF);  
+  
+  
+  diagSendRequest(req14);
+  testWaitForDiagRequestSent(req14,100);
+  testWaitForDiagResponse(req14,2000);
+  if(DiagGetRespPrimitiveByte(req14,0)==0x7f)
+  {   
+    for(i=0;i<(DiagGetRespPrimitiveSize(req14));i++)
+      { 
+        snprintf(Code,elCount(Code),"%s%02X ",Code,DiagGetRespPrimitiveByte(req14,i));
+      }
+    testStepFail("诊断负响应","响应码 %s",Code);
+  }else{
+    testSteppass("诊断正响应","诊断正响应");
+  }
+  diagStopTesterPresent();
+}
+/// <SignalCtl>
+_putValue(char EVCounter[]/*选择计数信号*/,signal *Counter,int value)
+{
+  putValue(EVCounter,value);
+  if(value)
+  setSignal(Counter,0);
+  else
+  setSignal(Counter,1);
+}
+/// <EnvCfg>
+void Software_version(char CaliArray[],char ECUArray[],char SBTArray[],char FBTArray[],char SVNArray[],char VersArray[])
+{ int i,len;
+  diagRequest  *  diagReq;
+  char CaliArr[10];
+  char ECUArr[10];
+  char SBTArr[4];
+  char FBTArr[4];
+  char SVNArr[4];
+  char VersArr[4];
+  const byte Cali  =3;
+  const byte ECU   =13;
+  const byte SBT   =23;
+  const byte FBT   =27;
+  const byte SVN   =47;
+  const byte Vers  =57;
+  diagSetTarget ("ABS_ESP");
+  diagResize(diagReq,3);
+  DiagSetPrimitiveByte(diagReq,0,0x22);
+  DiagSetPrimitiveByte(diagReq,1,0x35);
+  DiagSetPrimitiveByte(diagReq,2,0x70);
+  diagSendRequest(diagReq);
+  testWaitForDiagRequestSent(diagReq,50);
+  testWaitForDiagResponse(diagReq,1000);
+  for(i=0;i<DiagGetRespPrimitiveSize(diagReq);i++)
+  {
+    snprintf(CaliArr,10,"");
+    snprintf(ECUArr,10,"");
+    snprintf(SBTArr,4,"");
+    snprintf(FBTArr,4,"");
+    snprintf(SVNArr,4,"");
+    snprintf(VersArr,4,"");
+    switch(i)
+    { 
+      case Cali:
+        for(len=0;len<strlen(CaliArray);len++)
+        { 
+          CaliArr[len]=DiagGetRespPrimitiveByte(diagReq,i+len);
+          
+        }
+        if(strncmp(CaliArr,CaliArray,strlen(CaliArr))!=0 )
+        {
+          testStepFail("","标定数据版本不符 Expect:%s    Result:%s",CaliArr,CaliArray);
+          if( TestWaitForTesterConfirmation("标定数据版本不符")==2)
+          {stop();}
+        }
+        else
+        {
+          testStepPass("","标定数据版本符合:%s",CaliArr);
+        }
+        i+=strlen(CaliArray)-1;
+        break;
+       case ECU :        
+        for(len=0;len<strlen(ECUArray);len++)
+        {
+          ECUArr[len]=DiagGetRespPrimitiveByte(diagReq,i+len);
+        } 
+        if(strncmp(ECUArr,ECUArray,strlen(ECUArr))!=0)
+        {
+          testStepFail("","内部代号不符 Expect:%s    Result:%s",ECUArr,ECUArray);
+          if( TestWaitForTesterConfirmation("内部代号不符")==2)
+          {stop();}
+        }
+        else
+        {
+          testStepPass("","内部代号符合:%s",ECUArr);
+        }        
+        i+=strlen(ECUArray)-1;
+        break;
+      case SBT :
+        for(len=0;len<strlen(SBTArray);len++)
+        {
+          SBTArr[len]=DiagGetRespPrimitiveByte(diagReq,i+len);
+        } 
+        if(strncmp(SBTArr,SBTArray,strlen(SBTArr))!=0)
+        {
+          testStepFail("","SBT版本不符 Expect:%s    Result:%s",SBTArr,SBTArray);
+          if( TestWaitForTesterConfirmation("SBT版本不符")==2)
+          {stop();}
+        }
+        else
+        {
+          testStepPass("","SBT版本符合:%s",SBTArr);
+        }        
+        i+=strlen(SBTArray)-1;
+        break;
+      case FBT :
+        for(len=0;len<strlen(FBTArray);len++)
+        {
+          FBTArr[len]=DiagGetRespPrimitiveByte(diagReq,i+len);
+        } 
+        if(strncmp(FBTArr,FBTArray,strlen(FBTArr))!=0)
+        {
+          testStepFail("","FBT版本不符 Expect:%s    Result:%s",FBTArr,FBTArray);
+          if( TestWaitForTesterConfirmation("FBT版本不符")==2)
+          {stop();}
+        } 
+        else
+        {
+          testStepPass("","FBT版本符合:%s",FBTArr);
+        }    
+        i+=strlen(FBTArray)-1;     
+        break;
+      case SVN :
+        for(len=0;len<strlen(SVNArray);len++)
+        {
+          SVNArr[len]=DiagGetRespPrimitiveByte(diagReq,i+len);
+        } 
+        if(strncmp(SVNArr,SVNArray,strlen(SVNArr))!=0)
+        {
+          testStepFail("","SVN版本不符 Expect:%s    Result:%s",SVNArr,SVNArray);
+          if( TestWaitForTesterConfirmation("SVN版本不符")==2)
+          {stop();}
+        } 
+        else
+        {
+          testStepPass("","SVN版本符合:%s",SVNArr);
+        } 
+        i+=strlen(SVNArray)-1;        
+        break;
+      case Vers:
+          snprintf(VersArr,elcount(VersArr),"%02X%02X", DiagGetRespPrimitiveByte(diagReq,i),DiagGetRespPrimitiveByte(diagReq,i+1));
+          if(strncmp(VersArr,VersArray,strlen(VersArr))!=0)
+          {
+          testStepFail("","软件版本不符 Expect:%s    Result:%s",VersArr,VersArray);
+            if( TestWaitForTesterConfirmation("软件版本不符")==2)
+            {stop();}
+          } 
+          else
+          {
+            testStepPass("","软件版本符合:%s",VersArr);
+          }
+        
+        break;   
+    }
+    //write("%X  %d",DiagGetRespPrimitiveByte(diagReq,i),i);
+  }
+}
+/// <Diag>
+void Unlock()
+/*void Unlock()*/
+
+/// <SignalCtl>
+ResetSignal( signal *Sig)
+{ 
+  testResetSignalValue(Sig);
+}
+/// <SignalCtl>
+setSignalEnvar( envvarInt *aSignal, int aValue)
+{ 
+  putvalue(aSignal,aValue);
+}
+
+/// <SignalCtl>
+ResetSignal( envvarInt *Sig)
+{ 
+  testResetEnvVarValue(Sig);
+}
+/// <SignalCtl>
+ResetSignal( signal *Sig,signal *Sig1)
+{ 
+  testResetSignalValue(Sig);
+  testResetSignalValue(Sig1);
+}
+/// <SignalCtl>
+ResetSignal( signal *Sig,signal *Sig1,signal *Sig2)
+{ 
+  testResetSignalValue(Sig);
+  testResetSignalValue(Sig1);
+  testResetSignalValue(Sig2);
+}
+/// <SignalCtl>
+ResetSignal( signal *Sig,signal *Sig1,signal *Sig2,signal *Sig3)
+{ 
+  testResetSignalValue(Sig);
+  testResetSignalValue(Sig1);
+  testResetSignalValue(Sig2);
+  testResetSignalValue(Sig3);
+}
+/// <SignalCtl>
+ResetNode( dbNode *node)
+{ 
+  testResetNodeSignalValues(node);
+}
+/// <SignalCtl>
+ResetNode( dbNode *node,dbNode *node1)
+{ 
+  testResetNodeSignalValues(node);
+  testResetNodeSignalValues(node1);
+}
+/// <SignalCtl>
+ResetNode( dbNode *node,dbNode *node1,dbNode *node2)
+{ 
+  testResetNodeSignalValues(node);
+  testResetNodeSignalValues(node1);
+  testResetNodeSignalValues(node2);
+}
+/// <SignalCtl>
+ResetNode( dbNode *node,dbNode *node1,dbNode *node2,dbNode *node3)
+{ 
+  testResetNodeSignalValues(node);
+  testResetNodeSignalValues(node1);
+  testResetNodeSignalValues(node2);
+  testResetNodeSignalValues(node3);
+}
+/*
+msgswitch(dword msg,byte sate)
+{ int i;
+ if(sate)
+ {
+  for(i=0;i<elCount(RxMessageId);i++)
+   {
+      testenableMsg(RxMessageId[i]);
+   }
+ } 
+ else
+ {
+    for(i=0;i<elCount(RxMessageId);i++)
+    {
+      testdisableMsg(RxMessageId[i]);
+    }
+  testenableMsg(msg);
+ }
+ 
+}*/
+
+
+
+/// <Internal>
+void TestResult(dword DTC)
+
+/// <Internal>
+void Result(dword DTC)
+
+/// <SignalCtl>
+_readXCP(sysvarFloat* varname,float value) //单独的XCP变量监测（地址，长度）
+{
+  xcpActivate(varname);
+
+   switch(testWaitForSignalMatch(varname,value,15000))
+        {
+          case 0:testStepFail("网络值不符","网络值应为%f网络值实际为%f",value,@varname);
+                break;
+          case 1:testStepPass("网络值相符","网络值应为%f,网络值实际为%f",value,@varname);
+                 break;
+        }
+  xcpdeActivate(varname);
+}
+/*
+/// <SignalCtl>
+_readXCP(sysvarint* varname,int value) //单独的XCP变量监测（地址，长度）
+{
+  xcpConnect(ECU);
+  xcpActivate(varname);
+
+   switch(testWaitForSignalMatch(varname,value,15000))
+        {
+          case 0:testStepFail("网络值不符","网络值应为%d网络值实际为%d",value,@varname);
+                break;
+          case 1:testStepPass("网络值相符","网络值应为%d,网络值实际为%d",value,@varname);
+                 break;
+        }
+  xcpdeActivate(varname);
+}*/
+/// <SignalCtl>
+_readXCP(sysvarint* varname,long value) //单独的XCP变量监测（地址，长度）
+{
+  xcpConnect(ECU);
+  xcpActivate(varname);
+
+   switch(testWaitForSignalMatch(varname,value,15000))
+        {
+          case 0:testStepFail("网络值不符","网络值应为%d网络值实际为%d",value,@varname);
+                break;
+          case 1:testStepPass("网络值相符","网络值应为%d,网络值实际为%d",value,@varname);
+                 break;
+        }
+  xcpdeActivate(varname);
+}
+/// <SignalCtl>
+_readXCP(sysvarLongLong* varname,long value) //单独的XCP变量监测（地址，长度）
+{
+  xcpConnect(ECU);
+  xcpActivate(varname);
+
+   switch(testWaitForSignalMatch(varname,value,15000))
+        {
+          case 0:testStepFail("网络值不符","网络值应为%d网络值实际为%d",value,@varname);
+                break;
+          case 1:testStepPass("网络值相符","网络值应为%d,网络值实际为%d",value,@varname);
+                 break;
+        }
+  xcpdeActivate(varname);
+}
+/// <SignalCtl>
+double getxcp(sysvarint * var)
+{ 
+  xcpConnect(ECU);
+  xcpActivate(var);
+  testWaitForSysVar(var,xcpGetPollingCycle(var)*2);
+  return @var;
+}
+/// <SignalCtl>
+double getxcp(sysvarFloat * var )
+{
+  xcpConnect(ECU);
+  xcpActivate(var);
+  testWaitForSysVar(var,xcpGetPollingCycle(var)*2);
+  return @var;
+}
+/// <SignalCtl>
+double Putxcp(sysvarint * var,dword Value)
+{
+  xcpConnect(ECU);
+  xcpActivate(var);
+  sysSetVariableInt(var,Value);
+  testWaitForSysVar(var,xcpGetPollingCycle(var)*2);
+  return @var;
+}
+/// <SignalCtl>
+double Putxcp(sysvarFloat * var ,float Value) 
+{
+  xcpConnect(ECU);
+  xcpActivate(var);
+  sysSetVariableFloat(var,Value);
+  testWaitForSysVar(var,xcpGetPollingCycle(var)*2);
+  return @var;
+}
+
+/// <EnvCfg>
+void NullCarConfiguration()
+{
+
+  byte CarConfiguration[11]={0x2E,0xF1,0xA1,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x55};
+  diagSendReq(CarConfiguration);  
+}
+/// <EnvCfg>
+void HighCarConfiguration()
+{
+
+  byte CarConfiguration[11]={0x2E,0x21,0x00,0x11,0xE7,0x28,0x00,0x81,0x39,0x10,0xBF};
+  diagSendReq(CarConfiguration);  
+}
+/// <Diag>
+diagSendReq(byte code[])
+{
+  int i;
+  char Code[100];
+  diagRequest * req;
+  snprintf(Code,elCount(Code),"");
+  diagSetTarget("ABS_ESP");
+  diagResize(req,elcount(code));
+  for(i=0;i<elcount(code);i++)
+  {
+    DiagSetPrimitiveByte(req,i,code[i]);
+  }
+  diagSendRequest(req);
+  testWaitForDiagRequestSent(req,100);
+  testWaitForDiagResponse(req,500);
+  if(DiagGetRespPrimitiveByte(req,0)==0x7f)
+  {   
+    for(i=0;i<(DiagGetRespPrimitiveSize(req));i++)
+      { 
+        snprintf(Code,elCount(Code),"%s%02X ",Code,DiagGetRespPrimitiveByte(req,i));
+      }
+    testStepFail("诊断负响应","响应码 %s",Code);
+  }
+  else{
+    testSteppass("诊断正响应","诊断正响应");
+  }
+  diagStopTesterPresent();
+}
+/// <PowerCtl>
+void VoltSet(float Value)
+{
+  @sysvar::Prog_power::K30Volt=Value;
+}
+/// <PowerCtl>
+void Battery_Voltage_GreaterSet(sysvarFloat *Var,float Value)
+{
+  float Volt,currentVolt;
+  xcpSetPollingCycle(Var,10);
+  Volt=@sysvar::Prog_power::K30Volt;  
+  while(1)
+  { currentVolt=getxcp(Var);
+    if(((Value+0.03) < currentVolt) && (currentVolt < (Value+0.07)))
+    {break;}
+    else
+    {
+      Volt+=((Value+0.05)-(currentVolt))/2;
+      
+      if(Volt>26 || Volt<0)
+        {break;}
+      VoltSet(Volt);
+      testWaitForTimeout(100);
+    }
+  }
+  writeex(-3,0,"电压设置 %gV",getxcp(Var));
+  testStep("电压设置","电压--%g V",getxcp(Var));
+  
+}
+/// <PowerCtl>
+void Battery_Voltage_lessSet(sysvarFloat *Var,float Value)
+{
+  float Volt,currentVolt;
+  Volt=@sysvar::Prog_power::K30Volt; 
+  xcpSetPollingCycle(Var,10);
+  while(1)
+  { currentVolt=getxcp(Var);
+    if(Value-0.07 < currentVolt && currentVolt < Value-0.03)
+    {break;}
+    else
+    {
+      Volt+=((Value-0.05)-(currentVolt))/2;
+      if(Volt>26 || Volt<0)
+        {break;}    
+      VoltSet(Volt);
+      testWaitForTimeout(100);
+    }
+  }
+  writeex(-3,0,"电压设置 %gV",getxcp(Var));
+  testStep("电压设置","电压--%g V",getxcp(Var));
+}
+/// <MsgCheck>
+void CheckTx(int Exp)
+{
+  dword index = 0;
+  int i;
+  for(i=0;i<elcount(TxMessageId);i++)
+  {
+    TestJoinMessageEvent(TxMessageId[i]);
+  } 
+  if(Exp==0)
+  {
+    if(TestWaitForAnyJoinedEvent(2000) > 0)
+      {TestStepFail("CheckTx","ECU有报文发送");}
+    else
+      {TestSteppass("CheckTx","ECU无报文发送");}  
+  }
+  if(Exp==1)
+  {
+    if(TestWaitForAnyJoinedEvent(2000) > 0)
+      {TestSteppass("CheckTx","ECU有报文发送");}
+    else
+      {TestStepFail("CheckTx","ECU无报文发送");}  
+  }  
+}
+
+
+
+/// <BusCtl>
+void TxExtendFrame()
+{
+  message 0 msg={dlc=8};
+  int i,numCheckEvents;
+  int checkId;
+  checkId = ChkStart_ErrorFramesOccured();
+  ChkControl_Start(checkId);
+  for(i=0;i<elcount(RxMessageId);i++)
+  {
+    msg.id=RxMessageId[i];
+    msg.id=mkExtId(msg.id);
+    output(msg);
+    testWaitForTimeout(10);
+  }
+  ChkControl_Stop(checkId);
+  numCheckEvents = ChkQuery_NumEvents(checkId);
+  if (numCheckEvents > 0)
+  TestStepFail("Error Frame occurred!","Error Frame numCheckEvents  %d",numCheckEvents);
+}
+/// <BusCtl>
+void TxRemotrFrame()
+{
+  message 0 msg;
+  int i,numCheckEvents;
+  int checkId;
+  checkId = ChkStart_ErrorFramesOccured();
+  ChkControl_Start(checkId);
+  for(i=0;i<elcount(RxMessageId);i++)
+  {
+    msg.id=RxMessageId[i];
+    msg.rtr=1;
+    output(msg);
+    testWaitForTimeout(10);
+  }
+  ChkControl_Stop(checkId);
+  numCheckEvents = ChkQuery_NumEvents(checkId);
+  if (numCheckEvents > 0)
+  TestStepFail("Error Frame occurred!","Error Frame numCheckEvents  %d",numCheckEvents);
+}
+/// <BusCtl>
+void SetBusLoad(float Load)
+{ 
+  float baseLoad;
+  float curLoad;
+  float nEst;
+  int probe;
+  //目标值限幅
+  if (Load < 0) Load = 0;
+  if (Load > 100) Load = 100;
+  BusLoadTarget = Load;
+  //先停发负载帧, 等总线统计刷新后取基础负载
+  cancelTimer(timer_BusLoad);
+  BusLoadnum = 0;
+  TestWaitForTimeout(BusLoadSettle);
+  baseLoad = canGetBusLoad(1);
+  //目标不高于基础负载: 无需注入
+  if (Load <= baseLoad + 0.5)
+  {
+    BusLoadPerFrame = 0;
+    BusLoadnum = 0;
+    return;
+  }
+  //标定: 每周期发10帧, 实测单帧带来的负载增量(%), 与波特率/帧长/ID位数无关
+  probe = 10;
+  BusLoadnum = probe;
+  setTimerCyclic(timer_BusLoad,25);
+  TestWaitForTimeout(BusLoadSettle);
+  curLoad = canGetBusLoad(1);
+  if (curLoad - baseLoad < 2.0)
+  {
+    probe = probe * 4;
+    BusLoadnum = probe;
+    TestWaitForTimeout(BusLoadSettle);
+    curLoad = canGetBusLoad(1);
+  }
+  BusLoadPerFrame = (curLoad - baseLoad) / probe;
+  if (BusLoadPerFrame < 0.01)
+    BusLoadPerFrame = 0.9;   //标定失败兜底: 500k/8字节标准帧经验值
+  //线性外推, 先取90%从下方逼近: 直接按目标外推容易把总线顶到饱和, 饱和后读数封顶无法判断过冲量
+  nEst = (Load - baseLoad) / BusLoadPerFrame * 0.9;
+  BusLoadnum = (int)(nEst + 0.5);
+  if (BusLoadnum < 1) BusLoadnum = 1;
+}
+/// <BusCtl>
+void TestBusLoad(float Load)
+{ 
+  float curLoad;
+  float lastLoad;
+  float err;
+  int step;
+  int iter;
+  int bestNum;
+  int bRising;
+  SetBusLoad(Load);
+  //闭环修正: 目标是"达到"目标负载(允许略高, 最多1%); 加帧后负载不再上升即到总线能力上限, 取当前值收工
+  bestNum = 0;
+  lastLoad = -1.0;
+  bRising = 0;
+  for (iter = 0; iter < 10; iter++)
+  {
+    TestWaitForTimeout(BusLoadSettle);
+    curLoad = canGetBusLoad(1);
+    err = BusLoadTarget - curLoad;
+    if ((err <= 0) && (err >= -1.0))
+    {
+      bestNum = BusLoadnum;      //已达到目标(超出不到1%)
+      break;
+    }
+    if (bRising && (lastLoad >= 0.0) && (curLoad <= lastLoad + 0.2))
+      break;                     //加了帧负载却上不去: 已到上限, 取当前值
+    if (BusLoadPerFrame < 0.01)  //目标不高于基础负载: 无需注入
+      break;
+    if ((curLoad >= 99.5) && (BusLoadTarget < 99.5))
+      BusLoadnum = (int)(BusLoadnum * 0.75 + 0.5);   //读数封顶且目标在上限之下: 大步退
+    else if (err < 0)
+      BusLoadnum = (int)(BusLoadnum * BusLoadTarget / curLoad + 0.5);   //超出目标1%以上: 按比例退
+    else
+    {
+      step = (int)(err / BusLoadPerFrame * 0.7 + 0.5);   //还差: 按剩余偏差的70%补, 至少补1帧
+      if (step < 1) step = 1;
+      BusLoadnum = BusLoadnum + step;
+      bRising = 1;
+    }
+    if (BusLoadnum < 1) BusLoadnum = 1;
+    lastLoad = curLoad;
+  }
+  if (bestNum > 0)               //末次迭代可能试过了头, 回到最小达标帧数
+    BusLoadnum = bestNum;
+  write("BusLoad target %f  actual %f  frames %d", BusLoadTarget, canGetBusLoad(1), BusLoadnum);
+}
+/// <BusCtl>
+void CancelBusLoad()
+{ 
+  cancelTimer(timer_BusLoad);
+  BusLoadnum = 0;
+  BusLoadTarget = 0;
+}
+on timer timer_BusLoad
+{
+  message 0x7ff msg={dlc=8};
+  int i;
+  msg.id=BusLoadID;
+  msg.byte(0)=0xFF;
+  msg.byte(1)=0xFF;
+  msg.byte(2)=0xFF;
+  msg.byte(3)=0xFF;
+  msg.byte(4)=0xFF;
+  msg.byte(5)=0xFF;
+  msg.byte(6)=0xFF;
+  msg.byte(7)=0xFF;
+  for(i=0;i<BusLoadnum;i++)
+  {
+    output(msg);    
+  }
+}
+/// <Timing>
+void Check_Init_time(long Time)
+{
+  dword index = 0;
+  float Eventtime;
+  int i;
+  for(i=0;i<elcount(TxMessageId);i++)
+  {
+    TestJoinMessageEvent(TxMessageId[i]);
+  } 
+  index=TestWaitForAnyJoinedEvent(10000);
+  Eventtime = TestGetLastWaitElapsedTimeNS()/1000000;
+  if(index==0)
+  {
+    testStepFail("初始化时间","10s内未检测到ECU发送报文");
+  }
+  else
+  {
+    if(Eventtime <=Time)
+      {
+        testStepPass("初始化时间","初始化时间%dms,实际时间 %g",Time,Eventtime);
+      }
+    if(Eventtime >Time)
+      {
+        testStepFail("初始化时间","初始化时间%dms,实际时间 %g",Time,Eventtime);
+      }      
+  }
+}
+/// <Timing>
+void Check_Interval_time(long Time)
+{
+  dword index = 0;
+  float Eventtime,longtime;
+  int i;
+  longtime=TimeNowNS()/1000000;
+  Eventtime = 10;
+  while(TimeNowNS()/1000000-longtime < 1000)
+  {
+    for(i=0;i<elcount(TxMessageId);i++)
+    {
+      TestJoinMessageEvent(TxMessageId[i]);
+    }     
+    index=TestWaitForAnyJoinedEvent(10000);
+    Eventtime=_min(TestGetLastWaitElapsedTimeNS()/1000000,Eventtime);    
+  }
+  if(index==0)
+  {
+    testStepFail("间隔时间","10s内未检测到ECU发送报文");
+  }
+  else
+  {
+    if(Eventtime >=Time)
+      {
+        testStepPass("间隔时间","最小间隔时间%dms,实际时间 %g",Time,Eventtime);
+      }
+    if(Eventtime <Time)
+      {
+        testStepFail("间隔时间","最小间隔时间%dms,实际时间 %g",Time,Eventtime);
+      }      
+  }
+}
+/// <Timing>
+void Check_TxStop_time(long minTime,long maxTime)
+{
+  float timenow,timenow1;
+  int i;
+  timenow=TimeNowNS()/1000000;
+  while(1)
+  {
+    for(i=0;i<elcount(TxMessageId);i++)
+    {
+      TestJoinMessageEvent(TxMessageId[i]);
+    }
+    if(testWaitForAnyJoinedEvent(2000) == 0 || timenow1 > 5000)
+    {break;}
+    
+    timenow1=TimeNowNS()/1000000-timenow;
+  }
+  if(timenow1 <= maxTime && timenow1 >= minTime)
+    {
+      testStepPass("通信停止时间","通信停止时间[%dms,%dms],实际时间 %g",minTime,maxTime,timenow1);
+    }
+  if(timenow1 > maxTime || timenow1 < minTime)
+    {
+      testStepFail("通信停止时间","通信停止时间[%dms,%dms],实际时间 %g",minTime,maxTime,timenow1);
+    }      
+
+}
+/// <Timing>
+void Check_TxmessageAll_time(long Time)
+{
+  dword index = 0;
+  float Eventtime;
+  int i;
+  for(i=0;i<elcount(TxMessageId);i++)
+  {
+    TestJoinMessageEvent(TxMessageId[i]);
+  } 
+  index=testWaitForAllJoinedEvents(10000);
+  Eventtime = TestGetLastWaitElapsedTimeNS()/1000000;
+  if(index==0)
+  {
+    testStepFail("初始化时间","10s内未检测到ECU发送完报文");
+  }
+  else
+  {
+    if(Eventtime <=Time)
+      {
+        testStepPass("报文完全发送一次时间","报文完全发送一次时间%dms,实际时间 %g",Time,Eventtime);
+      }
+    if(Eventtime >Time)
+      {
+        testStepFail("报文完全发送一次时间","报文完全发送一次时间%dms,实际时间 %g",Time,Eventtime);
+      }      
+  }
+}
+/// <Timing>
+void Check_ACK_time(long Time)
+{
+  dword index = 0;
+  float Eventtime;
+  int i;
+  for(i=0;i<elcount(RxMessageId);i++)
+  {
+    TestJoinMessageEvent(RxMessageId[i]);
+  } 
+  index=TestWaitForAnyJoinedEvent(10000);
+  Eventtime = TestGetLastWaitElapsedTimeNS()/1000000;
+  if(index==0)
+  {
+    testStepFail("初始化时间","10s内未检测到ECU ACK置位");
+  }
+  else
+  {
+    if(Eventtime <=Time)
+      {
+        testStepPass("初始化时间","ACK置位时间%dms,实际时间 %g",Time,Eventtime);
+      }
+    if(Eventtime >Time)
+      {
+        testStepFail("初始化时间","ACK置位时间%dms,实际时间 %g",Time,Eventtime);
+      }      
+  }
+}
+/// <Timing>
+void Check_Init_signalvalue_time(long Time,dword gId,signal *sig,dword value)
+{
+  dword index = 0;
+  float Eventtime;
+  int i;
+  i=0;
+  Eventtime=TimeNowNS()/1000000;
+  testWaitForMessage(gId,Time);  
+  for(i=0;i<1000;i++)
+  {
+    index = getRawSignal(sig) == value;
+    if(index)
+    {
+      testWaitForTimeout(5);
+    }
+    if(index==0)
+    {
+      break;
+    }
+  }
+  Eventtime=TimeNowNS()/1000000-Eventtime;
+  if(i==1000)
+  {
+    testStepFail("信号发送有效值时间","5s内未检测到信号有效");
+  }
+  else
+  {
+    if(Eventtime <=Time)
+      {
+        testStepPass("信号发送有效值时间","信号发送有效值时间%dms,实际时间 %g",Time,Eventtime);
+      }
+    if(Eventtime >Time)
+      {
+        testStepFail("信号发送有效值时间","信号发送有效值时间%dms,实际时间 %g",Time,Eventtime);
+      }      
+  }
+}
+/// <Timing>
+void Check_Init_signalvalue_time(long Time,dbMsg* gId,signal *sig,dword value)
+{
+  dword index = 0;
+  float Eventtime;
+  int i;
+  i=0;
+  Eventtime=TimeNowNS()/1000000;
+  testWaitForMessage(gId,Time);  
+  for(i=0;i<1000;i++)
+  {
+    index = getRawSignal(sig) == value;
+    if(index)
+    {
+      testWaitForTimeout(5);
+    }
+    if(index==0)
+    {
+      break;
+    }
+  }
+  Eventtime=TimeNowNS()/1000000-Eventtime;
+  if(i==1000)
+  {
+    testStepFail("信号发送有效值时间","5s内未检测到信号有效");
+  }
+  else
+  {
+    if(Eventtime <=Time)
+      {
+        testStepPass("信号发送有效值时间","信号发送有效值时间%dms,实际时间 %g",Time,Eventtime);
+      }
+    if(Eventtime >Time)
+      {
+        testStepFail("信号发送有效值时间","信号发送有效值时间%dms,实际时间 %g",Time,Eventtime);
+      }      
+  }
+}
+
+/// <SignalCheck>
+SignalRowCheck(signal * sig, word compareValue)
+{
+  
+  long result;
+  
+  result = (getRawSignal(sig) == compareValue);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%X",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%X",getRawSignal(sig));  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+  }
+ 
+}
+/// <SignalCheck>
+SignalWaitCheck(signal * sig, float compareValue)
+{
+  
+  long result;
+  result = testWaitForSignalMatch(sig, compareValue,1000);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",$sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-2):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  } 
+}
+/// <SignalCheck>
+SignalWaitCheck(signal * sig, float compareValue,long time)
+{
+  
+  long result;
+  result = testWaitForSignalMatch(sig, compareValue,time);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",$sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-2):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  } 
+}
+/// <SignalCheck>
+SignalWaitCheck(signal * sig, float RangeValue1, float RangeValue2, long time)
+{
+  
+  long result;
+  result = testWaitForSignalInRange(sig, RangeValue1, RangeValue2, time);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"In Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",$sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-2):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  } 
+}
+
+/// <SignalCheck>
+SignalWaitCheck(sysvarInt * sig, float compareValue,long time)
+{
+  
+  long result;
+  xcpActivate(sig);
+  result = testWaitForSignalMatch(sig, compareValue,time);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%d",@sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-2):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  } 
+}
+/// <SignalCheck>
+SignalWaitCheck(sysvarFloat * sig, float compareValue,long time)
+{
+  
+  long result;
+  xcpActivate(sig);
+  result = testWaitForSignalMatch(sig, compareValue,time);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-2):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  } 
+}
+
+/// <SignalCheck>
+void SignalWaitCheckRate(signal* Sig, long timeout,  long CycleTime, float limit)
+{
+  float prevVal;
+  float currVal;
+  float deltaAngle;
+  float angularSpeed;
+  long elapsedMs = 0;
+  float absSpeed ;
+  
+  if (CycleTime <= 0)
+  {
+    TestStepFail("", "CycleTime 必须大于 0");
+    return;
+  }
+
+  prevVal = $Sig;
+
+  while (1)
+  {
+    testwaitfortimeout(CycleTime);
+    currVal = $Sig;
+    deltaAngle = currVal - prevVal;
+    angularSpeed = deltaAngle * (1000.0 / CycleTime);
+
+    // 计算绝对值（兼容无 fabs 的环境）
+    absSpeed = (angularSpeed >= 0) ? angularSpeed : -angularSpeed;
+    
+    if (absSpeed >= limit)   // 达到或超过限值（正反方向都检测）
+    {
+      TestStepPass("", "角速度达到限值：实际 %.2f °/s >= 目标 %.2f °/s（帧变化 %.2f° / %dms）", 
+                   angularSpeed, limit, deltaAngle, CycleTime);
+      break;
+    }
+
+    prevVal = currVal;  // 滑动窗口
+
+    elapsedMs += CycleTime;
+    if (elapsedMs >= timeout)
+    {
+      TestStepFail("", "超时 %dms，角速度未达限值：当前实际 %.2f °/s < 目标 %.2f °/s", 
+                   timeout, angularSpeed, limit);
+      break;
+    }
+  }
+}
+// 斜率区间判定：|角速度| 落入 [minLimit,maxLimit] 即通过
+// 大于：minLimit=X, maxLimit=CHK_HIGH_LIMIT；小于：minLimit=0, maxLimit=X
+/// <SignalCheck>
+void SignalWaitCheckRate(signal* Sig, long timeout, long CycleTime, float minLimit, float maxLimit)
+{
+  float prevVal;
+  float currVal;
+  float deltaAngle;
+  float angularSpeed;
+  long elapsedMs = 0;
+  float absSpeed;
+
+  if (CycleTime <= 0)
+  {
+    TestStepFail("", "CycleTime 必须大于 0");
+    return;
+  }
+  if (minLimit > maxLimit)
+  {
+    TestStepFail("", "区间下限 %.2f 大于上限 %.2f", minLimit, maxLimit);
+    return;
+  }
+
+  prevVal = $Sig;
+
+  while (1)
+  {
+    testwaitfortimeout(CycleTime);
+    currVal = $Sig;
+    deltaAngle = currVal - prevVal;
+    angularSpeed = deltaAngle * (1000.0 / CycleTime);
+
+    // 计算绝对值（兼容无 fabs 的环境）
+    absSpeed = (angularSpeed >= 0) ? angularSpeed : -angularSpeed;
+
+    if (absSpeed >= minLimit && absSpeed <= maxLimit)   // 落入限值区间（正反方向都检测）
+    {
+      TestStepPass("", "角速度落入区间：实际 %.2f °/s ∈ [%.2f, %.2f] °/s",
+                   angularSpeed, minLimit, maxLimit);
+      break;
+    }
+
+    prevVal = currVal;  // 滑动窗口
+
+    elapsedMs += CycleTime;
+    if (elapsedMs >= timeout)
+    {
+      TestStepFail("", "超时 %dms，角速度未落入 [%.2f, %.2f] °/s：当前实际 %.2f °/s",
+                   timeout, minLimit, maxLimit, angularSpeed);
+      break;
+    }
+  }
+}
+/// <SignalCheck>
+SignalWaitCheck(sysvarFloat * sig, float RangeValue1, float RangeValue2,long time)
+{
+  
+  long result;
+  result = testWaitForSignalInRange(sig, RangeValue1 ,RangeValue2,time);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"In Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-2):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  } 
+}
+/// <SignalCheck>
+SignalWaitCheck(sysvarInt * sig, float RangeValue1, float RangeValue2,long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalInRange(sig, RangeValue1 ,RangeValue2,time);
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"In Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-2):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalWaitCheckNot(signal * sig, float compareValue, long time)
+{
+  long result;
+  result = testWaitForSignalMatch(sig, compareValue, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Expect Not");
+  snprintf(ExpectValue, elcount(ExpectValue), "%g", compareValue);
+  snprintf(ResultValue, elcount(ResultValue), "%g", $sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;  // 等到了=失败
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;  // 异常=失败
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;  // 超时=通过
+    case (-1): writeEx(-3,3,"Check Error"); break;                                              // 错误
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckNot(sysvarFloat * sig, float compareValue, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalMatch(sig, compareValue, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Expect Not");
+  snprintf(ExpectValue, elcount(ExpectValue), "%g", compareValue);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckNot(sysvarInt * sig, float compareValue, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalMatch(sig, compareValue, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Expect Not");
+  snprintf(ExpectValue, elcount(ExpectValue), "%g", compareValue);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckNot(signal * sig, float RangeValue1, float RangeValue2, long time)
+{
+  long result;
+  result = testWaitForSignalInRange(sig, RangeValue1, RangeValue2, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Not Range");
+  snprintf(ExpectValue, elcount(ExpectValue), "[%g,%g]", RangeValue1, RangeValue2);
+  snprintf(ResultValue, elcount(ResultValue), "%g", $sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;  // 进入区间=失败
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;  // 超时=通过
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckNot(sysvarFloat * sig, float RangeValue1, float RangeValue2, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalInRange(sig, RangeValue1, RangeValue2, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Not Range");
+  snprintf(ExpectValue, elcount(ExpectValue), "[%g,%g]", RangeValue1, RangeValue2);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckNot(sysvarInt * sig, float RangeValue1, float RangeValue2, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalInRange(sig, RangeValue1, RangeValue2, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Not Range");
+  snprintf(ExpectValue, elcount(ExpectValue), "[%g,%g]", RangeValue1, RangeValue2);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+/// <SignalCheck>
+SignalWaitCheckKeep(signal * sig, float compareValue, long time)
+{
+  long result;
+  result = testWaitForSignalKeepMatch(sig, compareValue, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Expect Keep");
+  snprintf(ExpectValue, elcount(ExpectValue), "%g", compareValue);
+  snprintf(ResultValue, elcount(ResultValue), "%g", $sig);
+  
+  switch(result)
+  {
+    case (1):  
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckKeep(sysvarFloat * sig, float compareValue, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalKeepMatch(sig, compareValue, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Expect Keep");
+  snprintf(ExpectValue, elcount(ExpectValue), "%g", compareValue);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckKeep(sysvarInt * sig, float compareValue, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalKeepMatch(sig, compareValue, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Expect Keep");
+  snprintf(ExpectValue, elcount(ExpectValue), "%g", compareValue);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  
+    case (-2): SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+/// <SignalCheck>
+long testWaitForSignalKeepMatch(signal * sig, float compareValue, long time)
+{
+  const long checkWindow_ms = 5;          // 每 5 毫秒检查一次
+  long startTime;
+  startTime=0;
+
+  while (startTime <= time)
+  {
+    long res;
+
+    res = testWaitForSignalMatch(sig, compareValue, checkWindow_ms); // checkWindow_ms 是毫秒
+
+
+    if (res == -1) return -1;           // 检测出错
+    if (res == 0)  return 0;            // 窗口内从未匹配 → 保持失败
+  startTime += 5;
+  }
+
+    // 整个时间段内信号始终等于 compareValue
+    return 1;
+}
+/// <SignalCheck>
+long testWaitForSignalKeepMatch(sysvarFloat * sig, float compareValue, long time)
+{
+  const long checkWindow_ms = 5;          // 每 5 毫秒检查一次
+  long startTime;
+  startTime=0;
+
+  while (startTime <= time)
+  {
+    long res;
+
+    res = testWaitForSignalMatch(sig, compareValue, checkWindow_ms); // checkWindow_ms 是毫秒
+
+
+    if (res == -1) return -1;           // 检测出错
+    if (res == 0)  return 0;            // 窗口内从未匹配 → 保持失败
+  startTime += 5;
+  }
+
+    // 整个时间段内信号始终等于 compareValue
+    return 1;
+}
+/// <SignalCheck>
+long testWaitForSignalKeepMatch(sysvarInt * sig, float compareValue, long time)
+{
+  const long checkWindow_ms = 5;          // 每 5 毫秒检查一次
+  long startTime;
+  startTime=0;
+
+  while (startTime <= time)
+  {
+    long res;
+
+    res = testWaitForSignalMatch(sig, compareValue, checkWindow_ms); // checkWindow_ms 是毫秒
+
+
+    if (res == -1) return -1;           // 检测出错
+    if (res == 0)  return 0;            // 窗口内从未匹配 → 保持失败
+  startTime += 5;
+  }
+
+    // 整个时间段内信号始终等于 compareValue
+    return 1;
+}
+/// <SignalCheck>
+long testWaitForSignalKeepInRange(signal * sig, float RangeValue1,float RangeValue2, long time)
+{
+  const long checkWindow_ms = 5;          // 每 5 毫秒检查一次
+  long startTime;
+  startTime=0;
+
+  while (startTime <= time)
+  {
+    long res;
+
+    res = testWaitForSignalInRange(sig, RangeValue1, RangeValue2, checkWindow_ms); // checkWindow_ms 是毫秒
+
+
+    if (res == -1) return -1;           // 检测出错
+    if (res == 0)  return 0;            // 窗口内从未匹配 → 保持失败
+  startTime += 5;
+  }
+
+    // 整个时间段内信号始终等于 compareValue
+    return 1;
+}
+/// <SignalCheck>
+long testWaitForSignalKeepInRange(sysvarFloat * sig, float RangeValue1,float RangeValue2, long time)
+{
+  const long checkWindow_ms = 5;          // 每 5 毫秒检查一次
+  long startTime;
+  startTime=0;
+
+  while (startTime <= time)
+  {
+    long res;
+
+    res = testWaitForSignalInRange(sig, RangeValue1, RangeValue2, checkWindow_ms); // checkWindow_ms 是毫秒
+
+
+    if (res == -1) return -1;           // 检测出错
+    if (res == 0)  return 0;            // 窗口内从未匹配 → 保持失败
+  startTime += 5;
+  }
+
+    // 整个时间段内信号始终等于 compareValue
+    return 1;
+}
+/// <SignalCheck>
+long testWaitForSignalKeepInRange(sysvarInt * sig, float RangeValue1,float RangeValue2, long time)
+{
+  const long checkWindow_ms = 5;          // 每 5 毫秒检查一次
+  long startTime;
+  startTime=0;
+
+  while (startTime <= time)
+  {
+    long res;
+
+    res = testWaitForSignalInRange(sig, RangeValue1, RangeValue2, checkWindow_ms); // checkWindow_ms 是毫秒
+
+
+    if (res == -1) return -1;           // 检测出错
+    if (res == 0)  return 0;            // 窗口内从未匹配 → 保持失败
+  startTime += 5;
+  }
+
+    // 整个时间段内信号始终等于 compareValue
+    return 1;
+}
+/// <SignalCheck>
+SignalWaitCheckKeep(signal * sig, float RangeValue1, float RangeValue2, long time)
+{
+  long result;
+  result = testWaitForSignalKeepInRange(sig, RangeValue1, RangeValue2, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Keep Range");
+  snprintf(ExpectValue, elcount(ExpectValue), "[%g,%g]", RangeValue1, RangeValue2);
+  snprintf(ResultValue, elcount(ResultValue), "%g", $sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckKeep(sysvarFloat * sig, float RangeValue1, float RangeValue2, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalKeepInRange(sig, RangeValue1, RangeValue2, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Keep Range");
+  snprintf(ExpectValue, elcount(ExpectValue), "[%g,%g]", RangeValue1, RangeValue2);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+
+/// <SignalCheck>
+SignalWaitCheckKeep(sysvarInt * sig, float RangeValue1, float RangeValue2, long time)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = testWaitForSignalKeepInRange(sig, RangeValue1, RangeValue2, time);
+  
+  snprintf(SigName, elcount(SigName), "%s", sig.name);
+  snprintf(ExpectHear, elcount(ExpectHear), "Keep Range");
+  snprintf(ExpectValue, elcount(ExpectValue), "[%g,%g]", RangeValue1, RangeValue2);
+  snprintf(ResultValue, elcount(ResultValue), "%g", @sig);
+  
+  switch(result)
+  {
+    case (1):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass"); break;
+    case (0):  SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail"); break;
+    case (-1): writeEx(-3,3,"Check Error"); break;
+  }
+}
+/// <SignalCheck>
+SignalCheck(signal * sig, float compareValue)
+{
+  
+  long result;
+  result = CheckSignalMatch(sig, compareValue);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",$sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheck(sysvarFloat * sig, float compareValue)
+{
+  
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = CheckSignalMatch(sig, compareValue);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheck(sysvarInt * sig, float compareValue)
+{
+  
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = CheckSignalMatch(sig, compareValue);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheck(signal * sig, float RangeValue1, float RangeValue2)
+{
+  
+  long result;
+  result = checkSignalInRange(sig, RangeValue1 ,RangeValue2);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"In Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",$sig);  
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+
+/// <SignalCheck>
+SignalCheck(sysvarFloat * sig, float RangeValue1, float RangeValue2)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  if (@sig >= RangeValue1 && @sig <= RangeValue2)
+    result = 1;
+  else
+    result = 0;
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"In Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheck(sysvarInt * sig, float RangeValue1, float RangeValue2)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  if (@sig >= RangeValue1 && @sig <= RangeValue2)
+    result = 1;
+  else
+    result = 0;
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"In Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);
+  switch(result)
+  {
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheckNot(signal * sig, float compareValue)
+{
+  
+  long result;
+  result = CheckSignalMatch(sig, compareValue);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect Not");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",$sig);  
+  switch(result)
+  {
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+
+/// <SignalCheck>
+SignalCheckNot(signal * sig, float RangeValue1, float RangeValue2)
+{
+  
+  long result;
+  result = checkSignalInRange(sig, RangeValue1 ,RangeValue2);  
+  snprintf(SigName,elcount(SigName),"%s",sig.name);  
+  snprintf(ExpectHear,elcount(ExpectHear),"Not Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",$sig);   
+  switch(result)
+  {
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheckNot(sysvarFloat * sig, float compareValue)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = CheckSignalMatch(sig, compareValue);
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect Not");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);
+  switch(result)
+  {
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheckNot(sysvarInt * sig, float compareValue)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  result = CheckSignalMatch(sig, compareValue);
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Expect Not");
+  snprintf(ExpectValue,elcount(ExpectValue),"%g",compareValue);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);
+  switch(result)
+  {
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheckNot(sysvarFloat * sig, float RangeValue1, float RangeValue2)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  if (@sig >= RangeValue1 && @sig <= RangeValue2)
+    result = 1;
+  else
+    result = 0;
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Not Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);
+  switch(result)
+  {
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCheck>
+SignalCheckNot(sysvarInt * sig, float RangeValue1, float RangeValue2)
+{
+  long result;
+  xcpActivate(sig);
+  testWaitForSysVar(sig,500);
+  if (@sig >= RangeValue1 && @sig <= RangeValue2)
+    result = 1;
+  else
+    result = 0;
+  snprintf(SigName,elcount(SigName),"%s",sig.name);
+  snprintf(ExpectHear,elcount(ExpectHear),"Not Range");
+  snprintf(ExpectValue,elcount(ExpectValue),"[%g,%g]",RangeValue1,RangeValue2);
+  snprintf(ResultValue,elcount(ResultValue),"%g",@sig);
+  switch(result)
+  {
+    case (0):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"pass");break;
+    case (1):SignalCheck_addTable(SigName,ExpectHear,ExpectValue,ResultValue,"fail");break;
+    case (-1):writeEx(-3,3,"Check Error");break;
+  }
+}
+/// <SignalCtl>
+SetSignalRamp(signal* Sig,dword CycleTime,float step,float max)
+{
+  mRampId=StmCreate_Ramp(Sig,$Sig,max,CycleTime,(int)(max*CycleTime/step),0,0,0);  
+  StmControl_Start(mRampId);   
+  setTimer(StmControlDestroy,(int)(max*CycleTime/step));
+}
+on timer StmControlDestroy
+{
+  StmControl_Destroy(mRampId);     
+}
+/// <SignalCtl>
+ResetSignalRamp()
+{
+  StmControl_Destroy(mRampId);    
+}
+
+/**********************************
+ 背景检测（Chk）函数库（全部走 TSL 背景检查，不做采样）
+ 接口只有 7 个名字，按“对象类型 + 是否带 Timeout”重载：
+   ChkEqual     (obj, Expected [, Timeout])       值 == Expected
+   ChkNotEqual  (obj, Expected [, Timeout])       值 != Expected
+   ChkGreater   (obj, Threshold [, Timeout])      值 > Threshold
+   ChkLess      (obj, Threshold [, Timeout])      值 < Threshold
+   ChkInRange   (obj, Low, High [, Timeout])      值在 [Low,High] 内
+   ChkOutRange  (obj, Low, High [, Timeout])      值不在 [Low,High] 内
+   ChkKeepValue (obj [, Timeout])                 值维持不变（值变化即违规）
+ 对象 obj：signal* / sysvarInt* / sysvarFloat*
+ 不带 Timeout -> 释放函数截止：调用 ResetChk()
+ 带   Timeout -> 定时释放：到时自动停止、判定、销毁
+ TSL 接口：
+   信号     -> ChkStart_MsgSignalValueRangeViolation(Signal, Min, Max)
+   系统变量 -> ChkStart_MsgSignalValueRangeViolation(sysVar, Min, Max)（CANoe 7.2 SP3+）
+   维持不变 -> ChkStart_SignalValueChange(Signal | sysVar, Callback)
+ 判定输出复用 SignalCheck_addTable()
+***********************************/
+
+// TSL 检查回调：本库统一用 ChkQuery_NumEvents 判定，这里只占位
+/// <Internal>
+void Cb_ChkValueChange()
+{
+}
+
+// 设置本次检测的公共参数
+/// <Internal>
+// 追加一个检测槽位，返回槽位下标；槽位满时先结掉最早的一个，避免句柄泄漏
+/// <Internal>
+int ChkSlotPush(int Cond, float Low, float High, int Expect, char Name[])
+{
+  int idx;
+  if (mChkCount >= CHK_MAX)
+  {
+    ChkReportAt(0);
+    ChkSlotRemove(0);
+  }
+  idx = mChkCount;
+  mChkIds[idx] = 0;
+  mChkConds[idx] = Cond;
+  mChkLows[idx] = Low;
+  mChkHighs[idx] = High;
+  mChkExpects[idx] = Expect;
+  snprintf(mChkNames[idx], elcount(mChkNames[idx]), "%s", Name);
+  mChkCount = idx + 1;
+  return idx;
+}
+
+// 移除槽位（后面的前移）
+/// <Internal>
+void ChkSlotRemove(int idx)
+{
+  int i;
+  if (idx < 0 || idx >= mChkCount) return;
+  for (i = idx; i < mChkCount - 1; i++)
+  {
+    mChkIds[i]     = mChkIds[i + 1];
+    mChkConds[i]   = mChkConds[i + 1];
+    mChkLows[i]    = mChkLows[i + 1];
+    mChkHighs[i]   = mChkHighs[i + 1];
+    mChkExpects[i] = mChkExpects[i + 1];
+    snprintf(mChkNames[i], elcount(mChkNames[i]), "%s", mChkNames[i + 1]);
+  }
+  mChkCount--;
+  if (mChkCount < 0) mChkCount = 0;
+}
+
+// 判定指定槽位，结果交给 SignalCheck_addTable 输出表格
+/// <Internal>
+void ChkReportAt(int idx)
+{
+  long num;
+  int ok;
+  char CondHear[50];
+  char CondValue[60];
+  char ResultCell[100];
+  char Result[10];
+
+  if (idx < 0 || idx >= mChkCount) return;
+
+  if (mChkIds[idx] == 0)
+    num = 0;
+  else
+    num = ChkQuery_NumEvents(mChkIds[idx]);
+
+  if (mChkConds[idx] == 2)
+  {
+    snprintf(CondHear, elcount(CondHear), "大于阈值");
+    snprintf(CondValue, elcount(CondValue), "> %g", mChkLows[idx]);
+  }
+  else if (mChkConds[idx] == 3)
+  {
+    snprintf(CondHear, elcount(CondHear), "小于阈值");
+    snprintf(CondValue, elcount(CondValue), "< %g", mChkHighs[idx]);
+  }
+  else if (mChkConds[idx] == 1)
+  {
+    snprintf(CondHear, elcount(CondHear), "区间外");
+    snprintf(CondValue, elcount(CondValue), "[%g,%g]", mChkLows[idx], mChkHighs[idx]);
+  }
+  else if (mChkConds[idx] == 4)
+  {
+    snprintf(CondHear, elcount(CondHear), "维持不变");
+    snprintf(CondValue, elcount(CondValue), "值不允许变化");
+  }
+  else if (mChkConds[idx] == 5)
+  {
+    snprintf(CondHear, elcount(CondHear), "不等于期望值");
+    snprintf(CondValue, elcount(CondValue), "!= %g", mChkLows[idx]);
+  }
+  else if (mChkConds[idx] == 6)
+  {
+    snprintf(CondHear, elcount(CondHear), "等于期望值");
+    snprintf(CondValue, elcount(CondValue), "== %g", mChkLows[idx]);
+  }
+  else
+  {
+    snprintf(CondHear, elcount(CondHear), "区间内");
+    snprintf(CondValue, elcount(CondValue), "[%g,%g]", mChkLows[idx], mChkHighs[idx]);
+  }
+
+  // 区间外以“出现违规事件”为期望，其余以“无违规事件”为期望
+  if (mChkExpects[idx] == 1)
+    ok = (num > 0);
+  else
+    ok = (num == 0);
+
+  if (ok == 1)
+    snprintf(Result, elcount(Result), "pass");
+  else
+    snprintf(Result, elcount(Result), "fail");
+
+  // 直白结论：始终满足 / 有几次不满足
+  if (mChkConds[idx] == 2)
+  {
+    if (ok == 1) snprintf(ResultCell, elcount(ResultCell), "始终大于 %g", mChkLows[idx]);
+    else         snprintf(ResultCell, elcount(ResultCell), "%d 次未大于 %g", num, mChkLows[idx]);
+  }
+  else if (mChkConds[idx] == 3)
+  {
+    if (ok == 1) snprintf(ResultCell, elcount(ResultCell), "始终小于 %g", mChkHighs[idx]);
+    else         snprintf(ResultCell, elcount(ResultCell), "%d 次未小于 %g", num, mChkHighs[idx]);
+  }
+  else if (mChkConds[idx] == 1)
+  {
+    if (ok == 1) snprintf(ResultCell, elcount(ResultCell), "%d 次超出区间", num);
+    else         snprintf(ResultCell, elcount(ResultCell), "始终未超出区间");
+  }
+  else if (mChkConds[idx] == 4)
+  {
+    if (ok == 1) snprintf(ResultCell, elcount(ResultCell), "值始终未变化");
+    else         snprintf(ResultCell, elcount(ResultCell), "%d 次检测到值变化", num);
+  }
+  else if (mChkConds[idx] == 5)
+  {
+    if (ok == 1) snprintf(ResultCell, elcount(ResultCell), "%d 次不等于 %g", num, mChkLows[idx]);
+    else         snprintf(ResultCell, elcount(ResultCell), "始终等于 %g", mChkLows[idx]);
+  }
+  else if (mChkConds[idx] == 6)
+  {
+    if (ok == 1) snprintf(ResultCell, elcount(ResultCell), "始终等于 %g", mChkLows[idx]);
+    else         snprintf(ResultCell, elcount(ResultCell), "%d 次不等于 %g", num, mChkLows[idx]);
+  }
+  else
+  {
+    if (ok == 1) snprintf(ResultCell, elcount(ResultCell), "始终在 [%g,%g] 内", mChkLows[idx], mChkHighs[idx]);
+    else         snprintf(ResultCell, elcount(ResultCell), "%d 次超出 [%g,%g]", num, mChkLows[idx], mChkHighs[idx]);
+  }
+
+  SignalCheck_addTable(mChkNames[idx], CondHear, CondValue, ResultCell, Result);
+}
+
+/// <ChkAssert>
+// 释放函数：停止检测 -> 判定 -> 销毁。判定并释放**当前所有**在跑的检测（含并行检测）
+void ResetChk()
+{
+  int i;
+  cancelTimer(timer_ChkDestroy);
+
+  for (i = 0; i < mChkCount; i++)
+  {
+    if (mChkIds[i] != 0)
+      ChkControl_Stop(mChkIds[i]);
+    ChkReportAt(i);
+    if (mChkIds[i] != 0)
+      ChkControl_Destroy(mChkIds[i]);
+  }
+  mChkCount = 0;
+}
+
+/// <ChkAssert>
+// 按对象名释放：只判定并销毁该对象的检测（并行检测时用于单独收尾）
+// Name 为信号名，或系统变量的 "namespace::name"
+void ResetChk(char Name[])
+{
+  int i;
+  int len;
+
+  len = strlen(Name);
+  if (len <= 0) return;
+
+  for (i = 0; i < mChkCount; i++)
+  {
+    if (strlen(mChkNames[i]) != len) continue;
+    if (strncmp(mChkNames[i], Name, len) != 0) continue;
+
+    if (mChkIds[i] != 0)
+      ChkControl_Stop(mChkIds[i]);
+    ChkReportAt(i);
+    if (mChkIds[i] != 0)
+      ChkControl_Destroy(mChkIds[i]);
+    ChkSlotRemove(i);
+    return;
+  }
+}
+
+// 定时释放：到期判定并销毁当前全部检测（并行检测共用同一个定时器，
+// 多个检测要用不同窗口时，请用不带 Timeout 的重载 + 显式 ResetChk(Name)）
+on timer timer_ChkDestroy
+{
+  ResetChk();
+}
+
+// 信号：值不在 [Low,High] 内即记一次事件；Expect=1 表示期望出现越界事件
+/// <Internal>
+int ChkRangeCreate(int Cond, signal* Sig, float Low, float High, int Expect)
+{
+  int idx;
+  idx = ChkSlotPush(Cond, Low, High, Expect, Sig.name);
+  mChkIds[idx] = ChkStart_MsgSignalValueRangeViolation(Sig, Low, High);
+  return idx;
+}
+
+// 系统变量：值不在 [Low,High] 内即记一次事件
+/// <Internal>
+int ChkRangeCreate(int Cond, sysvarInt* Sv, float Low, float High, int Expect)
+{
+  int idx;
+  char name[200];
+  snprintf(name, elcount(name), "%s::%s", Sv.namespace, Sv.name);
+  idx = ChkSlotPush(Cond, Low, High, Expect, name);
+  mChkIds[idx] = ChkStart_MsgSignalValueRangeViolation(Sv, Low, High);
+  return idx;
+}
+/// <Internal>
+int ChkRangeCreate(int Cond, sysvarFloat* Sv, float Low, float High, int Expect)
+{
+  int idx;
+  char name[200];
+  snprintf(name, elcount(name), "%s::%s", Sv.namespace, Sv.name);
+  idx = ChkSlotPush(Cond, Low, High, Expect, name);
+  mChkIds[idx] = ChkStart_MsgSignalValueRangeViolation(Sv, Low, High);
+  return idx;
+}
+
+/// <ChkAssert>
+void ChkGreater(signal* Sig, float Threshold)
+{
+  ChkRangeCreate(2, Sig, Threshold, CHK_HIGH_LIMIT);
+}
+/// <ChkAssert>
+void ChkGreater(signal* Sig, float Threshold, dword Timeout)
+{
+  ChkGreater(Sig, Threshold);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkGreater(sysvarInt* Sv, float Threshold)
+{
+  ChkRangeCreate(2, Sv, Threshold, CHK_HIGH_LIMIT);
+}
+/// <ChkAssert>
+void ChkGreater(sysvarInt* Sv, float Threshold, dword Timeout)
+{
+  ChkGreater(Sv, Threshold);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkGreater(sysvarFloat* Sv, float Threshold)
+{
+  ChkRangeCreate(2, Sv, Threshold, CHK_HIGH_LIMIT);
+}
+/// <ChkAssert>
+void ChkGreater(sysvarFloat* Sv, float Threshold, dword Timeout)
+{
+  ChkGreater(Sv, Threshold);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+
+/// <ChkAssert>
+void ChkLess(signal* Sig, float Threshold)
+{
+  ChkRangeCreate(3, Sig, CHK_LOW_LIMIT, Threshold);
+}
+/// <ChkAssert>
+void ChkLess(signal* Sig, float Threshold, dword Timeout)
+{
+  ChkLess(Sig, Threshold);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkLess(sysvarInt* Sv, float Threshold)
+{
+  ChkRangeCreate(3, Sv, CHK_LOW_LIMIT, Threshold);
+}
+/// <ChkAssert>
+void ChkLess(sysvarInt* Sv, float Threshold, dword Timeout)
+{
+  ChkLess(Sv, Threshold);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkLess(sysvarFloat* Sv, float Threshold)
+{
+  ChkRangeCreate(3, Sv, CHK_LOW_LIMIT, Threshold);
+}
+/// <ChkAssert>
+void ChkLess(sysvarFloat* Sv, float Threshold, dword Timeout)
+{
+  ChkLess(Sv, Threshold);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+
+/// <ChkAssert>
+void ChkInRange(signal* Sig, float Low, float High)
+{
+  ChkRangeCreate(0, Sig, Low, High);
+}
+/// <ChkAssert>
+void ChkInRange(signal* Sig, float Low, float High, dword Timeout)
+{
+  ChkInRange(Sig, Low, High);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkInRange(sysvarInt* Sv, float Low, float High)
+{
+  ChkRangeCreate(0, Sv, Low, High);
+}
+/// <ChkAssert>
+void ChkInRange(sysvarInt* Sv, float Low, float High, dword Timeout)
+{
+  ChkInRange(Sv, Low, High);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkInRange(sysvarFloat* Sv, float Low, float High)
+{
+  ChkRangeCreate(0, Sv, Low, High);
+}
+/// <ChkAssert>
+void ChkInRange(sysvarFloat* Sv, float Low, float High, dword Timeout)
+{
+  ChkInRange(Sv, Low, High);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+
+/// <ChkAssert>
+void ChkOutRange(signal* Sig, float Low, float High)
+{
+  ChkRangeCreate(1, Sig, Low, High);
+  mChkExpectEvent = 1;                 // 出现违规事件才算期望
+}
+/// <ChkAssert>
+void ChkOutRange(signal* Sig, float Low, float High, dword Timeout)
+{
+  ChkOutRange(Sig, Low, High);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkOutRange(sysvarInt* Sv, float Low, float High)
+{
+  ChkRangeCreate(1, Sv, Low, High);
+  mChkExpectEvent = 1;
+}
+/// <ChkAssert>
+void ChkOutRange(sysvarInt* Sv, float Low, float High, dword Timeout)
+{
+  ChkOutRange(Sv, Low, High);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkOutRange(sysvarFloat* Sv, float Low, float High)
+{
+  ChkRangeCreate(1, Sv, Low, High);
+  mChkExpectEvent = 1;
+}
+/// <ChkAssert>
+void ChkOutRange(sysvarFloat* Sv, float Low, float High, dword Timeout)
+{
+  ChkOutRange(Sv, Low, High);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+
+/// <ChkAssert>
+void ChkEqual(signal* Sig, float Expected)
+{
+  ChkRangeCreate(6, Sig, Expected, Expected);   // 区间锁在期望值上，期望无事件
+}
+/// <ChkAssert>
+void ChkEqual(signal* Sig, float Expected, dword Timeout)
+{
+  ChkEqual(Sig, Expected);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkEqual(sysvarInt* Sv, float Expected)
+{
+  ChkRangeCreate(6, Sv, Expected, Expected);
+}
+/// <ChkAssert>
+void ChkEqual(sysvarInt* Sv, float Expected, dword Timeout)
+{
+  ChkEqual(Sv, Expected);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkEqual(sysvarFloat* Sv, float Expected)
+{
+  ChkRangeCreate(6, Sv, Expected, Expected);
+}
+/// <ChkAssert>
+void ChkEqual(sysvarFloat* Sv, float Expected, dword Timeout)
+{
+  ChkEqual(Sv, Expected);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+
+/// <ChkAssert>
+void ChkNotEqual(signal* Sig, float Expected)
+{
+  ChkRangeCreate(5, Sig, Expected, Expected);
+  mChkExpectEvent = 1;                 // 区间锁在期望值上，值不等于期望值时才有事件
+}
+/// <ChkAssert>
+void ChkNotEqual(signal* Sig, float Expected, dword Timeout)
+{
+  ChkNotEqual(Sig, Expected);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkNotEqual(sysvarInt* Sv, float Expected)
+{
+  ChkRangeCreate(5, Sv, Expected, Expected);
+  mChkExpectEvent = 1;
+}
+/// <ChkAssert>
+void ChkNotEqual(sysvarInt* Sv, float Expected, dword Timeout)
+{
+  ChkNotEqual(Sv, Expected);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkNotEqual(sysvarFloat* Sv, float Expected)
+{
+  ChkRangeCreate(5, Sv, Expected, Expected);
+  mChkExpectEvent = 1;
+}
+/// <ChkAssert>
+void ChkNotEqual(sysvarFloat* Sv, float Expected, dword Timeout)
+{
+  ChkNotEqual(Sv, Expected);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+
+/// <ChkAssert>
+void ChkKeepValue(signal* Sig)
+{
+  ChkParaSet(4, 0, 0);
+  snprintf(mChkName, elcount(mChkName), "%s", Sig.name);
+  mChkId = ChkStart_SignalValueChange(Sig, "Cb_ChkValueChange");
+}
+/// <ChkAssert>
+void ChkKeepValue(signal* Sig, dword Timeout)
+{
+  ChkKeepValue(Sig);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkKeepValue(sysvarInt* Sv)
+{
+  ChkParaSet(4, 0, 0);
+  snprintf(mChkName, elcount(mChkName), "%s::%s", Sv.namespace, Sv.name);
+  mChkId = ChkStart_SignalValueChange(Sv, "Cb_ChkValueChange");
+}
+/// <ChkAssert>
+void ChkKeepValue(sysvarInt* Sv, dword Timeout)
+{
+  ChkKeepValue(Sv);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+/// <ChkAssert>
+void ChkKeepValue(sysvarFloat* Sv)
+{
+  ChkParaSet(4, 0, 0);
+  snprintf(mChkName, elcount(mChkName), "%s::%s", Sv.namespace, Sv.name);
+  mChkId = ChkStart_SignalValueChange(Sv, "Cb_ChkValueChange");
+}
+/// <ChkAssert>
+void ChkKeepValue(sysvarFloat* Sv, dword Timeout)
+{
+  ChkKeepValue(Sv);
+  setTimer(timer_ChkDestroy, Timeout);
+}
+
+/// <SignalCtl>
+SetSignalRate(signal* Sig, float step, float num)
+{
+    long i;
+    float currentValue;
+    float targetValue ;  // 目标值
+    float nextValue;
+    float minVal, maxVal;
+    const float tolerance = 0.01;     // 单步校验容差
+    const float finalTolerance = 0.01; // 目标达成容差（可调整）
+    targetValue = num;
+    // 步长为 0，直接警告并退出
+    if (step == 0)
+    {
+        testStepWarning("步长设置为0，信号无变化！");
+        return;
+    }
+
+    // 如果初始值已经满足目标（容差范围内），则直接返回
+    currentValue = $Sig;
+    if (abs(currentValue - targetValue) <= finalTolerance)
+    {
+        return;
+    }
+    if(currentValue > targetValue) //当前值大于预期值
+      step = abs(step)*(-1);
+    i = 0;
+    while (1)
+    {
+        currentValue = $Sig;   // 获取当前信号值
+
+        // 根据 step 符号判断是否已越过目标值（考虑容差）
+        if (step > 0 && currentValue >= targetValue - finalTolerance)
+            break;
+        if (step < 0 && currentValue <= targetValue + finalTolerance)
+            break;
+
+        // 计算下一个设定值（不允许越过目标值）
+        if (step > 0)
+            nextValue = _min(currentValue + step, targetValue);
+        else
+            nextValue = _max(currentValue + step, targetValue);
+
+        $Sig = nextValue;  // 赋值信号
+
+        // 等待信号到达 nextValue 的容差范围内，超时 1000ms
+        minVal = nextValue - tolerance;
+        maxVal = nextValue + tolerance;
+        if (testWaitForSignalInRange(Sig, minVal, maxVal, 1000) != 1)
+        {
+            TestStepFail("", "信号设置超时！第 %d 次，目标值：%.2f，当前设定：%.2f",
+                         i + 1, targetValue, nextValue);
+            return;
+        }
+
+        i++;
+        if (i > 1000)
+        {
+            TestStepFail("", "信号设置步数过多，超过 1000 步");
+            break;
+        }
+    }
+
+    // 最后确保最终值精确为目标值（可选）
+    $Sig = targetValue;
+    if (testWaitForSignalInRange(Sig, targetValue - finalTolerance,
+                                 targetValue + finalTolerance, 1000) != 1)
+    {
+        TestStepFail("", "信号最终值未达到目标 %.2f", targetValue);
+    }
+}
+/// <Utility>
+void SignalCheck_addTable(char Tablelname[],char ExpectHear[],char ExpectCell[],char ResultCell[],char Result[])
+{
+  long table = 0;
+  int i=0,j=0;
+  char Tabledescribe[200];
+  
+  snprintf(Tabledescribe,elcount(Tabledescribe),"Check %s %s",Tablelname,ExpectHear);
+  // begin table
+  
+  table = TestInfoTable(Tabledescribe);
+  // header
+  TestInfoHeadingBegin(table, 0);
+  TestInfoCell(table, "SigName");
+  TestInfoCell(table, ExpectHear);
+  TestInfoCell(table, "Result Value");
+  TestInfoCell(table, "Result");  
+  TestInfoHeadingEnd(table);
+  // row 1
+  TestInfoRow(table, 0);
+  TestInfoCell(table, Tablelname);
+  TestInfoCell(table, ExpectCell);
+  TestInfoCell(table, ResultCell);
+  TestInfoCell(table, Result);
+  
+  if(strncmp("pass",Result,4)==0)
+  { 
+    writeEx(-3,3,"%s %s",ExpectHear,ExpectCell);
+    writeEx(-3,3,"Result %s",ResultCell);
+    writeEx(-3,3,"+++%s+++ Value is Expect",Tablelname);
+    TestSteppass(0, "Check Signal", table);
+    TestSteppass("Check Signal","Check %s %s %s",Tablelname,ExpectHear,ExpectCell);
+  }
+  if(strncmp("fail",Result,4)==0)
+  {
+    writeEx(-3,3,"%s %s",ExpectHear,ExpectCell);
+    writeEx(-3,3,"Result %s",ResultCell);    
+    writeEx(-3,3,"+++%s+++ Value is Nonexpect",Tablelname);
+    testStepFail(0, "Check Signal", table);
+    testStepFail("Check Signal","Check %s %s %s",Tablelname,ExpectHear,ExpectCell);
+  }
+}
+/// <Utility>
+GetCaseName()
+{
+  char CaseName[200];
+  char RelPath[400];
+  char LogName[600];
+  char RepName[600];
+  long CaseNameSize;
+  snprintf(CaseName,elCount(CaseName),""); 
+  testGetCurrentTestCaseTitle(CaseName,CaseNameSize);
+  snprintf(RelPath,elCount(RelPath),"Logging\\\%s",CaseName);
+  getAbsFilePath(RelPath,LogName,elCount(LogName));
+  snprintf(RelPath,elCount(RelPath),"Testreport\\\%s",CaseName);
+  getAbsFilePath(RelPath,RepName,elCount(RepName));
+  setLogFileName(LogName);
+  startLogging();
+  writeex(-3,0,"%s",RepName);
+  testReportFileName(RepName);
+}
+/// <Utility>
+GetCaseName(char title[])
+{
+  char CaseName[200];
+  char RelPath[400];
+  char LogName[600];
+  char RepName[600];
+  long CaseNameSize;
+  snprintf(CaseName,elCount(CaseName),""); 
+  testGetCurrentTestCaseTitle(CaseName,CaseNameSize);
+  snprintf(RelPath,elCount(RelPath),"Logging\\\%s_%s",CaseName,title);
+  getAbsFilePath(RelPath,LogName,elCount(LogName));
+  snprintf(RelPath,elCount(RelPath),"Testreport\\\%s_%s",CaseName,title);
+  getAbsFilePath(RelPath,RepName,elCount(RepName));
+  setLogFileName(LogName);
+  startLogging();
+  writeex(-3,0,"%s",RepName);
+  testReportFileName(RepName);
+}
+
+
+
+''' + build_relay_section()

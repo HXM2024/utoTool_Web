@@ -1,0 +1,4789 @@
+{
+  "tree": [
+    {
+      "l": "Node_93",
+      "c": [
+        {
+          "l": "Msg_93",
+          "id": 147,
+          "d": "8",
+          "cy": "20",
+          "c": [
+            {
+              "l": "x93_AsyALgtIndcr",
+              "bs": 7,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "AsyIndcrDispSts_NoDisp",
+              "vd": "6=AsyIndcrDispSts_Passive; 5=AsyIndcrDispSts_FailureDisp; 4=AsyIndcrDispSts_OverrideDisp; 3=AsyIndcrDispSts_ActiveDisp; 2=AsyIndcrDispSts_StandByDisp; 1=AsyIndcrDispSts_OffDisp; 0=AsyIndcrDispSts_NoDisp",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_AsyALgtIndcr_UB",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlStsChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0D17",
+              "sg": "AsyADL3FuncCtrlSts",
+              "sgi": 5
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlStsCntr",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AsyADL3FuncCtrlSts",
+              "sgi": 7
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlStsADMod",
+              "bs": 27,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "ADMod_NAD_Mod",
+              "vd": "3=ADMod_E2E; 2=ADMod_NOP; 1=ADMod_TJP_HWC; 0=ADMod_NAD_Mod",
+              "dt": "unsigned",
+              "sg": "AsyADL3FuncCtrlSts",
+              "sgi": 6
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlStsQf",
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "AsyADL3FuncCtrlSts",
+              "sgi": 2
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlStsDegraded",
+              "bs": 39,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "AsyADL3FuncCtrlSts",
+              "sgi": 4
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlStsSts",
+              "bs": 35,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "ColorSts_Red",
+              "vd": "3=ColorSts_Reserved; 2=ColorSts_Green; 1=ColorSts_Yellow; 0=ColorSts_Red",
+              "dt": "unsigned",
+              "sg": "AsyADL3FuncCtrlSts",
+              "sgi": 1
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlStsCtrlSts",
+              "bs": 33,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Primary",
+              "vd": "1=Secondary; 0=Primary",
+              "dt": "unsigned",
+              "sg": "AsyADL3FuncCtrlSts",
+              "sgi": 3
+            },
+            {
+              "l": "x93_AsyADL3FuncCtrlSts_UB",
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_AsyADModeReqChks",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0D18",
+              "sg": "AsyADModeReq",
+              "sgi": 2
+            },
+            {
+              "l": "x93_AsyADModeReqCntr",
+              "bs": 55,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AsyADModeReq",
+              "sgi": 3
+            },
+            {
+              "l": "x93_AsyADModeReqADActiveReq",
+              "bs": 51,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "ADMod_NAD_Mod",
+              "vd": "3=ADMod_E2E; 2=ADMod_NOP; 1=ADMod_TJP_HWC; 0=ADMod_NAD_Mod",
+              "dt": "unsigned",
+              "sg": "AsyADModeReq",
+              "sgi": 4
+            },
+            {
+              "l": "x93_AsyADModeReqADDeactiveReq",
+              "bs": 49,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "ReqSts1_NotReqd",
+              "vd": "1=ReqSts1_Reqd; 0=ReqSts1_NotReqd",
+              "dt": "unsigned",
+              "sg": "AsyADModeReq",
+              "sgi": 1
+            },
+            {
+              "l": "x93_AsyADModeReq_UB",
+              "bs": 48,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_PASFuncActive",
+              "bs": 63,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "OnOff1_Off",
+              "vd": "1=OnOff1_On; 0=OnOff1_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_PASFuncActive_UB",
+              "bs": 62,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_RctaBrkReqQM",
+              "bs": 61,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "OnOff1_Off",
+              "vd": "1=OnOff1_On; 0=OnOff1_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_RctaBrkReqQM_UB",
+              "bs": 60,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_RcwmBrkReqQM",
+              "bs": 59,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "OnOff1_Off",
+              "vd": "1=OnOff1_On; 0=OnOff1_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_RcwmBrkReqQM_UB",
+              "bs": 58,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_AsySftyStandStillReq",
+              "bs": 57,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "OnOff1_Off",
+              "vd": "1=OnOff1_On; 0=OnOff1_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x93_AsySftyStandStillReq_UB",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_33",
+      "c": [
+        {
+          "l": "Msg_33",
+          "id": 51,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x33_AsyPinionAgReqSafe_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x33_AgCtrlTqLowrLim",
+              "bs": 6,
+              "ln": 9,
+              "bo": "Motorola MSB",
+              "f": 0.125,
+              "o": -30,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "Nm",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x33_AgCtrlTqLowrLim_UB",
+              "bs": 13,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x33_EnvirPerObsFoTankTurn",
+              "bs": 12,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "EnvirPerObsFoTankTurn_HaveNoObstacleAndCanBeTrust",
+              "vd": "3=EnvirPerObsFoTankTurn_HaveObstacleAndCanNotBeTrust; 2=EnvirPerObsFoTankTurn_HaveObstacleAndCanBeTrust; 1=EnvirPerObsFoTankTurn_HaveNoObstacleAndCanNotBeTrust; 0=EnvirPerObsFoTankTurn_HaveNoObstacleAndCanBeTrust",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x33_EnvirPerObsFoTankTurn_UB",
+              "bs": 10,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x33_AsyPinionAgReqSafeAsyPinionAgReq",
+              "bs": 23,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0009765625,
+              "o": -14.5,
+              "mn": -14.5,
+              "mx": 17.4990234375,
+              "iv": "0.0",
+              "u": "rad",
+              "dt": "unsigned",
+              "sg": "AsyPinionAgReqSafe",
+              "sgi": 3
+            },
+            {
+              "l": "x33_AsyPinionAgReqSafeAsyPinionAgReqChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x02F7"
+            },
+            {
+              "l": "x33_AsyPinionAgReqSafeAsyPinionAgReqCntr",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x33_AgCtrlTqUpprLim",
+              "bs": 43,
+              "ln": 9,
+              "bo": "Motorola MSB",
+              "f": 0.125,
+              "o": -30,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "Nm",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x33_AgCtrlTqUpprLim_UB",
+              "bs": 50,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_54",
+      "c": [
+        {
+          "l": "Msg_54",
+          "id": 84,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x54_AESCtrlReq_UB",
+              "bs": 30,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x54_AESCtrlReqAESCtrlReq",
+              "bs": 29,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "AESCtrlReq_NoRequest",
+              "vd": "3=AESCtrlReq_RequestWithAES; 2=AESCtrlReq_Reserved2; 1=AESCtrlReq_Reserved1; 0=AESCtrlReq_NoRequest",
+              "dt": "unsigned",
+              "sg": "AESCtrlReq",
+              "sgi": 2
+            },
+            {
+              "l": "x54_AESCtrlReqCntr",
+              "bs": 27,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AESCtrlReq",
+              "sgi": 1
+            },
+            {
+              "l": "x54_AESCtrlReqChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0F0B",
+              "sg": "AESCtrlReq",
+              "sgi": 3
+            },
+            {
+              "l": "x54_AsyD2DModeChks",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0F09",
+              "sg": "AsyD2DMode",
+              "sgi": 2
+            },
+            {
+              "l": "x54_AsyD2DModeCntr",
+              "bs": 55,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AsyD2DMode",
+              "sgi": 1
+            },
+            {
+              "l": "x54_AsyD2DModeD2DMode",
+              "bs": 51,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "AsyD2DMode_NAD",
+              "vd": "9=AsyD2DMode_Reserved; 8=AsyD2DMode_Parking; 7=AsyD2DMode_Driving; 6=AsyD2DMode_APA; 5=AsyD2DMode_HPAParking; 4=AsyD2DMode_HPACruiseUnderground; 3=AsyD2DMode_HPACruiseGround; 2=AsyD2DMode_UNOA; 1=AsyD2DMode_HNOA; 0=AsyD2DMode_NAD",
+              "dt": "unsigned",
+              "sg": "AsyD2DMode",
+              "sgi": 3
+            },
+            {
+              "l": "x54_AsyD2DMode_UB",
+              "bs": 63,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_B9",
+      "c": [
+        {
+          "l": "Msg_B9",
+          "id": 185,
+          "d": "8",
+          "cy": "20",
+          "c": [
+            {
+              "l": "xB9_ALgtStdFromWhlSpdALgtStdFromWhlSpd",
+              "bs": 7,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.0009765625,
+              "mn": -18,
+              "mx": 18,
+              "iv": "0.0",
+              "u": "m/s^2",
+              "dt": "signed"
+            },
+            {
+              "l": "xB9_ALgtStdFromWhlSpdChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0034",
+              "sg": "ALgtStdFromWhlSpd",
+              "sgi": 3
+            },
+            {
+              "l": "xB9_ALgtStdFromWhlSpdCntr",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "ALgtStdFromWhlSpd",
+              "sgi": 1
+            },
+            {
+              "l": "xB9_ALgtStdFromWhlSpdQf",
+              "bs": 27,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "ALgtStdFromWhlSpd",
+              "sgi": 2
+            },
+            {
+              "l": "xB9_ALgtStdFromWhlSpd_UB",
+              "bs": 25,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xB9_AbsCtrlActv_UB",
+              "bs": 24,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xB9_AbsCtrlActvChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0D06",
+              "sg": "AbsCtrlActv",
+              "sgi": 3
+            },
+            {
+              "l": "xB9_AbsCtrlActvCntr",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AbsCtrlActv",
+              "sgi": 2
+            },
+            {
+              "l": "xB9_AbsCtrlActvCtrlSts1",
+              "bs": 43,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "CtrlSts1_NoCtrl",
+              "vd": "1=CtrlSts1_InCtrl; 0=CtrlSts1_NoCtrl",
+              "dt": "unsigned",
+              "sg": "AbsCtrlActv",
+              "sgi": 1
+            },
+            {
+              "l": "xB9_StandStillMgrStsForHldByBrkChks",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0445",
+              "sg": "StandStillMgrStsForHldByBrk",
+              "sgi": 3
+            },
+            {
+              "l": "xB9_StandStillMgrStsForHldByBrkCntr",
+              "bs": 63,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "StandStillMgrStsForHldByBrk",
+              "sgi": 2
+            },
+            {
+              "l": "xB9_StandStillMgrStsForHldByBrkStandStillMgrStsForHld1",
+              "bs": 59,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "StandStillMgrStsForHld1_StandStillMgrStsForHldVal0",
+              "vd": "7=StandStillMgrStsForHld1_StandStillMgrStsForHldVal7; 6=StandStillMgrStsForHld1_StandStillMgrStsForHldVal6; 5=StandStillMgrStsForHld1_StandStillMgrStsForHldVal5; 4=StandStillMgrStsForHld1_StandStillMgrStsForHldVal4; 3=StandStillMgrStsForHld1_StandStillMgrStsForHldVal3; 2=StandStillMgrStsForHld1_StandStillMgrStsForHldVal2; 1=StandStillMgrStsForHld1_StandStillMgrStsForHldVal1; 0=StandStillMgrStsForHld1_StandStillMgrStsForHldVal0",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xB9_StandStillMgrStsForHldByBrk_UB",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_2E",
+      "c": [
+        {
+          "l": "Msg_2E",
+          "id": 46,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x2E_WhlDirRotlFrntChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0228",
+              "sg": "WhlDirRotlFrnt",
+              "sgi": 2
+            },
+            {
+              "l": "x2E_WhlDirRotlFrntCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlDirRotlFrnt",
+              "sgi": 4
+            },
+            {
+              "l": "x2E_WhlDirRotlFrntLe",
+              "bs": 11,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "WhlRotlDirStd1_Undefd",
+              "vd": "3=WhlRotlDirStd1_Backw; 2=WhlRotlDirStd1_Fwd; 1=WhlRotlDirStd1_StandStill; 0=WhlRotlDirStd1_Undefd",
+              "dt": "unsigned",
+              "sg": "WhlDirRotlFrnt",
+              "sgi": 3
+            },
+            {
+              "l": "x2E_WhlDirRotlFrntRi",
+              "bs": 9,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "WhlRotlDirStd1_Undefd",
+              "vd": "3=WhlRotlDirStd1_Backw; 2=WhlRotlDirStd1_Fwd; 1=WhlRotlDirStd1_StandStill; 0=WhlRotlDirStd1_Undefd",
+              "dt": "unsigned",
+              "sg": "WhlDirRotlFrnt",
+              "sgi": 1
+            },
+            {
+              "l": "x2E_WhlDirRotlReChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0227",
+              "sg": "WhlDirRotlRe",
+              "sgi": 2
+            },
+            {
+              "l": "x2E_WhlDirRotlReCntr",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlDirRotlRe",
+              "sgi": 4
+            },
+            {
+              "l": "x2E_WhlDirRotlReLe",
+              "bs": 27,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "WhlRotlDirStd1_Undefd",
+              "vd": "3=WhlRotlDirStd1_Backw; 2=WhlRotlDirStd1_Fwd; 1=WhlRotlDirStd1_StandStill; 0=WhlRotlDirStd1_Undefd",
+              "dt": "unsigned",
+              "sg": "WhlDirRotlRe",
+              "sgi": 3
+            },
+            {
+              "l": "x2E_WhlDirRotlReRi",
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "WhlRotlDirStd1_Undefd",
+              "vd": "3=WhlRotlDirStd1_Backw; 2=WhlRotlDirStd1_Fwd; 1=WhlRotlDirStd1_StandStill; 0=WhlRotlDirStd1_Undefd",
+              "dt": "unsigned",
+              "sg": "WhlDirRotlRe",
+              "sgi": 1
+            },
+            {
+              "l": "x2E_WhlDirRotlFrnt_UB",
+              "bs": 39,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2E_WhlDirRotlRe_UB",
+              "bs": 38,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2E_BrkPedlPsd_UB",
+              "bs": 37,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2E_AbsCtrlActvForWhlFrntLe",
+              "bs": 36,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "CtrlSts1_NoCtrl",
+              "vd": "1=CtrlSts1_InCtrl; 0=CtrlSts1_NoCtrl",
+              "dt": "unsigned",
+              "sg": "AbsCtrlActvForWhl",
+              "sgi": 4
+            },
+            {
+              "l": "x2E_AbsCtrlActvForWhlFrntRi",
+              "bs": 35,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "CtrlSts1_NoCtrl",
+              "vd": "1=CtrlSts1_InCtrl; 0=CtrlSts1_NoCtrl",
+              "dt": "unsigned",
+              "sg": "AbsCtrlActvForWhl",
+              "sgi": 3
+            },
+            {
+              "l": "x2E_AbsCtrlActvForWhlReLe",
+              "bs": 34,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "CtrlSts1_NoCtrl",
+              "vd": "1=CtrlSts1_InCtrl; 0=CtrlSts1_NoCtrl",
+              "dt": "unsigned",
+              "sg": "AbsCtrlActvForWhl",
+              "sgi": 2
+            },
+            {
+              "l": "x2E_AbsCtrlActvForWhlReRi",
+              "bs": 33,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "CtrlSts1_NoCtrl",
+              "vd": "1=CtrlSts1_InCtrl; 0=CtrlSts1_NoCtrl",
+              "dt": "unsigned",
+              "sg": "AbsCtrlActvForWhl",
+              "sgi": 1
+            },
+            {
+              "l": "x2E_AbsCtrlActvForWhl_UB",
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2E_BrkPedlPsdChks",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0038",
+              "sg": "BrkPedlPsd",
+              "sgi": 3
+            },
+            {
+              "l": "x2E_BrkPedlPsdCntr",
+              "bs": 55,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "BrkPedlPsd",
+              "sgi": 4
+            },
+            {
+              "l": "x2E_BrkPedlPsdQf",
+              "bs": 51,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "BrkPedlPsd",
+              "sgi": 1
+            },
+            {
+              "l": "x2E_BrkPedlPsdBrkPedlNotPsdSafe",
+              "bs": 49,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "NoYes1_No",
+              "vd": "1=NoYes1_Yes; 0=NoYes1_No",
+              "dt": "unsigned",
+              "sg": "BrkPedlPsd",
+              "sgi": 2
+            },
+            {
+              "l": "x2E_BrkPedlPsdBrkPedlPsd",
+              "bs": 48,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "NoYes1_No",
+              "vd": "1=NoYes1_Yes; 0=NoYes1_No",
+              "dt": "unsigned",
+              "sg": "BrkPedlPsd",
+              "sgi": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_E0",
+      "c": [
+        {
+          "l": "Msg_E0",
+          "id": 224,
+          "d": "8",
+          "cy": "20",
+          "c": [
+            {
+              "l": "xE0_WhlFastSpdSafe_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xE0_WhlFastSpdSafeA",
+              "bs": 6,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.00391,
+              "mx": 125.0027,
+              "iv": "0.0",
+              "u": "m/s",
+              "dt": "unsigned",
+              "sg": "WhlFastSpdSafe",
+              "sgi": 4
+            },
+            {
+              "l": "xE0_WhlFastSpdSafeChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x1972",
+              "sg": "WhlFastSpdSafe",
+              "sgi": 1
+            },
+            {
+              "l": "xE0_WhlFastSpdSafeCntr",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlFastSpdSafe",
+              "sgi": 3
+            },
+            {
+              "l": "xE0_WhlFastSpdSafeQF",
+              "bs": 27,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "WhlFastSpdSafe",
+              "sgi": 2
+            },
+            {
+              "l": "xE0_VehSpdLgt_UB",
+              "bs": 39,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xE0_VehSpdLgtA",
+              "bs": 38,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.00391,
+              "mx": 125.0027,
+              "iv": "0.0",
+              "u": "m/s",
+              "dt": "unsigned",
+              "sg": "VehSpdLgt",
+              "sgi": 1
+            },
+            {
+              "l": "xE0_VehSpdLgtChks",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0037",
+              "sg": "VehSpdLgt",
+              "sgi": 4
+            },
+            {
+              "l": "xE0_VehSpdLgtCntr",
+              "bs": 63,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "VehSpdLgt",
+              "sgi": 2
+            },
+            {
+              "l": "xE0_VehSpdLgtQf",
+              "bs": 59,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "VehSpdLgt",
+              "sgi": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_107",
+      "c": [
+        {
+          "l": "Msg_107",
+          "id": 263,
+          "d": "8",
+          "cy": "20",
+          "c": [
+            {
+              "l": "x107_WhlSpdCircumlFrnt_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x107_WhlSpdCircumlFrntLe",
+              "bs": 6,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.00391,
+              "mx": 125.0027,
+              "iv": "0.0",
+              "u": "m/s",
+              "dt": "unsigned",
+              "sg": "WhlSpdCircumlFrnt",
+              "sgi": 5
+            },
+            {
+              "l": "x107_WhlSpdCircumlFrntChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x006F",
+              "sg": "WhlSpdCircumlFrnt",
+              "sgi": 6
+            },
+            {
+              "l": "x107_WhlSpdCircumlFrntCntr",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlSpdCircumlFrnt",
+              "sgi": 4
+            },
+            {
+              "l": "x107_WhlSpdCircumlFrntLeQf",
+              "bs": 27,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "WhlSpdCircumlFrnt",
+              "sgi": 1
+            },
+            {
+              "l": "x107_WhlSpdCircumlFrntRiQf",
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "WhlSpdCircumlFrnt",
+              "sgi": 2
+            },
+            {
+              "l": "x107_WhlSpdCircumlFrntWhlSpdCircumlFrntRi",
+              "bs": 39,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.00391,
+              "mx": 125.0027,
+              "iv": "0.0",
+              "u": "m/s",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_2F3",
+      "c": [
+        {
+          "l": "Msg_2F3",
+          "id": 755,
+          "d": "8",
+          "cy": "170",
+          "c": [
+            {
+              "l": "x2F3_EscStChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x007F",
+              "sg": "EscSt",
+              "sgi": 1
+            },
+            {
+              "l": "x2F3_EscStCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "EscSt",
+              "sgi": 3
+            },
+            {
+              "l": "x2F3_EscStEscSt",
+              "bs": 11,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "EscSt1_Ok",
+              "vd": "4=EscSt1_UsrOff; 3=EscSt1_PrmntErr; 2=EscSt1_TmpErr; 1=EscSt1_Ok; 0=EscSt1_Inin",
+              "dt": "unsigned",
+              "sg": "EscSt",
+              "sgi": 2
+            },
+            {
+              "l": "x2F3_EscSt_UB",
+              "bs": 8,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_14B",
+      "c": [
+        {
+          "l": "Msg_14B",
+          "id": 331,
+          "d": "8",
+          "cy": "20",
+          "c": [
+            {
+              "l": "x14B_WhlRotToothCntr_UB",
+              "bs": 22,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x14B_BrkTracCtrlActv_UB",
+              "bs": 21,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x14B_BrkTracCtrlActv",
+              "bs": 20,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "CtrlSts1_NoCtrl",
+              "vd": "1=CtrlSts1_InCtrl; 0=CtrlSts1_NoCtrl",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x14B_WhlRotToothCntrCntr",
+              "bs": 19,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlRotToothCntr",
+              "sgi": 1
+            },
+            {
+              "l": "x14B_WhlRotToothCntrChks",
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x19C8",
+              "sg": "WhlRotToothCntr",
+              "sgi": 4
+            },
+            {
+              "l": "x14B_WhlRotToothCntrFrntLe",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlRotToothCntr",
+              "sgi": 6
+            },
+            {
+              "l": "x14B_WhlRotToothCntrFrntRi",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlRotToothCntr",
+              "sgi": 3
+            },
+            {
+              "l": "x14B_WhlRotToothCntrReLe",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlRotToothCntr",
+              "sgi": 2
+            },
+            {
+              "l": "x14B_WhlRotToothCntrReRi",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlRotToothCntr",
+              "sgi": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_487",
+      "c": [
+        {
+          "l": "Msg_487",
+          "id": 1159,
+          "d": "8",
+          "cy": "700",
+          "c": [
+            {
+              "l": "x487_VehMtnSt_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x487_VehMtnStCntr",
+              "bs": 6,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "VehMtnSt",
+              "sgi": 1
+            },
+            {
+              "l": "x487_VehMtnStVehMtnSt",
+              "bs": 2,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "VehMtnSt2_Ukwn",
+              "vd": "7=VehMtnSt2_RollgBackwVal2; 6=VehMtnSt2_RollgBackwVal1; 5=VehMtnSt2_RollgFwdVal2; 4=VehMtnSt2_RollgFwdVal1; 3=VehMtnSt2_StandStillVal3; 2=VehMtnSt2_StandStillVal2; 1=VehMtnSt2_StandStillVal1; 0=VehMtnSt2_Ukwn",
+              "dt": "unsigned",
+              "sg": "VehMtnSt",
+              "sgi": 2
+            },
+            {
+              "l": "x487_VehMtnStChks",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0036",
+              "sg": "VehMtnSt",
+              "sgi": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1B7",
+      "c": [
+        {
+          "l": "Msg_1B7",
+          "id": 439,
+          "d": "8",
+          "cy": "20",
+          "c": [
+            {
+              "l": "x1B7_WhlSpdCircumlRe_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1B7_WhlSpdCircumlReLe",
+              "bs": 6,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.00391,
+              "mx": 125.0027,
+              "iv": "0.0",
+              "u": "m/s",
+              "dt": "unsigned",
+              "sg": "WhlSpdCircumlRe",
+              "sgi": 2
+            },
+            {
+              "l": "x1B7_WhlSpdCircumlReChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x007C",
+              "sg": "WhlSpdCircumlRe",
+              "sgi": 3
+            },
+            {
+              "l": "x1B7_WhlSpdCircumlReCntr",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "WhlSpdCircumlRe",
+              "sgi": 1
+            },
+            {
+              "l": "x1B7_WhlSpdCircumlReLeQf",
+              "bs": 27,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "WhlSpdCircumlRe",
+              "sgi": 4
+            },
+            {
+              "l": "x1B7_WhlSpdCircumlReRiQf",
+              "bs": 25,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "WhlSpdCircumlRe",
+              "sgi": 6
+            },
+            {
+              "l": "x1B7_WhlSpdCircumlReRi",
+              "bs": 39,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.00391,
+              "mx": 125.0027,
+              "iv": "0.0",
+              "u": "m/s",
+              "dt": "unsigned",
+              "sg": "WhlSpdCircumlRe",
+              "sgi": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_457",
+      "c": [
+        {
+          "l": "Msg_457",
+          "id": 1111,
+          "d": "8",
+          "cy": "50",
+          "c": [
+            {
+              "l": "x457_PtTqAtWhlFrntAct_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x457_PtTqAtWhlFrntActPtTqAtWhlsFrntQly",
+              "bs": 6,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "Qly3_De0",
+              "vd": "7=Qly3_De7; 6=Qly3_De6; 5=Qly3_De5; 4=Qly3_De4; 3=Qly3_De3; 2=Qly3_De2; 1=Qly3_De1; 0=Qly3_De0",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x457_PtTqAtWhlFrntActCntr",
+              "bs": 3,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "PtTqAtWhlFrntAct",
+              "sgi": 1
+            },
+            {
+              "l": "x457_PtTqAtWhlFrntActChks",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x004E",
+              "sg": "PtTqAtWhlFrntAct",
+              "sgi": 5
+            },
+            {
+              "l": "x457_PtTqAtWhlFrntActPtTqAtWhlFrntRiAct",
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "mn": -20000,
+              "mx": 20000,
+              "iv": "0",
+              "u": "NewtonMeter",
+              "dt": "signed"
+            },
+            {
+              "l": "x457_PtTqAtWhlFrntActPtTqAtWhlFrntLeAct",
+              "bs": 39,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "mn": -20000,
+              "mx": 20000,
+              "iv": "0",
+              "u": "NewtonMeter",
+              "dt": "signed"
+            },
+            {
+              "l": "x457_PtTqAtWhlFrntActPtTqAtAxleFrntAct",
+              "bs": 55,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "mn": -20000,
+              "mx": 20000,
+              "iv": "0",
+              "u": "NewtonMeter",
+              "dt": "signed"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1C7",
+      "c": [
+        {
+          "l": "Msg_1C7",
+          "id": 455,
+          "d": "8",
+          "cy": "30",
+          "c": [
+            {
+              "l": "x1C7_AccrpedlStsChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x1781",
+              "sg": "AccrpedlSts",
+              "sgi": 2
+            },
+            {
+              "l": "x1C7_AccrpedlStsCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AccrpedlSts",
+              "sgi": 3
+            },
+            {
+              "l": "x1C7_AccrpedlStsFltSts",
+              "bs": 11,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Flt_NoFault",
+              "vd": "1=Flt_Fault; 0=Flt_NoFault",
+              "dt": "unsigned",
+              "sg": "AccrpedlSts",
+              "sgi": 1
+            },
+            {
+              "l": "x1C7_TankTurnSteerWhlReq",
+              "bs": 10,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "TankTurnSteerWhlReq_NoRequest",
+              "vd": "4=TankTurnSteerWhlReq_Resd; 3=TankTurnSteerWhlReq_AgileControlCompensation; 2=TankTurnSteerWhlReq_ZEROHold; 1=TankTurnSteerWhlReq_ZEROReturn; 0=TankTurnSteerWhlReq_NoRequest",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1C7_TankTurnSteerWhlReq_UB",
+              "bs": 58,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1C7_AccrpedlSts_UB",
+              "bs": 57,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_597",
+      "c": [
+        {
+          "l": "Msg_597",
+          "id": 1431,
+          "d": "8",
+          "c": [
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup2",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup3",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup4",
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup5",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup6",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup7",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x597_PSCMdevelpsignalgroupreq1Functiondevpsignalgroup8",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_EB",
+      "c": [
+        {
+          "l": "Msg_EB",
+          "id": 235,
+          "d": "8",
+          "cy": "15",
+          "c": [
+            {
+              "l": "xEB_PrkgPinionAgReqGroupParkAssiPinionAgReqChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x01B1"
+            },
+            {
+              "l": "xEB_PrkgPinionAgReqGroupParkAssiPinionAgReqCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "xEB_PrkgPinionAgReqGroupQF",
+              "bs": 11,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "PrkgPinionAgReqGroup",
+              "sgi": 4
+            },
+            {
+              "l": "xEB_PrkgPinionAgReqGroupParkAssiPinionAgReq",
+              "bs": 9,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.000976563,
+              "o": -14.5,
+              "mn": -14.5,
+              "mx": 17.499039821,
+              "iv": "-0.0009691390000003963",
+              "u": "rad",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xEB_DPACtrlModReq_UB",
+              "bs": 26,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xEB_PrkgPinionAgReqGroup_UB",
+              "bs": 25,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xEB_RotaSuspReq_UB",
+              "bs": 24,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xEB_DPACtrlModReqChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0EE9",
+              "sg": "DPACtrlModReq",
+              "sgi": 2
+            },
+            {
+              "l": "xEB_DPACtrlModReqCntr",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "DPACtrlModReq",
+              "sgi": 1
+            },
+            {
+              "l": "xEB_DPACtrlModReqDPACtrlModReq",
+              "bs": 43,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "DPACtrlModReq_Default",
+              "vd": "14=DPACtrlModReq_LockRRAndRotation; 13=DPACtrlModReq_LockRLAndRotation; 12=DPACtrlModReq_LockFRAndRotation; 11=DPACtrlModReq_LockFLAndRotation; 10=DPACtrlModReq_LockCenterofMassAndRotation; 9=DPACtrlModReq_ReleaseLock; 8=DPACtrlModReq_LockRRAndTurnRight; 7=DPACtrlModReq_LockRRAndTurnLeft; 6=DPACtrlModReq_LockLRAndTurnRight; 5=DPACtrlModReq_LockLRAndTurnLeft; 4=DPACtrlModReq_LockRFAndTurnRight; 3=DPACtrlModReq_LockRFAndTurnLeft; 2=DPACtrlModReq_LockLFAndTurnRight; 1=DPACtrlModReq_LockLFAndTurnLeft; 0=DPACtrlModReq_Default",
+              "dt": "unsigned",
+              "sg": "DPACtrlModReq",
+              "sgi": 3
+            },
+            {
+              "l": "xEB_UturnTrqRelsChks",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0EE5",
+              "sg": "UturnTrqRels",
+              "sgi": 2
+            },
+            {
+              "l": "xEB_UturnTrqRelsCntr",
+              "bs": 63,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "UturnTrqRels",
+              "sgi": 3
+            },
+            {
+              "l": "xEB_UturnTrqRelsUturnTrqRels",
+              "bs": 59,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned",
+              "sg": "UturnTrqRels",
+              "sgi": 1
+            },
+            {
+              "l": "xEB_RotaSuspReq",
+              "bs": 58,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "RotaSuspReq_Default",
+              "vd": "3=RotaSuspReq_Reserved; 2=RotaSuspReq_RotateContinue; 1=RotaSuspReq_RotateSuspend; 0=RotaSuspReq_Default",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xEB_UturnTrqRels_UB",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "EPS",
+      "c": [
+        {
+          "l": "Msg_F6",
+          "id": 246,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "xF6_DrvrSteerActvChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x00BC",
+              "sg": "DrvrSteerActv",
+              "sgi": 2
+            },
+            {
+              "l": "xF6_DrvrSteerActvCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "DrvrSteerActv",
+              "sgi": 3
+            },
+            {
+              "l": "xF6_DrvrSteerActvDrvrSteerActv",
+              "bs": 11,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "OnOff1_Off",
+              "vd": "1=OnOff1_On; 0=OnOff1_Off",
+              "dt": "unsigned",
+              "sg": "DrvrSteerActv",
+              "sgi": 1
+            },
+            {
+              "l": "xF6_DrvrSteerActv_UB",
+              "bs": 10,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "xF6_SteerStsToCrabMov",
+              "bs": 9,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "SteerStsToCrabMov_OFF",
+              "vd": "3=SteerStsToCrabMov_Fault; 2=SteerStsToCrabMov_Active; 1=SteerStsToCrabMov_Ready; 0=SteerStsToCrabMov_OFF",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xF6_ADL3LatCtrlSts_UB",
+              "bs": 23,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "xF6_ADL3LatCtrlStsCtrlSts",
+              "bs": 22,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Primary",
+              "vd": "1=Secondary; 0=Primary",
+              "dt": "unsigned",
+              "sg": "ADL3LatCtrlSts",
+              "sgi": 7
+            },
+            {
+              "l": "xF6_ADL3LatCtrlStsSts",
+              "bs": 21,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "ColorSts_Red",
+              "vd": "3=ColorSts_Reserved; 2=ColorSts_Green; 1=ColorSts_Yellow; 0=ColorSts_Red",
+              "dt": "unsigned",
+              "sg": "ADL3LatCtrlSts",
+              "sgi": 1
+            },
+            {
+              "l": "xF6_ADL3LatCtrlStsQf",
+              "bs": 19,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_UndefindDataAccur",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "ADL3LatCtrlSts",
+              "sgi": 5
+            },
+            {
+              "l": "xF6_ADL3LatCtrlStsADMod",
+              "bs": 17,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "ADMod_NAD_Mod",
+              "vd": "3=ADMod_E2E; 2=ADMod_NOP; 1=ADMod_TJP_HWC; 0=ADMod_NAD_Mod",
+              "dt": "unsigned",
+              "sg": "ADL3LatCtrlSts",
+              "sgi": 4
+            },
+            {
+              "l": "xF6_ADL3LatCtrlStsDegraded",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "LatDegrad_NoDegradation_Green",
+              "vd": "11=LatDegrad_Reserved1; 10=LatDegrad_Yellow_fault10; 9=LatDegrad_Yellow_fault9; 8=LatDegrad_Yellow_fault8; 7=LatDegrad_Yellow_fault7; 6=LatDegrad_Yellow_fault6; 5=LatDegrad_Yellow_fault5; 4=LatDegrad_Yellow_fault4; 3=LatDegrad_Yellow_fault3; 2=LatDegrad_Yellow_fault2; 1=LatDegrad_Red_fault1; 0=LatDegrad_NoDegradation_Green",
+              "dt": "unsigned",
+              "sg": "ADL3LatCtrlSts",
+              "sgi": 6
+            },
+            {
+              "l": "xF6_ADL3LatCtrlStsCntr",
+              "bs": 27,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "ADL3LatCtrlSts",
+              "sgi": 2
+            },
+            {
+              "l": "xF6_ADL3LatCtrlStsChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0463",
+              "sg": "ADL3LatCtrlSts",
+              "sgi": 3
+            },
+            {
+              "l": "xF6_FrntSteerFEstimd1",
+              "bs": 47,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "mn": -32768,
+              "mx": 32767,
+              "iv": "0",
+              "u": "N",
+              "dt": "signed"
+            },
+            {
+              "l": "xF6_SteerStsToCrabMov_UB",
+              "bs": 60,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "xF6_UBoostReqBySteerFrnt",
+              "bs": 59,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "ReqStsSteer_NoReq",
+              "vd": "3=ReqStsSteer_Spare01; 2=ReqStsSteer_EvasiveReq; 1=ReqStsSteer_ParkReq; 0=ReqStsSteer_NoReq",
+              "dt": "unsigned"
+            },
+            {
+              "l": "xF6_UBoostReqBySteerFrnt_UB",
+              "bs": 57,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "xF6_FrntSteerFEstimd1_UB",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_46",
+          "id": 70,
+          "d": "8",
+          "cy": "15",
+          "c": [
+            {
+              "l": "x46_LatCtrlModCfmdChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x003A",
+              "sg": "LatCtrlModCfmd",
+              "sgi": 1
+            },
+            {
+              "l": "x46_LatCtrlModCfmdCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "LatCtrlModCfmd",
+              "sgi": 3
+            },
+            {
+              "l": "x46_LatCtrlModCfmdLatCtrlMod",
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "LatCtrlMod5_NoReq",
+              "vd": "15=LatCtrlMod5_HPA; 14=LatCtrlMod5_RPA; 13=LatCtrlMod5_APA; 12=LatCtrlMod5_SHWA; 11=LatCtrlMod5_E2E; 10=LatCtrlMod5_Reserved1; 9=LatCtrlMod5_EmgyManvAssi; 8=LatCtrlMod5_DsrTrlrStaby; 7=LatCtrlMod5_DsrMueSplit; 6=LatCtrlMod5_DsrOversteer; 5=LatCtrlMod5_SteerAssc; 4=LatCtrlMod5_SftyLaneKeepAid; 3=LatCtrlMod5_EmgyLaneKeepAidForStat; 2=LatCtrlMod5_EmgyLaneKeepAidForObjRe; 1=LatCtrlMod5_HighWayAssist; 0=LatCtrlMod5_NoReq",
+              "dt": "unsigned",
+              "sg": "LatCtrlModCfmd",
+              "sgi": 2
+            },
+            {
+              "l": "x46_LatCtrlModCfmd_UB",
+              "bs": 23,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x46_AESCtrlSts",
+              "bs": 22,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "AESCtrlSts_Off",
+              "vd": "3=AESCtrlSts_Reserved; 2=AESCtrlSts_Error; 1=AESCtrlSts_Active; 0=AESCtrlSts_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x46_AESCtrlSts_UB",
+              "bs": 20,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x46_SteerWhlTqAddl",
+              "bs": 39,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.00390625,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "NewtonMeter",
+              "dt": "signed"
+            },
+            {
+              "l": "x46_SteerWhlTqAddl_UB",
+              "bs": 41,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x46_SteerServoSts",
+              "bs": 40,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "SteerServoSts1_SteerPwrAssidElecFullFct",
+              "vd": "1=SteerServoSts1_SteerPwrAssidElecCritErr; 0=SteerServoSts1_SteerPwrAssidElecFullFct",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x46_SteerServoSts_UB",
+              "bs": 55,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x46_TqAssAddl_UB",
+              "bs": 54,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x46_TqAssAddl",
+              "bs": 53,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.00390625,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "NewtonMeter",
+              "dt": "signed"
+            }
+          ]
+        },
+        {
+          "l": "Msg_1BC",
+          "id": 444,
+          "d": "8",
+          "cy": "25",
+          "c": [
+            {
+              "l": "x1BC_SteerExtFctStsChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "SteerExtFctSts",
+              "sgi": 8
+            },
+            {
+              "l": "x1BC_SteerExtFctStsCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "SteerExtFctSts",
+              "sgi": 7
+            },
+            {
+              "l": "x1BC_SteerExtFctStsDrvrSteerOvrd",
+              "bs": 11,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned",
+              "sg": "SteerExtFctSts",
+              "sgi": 4
+            },
+            {
+              "l": "x1BC_SteerExtFctStsExtFctLowerLimActive",
+              "bs": 10,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerExtFctStsExtFctRateLimActive",
+              "bs": 9,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerExtFctStsExtFctUpperLimActive",
+              "bs": 8,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerExtFctStsExtSafeLimActive",
+              "bs": 23,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned",
+              "sg": "SteerExtFctSts",
+              "sgi": 2
+            },
+            {
+              "l": "x1BC_SteerExtFctStsLatAgReqNotInRange",
+              "bs": 22,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned",
+              "sg": "SteerExtFctSts",
+              "sgi": 3
+            },
+            {
+              "l": "x1BC_SteerExtFctStsLatCtrlReqNotInRange",
+              "bs": 21,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerExtFctSts_UB",
+              "bs": 20,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerAstLvl",
+              "bs": 19,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "SteerAstLvl2_Ukwn",
+              "vd": "7=SteerAstLvl2_Lvl7; 6=SteerAstLvl2_Lvl6; 5=SteerAstLvl2_Lvl5; 4=SteerAstLvl2_Lvl4; 3=SteerAstLvl2_Lvl3; 2=SteerAstLvl2_Lvl2; 1=SteerAstLvl2_Lvl1; 0=SteerAstLvl2_Ukwn",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerAstLvl_UB",
+              "bs": 16,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_GVMCSteerCtrlModCfmdChks",
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "GVMCSteerCtrlModCfmd",
+              "sgi": 4
+            },
+            {
+              "l": "x1BC_GVMCSteerCtrlModCfmdCntr",
+              "bs": 39,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "GVMCSteerCtrlModCfmd",
+              "sgi": 1
+            },
+            {
+              "l": "x1BC_GVMCSteerCtrlModCfmdGVMCSteerCtrlModCfmd",
+              "bs": 35,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GVMCSteerCtrlModCfmd_Off",
+              "vd": "3=GVMCSteerCtrlModCfmd_Resd2; 2=GVMCSteerCtrlModCfmd_Resd1; 1=GVMCSteerCtrlModCfmd_GVMCLongCtrlModReq; 0=GVMCSteerCtrlModCfmd_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_GVMCSteerCtrlModCfmdMainSts",
+              "bs": 33,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "MainSts_Off",
+              "vd": "3=MainSts_Reserved; 2=MainSts_Fault; 1=MainSts_Active; 0=MainSts_Off",
+              "dt": "unsigned",
+              "sg": "GVMCSteerCtrlModCfmd",
+              "sgi": 3
+            },
+            {
+              "l": "x1BC_DrvrSteerWhlHldGroupDrvrSteerWhlHldQly",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_DrvrSteerWhlHldGroupDrvrSteerWhlHld",
+              "bs": 43,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "OnOffDetd1_NoInfo",
+              "vd": "3=OnOffDetd1_OnDetd; 2=OnOffDetd1_NotOnOrOffDetd; 1=OnOffDetd1_OffDetd; 0=OnOffDetd1_NoInfo",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_DrvrSteerWhlHldGroup_UB",
+              "bs": 41,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_GVMCSteerCtrlModCfmd_UB",
+              "bs": 40,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerErrReq",
+              "bs": 55,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "SteerErrReq3_NoReq",
+              "vd": "7=SteerErrReq3_Spare03; 6=SteerErrReq3_Spare02; 5=SteerErrReq3_Spare01; 4=SteerErrReq3_SteerAssiTmpRedn; 3=SteerErrReq3_SteerAssiUrgentSrvRqrd; 2=SteerErrReq3_SteerErrStopSfty; 1=SteerErrReq3_SteerAssiSrvRqrd; 0=SteerErrReq3_NoReq",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerErrReq_UB",
+              "bs": 52,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerStsToParkAssi",
+              "bs": 51,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "SteerStsToParkAssi_NormOper",
+              "vd": "7=SteerStsToParkAssi_Spare2; 6=SteerStsToParkAssi_Spare1; 5=SteerStsToParkAssi_SteerTqHi; 4=SteerStsToParkAssi_SteerAbortByDrvrIntv; 3=SteerStsToParkAssi_SteerCtrlIntErr; 2=SteerStsToParkAssi_CtrlDifHi; 1=SteerStsToParkAssi_SteerAbortBySpdHi; 0=SteerStsToParkAssi_NormOper",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerStsToParkAssi_UB",
+              "bs": 48,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_TankTurnSteerWhlCfmd",
+              "bs": 63,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "TankTurnSteerWhlCfm_Off",
+              "vd": "7=TankTurnSteerWhlCfm_Reserved1; 6=TankTurnSteerWhlCfm_ZTurnInhb; 5=TankTurnSteerWhlCfm_ZTurnActv; 4=TankTurnSteerWhlCfm_Error; 3=TankTurnSteerWhlCfm_Hold; 2=TankTurnSteerWhlCfm_Pending; 1=TankTurnSteerWhlCfm_Returning; 0=TankTurnSteerWhlCfm_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_TankTurnSteerWhlCfmd_UB",
+              "bs": 60,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerSftyLimrSts",
+              "bs": 59,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Boolean_FALSE",
+              "vd": "1=Boolean_TRUE; 0=Boolean_FALSE",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1BC_SteerSftyLimrSts_UB",
+              "bs": 58,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_3BB",
+          "id": 955,
+          "d": "8",
+          "cy": "400",
+          "c": [
+            {
+              "l": "x3BB_PinionSteerAgMax1_UB",
+              "bs": 55,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x3BB_PinionSteerAgMax1",
+              "bs": 54,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0009765625,
+              "mn": -14.5,
+              "mx": 14.5,
+              "iv": "0.0",
+              "u": "rad",
+              "dt": "signed"
+            }
+          ]
+        },
+        {
+          "l": "Msg_4E",
+          "id": 78,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x4E_PinionSteerAgGroupChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x040D",
+              "sg": "PinionSteerAgGroup",
+              "sgi": 1
+            },
+            {
+              "l": "x4E_PinionSteerAgGroupPinionSteerAg1Qf",
+              "bs": 15,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_TmpUndefdData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x4E_PinionSteerAgGroupPinionSteerAgSpd1",
+              "bs": 13,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.0078125,
+              "mn": -50,
+              "mx": 50,
+              "iv": "0.0",
+              "u": "rad/s",
+              "dt": "signed"
+            },
+            {
+              "l": "x4E_PinionSteerAgGroupPinionSteerAgSpd1Qf",
+              "bs": 31,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_TmpUndefdData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x4E_PinionSteerAgGroupSteerWhlTq",
+              "bs": 29,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.00390625,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "NewtonMeter",
+              "dt": "signed",
+              "sg": "PinionSteerAgGroup",
+              "sgi": 3
+            },
+            {
+              "l": "x4E_PinionSteerAgGroupPinionSteerAg1",
+              "bs": 46,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0009765625,
+              "mn": -14.5,
+              "mx": 14.5,
+              "iv": "0.0",
+              "u": "rad",
+              "dt": "signed",
+              "sg": "PinionSteerAgGroup",
+              "sgi": 8
+            },
+            {
+              "l": "x4E_PinionSteerAgGroupCntr",
+              "bs": 63,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "PinionSteerAgGroup",
+              "sgi": 2
+            },
+            {
+              "l": "x4E_PinionSteerAgGroupSteerWhlTqQf",
+              "bs": 59,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_TmpUndefdData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "PinionSteerAgGroup",
+              "sgi": 6
+            },
+            {
+              "l": "x4E_PinionSteerAgGroup_UB",
+              "bs": 57,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_523",
+          "id": 1315,
+          "d": "8",
+          "c": [
+            {
+              "l": "x523_NM_NodeID_PSCM1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_NM_PNI_PSCM1",
+              "bs": 14,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_NM_AW_PSCM1",
+              "bs": 12,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_NM_CS_PSCM1",
+              "bs": 11,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_NM_RMR_PSCM1",
+              "bs": 8,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_PNC23_PSCM1",
+              "bs": 23,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_PNC29_PSCM1",
+              "bs": 29,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_PNC25_PSCM1",
+              "bs": 25,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_PNC38_PSCM1",
+              "bs": 38,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x523_PNC36_PSCM1",
+              "bs": 36,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "dt": "unsigned"
+            }
+          ]
+        },
+        {
+          "l": "Msg_596",
+          "id": 1430,
+          "d": "8",
+          "c": [
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup2",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup3",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup4",
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup5",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup6",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup7",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x596_PSCMdevelpsignalgroupresp1Functiondevpsignalgroup8",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_40",
+      "c": [
+        {
+          "l": "Msg_40",
+          "id": 64,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x40_SteerWhlSnsr_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x40_SteerWhlSnsrAg",
+              "bs": 6,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0009765625,
+              "mn": -14.5,
+              "mx": 14.5,
+              "iv": "0.0",
+              "u": "rad",
+              "dt": "signed",
+              "sg": "SteerWhlSnsr",
+              "sgi": 1
+            },
+            {
+              "l": "x40_SteerWhlSnsrQf",
+              "bs": 23,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "SteerWhlSnsr",
+              "sgi": 4
+            },
+            {
+              "l": "x40_SteerWhlSnsrAgSpd",
+              "bs": 21,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.0078125,
+              "mn": -50,
+              "mx": 50,
+              "iv": "0.0",
+              "u": "rad/s",
+              "dt": "signed",
+              "sg": "SteerWhlSnsr",
+              "sgi": 3
+            },
+            {
+              "l": "x40_SteerWhlSnsrChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0033",
+              "sg": "SteerWhlSnsr",
+              "sgi": 5
+            },
+            {
+              "l": "x40_SteerWhlSnsrCntr",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "SteerWhlSnsr",
+              "sgi": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_5B",
+      "c": [
+        {
+          "l": "Msg_5B",
+          "id": 91,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x5B_DPAModStsChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "DPAModSts",
+              "sgi": 3
+            },
+            {
+              "l": "x5B_DPAModStsCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "DPAModSts",
+              "sgi": 1
+            },
+            {
+              "l": "x5B_DPAModStsDPAModSts",
+              "bs": 11,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "ModSts3_OFF",
+              "vd": "4=ModSts3_Resd; 3=ModSts3_Active; 2=ModSts3_Ready; 1=ModSts3_Standby; 0=ModSts3_OFF",
+              "dt": "unsigned",
+              "sg": "DPAModSts",
+              "sgi": 2
+            },
+            {
+              "l": "x5B_DPAModSts_UB",
+              "bs": 8,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x5B_CrabMovModSts_UB",
+              "bs": 55,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x5B_CrabMovModStsTankTurnModSts",
+              "bs": 54,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "TurnModSts_OFF",
+              "vd": "3=TurnModSts_Active; 2=TurnModSts_Ready; 1=TurnModSts_Standby; 0=TurnModSts_OFF",
+              "dt": "unsigned",
+              "sg": "CrabMovModSts",
+              "sgi": 1
+            },
+            {
+              "l": "x5B_CrabMovModStsCntr",
+              "bs": 51,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "CrabMovModSts",
+              "sgi": 3
+            },
+            {
+              "l": "x5B_CrabMovModStsChks",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x1A0A",
+              "sg": "CrabMovModSts",
+              "sgi": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_152",
+      "c": [
+        {
+          "l": "Msg_152",
+          "id": 338,
+          "d": "8",
+          "c": [
+            {
+              "l": "x152_VehCfgPrmExt2BlkIDBytePosn1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 5
+            },
+            {
+              "l": "x152_VehCfgPrmExt2CCPBytePosn2",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 7
+            },
+            {
+              "l": "x152_VehCfgPrmExt2CCPBytePosn3",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 3
+            },
+            {
+              "l": "x152_VehCfgPrmExt2CCPBytePosn4",
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 4
+            },
+            {
+              "l": "x152_VehCfgPrmExt2CCPBytePosn5",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 1
+            },
+            {
+              "l": "x152_VehCfgPrmExt2CCPBytePosn6",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 8
+            },
+            {
+              "l": "x152_VehCfgPrmExt2CCPBytePosn7",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 6
+            },
+            {
+              "l": "x152_VehCfgPrmExt2CCPBytePosn8",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt2",
+              "sgi": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_79",
+      "c": [
+        {
+          "l": "Msg_79",
+          "id": 121,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x79_GVMCSteerWhlAgReqFrnt_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x79_GVMCSteerWhlAgReqFrntSteerWhlAgCtrl",
+              "bs": 6,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0009765625,
+              "mn": -14.5,
+              "mx": 14.5,
+              "iv": "0.0",
+              "u": "rad",
+              "dt": "signed"
+            },
+            {
+              "l": "x79_GVMCSteerWhlAgReqFrntChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x1A7E",
+              "sg": "GVMCSteerWhlAgReqFrnt",
+              "sgi": 3
+            },
+            {
+              "l": "x79_GVMCSteerWhlAgReqFrntSteerWhlTqCtrl",
+              "bs": 31,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.00390625,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "NewtonMeter",
+              "dt": "signed"
+            },
+            {
+              "l": "x79_GVMCSteerWhlAgReqFrntSteerWhlCtrlSts",
+              "bs": 33,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "SteerWhlCtrlSts_NoRequest",
+              "vd": "3=SteerWhlCtrlSts_Reserved; 2=SteerWhlCtrlSts_TqRequest; 1=SteerWhlCtrlSts_AngleRequest; 0=SteerWhlCtrlSts_NoRequest",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x79_GVMCSteerWhlAgReqFrntCntr",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "GVMCSteerWhlAgReqFrnt",
+              "sgi": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_156",
+      "c": [
+        {
+          "l": "Msg_156",
+          "id": 342,
+          "d": "8",
+          "cy": "1000",
+          "c": [
+            {
+              "l": "x156_TiAndDateIndcn_UB",
+              "bs": 7,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x156_TiAndDateIndcnDataValid",
+              "bs": 6,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "NoYes1_No",
+              "vd": "1=NoYes1_Yes; 0=NoYes1_No",
+              "dt": "unsigned",
+              "sg": "TiAndDateIndcn",
+              "sgi": 6
+            },
+            {
+              "l": "x156_TiAndDateIndcnSec1",
+              "bs": 5,
+              "ln": 6,
+              "bo": "Motorola MSB",
+              "mx": 59,
+              "iv": "0",
+              "u": "s",
+              "dt": "unsigned",
+              "sg": "TiAndDateIndcn",
+              "sgi": 5
+            },
+            {
+              "l": "x156_TiAndDateIndcnMins1",
+              "bs": 13,
+              "ln": 6,
+              "bo": "Motorola MSB",
+              "mx": 59,
+              "iv": "0",
+              "u": "Mins",
+              "dt": "unsigned",
+              "sg": "TiAndDateIndcn",
+              "sgi": 3
+            },
+            {
+              "l": "x156_TiAndDateIndcnHr1",
+              "bs": 20,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mx": 23,
+              "iv": "0",
+              "u": "hours",
+              "dt": "unsigned",
+              "sg": "TiAndDateIndcn",
+              "sgi": 2
+            },
+            {
+              "l": "x156_TiAndDateIndcnDay",
+              "bs": 28,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mn": 1,
+              "mx": 31,
+              "iv": "1",
+              "u": "Days",
+              "dt": "unsigned",
+              "sg": "TiAndDateIndcn",
+              "sgi": 4
+            },
+            {
+              "l": "x156_TiAndDateIndcnMth1",
+              "bs": 35,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mn": 1,
+              "mx": 12,
+              "iv": "1",
+              "u": "Month",
+              "dt": "unsigned",
+              "sg": "TiAndDateIndcn",
+              "sgi": 1
+            },
+            {
+              "l": "x156_TiAndDateIndcnYr1",
+              "bs": 46,
+              "ln": 7,
+              "bo": "Motorola MSB",
+              "mx": 99,
+              "iv": "0",
+              "u": "Year",
+              "dt": "unsigned",
+              "sg": "TiAndDateIndcn",
+              "sgi": 7
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_51",
+      "c": [
+        {
+          "l": "Msg_51",
+          "id": 81,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x51_AsyDataWithCmpSafeYawRateWithCmp",
+              "bs": 7,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.000244140625,
+              "mn": -6,
+              "mx": 6,
+              "iv": "0.0",
+              "u": "rad/s",
+              "dt": "signed",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 2
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafeChks",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "255",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0024",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 7
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafeGrdtOfALgt",
+              "bs": 31,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.00390625,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "m/s^3",
+              "dt": "signed",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 6
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafeYawRateQf",
+              "bs": 33,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 1
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafeCntr",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 5
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafeALgt1Qf",
+              "bs": 43,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 3
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafeALat1Qf",
+              "bs": 41,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 8
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafeALatWithCmp",
+              "bs": 55,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0085,
+              "mn": -138.992,
+              "mx": 139.0005,
+              "iv": "0.0",
+              "u": "m/s^2",
+              "dt": "signed",
+              "sg": "AsyDataWithCmpSafe",
+              "sgi": 4
+            },
+            {
+              "l": "x51_AsyDataWithCmpSafe_UB",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_A0",
+      "c": [
+        {
+          "l": "Msg_A0",
+          "id": 160,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "xA0_ADataRawSafeChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "255",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0022",
+              "sg": "ADataRawSafe",
+              "sgi": 5
+            },
+            {
+              "l": "xA0_ADataRawSafeCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "ADataRawSafe",
+              "sgi": 6
+            },
+            {
+              "l": "xA0_ADataRawSafeALat1Qf",
+              "bs": 11,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "sg": "ADataRawSafe",
+              "sgi": 2
+            },
+            {
+              "l": "xA0_ADataRawSafeALgt1Qf",
+              "bs": 9,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "sg": "ADataRawSafe",
+              "sgi": 3
+            },
+            {
+              "l": "xA0_ADataRawSafeALat",
+              "bs": 23,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0085,
+              "mn": -138.992,
+              "mx": 139.0005,
+              "iv": "0.0",
+              "u": "m/s^2",
+              "dt": "signed",
+              "sg": "ADataRawSafe",
+              "sgi": 4
+            },
+            {
+              "l": "xA0_ADataRawSafeAVertQf",
+              "bs": 24,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "sg": "ADataRawSafe",
+              "sgi": 7
+            },
+            {
+              "l": "xA0_ADataRawSafeALgt",
+              "bs": 38,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0085,
+              "mn": -138.992,
+              "mx": 139.0005,
+              "iv": "0.0",
+              "u": "m/s^2",
+              "dt": "signed",
+              "sg": "ADataRawSafe",
+              "sgi": 8
+            },
+            {
+              "l": "xA0_ADataRawSafeAVert",
+              "bs": 55,
+              "ln": 15,
+              "bo": "Motorola MSB",
+              "f": 0.0085,
+              "mn": -138.992,
+              "mx": 139.0005,
+              "iv": "9.8175",
+              "u": "m/s^2",
+              "dt": "signed",
+              "sg": "ADataRawSafe",
+              "sgi": 1
+            },
+            {
+              "l": "xA0_ADataRawSafe_UB",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1B0",
+      "c": [
+        {
+          "l": "Msg_1B0",
+          "id": 432,
+          "d": "8",
+          "cy": "10",
+          "c": [
+            {
+              "l": "x1B0_AgDataRawSafeRollRate",
+              "bs": 7,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.000244140625,
+              "mn": -6,
+              "mx": 6,
+              "iv": "0.0",
+              "u": "rad/s",
+              "dt": "signed",
+              "gs": "Counter",
+              "sg": "AgDataRawSafe",
+              "sgi": 6
+            },
+            {
+              "l": "x1B0_AgDataRawSafeYawRate",
+              "bs": 23,
+              "ln": 16,
+              "bo": "Motorola MSB",
+              "f": 0.000244140625,
+              "mn": -6,
+              "mx": 6,
+              "iv": "0.0",
+              "u": "rad/s",
+              "dt": "signed",
+              "sg": "AgDataRawSafe",
+              "sgi": 2
+            },
+            {
+              "l": "x1B0_AgDataRawSafeChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "255",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0023",
+              "sg": "AgDataRawSafe",
+              "sgi": 3
+            },
+            {
+              "l": "x1B0_AgDataRawSafeCntr",
+              "bs": 47,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AgDataRawSafe",
+              "sgi": 1
+            },
+            {
+              "l": "x1B0_AgDataRawSafeRollRateQf",
+              "bs": 43,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "AgDataRawSafe",
+              "sgi": 4
+            },
+            {
+              "l": "x1B0_AgDataRawSafeYawRateQf",
+              "bs": 41,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "Qf1_DataCalcdWithDevDefd",
+              "vd": "3=Qf1_DataCalcdWithDevDefd; 2=Qf1_DevOfDataNotWithinRngAllwd; 1=Qf1_DataTmpUndefdAndEvlnInProgs; 0=Qf1_DevOfDataUndefd",
+              "dt": "unsigned",
+              "sg": "AgDataRawSafe",
+              "sgi": 5
+            },
+            {
+              "l": "x1B0_AgDataRawSafe_UB",
+              "bs": 55,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_2E0",
+      "c": [
+        {
+          "l": "Msg_2E0",
+          "id": 736,
+          "d": "8",
+          "cy": "70",
+          "c": [
+            {
+              "l": "x2E0_VehModMngtGlbSafe1Chks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0074",
+              "sg": "VehModMngtGlbSafe1",
+              "sgi": 7
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1Cntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "VehModMngtGlbSafe1",
+              "sgi": 9
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1UsgModSts",
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "UsgModSts1_UsgModInActv",
+              "vd": "13=UsgModSts1_UsgModDrvg; 11=UsgModSts1_UsgModActv; 2=UsgModSts1_UsgModCnvinc; 1=UsgModSts1_UsgModInActv; 0=UsgModSts1_UsgModAbdnd",
+              "dt": "unsigned",
+              "sg": "VehModMngtGlbSafe1",
+              "sgi": 2
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1EgyLvlElecSubtyp",
+              "bs": 23,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1PwrLvlElecMai",
+              "bs": 19,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehModMngtGlbSafe1",
+              "sgi": 8
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1PwrLvlElecSubtyp",
+              "bs": 31,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1EgyLvlElecMai",
+              "bs": 27,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehModMngtGlbSafe1",
+              "sgi": 4
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1CarModSts1",
+              "bs": 39,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "CarModSts1_CarModNorm",
+              "vd": "5=CarModSts1_CarModDyno; 3=CarModSts1_CarModCrash; 2=CarModSts1_CarModFcy; 1=CarModSts1_CarModTrnsp; 0=CarModSts1_CarModNorm",
+              "dt": "unsigned",
+              "sg": "VehModMngtGlbSafe1",
+              "sgi": 3
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1CarModSubtypWdCarModSubtyp",
+              "bs": 36,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1FltEgyCnsWdSts",
+              "bs": 33,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "FltEgyCns1_NoFlt",
+              "vd": "1=FltEgyCns1_Flt; 0=FltEgyCns1_NoFlt",
+              "dt": "unsigned",
+              "sg": "VehModMngtGlbSafe1",
+              "sgi": 1
+            },
+            {
+              "l": "x2E0_VehModMngtGlbSafe1_UB",
+              "bs": 32,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_10E",
+      "c": [
+        {
+          "l": "Msg_10E",
+          "id": 270,
+          "d": "8",
+          "cy": "20",
+          "c": [
+            {
+              "l": "x10E_LatCtrlReqSafeChks",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "255",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0030",
+              "sg": "LatCtrlReqSafe",
+              "sgi": 4
+            },
+            {
+              "l": "x10E_LatCtrlReqSafeCntr",
+              "bs": 15,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "LatCtrlReqSafe",
+              "sgi": 3
+            },
+            {
+              "l": "x10E_LatCtrlReqSafeLatCtrlModReq",
+              "bs": 11,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "LatCtrlMod5_NoReq",
+              "vd": "15=LatCtrlMod5_HPA; 14=LatCtrlMod5_RPA; 13=LatCtrlMod5_APA; 12=LatCtrlMod5_SHWA; 11=LatCtrlMod5_E2E; 10=LatCtrlMod5_Reserved1; 9=LatCtrlMod5_EmgyManvAssi; 8=LatCtrlMod5_DsrTrlrStaby; 7=LatCtrlMod5_DsrMueSplit; 6=LatCtrlMod5_DsrOversteer; 5=LatCtrlMod5_SteerAssc; 4=LatCtrlMod5_SftyLaneKeepAid; 3=LatCtrlMod5_EmgyLaneKeepAidForStat; 2=LatCtrlMod5_EmgyLaneKeepAidForObjRe; 1=LatCtrlMod5_HighWayAssist; 0=LatCtrlMod5_NoReq",
+              "dt": "unsigned",
+              "sg": "LatCtrlReqSafe",
+              "sgi": 2
+            },
+            {
+              "l": "x10E_LatCtrlReqSafeSteerTqReq",
+              "bs": 23,
+              "ln": 14,
+              "bo": "Motorola MSB",
+              "f": 0.00390625,
+              "mn": -30,
+              "mx": 30,
+              "iv": "0.0",
+              "u": "NewtonMeter",
+              "dt": "signed",
+              "sg": "LatCtrlReqSafe",
+              "sgi": 5
+            },
+            {
+              "l": "x10E_LatCtrlReqSafeSteerWhlHptcWarnReq",
+              "bs": 25,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "OnOff1_Off",
+              "vd": "1=OnOff1_On; 0=OnOff1_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_LatCtrlReqSafe_UB",
+              "bs": 24,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_FricEstimnFromVehDynFricEstimnFromVehDyn",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "f": 0.01,
+              "mx": 2,
+              "iv": "0.0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_FricEstimnFromVehDynQly",
+              "bs": 47,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "Qly3_De1",
+              "vd": "7=Qly3_De7; 6=Qly3_De6; 5=Qly3_De5; 4=Qly3_De4; 3=Qly3_De3; 2=Qly3_De2; 1=Qly3_De1; 0=Qly3_De0",
+              "dt": "unsigned",
+              "sg": "FricEstimnFromVehDyn",
+              "sgi": 2
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmft_UB",
+              "bs": 44,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsCntr",
+              "bs": 43,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsChks",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0087"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsForStandStillMgrForPark",
+              "bs": 63,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "StandStillMgrStsForPark2_ParkNotReqd",
+              "vd": "4=StandStillMgrStsForPark2_ParkNotAvl; 3=StandStillMgrStsForPark2_ParkReqdAut; 2=StandStillMgrStsForPark2_ParkReqdAutByHldTiExcd; 1=StandStillMgrStsForPark2_ParkReqdByDrvr; 0=StandStillMgrStsForPark2_ParkNotReqd",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsDend",
+              "bs": 60,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Flg1_Rst",
+              "vd": "1=Flg1_Set; 0=Flg1_Rst",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsForBrkActv",
+              "bs": 59,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Flg1_Rst",
+              "vd": "1=Flg1_Set; 0=Flg1_Rst",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsForBrkPrecActv",
+              "bs": 58,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Flg1_Rst",
+              "vd": "1=Flg1_Set; 0=Flg1_Rst",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsForWhlBrkWrm",
+              "bs": 57,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Flg1_Rst",
+              "vd": "1=Flg1_Set; 0=Flg1_Rst",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x10E_VehDynCtrlStsForALgtCmftVehDynCtrlStsNotEna",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "Flg1_Rst",
+              "vd": "1=Flg1_Set; 0=Flg1_Rst",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_171",
+      "c": [
+        {
+          "l": "Msg_171",
+          "id": 369,
+          "d": "8",
+          "cy": "60",
+          "c": [
+            {
+              "l": "x171_PVMCLongCtrlModReq",
+              "bs": 7,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "CtrlMod_NoRequest",
+              "vd": "7=CtrlMod_Resd; 6=CtrlMod_ManualDrift; 5=CtrlMod_Track; 4=CtrlMod_SimRace; 3=CtrlMod_RemoteOffRoad; 2=CtrlMod_Reserved; 1=CtrlMod_GrannyDrift; 0=CtrlMod_NoRequest",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x171_PVMCLongCtrlModReq_UB",
+              "bs": 3,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "dt": "unsigned"
+            },
+            {
+              "l": "x171_PVMCSteerAst",
+              "bs": 2,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "CtrlModLvl2_No_Request",
+              "vd": "6=CtrlModLvl2_Resd; 5=CtrlModLvl2_Level4; 4=CtrlModLvl2_Level3; 3=CtrlModLvl2_Level2; 2=CtrlModLvl2_Level1; 1=CtrlModLvl2_Level0; 0=CtrlModLvl2_No_Request",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x171_PVMCSteerAst_UB",
+              "bs": 15,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_463",
+      "c": [
+        {
+          "l": "Msg_463",
+          "id": 1123,
+          "d": "8",
+          "cy": "170",
+          "c": [
+            {
+              "l": "x463_SteerSetg_UB",
+              "bs": 51,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x463_SteerSetgSteerMod",
+              "bs": 50,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "SteerMod_Ukwn",
+              "vd": "7=SteerMod_Resd7; 6=SteerMod_Resd6; 5=SteerMod_Resd5; 4=SteerMod_Mod4; 3=SteerMod_Mod3; 2=SteerMod_Mod2; 1=SteerMod_Mod1; 0=SteerMod_Ukwn",
+              "dt": "unsigned",
+              "sg": "SteerSetg",
+              "sgi": 1
+            },
+            {
+              "l": "x463_SteerSetgSteerAsscLvl",
+              "bs": 62,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "SteerAsscLvl_Ukwn",
+              "vd": "7=SteerAsscLvl_Resd7; 6=SteerAsscLvl_Resd6; 5=SteerAsscLvl_Resd5; 4=SteerAsscLvl_Lvl4; 3=SteerAsscLvl_Lvl3; 2=SteerAsscLvl_Lvl2; 1=SteerAsscLvl_Lvl1; 0=SteerAsscLvl_Ukwn",
+              "dt": "unsigned",
+              "sg": "SteerSetg",
+              "sgi": 2
+            },
+            {
+              "l": "x463_SteerSetgPen",
+              "bs": 59,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "IdPen_ProfUkwn",
+              "vd": "15=IdPen_ProfAll; 14=IdPen_Resd14; 13=IdPen_Prof13; 12=IdPen_Prof12; 11=IdPen_Prof11; 10=IdPen_Prof10; 9=IdPen_Prof9; 8=IdPen_Prof8; 7=IdPen_Prof7; 6=IdPen_Prof6; 5=IdPen_Prof5; 4=IdPen_Prof4; 3=IdPen_Prof3; 2=IdPen_Prof2; 1=IdPen_Prof1; 0=IdPen_ProfUkwn",
+              "dt": "unsigned",
+              "sg": "SteerSetg",
+              "sgi": 3
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_250",
+      "c": [
+        {
+          "l": "Msg_250",
+          "id": 592,
+          "d": "8",
+          "c": [
+            {
+              "l": "x250_VehCfgPrmBlkIDBytePosn1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 7
+            },
+            {
+              "l": "x250_VehCfgPrmCCPBytePosn2",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 5
+            },
+            {
+              "l": "x250_VehCfgPrmCCPBytePosn3",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 2
+            },
+            {
+              "l": "x250_VehCfgPrmCCPBytePosn4",
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 8
+            },
+            {
+              "l": "x250_VehCfgPrmCCPBytePosn5",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 6
+            },
+            {
+              "l": "x250_VehCfgPrmCCPBytePosn6",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 1
+            },
+            {
+              "l": "x250_VehCfgPrmCCPBytePosn7",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 3
+            },
+            {
+              "l": "x250_VehCfgPrmCCPBytePosn8",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrm",
+              "sgi": 4
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_3F7",
+      "c": [
+        {
+          "l": "Msg_3F7",
+          "id": 1015,
+          "d": "8",
+          "c": [
+            {
+              "l": "x3F7_VehCfgPrmExtBlkIDBytePosn1",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 8
+            },
+            {
+              "l": "x3F7_VehCfgPrmExtCCPBytePosn2",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 6
+            },
+            {
+              "l": "x3F7_VehCfgPrmExtCCPBytePosn3",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 7
+            },
+            {
+              "l": "x3F7_VehCfgPrmExtCCPBytePosn4",
+              "bs": 31,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 4
+            },
+            {
+              "l": "x3F7_VehCfgPrmExtCCPBytePosn5",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 2
+            },
+            {
+              "l": "x3F7_VehCfgPrmExtCCPBytePosn6",
+              "bs": 47,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 1
+            },
+            {
+              "l": "x3F7_VehCfgPrmExtCCPBytePosn7",
+              "bs": 55,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 3
+            },
+            {
+              "l": "x3F7_VehCfgPrmExtCCPBytePosn8",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "sg": "VehCfgPrmExt",
+              "sgi": 5
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_2AE",
+      "c": [
+        {
+          "l": "Msg_2AE",
+          "id": 686,
+          "d": "8",
+          "cy": "120",
+          "c": [
+            {
+              "l": "x2AE_DrvModReq_UB",
+              "bs": 62,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x2AE_DrvModReq",
+              "bs": 61,
+              "ln": 5,
+              "bo": "Motorola MSB",
+              "mx": 31,
+              "iv": "DrvModReqType3_Undefd",
+              "vd": "31=DrvModReqType3_Reserved3; 30=DrvModReqType3_Reserved2; 29=DrvModReqType3_Reserved1; 28=DrvModReqType3_Crossing; 27=DrvModReqType3_4L; 26=DrvModReqType3_4H; 25=DrvModReqType3_Comfortablerearseats; 24=DrvModReqType3_Allterrain; 23=DrvModReqType3_4WD; 22=DrvModReqType3_SportPlus; 21=DrvModReqType3_Anti_Carsickness; 20=DrvModReqType3_WaterWading; 19=DrvModReqType3_Mountain; 18=DrvModReqType3_DeepSnow; 17=DrvModReqType3_GrassorGravel; 16=DrvModReqType3_Slippery; 15=DrvModReqType3_Err; 14=DrvModReqType3_Rock; 13=DrvModReqType3_Mud; 12=DrvModReqType3_Sand; 11=DrvModReqType3_Snow; 10=DrvModReqType3_Power; 9=DrvModReqType3_Hybrid; 8=DrvModReqType3_Pure_EV; 7=DrvModReqType3_Race; 6=DrvModReqType3_Adaptive; 5=DrvModReqType3_Offroad_CrossTerrain; 4=DrvModReqType3_Individual; 3=DrvModReqType3_Dynamic_Sport; 2=DrvModReqType3_Comfort_Normal; 1=DrvModReqType3_ECO; 0=DrvModReqType3_Undefd",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1A",
+      "c": [
+        {
+          "l": "Msg_1A",
+          "id": 26,
+          "d": "8",
+          "cy": "100",
+          "c": [
+            {
+              "l": "x1A_AgDataCmpQualityPitchRateCmpQuality",
+              "bs": 7,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1A_AgDataCmpQualityRollRateCmpQuality",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter"
+            },
+            {
+              "l": "x1A_AgDataCmpQualityYawRateCmpQuality",
+              "bs": 23,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1A_AgDataCmpQuality_UB",
+              "bs": 43,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_360",
+      "c": [
+        {
+          "l": "Msg_360",
+          "id": 864,
+          "d": "8",
+          "cy": "80",
+          "c": [
+            {
+              "l": "x360_CarTiGlb",
+              "bs": 7,
+              "ln": 32,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "mx": 429496729.5,
+              "iv": "0.0",
+              "u": "s",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x360_CmptmtAirTEstimdExtdComptmtT",
+              "bs": 39,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "o": -60,
+              "mn": -60,
+              "mx": 125,
+              "iv": "0.0",
+              "u": "degC",
+              "dt": "unsigned",
+              "sg": "CmptmtAirTEstimdExtd",
+              "sgi": 2
+            },
+            {
+              "l": "x360_CmptmtAirTEstimdExtdQlyFlg",
+              "bs": 44,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_UndefindDataAccur",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "CmptmtAirTEstimdExtd",
+              "sgi": 1
+            },
+            {
+              "l": "x360_CmptmtAirTEstimdExtd_UB",
+              "bs": 42,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x360_ProfPenSts1_UB",
+              "bs": 41,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x360_ProfPenSts1",
+              "bs": 63,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "IdPen_ProfUkwn",
+              "vd": "15=IdPen_ProfAll; 14=IdPen_Resd14; 13=IdPen_Prof13; 12=IdPen_Prof12; 11=IdPen_Prof11; 10=IdPen_Prof10; 9=IdPen_Prof9; 8=IdPen_Prof8; 7=IdPen_Prof7; 6=IdPen_Prof6; 5=IdPen_Prof5; 4=IdPen_Prof4; 3=IdPen_Prof3; 2=IdPen_Prof2; 1=IdPen_Prof1; 0=IdPen_ProfUkwn",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x360_SaveSetgToMemPrmnt",
+              "bs": 59,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "OffOnAut1_Off",
+              "vd": "2=OffOnAut1_Aut; 1=OffOnAut1_On; 0=OffOnAut1_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x360_CarTiGlb_UB",
+              "bs": 57,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x360_SaveSetgToMemPrmnt_UB",
+              "bs": 56,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_380",
+      "c": [
+        {
+          "l": "Msg_380",
+          "id": 896,
+          "d": "8",
+          "cy": "700",
+          "c": [
+            {
+              "l": "x380_VehBattU_UB",
+              "bs": 54,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x380_VehBattUSysUQf",
+              "bs": 49,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_AccurData",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "VehBattU",
+              "sgi": 1
+            },
+            {
+              "l": "x380_VehBattUSysU",
+              "bs": 63,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "mx": 25,
+              "iv": "0.0",
+              "u": "Volt",
+              "dt": "unsigned",
+              "sg": "VehBattU",
+              "sgi": 2
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_1F0",
+      "c": [
+        {
+          "l": "Msg_1F0",
+          "id": 496,
+          "d": "8",
+          "cy": "30",
+          "c": [
+            {
+              "l": "x1F0_BkpOfDstTrvld",
+              "bs": 7,
+              "ln": 21,
+              "bo": "Motorola MSB",
+              "mx": 2000000,
+              "iv": "0",
+              "u": "km",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1F0_DrvModReqForChampnMod",
+              "bs": 18,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "SteerMod_Ukwn",
+              "vd": "7=SteerMod_Resd7; 6=SteerMod_Resd6; 5=SteerMod_Resd5; 4=SteerMod_Mod4; 3=SteerMod_Mod3; 2=SteerMod_Mod2; 1=SteerMod_Mod1; 0=SteerMod_Ukwn",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1F0_StandStillMgrStsForHld_UB",
+              "bs": 31,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1F0_StandStillMgrStsForHld1",
+              "bs": 30,
+              "ln": 3,
+              "bo": "Motorola MSB",
+              "mx": 7,
+              "iv": "StandStillMgrStsForHld1_StandStillMgrStsForHldVal0",
+              "vd": "7=StandStillMgrStsForHld1_StandStillMgrStsForHldVal7; 6=StandStillMgrStsForHld1_StandStillMgrStsForHldVal6; 5=StandStillMgrStsForHld1_StandStillMgrStsForHldVal5; 4=StandStillMgrStsForHld1_StandStillMgrStsForHldVal4; 3=StandStillMgrStsForHld1_StandStillMgrStsForHldVal3; 2=StandStillMgrStsForHld1_StandStillMgrStsForHldVal2; 1=StandStillMgrStsForHld1_StandStillMgrStsForHldVal1; 0=StandStillMgrStsForHld1_StandStillMgrStsForHldVal0",
+              "dt": "unsigned",
+              "sg": "StandStillMgrStsForHld",
+              "sgi": 1
+            },
+            {
+              "l": "x1F0_StandStillMgrStsForHldCntr",
+              "bs": 27,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "StandStillMgrStsForHld",
+              "sgi": 2
+            },
+            {
+              "l": "x1F0_StandStillMgrStsForHldChks",
+              "bs": 39,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0448",
+              "sg": "StandStillMgrStsForHld",
+              "sgi": 3
+            },
+            {
+              "l": "x1F0_RlyPwrDistbnCmd1WdIgnRlyCmd",
+              "bs": 55,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "OnOff1_Off",
+              "vd": "1=OnOff1_On; 0=OnOff1_Off",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1F0_RlyPwrDistbnCmd1WdIgnRlyCmd_UB",
+              "bs": 54,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1F0_BkpOfDstTrvld_UB",
+              "bs": 53,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x1F0_DrvModReqForChampnMod_UB",
+              "bs": 52,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "l": "Node_244",
+      "c": [
+        {
+          "l": "Msg_244",
+          "id": 580,
+          "d": "8",
+          "cy": "200",
+          "c": [
+            {
+              "l": "x244_IDcDcActLoSide_UB",
+              "bs": 4,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x244_IDcDcActLoSideCntr",
+              "bs": 3,
+              "ln": 4,
+              "bo": "Motorola MSB",
+              "mx": 15,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "Counter",
+              "sg": "IDcDcActLoSide",
+              "sgi": 1
+            },
+            {
+              "l": "x244_IDcDcActLoSideChks",
+              "bs": 15,
+              "bo": "Motorola MSB",
+              "mx": 255,
+              "iv": "0",
+              "u": "Unitless",
+              "dt": "unsigned",
+              "gs": "E2E_CRC",
+              "did": "0x0014",
+              "sg": "IDcDcActLoSide",
+              "sgi": 2
+            },
+            {
+              "l": "x244_IDcDcActLoSideIDcDcActLoSide",
+              "bs": 23,
+              "ln": 12,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "mx": 409.5,
+              "iv": "0.0",
+              "u": "A",
+              "dt": "unsigned",
+              "sg": "IDcDcActLoSide",
+              "sgi": 3
+            },
+            {
+              "l": "x244_AmbTRaw_UB",
+              "bs": 27,
+              "ln": 1,
+              "bo": "Motorola MSB",
+              "mx": 1,
+              "iv": "1",
+              "dt": "unsigned"
+            },
+            {
+              "l": "x244_AmbTRawAmbTVal",
+              "bs": 26,
+              "ln": 11,
+              "bo": "Motorola MSB",
+              "f": 0.1,
+              "o": -70,
+              "mn": -70,
+              "mx": 134.7,
+              "iv": "0.0",
+              "u": "degC",
+              "dt": "unsigned",
+              "sg": "AmbTRaw",
+              "sgi": 1
+            },
+            {
+              "l": "x244_AmbTRawQly",
+              "bs": 47,
+              "ln": 2,
+              "bo": "Motorola MSB",
+              "mx": 3,
+              "iv": "GenQf1_UndefindDataAccur",
+              "vd": "3=GenQf1_AccurData; 2=GenQf1_DataAccurNotWithinSpcn; 1=GenQf1_TmpUndefdData; 0=GenQf1_UndefindDataAccur",
+              "dt": "unsigned",
+              "sg": "AmbTRaw",
+              "sgi": 2
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "opt": {
+    "e": true,
+    "p": true,
+    "n": true
+  },
+  "ub": 0,
+  "rdy": {
+    "signal": "",
+    "onValue": "",
+    "offValue": ""
+  },
+  "spd": "",
+  "ch": 1,
+  "relay": 0,
+  "dtc": [],
+  "oem": "BYD",
+  "securityAlgo": "BYD_CBC",
+  "_meta": {
+    "config_name": "E245",
+    "digest": "bb5658bda2542380568e21fb0881af514cb065f1"
+  }
+}

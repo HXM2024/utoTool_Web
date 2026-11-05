@@ -19,7 +19,7 @@
           class="app-card can-content"
           :class="{ 'fill-height': activeTab === 'dbc' && dbcViewMode === 'table' }"
         >
-          <el-tabs v-model="activeTab" class="can-sub-tabs" tab-position="left">
+          <el-tabs v-model="activeTab" class="can-sub-tabs" tab-position="left" @tab-change="onTabChange">
 
         <!-- ====== DBC 报文信号表 ====== -->
         <el-tab-pane name="dbc">
@@ -1175,17 +1175,11 @@
                         @click.stop
                         @input="onHexIdInput('unconfigDtc')"
                       />
-                      <el-input
-                        v-model="otherData['excludeMsgIds']"
-                        placeholder="排除的报文ID (逗号分隔)"
-                        size="small"
-                        @click.stop
-                      />
                     </div>
                   </div>
                   <!-- ③ 部分配置：数量不定，+ 添加 -->
                   <div v-if="!(otherData.configDiagPartial || []).length" class="other-drop-hint">
-                    点击"+ 添加"录入部分配置（UDS指令 + 关联ID），每条生成一条用例
+                    点击"+ 添加"录入部分配置（UDS指令 + 关联DTC），每条生成一条用例
                   </div>
                   <div
                     v-for="(g, idx) in (otherData.configDiagPartial || [])"
@@ -1211,12 +1205,24 @@
                         @click.stop
                         @input="g.udsCommand = normalizeUdsText(g.udsCommand)"
                       />
-                      <el-input
-                        v-model="g.relatedIds"
-                        placeholder="关联ID (逗号分隔)"
-                        size="small"
+                      <div
+                        class="dtc-drop-zone"
                         @click.stop
-                      />
+                        @dragover.prevent
+                        @dragenter.prevent
+                        @drop.prevent.stop="onRelatedDtcDrop($event, g)"
+                      >
+                        <el-tag
+                          v-for="(i, ti) in (g.relatedDtcIdx || [])"
+                          :key="i"
+                          size="small"
+                          closable
+                          @close.stop="removeRelatedDtc(g, Number(ti))"
+                        >{{ faultDtcLabel(Number(i)) }}</el-tag>
+                        <span v-if="!(g.relatedDtcIdx || []).length" class="dtc-drop-hint">
+                          从对象浏览器 Fault 列表拖拽 DTC 到此
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -1636,6 +1642,7 @@
             :dbc-env-vars="store.objDbcEnvVars"
             :a2l-qualifier="a2lQualifierForPanel"
             :test-param-cards="testParamCards"
+            :fault-array="faultArray"
             @collapse="panelCollapsed = true"
             @test-params-change="onTestParamsChange"
             @test-param-configure="onTestParamCardConfigure"
@@ -1738,7 +1745,7 @@ import DtcCardList from '@/components/DtcCardList.vue'
 import DbcSignalTable from '@/components/DbcSignalTable.vue'
 import ResizableSplitter from '@/components/ResizableSplitter.vue'
 import { parseDbcRecords, parseParamColumns, parseFlatParamCells } from '@/utils/dbc'
-import { getChartData, updateParams, generateCAN, parseA2lFile, parseCAN, parseDbcFile, getCrcAlgorithms, exportConfigExcel } from '@/api/can'
+import { getChartData, updateParams, generateCAN, parseA2lFile, parseCAN, parseDbcFile, getCrcAlgorithms, exportConfigExcel, fetchFaultArray } from '@/api/can'
 import { getConfig, saveConfig, openFolder } from '@/api/config'
 import type { Column, VoltageChartData } from '@/types'
 import type { DbcTableColumn, DbcTableRow } from '@/types/dbcTable'
@@ -2758,6 +2765,70 @@ const dtcRaw = computed<any>({
   set: (v) => store.setDtc(v),
 })
 
+// Fault_array：后端按当前 Excel/DBC 解析 DTC_Configuration，index 与生成代码一致
+const faultArray = computed<any[]>({
+  get: () => store.objFaultArray,
+  set: (v: any[]) => store.setFaultArray(v),
+})
+/** 拉取 Fault_array（进入「其他配置」页签时刷新，供对象浏览器拖拽关联DTC） */
+async function refreshFaultArray() {
+  if (!currentConfig.value) return
+  try {
+    const ccpSymbols = store.canMotorMode === 'brushed' ? collectCcpSymbols() : {}
+    const relayCfg = store.relayConfigs.can
+    const res: any = await fetchFaultArray(
+      currentConfig.value,
+      store.selectedOem,
+      store.canMotorMode,
+      ccpSymbols,
+      relayCfg.relayModule,
+      relayCfg.canChannel,
+    )
+    const payload = res?.data || res
+    faultArray.value = payload?.fault_array || []
+  } catch {
+    faultArray.value = []
+  }
+}
+/** 页签切换：进入「其他配置」时刷新 Fault_array */
+function onTabChange(name: string | number) {
+  if (String(name) === 'other') refreshFaultArray()
+}
+
+/** 从对象浏览器 Fault 列表拖拽 DTC 到「关联DTC」：只存 Fault_array 下标 */
+function onRelatedDtcDrop(event: DragEvent, group: any) {
+  let payload: any = null
+  try {
+    const raw = event.dataTransfer?.getData('application/json')
+    if (raw) payload = JSON.parse(raw)
+  } catch {
+    payload = null
+  }
+  if (!payload) return
+  let index = Number(payload.index)
+  if (!Number.isInteger(index)) {
+    index = faultArray.value.findIndex(
+      (f: any) => String(f.DTC).toUpperCase() === String(payload.dtc || '').toUpperCase(),
+    )
+  }
+  if (index < 0 || index >= faultArray.value.length) return
+  if (!Array.isArray(group.relatedDtcIdx)) group.relatedDtcIdx = []
+  if (!group.relatedDtcIdx.includes(index)) group.relatedDtcIdx.push(index)
+}
+
+/** 移除「关联DTC」第 pos 项 */
+function removeRelatedDtc(group: any, pos: number) {
+  if (Array.isArray(group.relatedDtcIdx) && pos >= 0 && pos < group.relatedDtcIdx.length) {
+    group.relatedDtcIdx.splice(pos, 1)
+  }
+}
+
+/** 下标 → 显示用 DTC（找不到时回退为 #index） */
+function faultDtcLabel(index: number) {
+  const item = faultArray.value.find((f: any) => Number(f.index) === Number(index))
+  return item ? String(item.DTC) : `#${index}`
+}
+
 // DBC 搜索
 const dbcSearch = ref('')
 
@@ -3269,12 +3340,12 @@ const OTHER_CARD_DOCS: Record<string, string> = {
   highBusLoadCommunication: 'HighBusLoad_communication\n开启后生成 HighBusLoad_communication 用例：把总线负载加到所填负载率并持续观察，检查总线未出现错误帧则通过。\n\n参数：负载率（%）。',
   highBusLoadDiag: 'HighBusLoad_Diag\n开启后生成 HighBusLoad_Diag 用例：先用 14 FF FF FF 清除故障并确认无当前历史网络故障，再模拟高优先级报文把总线负载加到所填负载率并持续 1min，随后读全部故障码并检查外发故障灯，要求无当前历史故障码且故障灯 = 0x0；最后停止模拟负载。\n\n参数：负载率（%）。',
   dtcAged: 'DTCAged\n开启后生成 DTC_Aged 用例：逐个制造 Fault_array 中的每个故障，确认能报出对应 DTC，同时把全部故障 DTC 去重汇总成白名单；随后按所填次数反复上下电做「老化」，每次都用 mask=8 断言这些 DTC 仍作为历史故障存在；最后再上下电一次，断言当前与历史故障码已全部清除（掩码 9）。\n\n参数：老化上下电次数（次）。',
-  angleOffset: 'Angle偏移\n开启后生成 <信号名>_TurnWheel 用例（方向盘转动角度漂移检查，重复 3 轮）：\n\n① 上电后 14 清故障并确认无当前/历史故障；同时启动全程后台监控——转动全程该信号值都不得越出 DBC 的 minimum / maximum。\n② 弹窗提示测试员随意转动方向盘并保持住，确认后记录那一刻的角度作为漂移基准（要求距 0° 不少于 5°、且在信号范围内）。\n③ 下电再上电，紧跟 IG ON 逐帧观察该信号：检查自检初值 0 → 实际值的过渡时序（不得越界、须朝目标单向推进），并比对上下电前后角度漂移是否在 ±1° 内。\n④ 三轮结束后汇总全程越界检查结果。\n\n参数：角度信号名（可从 DBC 拖入）；承载报文 ID 由信号名自动查找。',
+  angleOffset: 'Angle偏移\n支持多个角度信号：从 DBC 拖入信号名，或点「+ 添加」手动录入，所有信号合并生成一条 AngleOffset_TurnWheel 用例：\n\n① 上电后 14 清故障并确认无当前/历史故障；同时为每个角度信号各启动一条后台监控——转动全程该信号值都不得越出 DBC 的 minimum / maximum。\n② 弹窗提示测试员随意转动方向盘并保持住，只转一次，所有信号在同一时间窗内完成检查，确认后统一等待。\n③ 逐个停止后台检查，并按信号名分别报告 PASS/FAIL（越界次数大于 0 判失败）。\n④ 记下点确认那一刻各信号的角度作为基准（越界或距 0° 不足 5° 的信号不参与上电观察），随后下电再上电，逐个信号调用 WatchAnglePowerOn 检查上电时序与漂移：不得越界/回退，须稳定到基准角度（±1°），按信号名分别报告 PASS/FAIL。\n\n参数：角度信号名（可拖入多个）。',
   minDelayTime: 'Min_delayTime\n开启后生成 Min_delayTime 用例：对每个 Tx 报文统计同一 ID 报文的最小发送间隔，实测最小间隔小于所填值则失败。\n\n参数：最小间隔时间（ms，整数）。',
   shutdown: 'Shutdown\n开启后生成 Shutdown_time 用例：Ready_Off 后 IG OFF，检查通信停止时间是否落在所填 [minTime, maxTime] 区间内，超出区间判失败。\n\n参数：下电诊断停止 minTime / maxTime（ms）。',
   busOff: 'tBusOff\n开启后按三组参数生成 BusOff 相关用例：\n\n① 快恢复（tbusoffquickNum / tquickmin / tquickmax）\n生成 BusOff_quick_recovery 用例：连续制造 BusOff 并恢复，检查报文快恢复时间是否落在 [tquickmin, tquickmax] 区间内。\n\n② 慢恢复（tbusoffslowNum / tslowmin / tslowmax）\n生成 BusOff_slow_recovery 用例：连续制造 BusOff 并恢复，检查报文慢恢复时间是否落在 [tslowmin, tslowmax] 区间内。\n\n③ DTC（DTCbusoffNum / DTCbusoffrecovery / DTCbusoffrecoveryType / DTC）\n生成 BusOff DTC 检测用例。\nDTCbusoffrecovery 为恢复量，用右侧开关声明它的含义：开=时间（ms），关=报文帧数。\n\n三组参数互相独立，各自填了才会生成对应用例；Num 为busoff次数，min/max 单位为 ms。',
   disableXcp: 'DisableXCP\n开启后生成 DisableXCP 用例：先发送「关闭XCP」的 UDS 指令，随后连接 XCP 并检查指定 ID 的报文已停止发送；再发送「打开XCP」指令并重新 Init，检查该 ID 报文恢复正常发送。\n\n参数：XCP ID（16 进制，如 0x123）、关闭XCP的UDS指令、打开XCP的UDS指令。',
-  configDiag: 'Config_Diag\n开启后生成 AllConfig_Diag（配置所有功能）、EraseConfig_Diag（擦除所有配置）及若干 PartialConfig_Diag_N（部分配置）：\n\n① AllConfig_Diag：Req14 → 发送「配置所有功能」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，并断言其为历史故障）→ 注入全部网络故障 → 读取全部故障（白名单=全部网络故障 DTC + 未配置DTC）→ 恢复全部网络故障 → 再次读取（网络故障 DTC 应转历史）。\n\n② EraseConfig_Diag：Req14 → 发送「擦除所有配置」UDS 指令 → 正常上下电 → 读取全部故障（白名单=未配置DTC，断言其为当前故障）→ 注入全部网络故障 → 读取全部故障（白名单=未被排除的 DTC + 未配置DTC）→ 恢复全部网络故障 → 读取（未配置DTC 应为当前故障）。\n\n③ PartialConfig_Diag_N（部分配置，数量不定，点「+ 添加」逐条录入）：Req14 → 发送该条的 UDS 指令 → 正常上下电（当前应无故障）→ 按分类静默注入故障 → 读取全部故障（白名单=该分类 DTC 去掉该条「关联ID」命中的，不含未配置DTC）→ 恢复后当前应无故障。与 EraseConfig 的区别：不期望「未配置DTC」，且只排除该条填写的「关联ID」。\n\n参数：全配=配置所有功能的UDS指令；全不配=擦除所有配置的UDS指令 + 未配置DTC（如 456F00）+ 擦除后不再报出的报文ID（可多个，英文逗号分隔，如 0x123,0x456）；部分配置=每条「UDS指令 + 关联ID（可多个，英文逗号分隔）」。',
+  configDiag: 'Config_Diag\n开启后生成 AllConfig_EraseConfig_Diag（全配 + 全不配）及若干 PartialConfig_Diag_N（部分配置）：\n\n① AllConfig_EraseConfig_Diag：Req14 → 发送「配置所有功能」UDS 指令 → 正常上下电 → 确认当前故障全清并断言未配置DTC 已在历史(mask=8) → 遍历 Fault_array 逐个「注入 → 诊断该DTC → 恢复」→ 确认当前故障全清 → 发送「擦除所有配置」UDS 指令 → 正常上下电 → 遍历 Fault_array 逐个「注入 → 诊断该DTC → 恢复」。\n\n② PartialConfig_Diag_N（部分配置，数量不定，点「+ 添加」逐条录入，每条只遍历拖入的关联 DTC）：发送该条的 UDS 指令 → 正常上下电 → 注入关联 DTC 并确认能诊断到（不恢复）→ 发送全部配置 → 正常上下电 → 确认当前无故障、但该 DTC 的 08 状态仍能读到 → 恢复该故障。\n\n参数：全配=配置所有功能的UDS指令；全不配=擦除所有配置的UDS指令 + 未配置DTC（如 456F00）；部分配置=每条「UDS指令 + 从对象浏览器 Fault 列表拖入的关联 DTC」。',
   sliderGroup: '开关配置（五项开关 + 两项 Counter 首帧判定，互相独立）\n· ExtendFrame：对每个 Rx 报文 ID 发送扩展帧，检查总线未出现错误帧。\n· RemotrFrame：对每个 Rx 报文 ID 发送远程帧，检查总线未出现错误帧。\n· UnexpectDlc:less：检查各 Tx 报文是否出现 DLC 小于预期的非预期长度。\n· UnexpectDlc:Greater：检查各 Tx 报文是否出现 DLC 大于预期的非预期长度。\n· VoltDTC_Diag：开启后在「助力电压」板块生成 AssistVoltage_VoltDtcDiag_LowVolt / _HighVolt 组合用例：电压故障在诊断范围内优先诊断，网络故障不报（两者不能同时报出）；恢复电压故障后，已成熟的网络故障应立即能诊断到。需先配置助力电压参数。\n\n· 11Reset-counter / Busoff-counter：分别控制 11 重启、BusOff 两类工况下计数器连续性的「首帧判定」——\n    滑块置「0」= 恢复后首帧计数必须为 0（默认）；置「last」= 不校验首帧初始值，只校验从第 2 帧起 +1 递增。\n    上电检测Counter（xxx_Counter）固定从 0 开始；高负载检测Counter（xxx_HighBusLoadCounter）固定不校验首帧，均不受此项影响。\n\n前四项均依赖 DBC 中已配置的 Tx/Rx 报文列表，需先导入并配置 DBC 再勾选。',
   readyOffDiagStop: 'Ready_OffDiagStop\n开启后生成 Ready_Off_Diag 用例：Ready Off 状态下，所填报文 ID 对应的故障应被禁止诊断（不置位），其它故障仍正常触发；用于验证 Ready Off 时车速类 DTC 不置位。\n\n参数：车速报文ID（如 0x123）。',
   waittime: '11ResetTime\n每个 Tx 报文都会生成 11 重启用例（xxx_11Reset_Attribute）：发送 11 01（ECU 复位）后等待该报文重新发出。\n\n参数：等待时间（ms），未填时按 3000 处理。',
@@ -3343,8 +3414,6 @@ const otherFieldDefs: OtherFieldDef[] = [
   { key: 'highBusLoadTxatt', label: 'HighBusLoad_Txatt', span: '1x1', layout: 'break', inputs: [{ key: 'busLoadRate', placeholder: '负载率', validate: 'int' }] },
   { key: 'highBusLoadCommunication', label: 'HighBusLoad_communication', span: '1x1', inputs: [{ key: 'busLoadRate2', placeholder: '负载率', validate: 'int' }] },
   { key: 'highBusLoadDiag', label: 'HighBusLoad_Diag', span: '1x1', inputs: [{ key: 'busLoadRate3', placeholder: '负载率', validate: 'int' }] },
-  // Angle偏移：方向盘转动角度漂移检查，信号名可从 DBC 拖入
-  { key: 'angleOffset', label: 'Angle偏移', span: '1x1', inputs: [{ key: 'angleOffsetSignal', placeholder: '角度信号名（可拖入）', drop: true }] },
   { key: 'dtcAged', label: 'DTCAged', span: '1x1', inputs: [{ key: 'dtcAgedNum', placeholder: '老化次数', validate: 'int' }] },
 ]
 
@@ -3397,6 +3466,15 @@ const groupCardDefs = ref<GroupCardDef[]>([
       { key: 'switchTime', placeholder: '开启/关闭诊断的时间' },
     ],
     groups: [],
+  },
+  {
+    // Angle偏移：支持多个角度信号，合并生成一条 AngleOffset_TurnWheel 用例
+    key: 'angleOffset', label: 'Angle偏移',
+    groupFields: [
+      { key: 'signalName', placeholder: '角度信号名（拖入）' },
+    ],
+    groups: [],
+    inlineIdx: true,
   },
 ])
 
@@ -3483,13 +3561,14 @@ function removeGroup(cardKey: string, groupId: string) {
   if (idx >= 0) card.groups.splice(idx, 1)
 }
 
-/** Config_Diag「部分配置」列表：数量不定，每条 = { udsCommand, relatedIds }。
+/** Config_Diag「部分配置」列表：数量不定，每条 = { udsCommand, relatedDtcIdx }。
+ *  relatedDtcIdx 存的是 Fault_array 下标（拖拽时只存下标，显示时反查 DTC）。
  *  直接存在 otherData.configDiagPartial（随 Other 一起保存/加载），无需额外字段。 */
 function addPartialConfig() {
   if (!Array.isArray(otherData.value.configDiagPartial)) {
     otherData.value.configDiagPartial = []
   }
-  otherData.value.configDiagPartial.push({ udsCommand: '', relatedIds: '' })
+  otherData.value.configDiagPartial.push({ udsCommand: '', relatedDtcIdx: [] })
   if (!otherCheckboxStates.value.configDiag) {
     otherCheckboxStates.value.configDiag = true
   }
@@ -4576,7 +4655,7 @@ function buildSignalRowsFromRaw(raw: any): SignalRow[] {
         dataType: rec.dataType,
         testDataType: rec.testDataType,
         dtc: rec.dtc,
-        signalType: rec.signalType,
+        signalType: rec.signalType || rec.genSigFuncType,
         xcpVar: rec.xcpVar,
         minPhy: rec.minPhy,
         maxPhy: rec.maxPhy,
@@ -4621,7 +4700,7 @@ function buildSignalRowsFromRaw(raw: any): SignalRow[] {
     signalColumns.forEach((c) => { row[c.key] = '' })
     row.invalidValue = rec.invalidValue
     row.dataType = rec.dataType
-    row.signalType = rec.signalType
+    row.signalType = rec.signalType || rec.genSigFuncType
     row.senders = rec.senders
     row.msgName = rec.msgName
     row.msgId = rec.msgId
@@ -5019,7 +5098,10 @@ function buildDbcTreeFromRaw(raw: any): any[] {
             lostDtc: rec.lostDtc,
             dlcDtc: rec.dlcDtc,
             dtc: rec.dtc,
-            signalType: rec.signalType,
+            signalType: rec.signalType || rec.genSigFuncType || (rec.genSigDataId ? 'E2E_CRC' : ''),
+            dataId: rec.genSigDataId,
+            sigGroup: rec.sigGroup,
+            sigGroupIndex: rec.sigGroupIndex,
             xcpVar: rec.xcpVar,
             minPhy: rec.minPhy,
             maxPhy: rec.maxPhy,
@@ -5247,6 +5329,9 @@ function buildTreeFromDict(raw: Record<string, any>): any[] {
             dlcDtc: '',
             dtc: '',
             signalType: sigData.st || '',
+            dataId: sigData.did || '',
+            sigGroup: sigData.sg || '',
+            sigGroupIndex: sigData.sgi ?? '',
             xcpVar: '',
             minPhy: sigData.mn || '',
             maxPhy: sigData.mx || '',
@@ -7234,6 +7319,8 @@ function buildDbcRawFromSignalRows(): any {
             if (sigNode.fields?.invalidValue) sigData.iv = sigNode.fields.invalidValue
             if (sigNode.fields?.initialValue) sigData.iv_init = sigNode.fields.initialValue
             if (sigNode.fields?.signalType) sigData.st = sigNode.fields.signalType
+            if (sigNode.fields?.sigGroup) sigData.sg = sigNode.fields.sigGroup
+            if (sigNode.fields?.sigGroupIndex) sigData.sgi = Number(sigNode.fields.sigGroupIndex) || 0
             if (sigNode.fields?.unit) sigData.unit = sigNode.fields.unit
             if (sigNode.fields?.valueDesc) sigData.vd = sigNode.fields.valueDesc
             // EPS 类型（target === 'eps'）写回 et，其余测试参数写回 tp
@@ -7243,6 +7330,8 @@ function buildDbcRawFromSignalRows(): any {
               const didVal = _resolveDateId(epsParam)
               if (didVal) sigData.did = didVal
             }
+            // 吉利 3.0：DataID 来自 DBC 的 GenSigDataID，EPS 参数未提供 did 时用它
+            if (!sigData.did && sigNode.fields?.dataId) sigData.did = String(sigNode.fields.dataId)
             if (sigNode.testParams?.length) {
               const tpObj: Record<string, any> = {}
               for (const p of sigNode.testParams) {
@@ -7292,6 +7381,8 @@ function buildDbcRawFromSignalRows(): any {
         if (child.fields?.startByte) sigData.sbyte = child.fields.startByte
         if (child.fields?.unit) sigData.unit = child.fields.unit
         if (child.fields?.signalType) sigData.st = child.fields.signalType
+        if (child.fields?.sigGroup) sigData.sg = child.fields.sigGroup
+        if (child.fields?.sigGroupIndex) sigData.sgi = Number(child.fields.sigGroupIndex) || 0
 
         // EPS 类型（target === 'eps'）写回 et，其余测试参数写回 tp
         const epsParam = child.testParams?.find((p: any) => p.target === 'eps')
@@ -7300,6 +7391,8 @@ function buildDbcRawFromSignalRows(): any {
           const didVal = _resolveDateId(epsParam)
           if (didVal) sigData.did = didVal
         }
+        // 吉利 GEEA_3.0：EPS 卡片未解析出 DataID 时，用 DBC 的 GenSigDataID 兜底
+        if (!sigData.did && child.fields?.dataId) sigData.did = String(child.fields.dataId)
         if (child.testParams?.length) {
           const tpObj: Record<string, any> = {}
           for (const p of child.testParams) {
@@ -7506,8 +7599,12 @@ async function onConfigChange(name: string) {
   undoLabel = ''
   currentConfig.value = name
   loadedConfig.value = ''
+  // 切换配置后 Fault_array 的条目/下标会变：先清掉旧数据，避免关联DTC显示错位；
+  // 停留在「其他配置」页签时立即重新拉取（否则等下次切页签时触发）
+  faultArray.value = []
   if (name) {
     loadConfig(name, token)
+    if (activeTab.value === 'other') refreshFaultArray()
   } else {
     resetData()
   }
@@ -7681,6 +7778,13 @@ function applyConfigData(data: any, syncChart: boolean = true) {
       card.groups = []
     }
   }
+  // 兼容旧配置：Angle偏移 以前是单个信号名（angleOffsetSignal），迁移为分组
+  const angleCard = groupCardDefs.value.find(c => c.key === 'angleOffset')
+  if (angleCard && !angleCard.groups.length && otherRaw.angleOffsetSignal) {
+    const names = String(otherRaw.angleOffsetSignal).split(/[,，;、\s]+/).filter(Boolean)
+    angleCard.groups = names.map(n => ({ id: genId(), values: { signalName: n } }))
+    delete otherData.value.angleOffsetSignal
+  }
 
   // 卡片布局顺序：配置里存了 cardLayout 就用配置的（没有则保留 localStorage/默认）
   if (Array.isArray(otherRaw.cardLayout)) {
@@ -7853,6 +7957,9 @@ function collectConfigData(): any {
       checkboxClean[s.key] = otherData.value[s.key] === 'TRUE'
     }
   }
+  // Config_Diag 是独立卡片（不在 otherFieldDefs / groupCardDefs 里），复选框状态需单独收集，
+  // 否则后端 checkbox_states['configDiag'] 恒为 False，AllConfig/EraseConfig/PartialConfig 用例都不生成。
+  checkboxClean.configDiag = !!otherCheckboxStates.value.configDiag
 
   // 合并所有 Other 数据
   const mergedOther = {
@@ -8392,7 +8499,7 @@ async function onUnifiedFileChange(uploadFile: any) {
       else if (parsed.DataLinkLayer) activeTab.value = 'dataLink'
       ElMessage.success('Excel 解析成功')
     } else if (fileInfo.type === 'dbc') {
-      const res: any = await parseDbcFile(file)
+      const res: any = await parseDbcFile(file, store.selectedOem)
       const raw = res?.data || res
       if (raw?.columns && raw?.rows) {
         dbcRaw.value = raw
@@ -9949,6 +10056,30 @@ onActivated(() => {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
   gap: 5px;
+}
+
+/* 「关联DTC」拖拽区：对象浏览器 Fault 列表拖入，显示 DTC，实际保存下标 */
+.dtc-drop-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  min-height: 32px;
+  padding: 3px 6px;
+  border: 1px dashed var(--border-color, #dcdfe6);
+  border-radius: 4px;
+  background: var(--bg-color-secondary, #fafafa);
+  cursor: default;
+}
+
+.dtc-drop-zone:hover {
+  border-color: var(--primary-color);
+}
+
+.dtc-drop-hint {
+  font-size: 12px;
+  color: var(--text-placeholder);
+  line-height: 1.4;
 }
 
 .other-section-title {

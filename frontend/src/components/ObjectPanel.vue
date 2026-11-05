@@ -10,7 +10,7 @@
         <!-- 宿主模块可在此插入自己的操作按钮（如上传 DBC） -->
         <slot name="header-actions" />
         <el-button
-          v-if="activeView !== 'dtc'"
+          v-if="activeView !== 'dtc' && activeView !== 'fault'"
           text
           size="small"
           :icon="Plus"
@@ -18,7 +18,7 @@
           title="全部展开"
         />
         <el-button
-          v-if="activeView !== 'dtc'"
+          v-if="activeView !== 'dtc' && activeView !== 'fault'"
           text
           size="small"
           :icon="Minus"
@@ -127,6 +127,40 @@
         <div v-else class="panel-empty">
           <el-icon class="empty-icon"><Warning /></el-icon>
           <span>{{ props.dtcRaw ? '无匹配结果' : '暂无 DTC 数据' }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fault_array（DTC_Configuration）列表，拖拽到部分配置的关联DTC -->
+    <div v-show="activeView === 'fault'" class="panel-view">
+      <el-input
+        v-model="faultFilter"
+        placeholder="搜索 DTC / 故障类型..."
+        :prefix-icon="Search"
+        clearable
+        size="small"
+        class="panel-search"
+      />
+      <div class="panel-scroll">
+        <div v-if="filteredFaultList.length" class="dtc-list">
+          <div
+            v-for="item in filteredFaultList"
+            :key="'fault-' + item.index"
+            class="dtc-card"
+            draggable="true"
+            @dragstart="onDragStart($event, item)"
+          >
+            <div class="dtc-card-header">
+              <span class="dtc-code">{{ item.DTC }}</span>
+              <span class="dtc-card-desc">#{{ item.index }} {{ item.Fault_Type }}</span>
+              <span v-if="item.Fault" class="dtc-card-detail">{{ item.Fault }}</span>
+              <el-icon class="drag-hint"><Rank /></el-icon>
+            </div>
+          </div>
+        </div>
+        <div v-else class="panel-empty">
+          <el-icon class="empty-icon"><Warning /></el-icon>
+          <span>{{ props.faultArray && props.faultArray.length ? '无匹配结果' : '暂无 Fault_array 数据' }}</span>
         </div>
       </div>
     </div>
@@ -380,6 +414,7 @@ const props = defineProps<{
   a2lQualifier?: string
   dbcEnvVars?: DbcEnvVar[]
   testParamCards?: TestParamCard[]
+  faultArray?: any[]
 }>()
 
 const emit = defineEmits<{
@@ -392,10 +427,11 @@ const emit = defineEmits<{
 const store = useModuleStore()
 
 // ==================== 状态 ====================
-const activeView = ref<'dbc' | 'dtc' | 'a2l' | 'testparam'>('dbc')
+const activeView = ref<'dbc' | 'dtc' | 'fault' | 'a2l' | 'testparam'>('dbc')
 const dbcFilter = ref('')
 const dtcFilter = ref('')
 const a2lFilter = ref('')
+const faultFilter = ref('')
 /**
  * 搜索防抖：过滤要递归遍历整棵树（大 DBC/A2L 下节点数万级），原来每敲一个字符就整体重算一次，
  * 输入明显卡顿。这里让「参与过滤的关键字」延后 200ms 生效，输入框本身（v-model）仍即时回显。
@@ -528,11 +564,19 @@ const hasTestParams = computed(() => {
   return !!(props.testParamCards && props.testParamCards.length > 0)
 })
 
+// Fault_array 条目：index 与生成的 CAPL 下标一致，拖拽后回传 index
+// （须在 hasFault 之前定义：availableViews 的 immediate watch 会在 setup 内立即求值）
+const faultList = computed<any[]>(() => (Array.isArray(props.faultArray) ? props.faultArray : []))
+
+// Fault_array 是否有数据
+const hasFault = computed(() => faultList.value.length > 0)
+
 // 滑块控件：仅显示已加载的对象类型
 const availableViews = computed(() => {
-  const views: Array<{ value: 'dbc' | 'dtc' | 'a2l' | 'testparam'; label: string; icon: any }> = []
+  const views: Array<{ value: 'dbc' | 'dtc' | 'fault' | 'a2l' | 'testparam'; label: string; icon: any }> = []
   if (hasDbc.value) views.push({ value: 'dbc', label: 'DBC', icon: Connection })
   if (hasDtc.value) views.push({ value: 'dtc', label: 'DTC', icon: Warning })
+  if (hasFault.value) views.push({ value: 'fault', label: 'Fault', icon: Warning })
   if (hasA2l.value) views.push({ value: 'a2l', label: 'A2L', icon: Document })
   if (hasTestParams.value) views.push({ value: 'testparam', label: '测试参数', icon: Cpu })
   return views
@@ -898,6 +942,20 @@ const filteredDtcList = computed(() => {
   )
 })
 
+// ==================== Fault_array（DTC_Configuration）====================
+
+const filteredFaultList = computed(() => {
+  const search = faultFilter.value.trim().toLowerCase()
+  if (!search) return faultList.value
+  return faultList.value.filter(
+    (item) =>
+      String(item.DTC || '').toLowerCase().includes(search) ||
+      String(item.Fault_Type || '').toLowerCase().includes(search) ||
+      String(item.Fault || '').toLowerCase().includes(search) ||
+      String(item.index).includes(search),
+  )
+})
+
 // ==================== A2L 树形构建 ====================
 
 const a2lTree = computed(() => {
@@ -1193,6 +1251,24 @@ function onDragStart(event: DragEvent, data: any) {
     return
   }
   event.dataTransfer.effectAllowed = 'copy'
+
+  // Fault_array 条目：拖拽只带 DTC 文本 + 该条在 Fault_array 里的下标（后端只认下标）
+  if (data.index !== undefined && data.DTC) {
+    const dtc = String(data.DTC)
+    event.dataTransfer.setData('text/plain', dtc)
+    event.dataTransfer.setData(
+      'application/json',
+      JSON.stringify({
+        type: 'faultDtc',
+        index: data.index,
+        dtc,
+        faultType: data.Fault_Type || '',
+        id: data.ID || '',
+        fault: data.Fault || '',
+      }),
+    )
+    return
+  }
 
   const name = data.name || data.label || ''
   let plain = data.type === 'attr' ? (data.value ?? name) : name
