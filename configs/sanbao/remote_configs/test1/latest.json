@@ -1,0 +1,30 @@
+{
+  "module_title": "三包测试",
+  "module_description": "SanBao Test Module",
+  "globalVariables": [],
+  "steps": [
+    {
+      "code": "Init();",
+      "customStepId": "cs-1785463843818-lq1d4",
+      "id": "step-1785463866047-tnwh7",
+      "name": "Init",
+      "params": {},
+      "type": "step"
+    },
+    {
+      "code": "setsignal({{Sig}},{{Value}});",
+      "customStepId": "cs-1785463916552-r39tv",
+      "id": "step-1785463918411-ftgn3",
+      "name": "SetSignal",
+      "params": {
+        "Sig": "x17D_VehSpdAvgDrvn_ABS",
+        "Value": "5"
+      },
+      "type": "step"
+    }
+  ],
+  "_meta": {
+    "config_name": "test1",
+    "digest": "cd2ecbf7426a9e187eb5f7b7a1acd51ebe225a21"
+  }
+}

@@ -836,6 +836,13 @@
                       size="small"
                       @click.stop
                     />
+                    <el-button
+                      v-else-if="inp.type === 'button'"
+                      class="other-card-btn"
+                      size="small"
+                      :style="inp.span ? { gridColumn: `span ${inp.span}` } : undefined"
+                      @click.stop="inp.action === 'dtcIndex' ? openDtcIndexEditor() : openFaultNumEditor()"
+                    >{{ inp.placeholder }}</el-button>
                     <el-input
                       v-else
                       v-model="otherData[inp.key]"
@@ -1151,7 +1158,8 @@
                         placeholder="配置所有功能的UDS指令"
                         size="small"
                         @click.stop
-                        @input="onUdsInput('configUdsCommand')"
+                        @input="onConfigDiagUdsInput('configUdsCommand')"
+                        @blur="onConfigDiagUdsBlur('configUdsCommand')"
                       />
                     </div>
                   </div>
@@ -1166,14 +1174,19 @@
                         placeholder="擦除所有配置的UDS指令"
                         size="small"
                         @click.stop
-                        @input="onUdsInput('eraseUdsCommand')"
+                        @input="onConfigDiagUdsInput('eraseUdsCommand')"
+                        @blur="onConfigDiagUdsBlur('eraseUdsCommand')"
                       />
                       <el-input
                         v-model="otherData['unconfigDtc']"
-                        placeholder="未配置DTC (如 456F00)"
+                        placeholder="未配置DTC (可拖入/填多个，如 456F00, 456F01)"
                         size="small"
+                        class="other-group-field-full"
                         @click.stop
-                        @input="onHexIdInput('unconfigDtc')"
+                        @input="onMultiDtcInput('unconfigDtc')"
+                        @blur="onConfigDiagDtcBlur('unconfigDtc')"
+                        @dragover.prevent
+                        @drop="onMultiDtcDrop($event, 'unconfigDtc')"
                       />
                     </div>
                   </div>
@@ -1202,8 +1215,10 @@
                         v-model="g.udsCommand"
                         placeholder="UDS指令"
                         size="small"
+                        class="other-group-field-full"
                         @click.stop
-                        @input="g.udsCommand = normalizeUdsText(g.udsCommand)"
+                        @input="onPartialUdsInput(g)"
+                        @blur="onPartialUdsBlur(g)"
                       />
                       <div
                         class="dtc-drop-zone"
@@ -1652,6 +1667,70 @@
       </transition>
     </div>
   </div>
+
+  <!-- FaultNum（故障内部编号）槽位编辑弹窗：默认 20 个 DTC 槽位信号 -->
+  <el-dialog
+    v-model="faultNumEditorVisible"
+    title="FaultNum（故障内部编号）"
+    width="680px"
+    append-to-body
+  >
+    <div class="fault-num-dialog-head">
+      <span class="fault-num-dialog-tip">
+        DTC 槽位信号名（默认 20 个，FaultNum1 ~ FaultNum20）；可修改数量（最多 {{ FAULT_NUM_MAX_SLOTS }} 个）和信号名，或从对象浏览器拖入信号。
+      </span>
+      <span class="fault-num-count">
+        数量
+        <el-input-number
+          v-model="faultNumSlotCount"
+          :min="1"
+          :max="FAULT_NUM_MAX_SLOTS"
+          size="small"
+          controls-position="right"
+        />
+      </span>
+      <el-button size="small" @click="resetFaultNumSlots">恢复默认</el-button>
+    </div>
+    <div class="fault-num-slots-grid">
+      <div v-for="(_, idx) in faultNumSlots" :key="idx" class="fault-num-slot">
+        <span class="fault-num-slot-label">FaultNum{{ idx + 1 }}</span>
+        <el-input
+          v-model="faultNumSlots[idx]"
+          size="small"
+          :placeholder="`FaultNum${idx + 1}`"
+          @dragover.prevent
+          @drop="onDropReplace($event, (v: string) => faultNumSlots[idx] = v)"
+        />
+      </div>
+    </div>
+    <template #footer>
+      <el-button type="primary" @click="faultNumEditorVisible = false">确定</el-button>
+    </template>
+  </el-dialog>
+
+  <!-- DTC 序号列表弹窗：默认取 DTC 表中 DTC_Type=Bus 的 DTC（不含 0、1），每个 DTC 后填 FaultIndex -->
+  <el-dialog
+    v-model="dtcIndexEditorVisible"
+    title="DTC序号列表"
+    width="560px"
+    append-to-body
+  >
+    <div class="fault-num-dialog-head">
+      <span class="fault-num-dialog-tip">
+        默认填充 DTC 表中 DTC_Type=Bus 的 DTC（已排除 0 和 1）；每个 DTC 后面填写对应的 FaultIndex。
+      </span>
+    </div>
+    <div v-if="faultIndexList.length" class="dtc-index-grid">
+      <div v-for="(item, idx) in faultIndexList" :key="idx" class="dtc-index-row">
+        <span class="dtc-index-code" :title="item.dtc">{{ item.dtc }}</span>
+        <el-input v-model="item.faultIndex" size="small" placeholder="FaultIndex" />
+      </div>
+    </div>
+    <div v-else class="dtc-index-empty">DTC 表中没有 DTC_Type=Bus 的 DTC。</div>
+    <template #footer>
+      <el-button type="primary" @click="dtcIndexEditorVisible = false">确定</el-button>
+    </template>
+  </el-dialog>
 
   <!-- 测试参数卡片「先配置再拖拽」配置弹窗 -->
   <el-dialog
@@ -3253,7 +3332,10 @@ const visibleConfigFieldDefs = computed(() => {
 interface OtherInputDef {
   key: string
   placeholder: string
-  type?: 'text' | 'select'
+  /** button = 渲染成按钮（点击打开对应弹窗） */
+  type?: 'text' | 'select' | 'button'
+  /** type=button 时的动作：faultNum=槽位编辑；dtcIndex=DTC序号列表编辑 */
+  action?: 'faultNum' | 'dtcIndex'
   /** 输入校验类型：int=仅整数，hex=16进制（0x 前缀），uds=UDS 指令字节序列 */
   validate?: 'int' | 'hex' | 'uds'
   /** type=select 时的开关取值与文案（默认 TRUE / FALSE） */
@@ -3325,6 +3407,74 @@ interface CompoundSliderDef {
   }>
 }
 
+/** FaultNum 默认槽位数（数量可在弹窗里编辑，1 ~ FAULT_NUM_MAX_SLOTS） */
+const FAULT_NUM_DEFAULT_SLOTS = 20
+const FAULT_NUM_MAX_SLOTS = 50
+function defaultFaultNumSlots(): string[] {
+  return Array.from({ length: FAULT_NUM_DEFAULT_SLOTS }, (_, i) => `FaultNum${i + 1}`)
+}
+/** FaultNum 槽位信号名：卡片里的 FaultNum 按钮点开弹窗编辑，随 Other 一起保存 */
+const faultNumSlots = ref<string[]>(defaultFaultNumSlots())
+const faultNumEditorVisible = ref(false)
+
+/** 槽位数量：数组长度即数量，改数量时保留已填信号名，新增的按 FaultNumN 补默认 */
+const faultNumSlotCount = computed({
+  get: () => faultNumSlots.value.length,
+  set: (n: number) => resizeFaultNumSlots(n),
+})
+
+function resizeFaultNumSlots(count: number) {
+  const n = Math.max(1, Math.min(FAULT_NUM_MAX_SLOTS, Math.round(Number(count) || 1)))
+  const cur = faultNumSlots.value
+  if (n === cur.length) return
+  if (n < cur.length) {
+    faultNumSlots.value = cur.slice(0, n)
+    return
+  }
+  const next = cur.slice()
+  for (let i = cur.length; i < n; i++) next.push(`FaultNum${i + 1}`)
+  faultNumSlots.value = next
+}
+
+function openFaultNumEditor() {
+  faultNumEditorVisible.value = true
+}
+
+function resetFaultNumSlots() {
+  faultNumSlots.value = defaultFaultNumSlots()
+}
+
+/** DTC 序号列表：每个 DTC 后跟一个 FaultIndex；默认取 DTC 表里 DTC_Type=Bus 的 DTC（排除 0、1） */
+interface DtcIndexItem { dtc: string; faultIndex: string }
+const faultIndexList = ref<DtcIndexItem[]>([])
+const dtcIndexEditorVisible = ref(false)
+
+function buildDefaultFaultIndexList(): DtcIndexItem[] {
+  const columns = Array.isArray(dtcRaw.value?.columns) ? dtcRaw.value.columns : []
+  const rows = Array.isArray(dtcRaw.value?.rows) ? dtcRaw.value.rows : []
+  const normCol = (c: any) => String(c ?? '').replace(/^⚠\s*/, '').trim()
+  const dtcCol = columns.findIndex((c: any) => normCol(c) === 'DTC')
+  const typeCol = columns.findIndex((c: any) => normCol(c) === 'DTC_Type')
+  if (dtcCol < 0 || typeCol < 0) return []
+  const list: DtcIndexItem[] = []
+  for (const row of rows) {
+    if (String((row as any)?.[typeCol] ?? '').trim().toLowerCase() !== 'bus') continue
+    const code = String((row as any)?.[dtcCol] ?? '').trim()
+    if (!code) continue
+    const value = Number(code)
+    if (value === 0 || value === 1) continue
+    list.push({ dtc: code, faultIndex: '' })
+  }
+  return list
+}
+
+function openDtcIndexEditor() {
+  if (!faultIndexList.value.length) {
+    faultIndexList.value = buildDefaultFaultIndexList()
+  }
+  dtcIndexEditorVisible.value = true
+}
+
 /** 其他配置各测试项卡片的「使用说明」文案（key = 卡片 key），卡片右上角「?」点击展示。
  *  参考后端用例生成逻辑与 CAPL 实现编写，如需调整直接修改此处文本即可。 */
 const OTHER_CARD_DOCS: Record<string, string> = {
@@ -3345,6 +3495,7 @@ const OTHER_CARD_DOCS: Record<string, string> = {
   shutdown: 'Shutdown\n开启后生成 Shutdown_time 用例：Ready_Off 后 IG OFF，检查通信停止时间是否落在所填 [minTime, maxTime] 区间内，超出区间判失败。\n\n参数：下电诊断停止 minTime / maxTime（ms）。',
   busOff: 'tBusOff\n开启后按三组参数生成 BusOff 相关用例：\n\n① 快恢复（tbusoffquickNum / tquickmin / tquickmax）\n生成 BusOff_quick_recovery 用例：连续制造 BusOff 并恢复，检查报文快恢复时间是否落在 [tquickmin, tquickmax] 区间内。\n\n② 慢恢复（tbusoffslowNum / tslowmin / tslowmax）\n生成 BusOff_slow_recovery 用例：连续制造 BusOff 并恢复，检查报文慢恢复时间是否落在 [tslowmin, tslowmax] 区间内。\n\n③ DTC（DTCbusoffNum / DTCbusoffrecovery / DTCbusoffrecoveryType / DTC）\n生成 BusOff DTC 检测用例。\nDTCbusoffrecovery 为恢复量，用右侧开关声明它的含义：开=时间（ms），关=报文帧数。\n\n三组参数互相独立，各自填了才会生成对应用例；Num 为busoff次数，min/max 单位为 ms。',
   disableXcp: 'DisableXCP\n开启后生成 DisableXCP 用例：先发送「关闭XCP」的 UDS 指令，随后连接 XCP 并检查指定 ID 的报文已停止发送；再发送「打开XCP」指令并重新 Init，检查该 ID 报文恢复正常发送。\n\n参数：XCP ID（16 进制，如 0x123）、关闭XCP的UDS指令、打开XCP的UDS指令。',
+  dtcUpload: 'DTC上传\n从 DBC 拖入（或手填）ECU 上传 DTC 的报文中的 8 个字段信号，生成 DTC699_1 / DTC699_2 / DTC699_3 三条用例。报文 ID 与周期由这些信号在 DBC 中的归属反查；生成时统一按 $信号名 读取（$Signal 读最近一次接收值，裸信号名在 CAPL 里不是变量）。\n\n① DTC699_1：按故障分类逐个注入，读上传报文检查该类 DTC 已上传且状态为 0x09（当前+已确认）→ 恢复后状态 0x08（历史）→ 14 清除后状态 0x00。\n② DTC699_2：注入后先断言状态 0x09，再 KL15 OFF 等待 200ms、KL15 ON，检查 DTC2 字段全为 0（不主动上传）→ 恢复后状态 0x08 → 14 清除后状态 0x00。\n③ DTC699_3：注入后等待 1000ms 断言状态 0x09；KL15 OFF 200ms 后恢复故障，总等待 3000ms 再 KL15 ON，断言状态 0x08；14 清除后状态 0x00。\n\n每条用例都要求上报的 DTC 集合与预期完全一致（不多不少），并逐条打印预期/实际便于定位。\n\n参数：DTC1_HighByte / DTC1_MiddByte / DTC1_LowByte / DTC1_Status / DTC2_HighByte / DTC2_MiddByte / DTC2_LowByte / DTC2_Status 共 8 个信号名，任一未填则不生成。',
   configDiag: 'Config_Diag\n开启后生成 AllConfig_EraseConfig_Diag（全配 + 全不配）及若干 PartialConfig_Diag_N（部分配置）：\n\n① AllConfig_EraseConfig_Diag：Req14 → 发送「配置所有功能」UDS 指令 → 正常上下电 → 确认当前故障全清并断言未配置DTC 已在历史(mask=8) → 遍历 Fault_array 逐个「注入 → 诊断该DTC → 恢复」→ 确认当前故障全清 → 发送「擦除所有配置」UDS 指令 → 正常上下电 → 遍历 Fault_array 逐个「注入 → 诊断该DTC → 恢复」。\n\n② PartialConfig_Diag_N（部分配置，数量不定，点「+ 添加」逐条录入，每条只遍历拖入的关联 DTC）：发送该条的 UDS 指令 → 正常上下电 → 注入关联 DTC 并确认能诊断到（不恢复）→ 发送全部配置 → 正常上下电 → 确认当前无故障、但该 DTC 的 08 状态仍能读到 → 恢复该故障。\n\n参数：全配=配置所有功能的UDS指令；全不配=擦除所有配置的UDS指令 + 未配置DTC（如 456F00）；部分配置=每条「UDS指令 + 从对象浏览器 Fault 列表拖入的关联 DTC」。',
   sliderGroup: '开关配置（五项开关 + 两项 Counter 首帧判定，互相独立）\n· ExtendFrame：对每个 Rx 报文 ID 发送扩展帧，检查总线未出现错误帧。\n· RemotrFrame：对每个 Rx 报文 ID 发送远程帧，检查总线未出现错误帧。\n· UnexpectDlc:less：检查各 Tx 报文是否出现 DLC 小于预期的非预期长度。\n· UnexpectDlc:Greater：检查各 Tx 报文是否出现 DLC 大于预期的非预期长度。\n· VoltDTC_Diag：开启后在「助力电压」板块生成 AssistVoltage_VoltDtcDiag_LowVolt / _HighVolt 组合用例：电压故障在诊断范围内优先诊断，网络故障不报（两者不能同时报出）；恢复电压故障后，已成熟的网络故障应立即能诊断到。需先配置助力电压参数。\n\n· 11Reset-counter / Busoff-counter：分别控制 11 重启、BusOff 两类工况下计数器连续性的「首帧判定」——\n    滑块置「0」= 恢复后首帧计数必须为 0（默认）；置「last」= 不校验首帧初始值，只校验从第 2 帧起 +1 递增。\n    上电检测Counter（xxx_Counter）固定从 0 开始；高负载检测Counter（xxx_HighBusLoadCounter）固定不校验首帧，均不受此项影响。\n\n前四项均依赖 DBC 中已配置的 Tx/Rx 报文列表，需先导入并配置 DBC 再勾选。',
   readyOffDiagStop: 'Ready_OffDiagStop\n开启后生成 Ready_Off_Diag 用例：Ready Off 状态下，所填报文 ID 对应的故障应被禁止诊断（不置位），其它故障仍正常触发；用于验证 Ready Off 时车速类 DTC 不置位。\n\n参数：车速报文ID（如 0x123）。',
@@ -3355,6 +3506,7 @@ const OTHER_CARD_DOCS: Record<string, string> = {
   otaDiagStop: 'OTA_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：通过信号值开启 OTA 网络诊断，注入故障应能正常诊断，并校验低压/高压下的 DTC；再用停止值关闭网络诊断，注入的故障应不再被诊断。\n\n字段：OTA信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔），用例按取值循环执行。',
   sigDiagStop: 'Sig_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：先设置「开启诊断的信号值」，注入故障应能诊断到 DTC；再设置「关闭诊断的信号值」，故障应不再被诊断。\n\n字段：信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔）。',
   pwrStsFbDiagStop: 'PwrStsFb_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：通过信号值切换电源状态反馈（模拟发动机/电源状态），并结合断开与恢复报文，检查网络诊断的开启与关闭行为是否符合预期。\n\n字段：信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔）。',
+  faultNumUpload: 'FaultNum上传\n填写 ECU 上传故障编号报文中的字段，信号名默认：当前故障总数=TotalFaultNum、帧序号=FrameIndex、供应商代码=SupplierNum（SupplierNum 后面另有一个值输入框）。\n\nFaultNum（故障内部编号）是 DTC 槽位信号，默认 20 个（FaultNum1 ~ FaultNum20）：点击 FaultNum 按钮打开弹窗，可修改槽位数量（最多 50 个）、逐槽修改信号名或从对象浏览器拖入，弹窗内可一键恢复默认。\n\nDTC序号列表：点击按钮打开弹窗，默认填充 DTC 表中 DTC_Type=Bus 的 DTC（已排除 0 和 1），每个 DTC 后可填写对应的 FaultIndex。',
 }
 
 // 排列顺序按卡片尺寸（span）优化，尽量填满 8 列网格、减少空洞：
@@ -3415,6 +3567,27 @@ const otherFieldDefs: OtherFieldDef[] = [
   { key: 'highBusLoadCommunication', label: 'HighBusLoad_communication', span: '1x1', inputs: [{ key: 'busLoadRate2', placeholder: '负载率', validate: 'int' }] },
   { key: 'highBusLoadDiag', label: 'HighBusLoad_Diag', span: '1x1', inputs: [{ key: 'busLoadRate3', placeholder: '负载率', validate: 'int' }] },
   { key: 'dtcAged', label: 'DTCAged', span: '1x1', inputs: [{ key: 'dtcAgedNum', placeholder: '老化次数', validate: 'int' }] },
+  { key: 'dtcUpload', label: 'DTC上传', span: '2x3', layout: 'rows', inputs: [
+    { key: 'dtc1HighByte', placeholder: 'DTC1_HighByte', span: 12, drop: true },
+    { key: 'dtc1MiddByte', placeholder: 'DTC1_MiddByte', span: 12, drop: true },
+    { key: 'dtc1LowByte', placeholder: 'DTC1_LowByte', span: 12, drop: true },
+    { key: 'dtc1Status', placeholder: 'DTC1_Status', span: 12, drop: true },
+    { key: 'dtc2HighByte', placeholder: 'DTC2_HighByte', span: 12, drop: true },
+    { key: 'dtc2MiddByte', placeholder: 'DTC2_MiddByte', span: 12, drop: true },
+    { key: 'dtc2LowByte', placeholder: 'DTC2_LowByte', span: 12, drop: true },
+    { key: 'dtc2Status', placeholder: 'DTC2_Status', span: 12, drop: true },
+  ] },
+  { key: 'faultNumUpload', label: 'FaultNum上传', span: '1x2', layout: 'rows', inputs: [
+    { key: 'totalFaultNum', placeholder: '当前故障总数', span: 12 },
+    { key: 'frameIndex', placeholder: '帧序号', span: 12 },
+    { key: 'supplierNum', placeholder: '供应商代码', span: 6 },
+    // SupplierNum 后面跟一个值的输入框
+    { key: 'supplierNumValue', placeholder: '值', span: 6 },
+    // DTC 槽位：默认 20 个信号 FaultNum1~FaultNum20，点按钮在弹窗里编辑数量和信号名
+    { key: 'faultNumSlots', placeholder: 'FaultNum（编辑）', type: 'button', action: 'faultNum', span: 12 },
+    // DTC 序号列表：默认取 DTC 表中 DTC_Type=Bus 的 DTC（不含 0、1），每个 DTC 后跟 FaultIndex
+    { key: 'dtcIndexList', placeholder: 'DTC序号列表（编辑）', type: 'button', action: 'dtcIndex', span: 12 },
+  ] },
 ]
 
 /** Group 卡片（拖拽 DBC 对象生成多组参数） */
@@ -3519,6 +3692,19 @@ const COUNTER_START_DEFAULTS: Record<string, string> = {
   counter11ResetStart: '0',
 }
 
+/** FaultNum上传卡片里信号名字段的默认值（未配置时填对应信号名） */
+const FAULT_NUM_UPLOAD_DEFAULTS: Record<string, string> = {
+  totalFaultNum: 'TotalFaultNum',
+  frameIndex: 'FrameIndex',
+  supplierNum: 'SupplierNum',
+}
+
+function applyFaultNumUploadDefaults() {
+  for (const [k, v] of Object.entries(FAULT_NUM_UPLOAD_DEFAULTS)) {
+    if (!otherData.value[k]) otherData.value[k] = v
+  }
+}
+
 /** DiagStop 分组：放在一起展示 */
 const diagStopGroupKeys = ['otaDiagStop', 'sigDiagStop', 'pwrStsFbDiagStop', 'readyOffDiagStop']
 
@@ -3602,10 +3788,10 @@ function getCardSpan(inputCount: number): string {
 }
 
 /** 根据 group 数量动态计算卡片跨行数（每行 92px，至少 2 行） */
-function getGroupRowSpan(groupCount: number): number {
-  // 空状态：2 行；每个 group 约 70px，每行 92px
+function getGroupRowSpan(groupCount: number, perItem: number = 70): number {
+  // 空状态：2 行；每个 group 默认约 70px（含「关联DTC」拖拽区的条目更高，由调用方传 perItem），每行 92px
   if (groupCount === 0) return 2
-  return Math.max(2, Math.ceil((groupCount * 70 + 40) / 92))
+  return Math.max(2, Math.ceil((groupCount * perItem + 40) / 92))
 }
 
 /** Config_Diag 卡片条目数：2 条固定（全配 / 全不配）+ 部分配置条数 */
@@ -3613,8 +3799,9 @@ const configDiagEntryCount = computed(() =>
   2 + (Array.isArray(otherData.value.configDiagPartial) ? otherData.value.configDiagPartial.length : 0)
 )
 
-/** Config_Diag 卡片跨行数：与分组卡片同口径（每行 92px，每条约 70px） */
-const configDiagRowSpan = computed(() => getGroupRowSpan(configDiagEntryCount.value))
+/** Config_Diag 卡片跨行数：全配/全不配两条较高，部分配置还多一行「关联DTC」拖拽区，
+ *  按每条约 110px 估算（每行 92px），避免内容撑出卡片 */
+const configDiagRowSpan = computed(() => getGroupRowSpan(configDiagEntryCount.value, 110))
 
 /** 分组卡片子网格占用的外层行数：两列一行，累加每行两张卡片跨行数的较大值；
  *  Config_Diag 也在这个子网格里（作为第 5 张），故一并计入 */
@@ -3906,6 +4093,106 @@ function onHexIdInput(cardKey: string) {
   return;
   }  
   // 其他情况（含纯十六进制字符、非法输入）不处理，避免删除过程中强制补全导致无法清空
+}
+
+/** 多个 DTC 输入：允许用逗号/空格/分号分隔多个 DTC（如 456F00, 456F01）。
+ *  输入时只保留十六进制字符与分隔符，过滤掉中文/符号等非法内容；
+ *  失焦时再由 onConfigDiagDtcBlur 统一规范成 0xXXXXXX。 */
+function onMultiDtcInput(inputKey: string) {
+  const val = String(otherData.value[inputKey] || '')
+  const filtered = val.replace(/[^0-9a-fA-FxX,，;、\s]/g, '')
+  if (filtered !== val) {
+    otherData.value[inputKey] = filtered
+  }
+}
+
+/** DTC 列表规范化：去 0x 前缀、转大写、最多 6 位十六进制，逗号分隔并去重；
+ *  非法项（含非十六进制字符）直接丢弃，保证传给后端的 DTC 一定合法。 */
+function normalizeDtcList(raw: string): string {
+  const tokens = String(raw || '').split(/[,，;、\s]+/).filter(Boolean)
+  const out: string[] = []
+  for (const t of tokens) {
+    const hex = t.replace(/^0[xX]/, '').toUpperCase()
+    if (!/^[0-9A-F]+$/.test(hex)) continue
+    const dtc = '0x' + hex.slice(0, 6)
+    if (!out.includes(dtc)) out.push(dtc)
+  }
+  return out.join(', ')
+}
+
+/** 未配置DTC 失焦校验：统一成 0xXXXXXX, 0xYYYYYY */
+function onConfigDiagDtcBlur(inputKey: string) {
+  const raw = String(otherData.value[inputKey] || '')
+  const normalized = normalizeDtcList(raw)
+  if (normalized !== raw) {
+    otherData.value[inputKey] = normalized
+  }
+}
+
+/** 多个 DTC 输入支持拖拽追加：从对象浏览器 DTC / Fault 列表拖入，
+ *  自动去重后以「, 」拼接（与手动输入的逗号分隔口径一致）。 */
+function onMultiDtcDrop(event: DragEvent, inputKey: string) {
+  event.preventDefault()
+  event.stopPropagation()
+  const raw = event.dataTransfer?.getData('text/plain') || ''
+  const token = String(raw).trim().replace(/[^0-9a-fA-FxX]/g, '')
+  if (!token) return
+  const merged = [String(otherData.value[inputKey] || ''), token].filter(Boolean).join(',')
+  otherData.value[inputKey] = normalizeDtcList(merged)
+}
+
+/** UDS 指令输入过滤：只保留十六进制字符与分隔符，中文/符号等非法内容直接丢弃 */
+function filterUdsChars(raw: string): string {
+  return String(raw || '').replace(/[^0-9a-fA-FxX,，;、\s]/g, '')
+}
+
+/** UDS 指令规范化：0x14,0xFF,0xFF,0xFF。
+ *  去掉括号与 0x 前缀后按非十六进制字符切分，每两位转成一个字节；
+ *  落单的半字节（奇数长度末尾）在失焦时丢弃，保证输出始终是完整合法字节序列。 */
+function sanitizeUdsBytes(raw: string): string {
+  const s = String(raw || '')
+  if (!s.trim()) return ''
+  const chunks = s
+    .replace(/[[\]{}]/g, ' ')
+    .replace(/0[xX]/g, ' ')
+    .split(/[^0-9a-fA-F]+/)
+    .filter(Boolean)
+  const out: string[] = []
+  for (const c of chunks) {
+    const upper = c.toUpperCase()
+    for (let i = 0; i + 2 <= upper.length; i += 2) {
+      out.push('0x' + upper.slice(i, i + 2))
+    }
+  }
+  return out.join(',')
+}
+
+/** Config_Diag 全配/全不配 UDS 指令：输入时过滤非法字符，失焦时规范化 */
+function onConfigDiagUdsInput(inputKey: string) {
+  const val = String(otherData.value[inputKey] || '')
+  const filtered = filterUdsChars(val)
+  if (filtered !== val) {
+    otherData.value[inputKey] = filtered
+  }
+}
+
+function onConfigDiagUdsBlur(inputKey: string) {
+  const raw = String(otherData.value[inputKey] || '')
+  const normalized = sanitizeUdsBytes(raw)
+  if (normalized !== raw) {
+    otherData.value[inputKey] = normalized
+  }
+}
+
+/** 部分配置的 UDS 指令：与全配/全不配同一套过滤与规范化 */
+function onPartialUdsInput(g: { udsCommand: string }) {
+  const filtered = filterUdsChars(g.udsCommand)
+  if (filtered !== g.udsCommand) g.udsCommand = filtered
+}
+
+function onPartialUdsBlur(g: { udsCommand: string }) {
+  const normalized = sanitizeUdsBytes(g.udsCommand)
+  if (normalized !== g.udsCommand) g.udsCommand = normalized
 }
 
 /** 整数输入校验：仅保留数字字符 */
@@ -7763,10 +8050,28 @@ function applyConfigData(data: any, syncChart: boolean = true) {
   buildDllTreeFromRaw(dllRaw.value)
 
   otherData.value = { ...(data['Other'] || data['other_page'] || {}) }
+  // FaultNum 槽位：老配置没有该字段时回到默认 FaultNum1 ~ FaultNum20；已有则按保存的数量恢复
+  {
+    const rawSlots = otherData.value.faultNum
+    faultNumSlots.value = Array.isArray(rawSlots) && rawSlots.length
+      ? rawSlots.slice(0, FAULT_NUM_MAX_SLOTS).map((v, i) => String(v ?? '') || `FaultNum${i + 1}`)
+      : defaultFaultNumSlots()
+  }
+  // DTC 序号列表：恢复保存的 DTC + FaultIndex
+  {
+    const rawIdx = otherData.value.faultIndexList
+    faultIndexList.value = Array.isArray(rawIdx)
+      ? rawIdx
+          .filter((x: any) => x && typeof x === 'object')
+          .map((x: any) => ({ dtc: String(x.dtc ?? ''), faultIndex: String(x.faultIndex ?? '') }))
+      : []
+  }
   // Counter 首帧选择项：配置里没有时补默认值（从 0 开始），否则下拉框显示空白
   for (const [k, dv] of Object.entries(COUNTER_START_DEFAULTS)) {
     if (!otherData.value[k]) otherData.value[k] = dv
   }
+  // FaultNum上传：默认信号名 TotalFaultNum / FrameIndex / SupplierNum
+  applyFaultNumUploadDefaults()
 
   // 从 Other 数据中提取 Group 卡片数据（数组形式）
   const otherRaw = data['Other'] || data['other_page'] || {}
@@ -7967,6 +8272,10 @@ function collectConfigData(): any {
     ...groupDataClean,
     ...hexDataClean,
     ...(signalInvalidData.length ? { signalInvalidValue: signalInvalidData } : {}),
+    // FaultNum 卡片的 20 个 DTC 槽位信号名
+    faultNum: [...faultNumSlots.value],
+    // DTC 序号列表：DTC + FaultIndex
+    faultIndexList: faultIndexList.value.map(x => ({ dtc: x.dtc, faultIndex: x.faultIndex })),
   }
 
   // DTC 数据双重保证：空单元格填 0（DTC 码列除外），避免后端 pandas 解析为 NaN
@@ -8401,9 +8710,12 @@ function resetData(loadChart: boolean = true) {
   for (const [k, dv] of Object.entries(COUNTER_START_DEFAULTS)) {
     otherData.value[k] = dv
   }
+  applyFaultNumUploadDefaults()
   otherCheckboxStates.value = {}
   groupCardDefs.value.forEach(c => { c.groups = [] })
   hexIdCardDefs.value.forEach(c => { otherData.value[c.key] = '' })
+  faultNumSlots.value = defaultFaultNumSlots()
+  faultIndexList.value = []
   configPageData.value = {}
   lastA2lQualifier = ''
   lastCddQualifier = ''
@@ -8937,6 +9249,7 @@ onMounted(() => {
   for (const [k, dv] of Object.entries(COUNTER_START_DEFAULTS)) {
     if (!otherData.value[k]) otherData.value[k] = dv
   }
+  applyFaultNumUploadDefaults()
   // 全局事件委托：鼠标点击输入框时全选内容
   document.addEventListener('focusin', handleGlobalFocusIn)
 })
@@ -9911,6 +10224,111 @@ onActivated(() => {
     width: 100%;
     justify-content: center;
   }
+
+  // FaultNum 卡片里的「FaultNum（点击编辑）」按钮与输入框同宽
+  :deep(.el-button) {
+    width: 100%;
+  }
+
+  // 相邻两个按钮（FaultNum / DTC序号列表）会吃到 Element Plus 默认的 +12px 左边距，
+  // 导致后者相对前者右移；清零后两个按钮左右对齐
+  :deep(.el-button + .el-button) {
+    margin-left: 0;
+  }
+}
+
+// FaultNum 槽位编辑弹窗：20 个槽位，两列铺开，内容超高时弹窗内滚动
+.fault-num-dialog-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  margin-bottom: 10px;
+
+  // 槽位数量输入：标签 + 数字框
+  .fault-num-count {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text-secondary);
+    white-space: nowrap;
+
+    :deep(.el-input-number) {
+      width: 90px;
+    }
+  }
+}
+
+.fault-num-dialog-tip {
+  flex: 1;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.fault-num-slots-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.fault-num-slot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .fault-num-slot-label {
+    flex: 0 0 76px;
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+
+  :deep(.el-input) {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+// DTC 序号列表弹窗：DTC + FaultIndex，两列铺开，内容超高时弹窗内滚动
+.dtc-index-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.dtc-index-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .dtc-index-code {
+    flex: 0 0 100px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    font-family: var(--el-font-family-mono, monospace);
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+
+  :deep(.el-input) {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+.dtc-index-empty {
+  padding: 16px 0;
+  text-align: center;
+  font-size: 12px;
+  color: var(--text-secondary);
 }
 
 // Compound 滑块卡片：小卡片两两一行（2 列网格）
@@ -9982,6 +10400,9 @@ onActivated(() => {
   gap: 8px;
   flex: 1;
   min-height: 0;
+  /* 条目较多（如多条部分配置 + 多条关联DTC）时在卡片内滚动，避免内容撑出卡片边界 */
+  overflow-y: auto;
+  overflow-x: hidden;
   padding: 6px;
   border: 2px dashed transparent;
   border-radius: 6px;
@@ -10074,6 +10495,13 @@ onActivated(() => {
 
 .dtc-drop-zone:hover {
   border-color: var(--primary-color);
+}
+
+/* 「关联DTC」拖拽区在分组字段栅格里铺满整行：
+   否则只会落在 auto-fill 的某一列（≈140px）里，DTC 标签被迫纵向堆叠、撑出卡片高度 */
+.other-group-fields > .dtc-drop-zone,
+.other-group-fields > .other-group-field-full {
+  grid-column: 1 / -1;
 }
 
 .dtc-drop-hint {

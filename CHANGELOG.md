@@ -12,6 +12,47 @@
 
 ---
 
+## [1.0.55] - 2026-11-06
+
+**版本号**：`1.0.55`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.55.exe`（172,809,363 字节，SHA256 `08AA209E065DBF1C19662ED85CF3848686A54B08F342E73B0EB4020B928A1F2B`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.55",
+  "release_notes": "本版本更新：\n- 新增「DTC上传」用例组：从 DBC 拖入 0x699 报文的 DTC1/DTC2 共 8 个字段信号，自动生成 DTC699_1 / DTC699_2 / DTC699_3 三条用例（注入后状态 0x09 → 恢复后 0x08 → 14 清除后 0x00），覆盖 KL15 断电重启不主动上传、长时间保持等场景\n- 三条用例的报文 ID 与周期由信号在 DBC 中的归属自动反查，支持带 $ 前缀的系统变量信号名；8 个信号缺任一则不生成",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.55.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.55）
+
+---
+
+### [1.0.55] - 2026-11-06
+
+**会话主题**：新增「DTC上传」用例（0x699 报文 DTC1/DTC2 字段 → DTC699_1/2/3）
+
+**变更内容**：
+
+1. **前端 Other 卡片「DTC上传」**（`frontend/src/views/CANView.vue`）
+   - 新增 `dtcUpload` 卡片（`span: 4x3`、`layout: rows`），8 个输入框支持从对象浏览器拖入 DBC 信号：`DTC1_HighByte` / `DTC1_MiddByte` / `DTC1_LowByte` / `DTC1_Status` / `DTC2_HighByte` / `DTC2_MiddByte` / `DTC2_LowByte` / `DTC2_Status`
+   - 卡片帮助气泡补充三条用例的完整步骤说明与参数要求
+2. **后端生成入口**（`backend/processors/excel_processor.py`）
+   - Other 字段字典增加 `dtcUpload` 的 8 个字段；`_add_DTC699_Upload_testcases` 注册到 Other 用例分发表
+   - 报文 ID 与周期由第一个能在 `msg_dict` 中找到的信号反查（信号名可带 `$` 前缀），周期缺失时默认 20ms；8 个信号缺任意一个、或都匹配不到 DBC 报文时不生成，仅告警
+   - 生成的 `DTC699_1` / `DTC699_2` / `DTC699_3` 登记到 XML 的 Other 分组
+3. **CAPL 模板**（`backend/templates/capl.py`）
+   - 新增 `testcase_DTC699_Upload`：`DTC699_Update`（按 DTC 逐条比对上报集合）、`DTC699_CheckDTC2Zero`，以及三条用例主体：
+     - `DTC699_1`：按故障分类逐个注入 → 状态 0x09 → 恢复 → 0x08 → 14 清除 → 0x00
+     - `DTC699_2`：注入后断言 0x09 → KL15 OFF 200ms → KL15 ON → DTC2 字段全 0（不主动上传）→ 恢复 0x08 → 14 清除 0x00
+     - `DTC699_3`：注入 1000ms 后断言 0x09 → KL15 OFF 200ms、恢复故障、总等待 3000ms 后 KL15 ON → 断言 0x08 → 14 清除 0x00
+
+**相关文件**：`frontend/src/views/CANView.vue`、`backend/processors/excel_processor.py`、`backend/templates/capl.py`
+
+---
+
 ## [1.0.54] - 2026-11-03
 
 **版本号**：`1.0.54`（`frontend/package.json` 的 `version`）
@@ -27,6 +68,51 @@
 }
 ```
 **发布状态**：已发布到共享盘（version 1.0.54）
+
+---
+
+## [1.0.55] - 2026-11-06
+
+**版本号**：`1.0.55`（`frontend/package.json` 的 `version`）
+**安装包**：待打包
+**共享盘路径**：待发布
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.55",
+  "release_notes": "本版本更新：\n- Config_Diag：AllConfig_EraseConfig_Diag 去掉「关联ID」参数，改为按故障分类遍历（全配 FIUClass 唯一性判定；全不配以未配置DTC 为基量做多 DTC 断言），未配置DTC 支持多个\n- 新增「DTC上传」配置：录入 0x699 的 DTC1/DTC2 共 8 个信号，生成 DTC699_1/2/3 用例（注入→09、恢复→08、14 清除→00，含 KL15 OFF/ON 下 DTC2=0 校验）\n- 修复 CAN 页主内容区白屏（ObjectPanel 中 faultList 的 TDZ 引用错误）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.55.exe"
+}
+```
+**发布状态**：未发布
+
+---
+
+### [1.0.55] - 2026-11-06
+
+**会话主题**：Config_Diag 按类遍历、新增 DTC上传（0x699）用例、修复 CAN 页主区空白
+
+**变更内容**：
+
+1. **AllConfig_EraseConfig_Diag 去掉「关联ID（排除报文ID）」参数**（`backend/templates/capl.py`、`backend/processors/excel_processor.py`、`frontend/src/views/CANView.vue`）
+   - 模板删除 `ExcludeID[]` 声明与擦除段的排除跳过逻辑，`render()` 不再替换 `{EXCLUDE_LEN}` / `{EXCLUDE_IDS}`
+   - 前端 `#2 EraseConfig_Diag` 分组删除「排除的报文ID」输入框；卡片说明同步
+2. **AllConfig_EraseConfig_Diag 改为「按故障分类遍历」**（`backend/templates/capl.py`、`backend/processors/excel_processor.py`）
+   - 全部配置段：`for(i=1;i<=6;i++)` → `FIUClass(i,1)`（内部汇总该类 DTC、等报出并判定「都在且不多不少」）→ `FIUCreset(i)` → `Wait(tg*2+1000)` → `TestNoDTC()`
+   - 全不配置段：`FIUClass(i,0xF)` 只注入不判定，随后以「未配置DTC」为基量逐类汇总去重，`TestStep_Read_Multi_DTC(...,len,1,1,1)` 断言「该类 DTC + 未配置DTC 都在且不多不少」；恢复后断言当前只剩未配置DTC
+   - 未配置DTC 支持填多个（逗号/空格/分号分隔），模板新增 `UnconfigDTC[{UNCONFIG_DTC_LEN}]={{UNCONFIG_DTCS}}` 数组声明；`{UNCONFIG_DTC}` 标量口径保留（取第一个）
+3. **新增「DTC上传」配置与 DTC699 系列用例**（`backend/templates/capl.py`、`backend/processors/excel_processor.py`、`backend/core/can_module.py`、`frontend/src/views/CANView.vue`）
+   - 其他配置新增卡片，录入 8 个信号：`DTC1_HighByte / DTC1_MiddByte / DTC1_LowByte / DTC1_Status / DTC2_HighByte / DTC2_MiddByte / DTC2_LowByte / DTC2_Status`（支持从 DBC 拖入）
+   - 新增 `DTC699_Update()`：等上传报文、逐帧采集 DTC1/DTC2 并去重保留最新状态，双向比对（不多不少）+ 状态比对，逐条打印预期/实际；`DTC699_CheckDTC2Zero()` 检查 DTC2 字段全 0
+   - 生成三条用例：`DTC699_1`（按类注入 → 09 → 恢复 08 → 14 清除 00）、`DTC699_2`（KL15 OFF 200ms / ON 后 DTC2=0）、`DTC699_3`（注入 1000ms → 09；OFF 200ms 后恢复、总等 3000ms → ON 查 08；14 清除 00）
+   - 报文 ID 与周期由信号在 DBC 中的归属反查，信号名允许带 `$` 前缀；8 个信号未填全或都匹配不到 DBC 时不生成并告警
+   - 辅助函数全部使用局部数组（`TestCase.can` 的 `variables{}` 为空，不引入全局变量）；新增 `FIUCreset_notime(int Fault_Type)`（`TestFunction.cin`，恢复故障但不内置等待），DTC699 用例按原脚本改用该函数并用显式 `Wait` 控制恢复时长
+4. **修复 CAN 页主内容区空白**（`frontend/src/components/ObjectPanel.vue`）
+   - `faultList` 被前置的 `hasFault` 引用，而 `availableViews` 的 `immediate` watch 在 setup 内立即求值，触发 TDZ 报错 `Cannot access 'faultList' before initialization`，导致 ObjectPanel setup 失败、主区白屏（左侧 GlobalSidebar 不受影响）
+   - 将 `faultList` 上移到 `hasFault` 之前并删除后部重复定义
+
+**相关文件**：`backend/templates/capl.py`、`backend/processors/excel_processor.py`、`backend/core/can_module.py`、`frontend/src/views/CANView.vue`、`frontend/src/components/ObjectPanel.vue`
 
 ---
 

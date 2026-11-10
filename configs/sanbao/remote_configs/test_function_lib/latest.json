@@ -1,0 +1,22 @@
+{
+  "module_title": "三包测试",
+  "module_description": "SanBao Test Module",
+  "globalVariables": [],
+  "steps": [
+    {
+      "id": "step-1785462408042-2t0l1",
+      "type": "step",
+      "customStepId": "fn-CheckCounter-ms8a7v56",
+      "name": "CheckCounter",
+      "code": "CheckCounter({{Sig}}, {{Max}});",
+      "params": {
+        "Sig": "Signal::CounterSig",
+        "Max": "100"
+      }
+    }
+  ],
+  "_meta": {
+    "config_name": "test_function_lib",
+    "digest": "ec3bffbbedd56aa5658ffc5dcbb667915cc0bd2a"
+  }
+}

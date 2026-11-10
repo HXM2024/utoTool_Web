@@ -1,0 +1,18 @@
+{
+  "module_title": "三包测试",
+  "module_description": "SanBao Test Module",
+  "globalVariables": [],
+  "steps": [],
+  "test_cases": [],
+  "oem": "ChangAn",
+  "securityAlgo": "ChangAn_SeedKey",
+  "a2lQualifierLineEdit": "",
+  "cddQualifierLineEdit": "ABS_ESP",
+  "readySignal": "",
+  "readyOnValue": "",
+  "readyOffValue": "",
+  "_meta": {
+    "config_name": "IG_ON_OFF",
+    "digest": "0c61737e526af7309f66df95d09108dd841a2db5"
+  }
+}
