@@ -1708,25 +1708,33 @@
     </template>
   </el-dialog>
 
-  <!-- DTC 序号列表弹窗：默认取 DTC 表中 DTC_Type=Bus 的 DTC（不含 0、1），每个 DTC 后填 FaultIndex -->
+  <!-- DTC 序号列表弹窗：按电压（高压/低压）分组，每个电压后可挂多条 DTC + FaultIndex -->
   <el-dialog
     v-model="dtcIndexEditorVisible"
     title="DTC序号列表"
-    width="560px"
+    width="620px"
     append-to-body
   >
     <div class="fault-num-dialog-head">
       <span class="fault-num-dialog-tip">
-        默认填充 DTC 表中 DTC_Type=Bus 的 DTC（已排除 0 和 1）；每个 DTC 后面填写对应的 FaultIndex。
+        填写高压、低压电压值（V）；每个电压下面可添加多条 DTC + FaultIndex。高压组默认填充 DTC 表中 DTC_Type=Bus 的 DTC（已排除 0 和 1）。
       </span>
     </div>
-    <div v-if="faultIndexList.length" class="dtc-index-grid">
-      <div v-for="(item, idx) in faultIndexList" :key="idx" class="dtc-index-row">
-        <span class="dtc-index-code" :title="item.dtc">{{ item.dtc }}</span>
-        <el-input v-model="item.faultIndex" size="small" placeholder="FaultIndex" />
+    <div v-for="(group, gi) in voltageDtcGroups" :key="gi" class="dtc-index-group">
+      <div class="dtc-index-group-head">
+        <span class="dtc-index-group-label">{{ group.label }}</span>
+        <el-input v-model="group.voltage" size="small" placeholder="电压值(V)" class="dtc-index-voltage" />
+        <el-button size="small" :icon="Plus" @click="addDtcIndexItem(group)">添加</el-button>
       </div>
+      <div v-if="group.items.length" class="dtc-index-grid">
+        <div v-for="(item, idx) in group.items" :key="idx" class="dtc-index-row">
+          <el-input v-model="item.dtc" size="small" placeholder="DTC" class="dtc-index-dtc" />
+          <el-input v-model="item.faultIndex" size="small" placeholder="FaultIndex" />
+          <el-button link size="small" :icon="Delete" @click="removeDtcIndexItem(group, idx)" />
+        </div>
+      </div>
+      <div v-else class="dtc-index-empty">暂无 DTC，点击「添加」新增。</div>
     </div>
-    <div v-else class="dtc-index-empty">DTC 表中没有 DTC_Type=Bus 的 DTC。</div>
     <template #footer>
       <el-button type="primary" @click="dtcIndexEditorVisible = false">确定</el-button>
     </template>
@@ -3444,10 +3452,19 @@ function resetFaultNumSlots() {
   faultNumSlots.value = defaultFaultNumSlots()
 }
 
-/** DTC 序号列表：每个 DTC 后跟一个 FaultIndex；默认取 DTC 表里 DTC_Type=Bus 的 DTC（排除 0、1） */
+/** DTC 序号列表：按电压（高压/低压）分组，每个电压下可挂多条 DTC + FaultIndex；
+ *  高压组默认取 DTC 表里 DTC_Type=Bus 的 DTC（排除 0、1） */
 interface DtcIndexItem { dtc: string; faultIndex: string }
-const faultIndexList = ref<DtcIndexItem[]>([])
+interface VoltageDtcGroup { label: string; voltage: string; items: DtcIndexItem[] }
+const voltageDtcGroups = ref<VoltageDtcGroup[]>(defaultVoltageDtcGroups())
 const dtcIndexEditorVisible = ref(false)
+
+function defaultVoltageDtcGroups(): VoltageDtcGroup[] {
+  return [
+    { label: '高压', voltage: '', items: [] },
+    { label: '低压', voltage: '', items: [] },
+  ]
+}
 
 function buildDefaultFaultIndexList(): DtcIndexItem[] {
   const columns = Array.isArray(dtcRaw.value?.columns) ? dtcRaw.value.columns : []
@@ -3468,9 +3485,17 @@ function buildDefaultFaultIndexList(): DtcIndexItem[] {
   return list
 }
 
+function addDtcIndexItem(group: VoltageDtcGroup) {
+  group.items.push({ dtc: '', faultIndex: '' })
+}
+
+function removeDtcIndexItem(group: VoltageDtcGroup, idx: number) {
+  group.items.splice(idx, 1)
+}
+
 function openDtcIndexEditor() {
-  if (!faultIndexList.value.length) {
-    faultIndexList.value = buildDefaultFaultIndexList()
+  if (voltageDtcGroups.value.every(g => !g.items.length)) {
+    voltageDtcGroups.value[0].items = buildDefaultFaultIndexList()
   }
   dtcIndexEditorVisible.value = true
 }
@@ -3506,7 +3531,7 @@ const OTHER_CARD_DOCS: Record<string, string> = {
   otaDiagStop: 'OTA_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：通过信号值开启 OTA 网络诊断，注入故障应能正常诊断，并校验低压/高压下的 DTC；再用停止值关闭网络诊断，注入的故障应不再被诊断。\n\n字段：OTA信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔），用例按取值循环执行。',
   sigDiagStop: 'Sig_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：先设置「开启诊断的信号值」，注入故障应能诊断到 DTC；再设置「关闭诊断的信号值」，故障应不再被诊断。\n\n字段：信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔）。',
   pwrStsFbDiagStop: 'PwrStsFb_DiagStop\n从 DBC 拖入信号，或点「+ 添加」手动录入：通过信号值切换电源状态反馈（模拟发动机/电源状态），并结合断开与恢复报文，检查网络诊断的开启与关闭行为是否符合预期。\n\n字段：信号名（拖入）、关闭诊断的信号值、开启诊断的信号值、开启/关闭诊断的时间（ms）。\n信号值支持多个取值（英文逗号分隔）。',
-  faultNumUpload: 'FaultNum上传\n填写 ECU 上传故障编号报文中的字段，信号名默认：当前故障总数=TotalFaultNum、帧序号=FrameIndex、供应商代码=SupplierNum（SupplierNum 后面另有一个值输入框）。\n\nFaultNum（故障内部编号）是 DTC 槽位信号，默认 20 个（FaultNum1 ~ FaultNum20）：点击 FaultNum 按钮打开弹窗，可修改槽位数量（最多 50 个）、逐槽修改信号名或从对象浏览器拖入，弹窗内可一键恢复默认。\n\nDTC序号列表：点击按钮打开弹窗，默认填充 DTC 表中 DTC_Type=Bus 的 DTC（已排除 0 和 1），每个 DTC 后可填写对应的 FaultIndex。',
+  faultNumUpload: 'FaultNum上传\n填写 ECU 上传故障编号报文中的字段，信号名默认：当前故障总数=TotalFaultNum、帧序号=FrameIndex、供应商代码=SupplierNum（SupplierNum 后面另有一个值输入框）。\n\nFaultNum（故障内部编号）是 DTC 槽位信号，默认 20 个（FaultNum1 ~ FaultNum20）：点击 FaultNum 按钮打开弹窗，可修改槽位数量（最多 50 个）、逐槽修改信号名或从对象浏览器拖入，弹窗内可一键恢复默认。\n\nDTC序号列表：点击按钮打开弹窗，按电压分为高压、低压两组，各填一个电压值（V）；每组下面可添加多条「DTC + FaultIndex」，可逐条新增/删除。高压组默认填充 DTC 表中 DTC_Type=Bus 的 DTC（已排除 0 和 1）。',
 }
 
 // 排列顺序按卡片尺寸（span）优化，尽量填满 8 列网格、减少空洞：
@@ -8057,14 +8082,22 @@ function applyConfigData(data: any, syncChart: boolean = true) {
       ? rawSlots.slice(0, FAULT_NUM_MAX_SLOTS).map((v, i) => String(v ?? '') || `FaultNum${i + 1}`)
       : defaultFaultNumSlots()
   }
-  // DTC 序号列表：恢复保存的 DTC + FaultIndex
+  // DTC 序号列表：恢复保存的高压/低压电压值 + 各电压下的 DTC/FaultIndex
   {
     const rawIdx = otherData.value.faultIndexList
-    faultIndexList.value = Array.isArray(rawIdx)
-      ? rawIdx
-          .filter((x: any) => x && typeof x === 'object')
-          .map((x: any) => ({ dtc: String(x.dtc ?? ''), faultIndex: String(x.faultIndex ?? '') }))
-      : []
+    const rawVolt = otherData.value.faultVoltage
+    const volt = rawVolt && typeof rawVolt === 'object' ? rawVolt : {}
+    const groups = defaultVoltageDtcGroups()
+    groups[0].voltage = String((volt as any).high ?? '')
+    groups[1].voltage = String((volt as any).low ?? '')
+    if (Array.isArray(rawIdx)) {
+      for (const x of rawIdx) {
+        if (!x || typeof x !== 'object') continue
+        const group = String((x as any).voltage ?? '') === '低压' ? groups[1] : groups[0]
+        group.items.push({ dtc: String((x as any).dtc ?? ''), faultIndex: String((x as any).faultIndex ?? '') })
+      }
+    }
+    voltageDtcGroups.value = groups
   }
   // Counter 首帧选择项：配置里没有时补默认值（从 0 开始），否则下拉框显示空白
   for (const [k, dv] of Object.entries(COUNTER_START_DEFAULTS)) {
@@ -8274,8 +8307,14 @@ function collectConfigData(): any {
     ...(signalInvalidData.length ? { signalInvalidValue: signalInvalidData } : {}),
     // FaultNum 卡片的 20 个 DTC 槽位信号名
     faultNum: [...faultNumSlots.value],
-    // DTC 序号列表：DTC + FaultIndex
-    faultIndexList: faultIndexList.value.map(x => ({ dtc: x.dtc, faultIndex: x.faultIndex })),
+    // DTC 序号列表：按电压分组（高压/低压），每组电压值 + 多条 DTC/FaultIndex
+    faultVoltage: {
+      high: voltageDtcGroups.value[0]?.voltage ?? '',
+      low: voltageDtcGroups.value[1]?.voltage ?? '',
+    },
+    faultIndexList: voltageDtcGroups.value.flatMap(g =>
+      g.items.map(x => ({ voltage: g.label, dtc: x.dtc, faultIndex: x.faultIndex }))
+    ),
   }
 
   // DTC 数据双重保证：空单元格填 0（DTC 码列除外），避免后端 pandas 解析为 NaN
@@ -8715,7 +8754,7 @@ function resetData(loadChart: boolean = true) {
   groupCardDefs.value.forEach(c => { c.groups = [] })
   hexIdCardDefs.value.forEach(c => { otherData.value[c.key] = '' })
   faultNumSlots.value = defaultFaultNumSlots()
-  faultIndexList.value = []
+  voltageDtcGroups.value = defaultVoltageDtcGroups()
   configPageData.value = {}
   lastA2lQualifier = ''
   lastCddQualifier = ''
@@ -10293,12 +10332,38 @@ onActivated(() => {
   }
 }
 
-// DTC 序号列表弹窗：DTC + FaultIndex，两列铺开，内容超高时弹窗内滚动
+// DTC 序号列表弹窗：按电压分组，每组「电压值 + 多条 DTC/FaultIndex」，内容超高时组内滚动
+.dtc-index-group {
+  margin-bottom: 12px;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.dtc-index-group-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+
+  .dtc-index-group-label {
+    flex: 0 0 36px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-primary);
+  }
+
+  .dtc-index-voltage {
+    flex: 0 0 140px;
+  }
+}
+
 .dtc-index-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 8px 16px;
-  max-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 30vh;
   overflow-y: auto;
   padding-right: 4px;
 }
@@ -10308,14 +10373,8 @@ onActivated(() => {
   align-items: center;
   gap: 8px;
 
-  .dtc-index-code {
-    flex: 0 0 100px;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-    font-family: var(--el-font-family-mono, monospace);
-    font-size: 12px;
-    color: var(--text-primary);
+  .dtc-index-dtc {
+    flex: 0 0 140px;
   }
 
   :deep(.el-input) {
@@ -10325,7 +10384,7 @@ onActivated(() => {
 }
 
 .dtc-index-empty {
-  padding: 16px 0;
+  padding: 8px 0;
   text-align: center;
   font-size: 12px;
   color: var(--text-secondary);

@@ -23,6 +23,9 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    // Electron 30 对应 Chromium 124：显式锁定产物语法目标，
+    // 避免 Vite 升级后默认 target 变化导致生成超出运行时能力的语法。
+    target: 'chrome124',
   },
   css: {
     preprocessorOptions: {

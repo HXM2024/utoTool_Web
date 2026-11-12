@@ -12,6 +12,54 @@
 
 ---
 
+## [1.0.56] - 2026-11-11
+
+**版本号**：`1.0.56`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.56.exe`（172,863,358 字节，SHA256 `875375BA8C5E1A7484A7AA7C47D55BA03AC1B63056438BD2846BF2D429D4E237`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.56",
+  "release_notes": "本版本更新：\n- 「FaultNum上传」DTC 序号弹窗改为按电压分组（高/低压各一个电压值，组内可增删 DTC+序号）\n- 「FaultNum上传」接入生成模板：新增 DTCs_Upload / _IGreset / _Voltage / _Clear 四条用例，槽位信号、TotalFaultNum/FrameIndex/SupplierNum 与电压均取卡片配置\n- DTC_Configuration.cin 的 struct DTC_Data 首位新增 word faultNum，逐行写入该 DTC 配置的序号（未配置写 0）",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.56.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.56）
+
+---
+
+### [1.0.56] - 2026-11-11
+
+**会话主题**：FaultNum上传接入生成模板，DTC_Configuration 写入 faultNum
+
+**变更内容**：
+
+1. **「FaultNum上传」DTC 序号弹窗改为按电压分组**（`frontend/src/views/CANView.vue`）
+   - 高压 / 低压各一个电压值输入框，组内可增删「DTC + FaultIndex」条目（数量不限）
+   - 默认以 DTC 表中 `Bus` 类型（排除 0 / 1）填充高压组；收集为 `faultVoltage {high, low}` 与带 `voltage` 标签的 `faultIndexList`，加载与重置同步该结构
+2. **`DTC_Configuration.cin` 增加 faultNum 列**（`backend/processors/excel_processor.py`）
+   - `struct DTC_Data` 首位新增 `word faultNum;`
+   - `DTC_Data_array` 每行首列写入该 DTC 在「FaultNum上传」中配置的序号，未配置的写 `0`（如 `{1,0xE60087,Bus,10,5,1,3,0}`）
+   - 新增 `_fault_num_by_dtc()`：解析 `faultIndexList`，规范化 DTC（去空格、大写、去 `0x` 前缀），序号支持十进制与 `0x`；非法值告警后跳过
+3. **新增 CAPL 模板并接入生成**（`backend/templates/fault_num_upload.py`、`backend/processors/excel_processor.py`）
+   - 新模板含 `DTCs_Upload` / `DTCs_Upload_IGreset` / `DTCs_Upload_Voltage` / `DTCs_Upload_Clear` 四条用例及配套库函数（`State_Op`、`Collect_Type`、`AddVoltageDTCs`、`RemoveVoltageDTCs`、`Inject_Type`、`Reset_All`、`Up_Check_Slots`、`CheckFrameCyclicSend` 等）
+   - 槽位信号取卡片 `faultNum`（默认 `FaultNum1..FaultNum20`），信号名取 `totalFaultNum` / `frameIndex` / `supplierNum`，供应商比较值取 `supplierNumValue`
+   - 报文 ID 与周期由上述信号在 `msg_dict` 中反查；电压用例分别使用 `faultVoltage.low` / `high`（默认 8.8 / 18.2），额外 DTC 取对应电压分组的 `faultIndexList`，展开为 `extraDTCs[10][2]`（最多 10 条）
+   - 仅在卡片勾选时注入：库追加到 `TestFunction.cin`，用例追加到 `TestCase.can` 并登记 XML 的 Other 分组
+4. **字段映射打通**（`backend/core/can_module.py`）
+   - `get_other_key_map()` 增加 `faultVoltage`，`faultNum` / `faultIndexList` 等沿用既有映射
+
+**验证**：
+- `python -m py_compile backend/templates/fault_num_upload.py backend/processors/excel_processor.py` 通过
+- 模板大括号配平检查：`LIB` / `CASES` 均无未替换占位符残留，替换后样板行为 `s[0] = $FaultNum1;`、`supplierNum == 3`、`voltSet = 8.8 / 18.2`、`testWaitForMessage(0x5C4,1000)`
+- 未做真实 Excel 端到端生成与 CANoe 编译验证
+
+**相关文件**：`frontend/src/views/CANView.vue`、`backend/processors/excel_processor.py`、`backend/templates/fault_num_upload.py`、`backend/core/can_module.py`
+
+---
+
 ## [1.0.55] - 2026-11-06
 
 **版本号**：`1.0.55`（`frontend/package.json` 的 `version`）
@@ -53,42 +101,6 @@
 
 ---
 
-## [1.0.54] - 2026-11-03
-
-**版本号**：`1.0.54`（`frontend/package.json` 的 `version`）
-**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.54.exe`（172,773,661 字节，SHA256 `5159D9886E84CDDEDBEA786359EE4B7A8CA26AC571F33ADF4A3E9BA0B2954C8F`）
-**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
-
-**更新配置**（`version.json`）：
-```json
-{
-  "version": "1.0.54",
-  "release_notes": "本版本更新：\n- 基于最新 NewCode 重新集成 UDS/BOOT 模块（处理器与最新源逐方法同步，补 BOOT 31 服务 Control_Type_RxLen）\n- 修复模板解压后文件落点错误（UDS 写入 Testmodule_UDS 工程目录，BOOT 解压到 #BT自动化测试工具#V1.0.17 工程目录）\n- 修复 zip 中文文件名乱码（已标记 UTF-8 的条目不再二次转码）及 22_DID 生成时字符串与整型比较报错",
-  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.54.exe"
-}
-```
-**发布状态**：已发布到共享盘（version 1.0.54）
-
----
-
-## [1.0.55] - 2026-11-06
-
-**版本号**：`1.0.55`（`frontend/package.json` 的 `version`）
-**安装包**：待打包
-**共享盘路径**：待发布
-
-**更新配置**（`version.json`）：
-```json
-{
-  "version": "1.0.55",
-  "release_notes": "本版本更新：\n- Config_Diag：AllConfig_EraseConfig_Diag 去掉「关联ID」参数，改为按故障分类遍历（全配 FIUClass 唯一性判定；全不配以未配置DTC 为基量做多 DTC 断言），未配置DTC 支持多个\n- 新增「DTC上传」配置：录入 0x699 的 DTC1/DTC2 共 8 个信号，生成 DTC699_1/2/3 用例（注入→09、恢复→08、14 清除→00，含 KL15 OFF/ON 下 DTC2=0 校验）\n- 修复 CAN 页主内容区白屏（ObjectPanel 中 faultList 的 TDZ 引用错误）",
-  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.55.exe"
-}
-```
-**发布状态**：未发布
-
----
-
 ### [1.0.55] - 2026-11-06
 
 **会话主题**：Config_Diag 按类遍历、新增 DTC上传（0x699）用例、修复 CAN 页主区空白
@@ -113,6 +125,24 @@
    - 将 `faultList` 上移到 `hasFault` 之前并删除后部重复定义
 
 **相关文件**：`backend/templates/capl.py`、`backend/processors/excel_processor.py`、`backend/core/can_module.py`、`frontend/src/views/CANView.vue`、`frontend/src/components/ObjectPanel.vue`
+
+---
+
+## [1.0.54] - 2026-11-03
+
+**版本号**：`1.0.54`（`frontend/package.json` 的 `version`）
+**安装包**：`#Excel2Case#V1.0.00 Setup 1.0.54.exe`（172,773,661 字节，SHA256 `5159D9886E84CDDEDBEA786359EE4B7A8CA26AC571F33ADF4A3E9BA0B2954C8F`）
+**共享盘路径**：`\\172.28.4.125\装机工作软件\工具软件\Excel2Case`
+
+**更新配置**（`version.json`）：
+```json
+{
+  "version": "1.0.54",
+  "release_notes": "本版本更新：\n- 基于最新 NewCode 重新集成 UDS/BOOT 模块（处理器与最新源逐方法同步，补 BOOT 31 服务 Control_Type_RxLen）\n- 修复模板解压后文件落点错误（UDS 写入 Testmodule_UDS 工程目录，BOOT 解压到 #BT自动化测试工具#V1.0.17 工程目录）\n- 修复 zip 中文文件名乱码（已标记 UTF-8 的条目不再二次转码）及 22_DID 生成时字符串与整型比较报错",
+  "setup_name": "#Excel2Case#V1.0.00 Setup 1.0.54.exe"
+}
+```
+**发布状态**：已发布到共享盘（version 1.0.54）
 
 ---
 
